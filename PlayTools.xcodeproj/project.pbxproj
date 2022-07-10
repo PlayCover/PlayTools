@@ -12,7 +12,6 @@
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
 		AA71970E287A44D200623C15 /* PlayLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719705287A44D200623C15 /* PlayLoader.h */; };
 		AA71970F287A44D200623C15 /* PlayCover.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719706287A44D200623C15 /* PlayCover.swift */; };
-		AA719710287A44D200623C15 /* IOKit.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = AA719707287A44D200623C15 /* IOKit.tbd */; };
 		AA719712287A44D200623C15 /* PlayUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719709287A44D200623C15 /* PlayUI.swift */; };
 		AA719758287A480D00623C15 /* PlayMice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719722287A480C00623C15 /* PlayMice.swift */; };
 		AA719759287A480D00623C15 /* PlayAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719723287A480C00623C15 /* PlayAction.swift */; };
@@ -89,7 +88,6 @@
 		AA719704287A44D200623C15 /* PlaySettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlaySettings.swift; sourceTree = "<group>"; };
 		AA719705287A44D200623C15 /* PlayLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayLoader.h; sourceTree = "<group>"; };
 		AA719706287A44D200623C15 /* PlayCover.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayCover.swift; sourceTree = "<group>"; };
-		AA719707287A44D200623C15 /* IOKit.tbd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.text-based-dylib-definition"; path = IOKit.tbd; sourceTree = "<group>"; };
 		AA719708287A44D200623C15 /* PlayTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayTools.h; sourceTree = "<group>"; };
 		AA719709287A44D200623C15 /* PlayUI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayUI.swift; sourceTree = "<group>"; };
 		AA71970A287A44D200623C15 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -166,7 +164,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA719710287A44D200623C15 /* IOKit.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -176,7 +173,7 @@
 		AA7196CE287A447700623C15 = {
 			isa = PBXGroup;
 			children = (
-				AA719873287A85DD00623C15 /* Sources */,
+				AA7196DA287A447700623C15 /* PlayTools */,
 				AA7196D9287A447700623C15 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -195,11 +192,9 @@
 				AA719721287A480C00623C15 /* Controls */,
 				AA719799287A481500623C15 /* Keymap */,
 				AA71979F287A481500623C15 /* Macros */,
-				AA7197A0287A481500623C15 /* MacroController.swift */,
 				AA71978C287A481500623C15 /* Menu */,
 				AA719791287A481500623C15 /* Utils */,
 				AA71970A287A44D200623C15 /* Info.plist */,
-				AA719707287A44D200623C15 /* IOKit.tbd */,
 				AA719706287A44D200623C15 /* PlayCover.swift */,
 				AA719705287A44D200623C15 /* PlayLoader.h */,
 				AA719702287A44D200623C15 /* PlayLoader.m */,
@@ -270,6 +265,7 @@
 		AA71979F287A481500623C15 /* Macros */ = {
 			isa = PBXGroup;
 			children = (
+				AA7197A0287A481500623C15 /* MacroController.swift */,
 			);
 			path = Macros;
 			sourceTree = "<group>";
@@ -333,14 +329,6 @@
 				AA71983B287A819F00623C15 /* CALayer-KIFAdditions.m */,
 			);
 			path = addition;
-			sourceTree = "<group>";
-		};
-		AA719873287A85DD00623C15 /* Sources */ = {
-			isa = PBXGroup;
-			children = (
-				AA7196DA287A447700623C15 /* PlayTools */,
-			);
-			path = Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -632,7 +620,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "Sources/$(SWIFT_MODULE_NAME)/Info.plist";
+				INFOPLIST_FILE = "$(SWIFT_MODULE_NAME)/Info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -651,7 +639,7 @@
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Sources/$(SWIFT_MODULE_NAME)/$(SWIFT_MODULE_NAME).h";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SWIFT_MODULE_NAME)/$(SWIFT_MODULE_NAME).h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "$(SWIFT_MODULE_NAME)-Swift.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -671,7 +659,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "Sources/$(SWIFT_MODULE_NAME)/Info.plist";
+				INFOPLIST_FILE = "$(SWIFT_MODULE_NAME)/Info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -690,7 +678,7 @@
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Sources/$(SWIFT_MODULE_NAME)/$(SWIFT_MODULE_NAME).h";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SWIFT_MODULE_NAME)/$(SWIFT_MODULE_NAME).h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "$(SWIFT_MODULE_NAME)-Swift.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
