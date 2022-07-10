@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
     s.name             = 'PlayTools'
-    s.version          = '0.1.0'
+    s.version          = '1.1.1'
     s.summary          = 'PlayTools from PlayCover'
     s.swift_versions   = '5'
   # This description is used to generate tags and improve search results.
@@ -28,7 +28,7 @@ Pod::Spec.new do |s|
     s.source           = { :git => 'https://github.com/PlayCover/PlayTools.git', :tag => s.version.to_s }
     # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
   
-    s.platforms = { :ios => "14.0" }  
+    s.platforms = { :ios => "14.0" }
     s.source_files = 'PlayTools/**/*'
   
     # s.resource_bundles = {
