@@ -79,7 +79,7 @@ extension Dictionary {
         if let key = settings[PlaySettings.discordActivityKey] as? Bool {
             return key
         }
-        return PlaySettings.isGame
+        return true
     }
   
     private static let customActivityKey = "pc.customActivity"
