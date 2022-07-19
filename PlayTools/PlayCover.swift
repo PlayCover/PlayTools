@@ -23,6 +23,7 @@ final public class PlayCover : NSObject {
         PlaySettings.shared.setupLayout()
         PlayInput.shared.initialize()
         PlaySettings.shared.clearLegacy()
+        DiscordIPC.shared.initailize()
     }
     
     @objc static public func initMenu( menu : NSObject){

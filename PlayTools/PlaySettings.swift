@@ -74,6 +74,25 @@ extension Dictionary {
         return PlaySettings.isGame
     }
     
+    private static let discordActivityKey = "pc.discordActivity"
+    @objc public var discordActivity : Bool {
+        if let key = settings[PlaySettings.discordActivityKey] as? Bool {
+            return key
+        }
+        return true
+    }
+  
+    private static let customActivityKey = "pc.customActivity"
+    var customActivity : DiscordActivity {
+        do {
+            let dict = settings[PlaySettings.customActivityKey] as? Dictionary ?? [:]
+            let data = try JSONSerialization.data(withJSONObject: dict, options: [.fragmentsAllowed])
+            return try JSONDecoder().decode(DiscordActivity.self, from: data)
+        } catch {
+            return DiscordActivity()
+        }
+    }
+    
     private static let keymappingKey = "pc.keymapping"
     @objc public var keymapping : Bool {
         if let key = settings[PlaySettings.keymappingKey] as? Bool {
@@ -135,6 +154,8 @@ extension Dictionary {
         UserDefaults.standard.removeObject(forKey: PlaySettings.refreshRateKey)
         UserDefaults.standard.removeObject(forKey: PlaySettings.keymappingKey)
         UserDefaults.standard.removeObject(forKey: PlaySettings.adaptiveDisplayKey)
+        UserDefaults.standard.removeObject(forKey: PlaySettings.discordActivityKey)
+        UserDefaults.standard.removeObject(forKey: PlaySettings.customActivityKey)
     }
     
     public static let settingsUrl = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Preferences/playcover.plist")
