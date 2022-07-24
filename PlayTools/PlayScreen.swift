@@ -20,7 +20,7 @@ extension CGSize {
     }
     
     func toAspectRatio() -> CGSize {
-        return CGSize(width: UIScreen.main.bounds.width , height: UIScreen.main.bounds.height)
+        return CGSize(width: 1920 , height: 1080)
     }
 }
 
@@ -35,11 +35,11 @@ extension CGRect {
     }
     
     func toAspectRatio() -> CGRect {
-        return CGRect(x: 1920, y : 1080, width: UIScreen.main.bounds.width , height: UIScreen.main.bounds.height)
+        return CGRect(x: 1920, y : 1080, width: 1920 , height: 1080)
     }
     
     func toAspectRatioReversed() -> CGRect {
-        return CGRect(x: 1920, y : 1080, width: UIScreen.main.bounds.width , height: UIScreen.main.bounds.height)
+        return CGRect(x: 1920, y : 1080, width: 1920 , height: 1080)
     }
    
 }
