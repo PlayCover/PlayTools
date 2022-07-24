@@ -13,9 +13,9 @@ let screen = PlayScreen.shared
 extension CGSize {
     func aspectRatio() -> CGFloat{
         if width > height{
-            return UIScreen.main.bounds.width / UIScreen.main.bounds.height
+            return 1920 / 1080
         } else{
-            return UIScreen.main.bounds.width / UIScreen.main.bounds.height
+            return 1080 / 1920
         }
     }
     
@@ -28,9 +28,9 @@ extension CGRect {
     
     func aspectRatio() -> CGFloat{
         if width > height{
-            return UIScreen.main.bounds.width / UIScreen.main.bounds.height
+            return 1920 / 1080
         } else{
-            return UIScreen.main.bounds.width / UIScreen.main.bounds.height
+            return 1080 / 1920
         }
     }
     
