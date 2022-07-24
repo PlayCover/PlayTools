@@ -20,7 +20,7 @@ extension CGSize {
     }
     
     func toAspectRatio() -> CGSize {
-        return CGSize(width: height / UIScreen.aspectRatio, height: height)
+        return CGSize(width: 900, height: 1080)
     }
 }
 
