@@ -39,7 +39,7 @@ extension CGRect {
     }
     
     func toAspectRatioReversed() -> CGRect {
-        return CGRect(x: minX, y : minY, width: width, height: width / UIScreen.aspectRatio)
+        return CGRect(x: minX, y : minY, width: width, height: width )
     }
    
 }
