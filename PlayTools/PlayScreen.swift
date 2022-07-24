@@ -28,9 +28,9 @@ extension CGRect {
     
     func aspectRatio() -> CGFloat{
         if width > height{
-            return width / height
+            return UIScreen.main.bounds.width / UIScreen.main.bounds.height
         } else{
-            return height / width
+            return UIScreen.main.bounds.width / UIScreen.main.bounds.height
         }
     }
     
