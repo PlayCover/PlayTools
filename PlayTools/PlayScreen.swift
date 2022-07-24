@@ -35,11 +35,11 @@ extension CGRect {
     }
     
     func toAspectRatio() -> CGRect {
-        return CGRect(x: minX, y : minY, width: 1920 , height: height)
+        return CGRect(x: minX, y : minY, width: 1920 , height: 1080)
     }
     
     func toAspectRatioReversed() -> CGRect {
-        return CGRect(x: minX, y : minY, width: 1920, height: height )
+        return CGRect(x: minX, y : minY, width: 1920, height: 1080 )
     }
    
 }
