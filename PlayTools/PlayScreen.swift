@@ -13,14 +13,14 @@ let screen = PlayScreen.shared
 extension CGSize {
     func aspectRatio() -> CGFloat{
         if width > height{
-            return width / height
+            return UIScreen.main.bounds.width / UIScreen.main.bounds.height
         } else{
-            return height / width
+            return UIScreen.main.bounds.width / UIScreen.main.bounds.height
         }
     }
     
     func toAspectRatio() -> CGSize {
-        return CGSize(width: 1920, height: 1080)
+        return CGSize(width: UIScreen.main.bounds.width , height: UIScreen.main.bounds.height)
     }
 }
 
@@ -35,11 +35,11 @@ extension CGRect {
     }
     
     func toAspectRatio() -> CGRect {
-        return CGRect(x: minX, y : minY, width: 1920 , height: 1080)
+        return CGRect(x: 1920, y : 1080, width: UIScreen.main.bounds.width , height: UIScreen.main.bounds.height)
     }
     
     func toAspectRatioReversed() -> CGRect {
-        return CGRect(x: minX, y : minY, width: 1920, height: 1080 )
+        return CGRect(x: 1920, y : 1080, width: UIScreen.main.bounds.width , height: UIScreen.main.bounds.height)
     }
    
 }
