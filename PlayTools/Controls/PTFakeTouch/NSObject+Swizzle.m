@@ -134,14 +134,17 @@
 }
 
 - (CGRect) hook_frame {
+    printf("frame %f %f %f %f", self.frame.origin.x, self.frame.origin.y, self.frame.size.width, self.frame.size.height);
     return [PlayScreen frame:[self hook_frame]];
 }
 
 - (CGRect) hook_bounds {
+    printf("bounds %f %f %f %f", self.bounds.origin.x, self.bounds.origin.y, self.bounds.size.width, self.bounds.size.height);
     return [PlayScreen bounds:[self hook_bounds]];
 }
 
 - (CGSize) hook_size {
+    printf("size %f %f", self.size.width, self.size.height);
     return [PlayScreen sizeAspectRatio:[self hook_size]];
 }
 
