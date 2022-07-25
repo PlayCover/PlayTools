@@ -24,20 +24,20 @@
 #define CS_OPS_IDENTITY 11         /* get codesign identity */
 
 
-NSString *getIpadModel() {
-    NSString *ipadModel = @"";
-    NSString *userName = NSUserName();
-    NSString *plistPath = [NSString stringWithFormat:@"/Users/%@/Library/Preferences/playcover.plist", userName];
-    if ([[NSFileManager defaultManager] fileExistsAtPath:plistPath]) {
-        NSDictionary *plistDic = [NSDictionary dictionaryWithContentsOfFile:plistPath];
-        ipadModel = [plistDic objectForKey:@"pc.ipadModel"];
-    }
-    return ipadModel;
+// get pc.ipadModel value from /Library/Preferences/playcover.plist as char*
+char* getIPadModel() {
+    NSString *path = [NSString stringWithFormat:@"%@/Library/Preferences/playcover.plist", NSHomeDirectory()];
+    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:path];
+    return [[dict objectForKey:@"pc.ipadModel"] UTF8String];
 }
 
-#define DEVICE_MODEL getIpadModel()
+// get pc.ipadModel value from /Library/Preferences/playcover.plist as NSString*
+NSString* getIPadModelNS() {
+    NSString *path = [NSString stringWithFormat:@"%@/Library/Preferences/playcover.plist", NSHomeDirectory()];
+    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:path];
+    return [dict objectForKey:@"pc.ipadModel"];
+}
 
-#define OEM_ID (DEVICE_MODEL == @"iPad8,6" ? @"J320xAP" : @"J522AP")
 
 
 int dyld_get_active_platform();
@@ -50,16 +50,21 @@ void *my_dyld_get_base_platform(void *platform) { return 2; }
 
 //#define DEVICE_MODEL ("iPad13,8")
 //#define DEVICE_MODEL ("iPad8,6")
+//get pc.ipadModel from /Library/Preferences/playcover.plist
+
 
 // find Mac by using sysctl of HW_TARGET
 //#define OEM_ID ("J522AP")
 //#define OEM_ID ("J320xAP")
+//const char *OEM_ID = ("J320xAP");
 
 static int my_uname(struct utsname *uts) {
   int result = 0;
   NSString *nickname = @"ipad";
 //   NSString *productType = @"iPad13,8";
-  NSString *productType = @"iPad8,6";
+  //NSString *productType = @"iPad8,6";
+    //const char *DEVICE_MODEL = getIPadModel();
+    NSString *productType = getIPadModelNS();
   if (nickname.length == 0)
     result = uname(uts);
   else {
@@ -70,6 +75,8 @@ static int my_uname(struct utsname *uts) {
 }
 
 static int my_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0, size_t arg1) {
+    const char *DEVICE_MODEL = getIPadModel();
+    const char *OEM_ID = DEVICE_MODEL == @"iPad8,6" ? "J320xAP" : "J522AP";
   if (name[0] == CTL_HW && (name[1] == HW_MACHINE || name[0] == HW_PRODUCT)) {
     if (NULL == buf) {
       *size = strlen(DEVICE_MODEL) + 1;
