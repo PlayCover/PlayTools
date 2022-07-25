@@ -9,9 +9,9 @@ import SwiftUI
 import AVFoundation
 
 let screen = PlayScreen.shared
-let mainScreenWidth = UIScreen.main.bounds.width //1920.0 //
+let mainScreenWidth:CGFloat =  PlaySettings.shared.windowSize == 1080 ? 1920 : 2560
 //NSScreen.main?.frame.width
-let mainScreenHeight = UIScreen.main.bounds.height //1080.0 //UIScreen.main.focusedItem!.frame.height
+let mainScreenHeight:CGFloat = PlaySettings.shared.windowSize //1080.0 //UIScreen.main.bounds.height //1080.0 //UIScreen.main.focusedItem!.frame.height
 
 extension CGSize {
     func aspectRatio() -> CGFloat{

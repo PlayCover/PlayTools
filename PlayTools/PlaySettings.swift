@@ -99,6 +99,15 @@ extension Dictionary {
         return 0.5
     }()
     
+    private static let windowSizeKey = "pc.gameWindowSize"
+    
+    @objc lazy public var windowSize : CGFloat = {
+        if let key = settings[PlaySettings.windowSizeKey] as? CGFloat {
+            return key
+        }
+        return 1080
+    }()
+    
     static var isGame : Bool {
         if let info = Bundle.main.infoDictionary?.description{
             for keyword in PlaySettings.keywords {
