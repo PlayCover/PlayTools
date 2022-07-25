@@ -8,18 +8,26 @@ import SwiftUI
 import AVFoundation
 
 let screen = PlayScreen.shared
+let mainScreenWidth = PlaySettings.shared.windowSizeWidth
+let mainScreenHeight = PlaySettings.shared.windowSizeHeight
+//let mainScreenWidth = 1920.0 //UIScreen.main.focusedItem!.frame.width
+//NSScreen.main?.frame.width
+//let mainScreenHeight = 1080.0 //UIScreen.main.focusedItem!.frame.height
 
 extension CGSize {
     func aspectRatio() -> CGFloat{
         if width > height{
-            return 1920 / 1080
+            return mainScreenWidth / mainScreenHeight
+            //return 1920 / 1080
         } else{
-            return 1080 / 1920
+            //return 1080 / 1920
+            return mainScreenHeight / mainScreenWidth
         }
     }
     
     func toAspectRatio() -> CGSize {
-        return CGSize(width: 1080 , height: 1920)
+        //return CGSize(width: 1080 , height: 1920)
+        return CGSize(width: mainScreenHeight , height: mainScreenWidth)
     }
 }
 
@@ -27,18 +35,18 @@ extension CGRect {
     
     func aspectRatio() -> CGFloat{
         if width > height{
-            return 1920 / 1080
+            return mainScreenWidth / mainScreenHeight
         } else{
-            return 1080 / 1920
+            return mainScreenHeight / mainScreenWidth
         }
     }
     // small window
     func toAspectRatio() -> CGRect {
-        return CGRect(x: minX, y : minY, width: 1080 , height: 1920)
+        return CGRect(x: minX, y : minY, width: mainScreenHeight , height: mainScreenWidth)
     }
     
     func toAspectRatioReversed() -> CGRect {
-        return CGRect(x: minX, y : minY, width: 1920 , height: 1080)
+        return CGRect(x: minX, y : minY, width: mainScreenWidth , height: mainScreenHeight)
     }
    
 }
