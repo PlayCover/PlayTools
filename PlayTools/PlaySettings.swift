@@ -99,18 +99,18 @@ extension Dictionary {
         return 0.5
     }()
     
-    private static let windowSizeKey = "pc.gameWindowSize"
-    
+    private static let gameWindowSizeHeight = "pc.gameWindowSizeHeight"
     @objc lazy public var windowSizeHeight : CGFloat = {
-        if let key = settings[PlaySettings.windowSizeKey] as? CGFloat {
+        if let key = settings[PlaySettings.gameWindowSizeHeight] as? CGFloat {
             return key
         }
         return 1080
     }()
     
+    private static let gameWindowSizeWidth = "pc.gameWindowSizeWidth"
     @objc lazy public var windowSizeWidth : CGFloat = {
-        if let key = settings[PlaySettings.windowSizeKey] as? CGFloat {
-            return key * 1.77777777778
+        if let key = settings[PlaySettings.gameWindowSizeWidth] as? CGFloat {
+            return key
         }
         return 1920
     }()
