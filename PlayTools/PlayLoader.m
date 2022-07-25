@@ -23,6 +23,23 @@
 #define CS_OPS_ENTITLEMENTS_BLOB 7 /* get entitlements blob */
 #define CS_OPS_IDENTITY 11         /* get codesign identity */
 
+
+NSString *getIpadModel() {
+    NSString *ipadModel = @"";
+    NSString *userName = NSUserName();
+    NSString *plistPath = [NSString stringWithFormat:@"/Users/%@/Library/Preferences/playcover.plist", userName];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:plistPath]) {
+        NSDictionary *plistDic = [NSDictionary dictionaryWithContentsOfFile:plistPath];
+        ipadModel = [plistDic objectForKey:@"pc.ipadModel"];
+    }
+    return ipadModel;
+}
+
+#define DEVICE_MODEL getIpadModel()
+
+#define OEM_ID (DEVICE_MODEL == @"iPad8,6" ? @"J320xAP" : @"J522AP")
+
+
 int dyld_get_active_platform();
 
 int my_dyld_get_active_platform() { return 2; }
@@ -32,11 +49,11 @@ extern void *dyld_get_base_platform(void *platform);
 void *my_dyld_get_base_platform(void *platform) { return 2; }
 
 //#define DEVICE_MODEL ("iPad13,8")
-#define DEVICE_MODEL ("iPad8,6")
+//#define DEVICE_MODEL ("iPad8,6")
 
 // find Mac by using sysctl of HW_TARGET
 //#define OEM_ID ("J522AP")
-#define OEM_ID ("J320xAP")
+//#define OEM_ID ("J320xAP")
 
 static int my_uname(struct utsname *uts) {
   int result = 0;
