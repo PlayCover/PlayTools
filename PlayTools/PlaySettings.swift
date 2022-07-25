@@ -110,11 +110,7 @@ extension Dictionary {
     
     @objc lazy public var windowSizeWidth : CGFloat = {
         if let key = settings[PlaySettings.windowSizeKey] as? CGFloat {
-            if key == 1080 || key == 1080.0 {
-                return 1920
-            } else {
-                return 2560
-            }
+            return key * 1.77777777778
         }
         return 1920
     }()
