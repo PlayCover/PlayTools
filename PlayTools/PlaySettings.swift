@@ -104,7 +104,7 @@ extension Dictionary {
         if let key = settings[PlaySettings.gameWindowSizeHeight] as? CGFloat {
             return key
         }
-        return 1080
+        return 1080.0
     }()
     
     private static let gameWindowSizeWidth = "pc.gameWindowSizeWidth"
@@ -112,7 +112,7 @@ extension Dictionary {
         if let key = settings[PlaySettings.gameWindowSizeWidth] as? CGFloat {
             return key
         }
-        return 1920
+        return 1920.0
     }()
     
     static var isGame : Bool {
