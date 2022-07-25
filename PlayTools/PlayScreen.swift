@@ -9,7 +9,7 @@ import SwiftUI
 import AVFoundation
 
 let screen = PlayScreen.shared
-let mainScreenWidth: CGFloat =  PlaySettings.shared.windowSizeWidth == 1920 ? 1920 : 1920
+let mainScreenWidth: CGFloat =  1920
 let mainScreenHeight: CGFloat = PlaySettings.shared.windowSizeHeight
 
 extension CGSize {
