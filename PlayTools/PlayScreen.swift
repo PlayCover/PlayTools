@@ -15,8 +15,9 @@ let mainScreenHeight = PlaySettings.shared.windowSizeHeight
 //let mainScreenHeight = 1080.0 //UIScreen.main.focusedItem!.frame.height
 
 extension CGSize {
-    func aspectRatio() -> CGFloat{
-        if width > height{
+    func aspectRatio() -> CGFloat {
+        // width > height
+        if mainScreenWidth > mainScreenHeight{
             return mainScreenWidth / mainScreenHeight
             //return 1920 / 1080
         } else{
@@ -34,7 +35,7 @@ extension CGSize {
 extension CGRect {
     
     func aspectRatio() -> CGFloat{
-        if width > height{
+        if mainScreenWidth > mainScreenHeight {
             return mainScreenWidth / mainScreenHeight
         } else{
             return mainScreenHeight / mainScreenWidth
