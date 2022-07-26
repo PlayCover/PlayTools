@@ -151,6 +151,8 @@ extension Dictionary {
         UserDefaults.standard.removeObject(forKey: PlaySettings.refreshRateKey)
         UserDefaults.standard.removeObject(forKey: PlaySettings.keymappingKey)
         UserDefaults.standard.removeObject(forKey: PlaySettings.adaptiveDisplayKey)
+        UserDefaults.standard.removeObject(forKey: PlaySettings.gameWindowSizeWidth)
+        UserDefaults.standard.removeObject(forKey: PlaySettings.gameWindowSizeHeight)
     }
     
     public static let settingsUrl = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Preferences/playcover.plist")

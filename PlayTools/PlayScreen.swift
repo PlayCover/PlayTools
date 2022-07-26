@@ -17,11 +17,11 @@ let mainScreenHeight = PlaySettings.shared.windowSizeHeight
 extension CGSize {
     func aspectRatio() -> CGFloat{
         if width > height{
-            return mainScreenWidth / mainScreenHeight
+            return 1.77777777778
             //return 1920 / 1080
         } else{
             //return 1080 / 1920
-            return mainScreenHeight / mainScreenWidth
+            return 0.5625
         }
     }
     
@@ -35,9 +35,9 @@ extension CGRect {
     
     func aspectRatio() -> CGFloat{
         if width > height{
-            return mainScreenWidth / mainScreenHeight
+            return 1.77777777778
         } else{
-            return mainScreenHeight / mainScreenWidth
+            return 0.5625
         }
     }
     // small window
@@ -95,7 +95,6 @@ public final class PlayScreen : NSObject {
     @objc public static func sizeAspectRatio(_ size : CGSize) -> CGSize {
         return size.toAspectRatio()
     }
-    
     var fullscreen : Bool {
         return Dynamic(nsWindow).styleMask.contains(16384).asBool ?? false
     }
