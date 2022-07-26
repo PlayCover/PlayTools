@@ -17,7 +17,7 @@ let mainScreenHeight = PlaySettings.shared.windowSizeHeight
 extension CGSize {
     func aspectRatio() -> CGFloat {
         // width > height
-        if mainScreenWidth > mainScreenHeight{
+        if mainScreenWidth > mainScreenHeight {
             return mainScreenWidth / mainScreenHeight
             //return 1920 / 1080
         } else{
@@ -58,10 +58,10 @@ extension UIScreen {
         let count = Dynamic.NSScreen.screens.count.asInt ?? 0
         if PlaySettings.shared.notch  {
             if count == 1 {
-                return 1.6
+                return 1.777777777777778 //1.6
             } else {
                 if Dynamic.NSScreen.mainScreen.asObject == Dynamic.NSScreen.screens.first {
-                    return 1.6
+                    return 1.777777777777778
                 }
             }
            
@@ -69,7 +69,7 @@ extension UIScreen {
         if let frame = Dynamic(Dynamic.NSScreen.mainScreen.asObject).frame.asCGRect {
             return frame.aspectRatio()
         }
-        return 1.6
+        return 1.777777777777778
     }
 }
 
