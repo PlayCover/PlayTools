@@ -29,6 +29,7 @@ extension Dictionary {
     
     @objc public static let shared = PlaySettings()
     
+    private static let enableWindowAutoSize = "pc.enableWindowAutoSize"
     
     private static let gamingmodeKey = "pc.gamingMode"
     
@@ -50,7 +51,7 @@ extension Dictionary {
     
     private static let layoutKey = "pc.layout"
     
-	lazy var layout : Array<Array<CGFloat>> = [] {
+    lazy var layout : Array<Array<CGFloat>> = [] {
         didSet {
             do {
                 settings[PlaySettings.layoutKey] = layout
@@ -153,6 +154,7 @@ extension Dictionary {
         UserDefaults.standard.removeObject(forKey: PlaySettings.adaptiveDisplayKey)
         UserDefaults.standard.removeObject(forKey: PlaySettings.gameWindowSizeWidth)
         UserDefaults.standard.removeObject(forKey: PlaySettings.gameWindowSizeHeight)
+        UserDefaults.standard.removeObject(forKey: PlaySettings.enableWindowAutoSize)
     }
     
     public static let settingsUrl = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Preferences/playcover.plist")

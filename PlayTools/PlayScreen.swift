@@ -10,36 +10,44 @@ import AVFoundation
 let screen = PlayScreen.shared
 let mainScreenWidth = PlaySettings.shared.windowSizeWidth
 let mainScreenHeight = PlaySettings.shared.windowSizeHeight
-
 extension CGSize {
     func aspectRatio() -> CGFloat {
-        if mainScreenWidth > mainScreenHeight {
-            return mainScreenWidth / mainScreenHeight
+        // width > height
+        if mainScreenWidth > mainScreenHeight || width > height {
+            return PlaySettings.shared.adaptiveDisplay ? mainScreenWidth / mainScreenHeight : width / height
         } else{
-            return mainScreenHeight / mainScreenWidth
+            return PlaySettings.shared.adaptiveDisplay ? mainScreenHeight / mainScreenWidth : height / width
         }
     }
     
     func toAspectRatio() -> CGSize {
-        return CGSize(width: mainScreenHeight , height: mainScreenWidth)
+        return CGSize(width: PlaySettings.shared.adaptiveDisplay ? mainScreenHeight : height / UIScreen.aspectRatio,
+                      height: PlaySettings.shared.adaptiveDisplay ? mainScreenWidth : height)
     }
 }
 
 extension CGRect {
     
     func aspectRatio() -> CGFloat{
-        if mainScreenWidth > mainScreenHeight {
-            return mainScreenWidth / mainScreenHeight
+        if mainScreenWidth > mainScreenHeight || width > height {
+            return PlaySettings.shared.adaptiveDisplay ? mainScreenWidth / mainScreenHeight : width / height
         } else{
-            return mainScreenHeight / mainScreenWidth
+            return PlaySettings.shared.adaptiveDisplay ? mainScreenHeight / mainScreenWidth : height / width
         }
     }
+    // small window
     func toAspectRatio() -> CGRect {
-        return CGRect(x: minX, y : minY, width: mainScreenHeight , height: mainScreenWidth)
+        return CGRect(x: minX,
+                      y : minY,
+                      width: PlaySettings.shared.adaptiveDisplay ? mainScreenHeight : height / UIScreen.aspectRatio ,
+                      height: PlaySettings.shared.adaptiveDisplay ? mainScreenWidth : height)
     }
     
     func toAspectRatioReversed() -> CGRect {
-        return CGRect(x: minX, y : minY, width: mainScreenWidth , height: mainScreenHeight)
+        return CGRect(x: minX,
+                      y : minY,
+                      width: PlaySettings.shared.adaptiveDisplay ? mainScreenWidth : width ,
+                      height: PlaySettings.shared.adaptiveDisplay ? mainScreenHeight : width / UIScreen.aspectRatio)
     }
    
 }
@@ -50,10 +58,10 @@ extension UIScreen {
         let count = Dynamic.NSScreen.screens.count.asInt ?? 0
         if PlaySettings.shared.notch  {
             if count == 1 {
-                return mainScreenWidth / mainScreenHeight //1.6
+                return PlaySettings.shared.adaptiveDisplay ? mainScreenWidth / mainScreenHeight : 1.6 //1.6 or 1.77777778
             } else {
                 if Dynamic.NSScreen.mainScreen.asObject == Dynamic.NSScreen.screens.first {
-                    return mainScreenWidth / mainScreenHeight
+                    return PlaySettings.shared.adaptiveDisplay ?  mainScreenWidth / mainScreenHeight : 1.6
                 }
             }
            
@@ -61,7 +69,7 @@ extension UIScreen {
         if let frame = Dynamic(Dynamic.NSScreen.mainScreen.asObject).frame.asCGRect {
             return frame.aspectRatio()
         }
-        return mainScreenWidth / mainScreenHeight
+        return PlaySettings.shared.adaptiveDisplay ? mainScreenWidth / mainScreenHeight : 1.6
     }
 }
 
