@@ -31,11 +31,11 @@ extern void *dyld_get_base_platform(void *platform);
 
 void *my_dyld_get_base_platform(void *platform) { return 2; }
 
-//#define DEVICE_MODEL ("iPad13,8")
+// #define DEVICE_MODEL ("iPad13,8")
 #define DEVICE_MODEL ("iPad8,6")
 
 // find Mac by using sysctl of HW_TARGET
-//#define OEM_ID ("J522AP")
+// #define OEM_ID ("J522AP")
 #define OEM_ID ("J320xAP")
 
 static int my_uname(struct utsname *uts) {
@@ -113,36 +113,35 @@ static int my_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
 //   mode = 0644;
 //   int value = open(path, flags, mode);
 //   if (value == -1) {
-//     printf("[Hades] open (%s): %s\n", strerror(errno), path);
+//     printf("[Lucas] open (%s): %s\n", strerror(errno), path);
 //   }
-//
+
 //   return value;
 // }
-//
+
 // static int my_create(const char *path, mode_t mode) {
 //   int value = creat(path, mode);
 //   if (value == -1) {
-//     printf("[Hades] create (%s): %s\n", strerror(errno), path);
-//   }
-//   return value;
-// }
-//
-// static int my_mkdir(const char *path, mode_t mode) {
-//   int value = mkdir(path, mode);
-//   if (value == -1) {
-//     printf("[Hades] mkdir (%s): %s\n", strerror(errno), path);
-//   }
-//   return value;
-// }
-//
-// static int my_lstat(const char *restrict path, void *restrict buf) {
-//   int value = lstat(path, buf);
-//   if (value == -1) {
-//     printf("[Hades] lstat (%s): %s\n", strerror(errno), path);
+//     printf("[Lucas] create (%s): %s\n", strerror(errno), path);
 //   }
 //   return value;
 // }
 
+// static int my_mkdir(const char *path, mode_t mode) {
+//   int value = mkdir(path, mode);
+//   if (value == -1) {
+//     printf("[Lucas] mkdir (%s): %s\n", strerror(errno), path);
+//   }
+//   return value;
+// }
+
+// static int my_lstat(const char *restrict path, void *restrict buf) {
+//   int value = lstat(path, buf);
+//   if (value == -1) {
+//     printf("[Lucas] lstat (%s): %s\n", strerror(errno), path);
+//   }
+//   return value;
+// }
 
 static bool isGenshin = false;
 
@@ -175,10 +174,6 @@ DYLD_INTERPOSE(my_sysctl, sysctl)
 
 static void __attribute__((constructor)) initialize(void) {
   NSString *bundleId = [[NSBundle mainBundle] bundleIdentifier];
-  CGRect bounds = [[UIScreen mainScreen] bounds];
-  CGFloat width = bounds.size.width;
-  CGFloat height = bounds.size.height;
-  printf("[Hades] App width: %f, height: %f\n", width, height);
   isGenshin =
       [bundleId isEqual:@"com.miHoYo.GenshinImpact"] || [bundleId isEqual:@"com.miHoYo.Yuanshen"];
   [PlayCover launch];
