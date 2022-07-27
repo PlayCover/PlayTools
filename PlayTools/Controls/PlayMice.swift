@@ -38,6 +38,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
             point = Dynamic(screen.nsWindow).mouseLocationOutsideOfEventStream.asCGPoint!
         }
         if let rect = (Dynamic(screen.nsWindow).frame.asCGRect){
+            Dynamic(screen.nsWindow).StyleMask.resizable = true
             point.x = (point.x / rect.width) * screen.screenRect.width
             point.y = screen.screenRect.height - ((point.y / rect.height) * screen.screenRect.height)
         }

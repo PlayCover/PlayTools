@@ -66,8 +66,8 @@ extension UIScreen {
             }
            
         }
-        if Dynamic(Dynamic.NSScreen.mainScreen.asObject).frame.asCGRect != nil {
-            return 1.777777777777778 //frame.aspectRatio()
+        if let frame = Dynamic(Dynamic.NSScreen.mainScreen.asObject).frame.asCGRect {
+            return frame.aspectRatio()
         }
         return 1.777777777777778
     }

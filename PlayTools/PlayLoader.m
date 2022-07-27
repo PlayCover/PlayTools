@@ -109,39 +109,40 @@ static int my_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
 }
 
 // Useful for debugging:
-// static int my_open(const char *path, int flags, mode_t mode) {
-//   mode = 0644;
-//   int value = open(path, flags, mode);
-//   if (value == -1) {
-//     printf("[Lucas] open (%s): %s\n", strerror(errno), path);
-//   }
+ static int my_open(const char *path, int flags, mode_t mode) {
+   mode = 0644;
+   int value = open(path, flags, mode);
+   if (value == -1) {
+     printf("[Hades] open (%s): %s\n", strerror(errno), path);
+   }
 
-//   return value;
-// }
+   return value;
+ }
 
-// static int my_create(const char *path, mode_t mode) {
-//   int value = creat(path, mode);
-//   if (value == -1) {
-//     printf("[Lucas] create (%s): %s\n", strerror(errno), path);
-//   }
-//   return value;
-// }
+ static int my_create(const char *path, mode_t mode) {
+   int value = creat(path, mode);
+   if (value == -1) {
+     printf("[Hades] create (%s): %s\n", strerror(errno), path);
+   }
+   return value;
+ }
 
-// static int my_mkdir(const char *path, mode_t mode) {
-//   int value = mkdir(path, mode);
-//   if (value == -1) {
-//     printf("[Lucas] mkdir (%s): %s\n", strerror(errno), path);
-//   }
-//   return value;
-// }
+ static int my_mkdir(const char *path, mode_t mode) {
+   int value = mkdir(path, mode);
+   if (value == -1) {
+     printf("[Hades] mkdir (%s): %s\n", strerror(errno), path);
+   }
+   return value;
+ }
 
-// static int my_lstat(const char *restrict path, void *restrict buf) {
-//   int value = lstat(path, buf);
-//   if (value == -1) {
-//     printf("[Lucas] lstat (%s): %s\n", strerror(errno), path);
-//   }
-//   return value;
-// }
+ static int my_lstat(const char *restrict path, void *restrict buf) {
+   int value = lstat(path, buf);
+   if (value == -1) {
+     printf("[Hades] lstat (%s): %s\n", strerror(errno), path);
+   }
+   return value;
+ }
+
 
 static bool isGenshin = false;
 
@@ -165,15 +166,19 @@ DYLD_INTERPOSE(my_dyld_get_base_platform, dyld_get_base_platform)
 DYLD_INTERPOSE(my_uname, uname)
 DYLD_INTERPOSE(my_sysctlbyname, sysctlbyname)
 DYLD_INTERPOSE(my_sysctl, sysctl)
-// DYLD_INTERPOSE(my_open, open)
-// DYLD_INTERPOSE(my_mkdir, mkdir)
-// DYLD_INTERPOSE(my_create, creat)
-// DYLD_INTERPOSE(my_lstat, lstat)
+ DYLD_INTERPOSE(my_open, open)
+ DYLD_INTERPOSE(my_mkdir, mkdir)
+ DYLD_INTERPOSE(my_create, creat)
+ DYLD_INTERPOSE(my_lstat, lstat)
 
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
   NSString *bundleId = [[NSBundle mainBundle] bundleIdentifier];
+  CGRect bounds = [[UIScreen mainScreen] bounds];
+  CGFloat width = bounds.size.width;
+  CGFloat height = bounds.size.height;
+  printf("[Hades] App width: %f, height: %f\n", width, height);
   isGenshin =
       [bundleId isEqual:@"com.miHoYo.GenshinImpact"] || [bundleId isEqual:@"com.miHoYo.Yuanshen"];
   [PlayCover launch];
