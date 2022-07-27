@@ -150,7 +150,6 @@ extern int csops(pid_t pid, unsigned int ops, void *useraddr, size_t usersize);
 int my_csops(pid_t pid, uint32_t ops, user_addr_t useraddr, user_size_t usersize) {
   if (isGenshin) {
     if (ops == CS_OPS_STATUS || ops == CS_OPS_IDENTITY) {
-        printf("usersize %llu", usersize);
       printf("Hooked CSOPS %d \n", ops);
       return 0;
     }
