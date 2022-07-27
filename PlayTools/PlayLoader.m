@@ -179,6 +179,9 @@ static void __attribute__((constructor)) initialize(void) {
   CGFloat width = bounds.size.width;
   CGFloat height = bounds.size.height;
   printf("[Hades] App width: %f, height: %f\n", width, height);
+
+  CGRect visibleFrame = [[UIScreen mainScreen] visibleFrame];
+  printf("[Hades] Visible frame: %f, %f, %f, %f\n", visibleFrame.origin.x, visibleFrame.origin.y, visibleFrame.size.width, visibleFrame.size.height);
   isGenshin =
       [bundleId isEqual:@"com.miHoYo.GenshinImpact"] || [bundleId isEqual:@"com.miHoYo.Yuanshen"];
   [PlayCover launch];
