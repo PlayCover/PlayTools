@@ -2,44 +2,46 @@
 //  ScreenController.swift
 //  PlayTools
 //
-
 import Foundation
 import UIKit
 import SwiftUI
 import AVFoundation
 
 let screen = PlayScreen.shared
+let mainScreenWidth = PlaySettings.shared.windowSizeWidth
+let mainScreenHeight = PlaySettings.shared.windowSizeHeight
 
 extension CGSize {
-    func aspectRatio() -> CGFloat{
-        if width > height{
-            return width / height
+    func aspectRatio() -> CGFloat {
+        // width > height
+        if mainScreenWidth > mainScreenHeight {
+            return mainScreenWidth / mainScreenHeight
         } else{
-            return height / width
+            return mainScreenHeight / mainScreenWidth
         }
     }
     
     func toAspectRatio() -> CGSize {
-        return CGSize(width: height / UIScreen.aspectRatio, height: height)
+        return CGSize(width: mainScreenHeight , height: mainScreenWidth)
     }
 }
 
 extension CGRect {
     
     func aspectRatio() -> CGFloat{
-        if width > height{
-            return width / height
+        if mainScreenWidth > mainScreenHeight {
+            return mainScreenWidth / mainScreenHeight
         } else{
-            return height / width
+            return mainScreenHeight / mainScreenWidth
         }
     }
-    
+    // small window
     func toAspectRatio() -> CGRect {
-        return CGRect(x: minX, y : minY, width: height / UIScreen.aspectRatio, height: height)
+        return CGRect(x: minX, y : minY, width: mainScreenHeight , height: mainScreenWidth)
     }
     
     func toAspectRatioReversed() -> CGRect {
-        return CGRect(x: minX, y : minY, width: width, height: width / UIScreen.aspectRatio)
+        return CGRect(x: minX, y : minY, width: mainScreenWidth , height: mainScreenHeight)
     }
    
 }
@@ -50,10 +52,10 @@ extension UIScreen {
         let count = Dynamic.NSScreen.screens.count.asInt ?? 0
         if PlaySettings.shared.notch  {
             if count == 1 {
-                return 1.6
+                return mainScreenWidth / mainScreenHeight //1.6 or 1.77777778
             } else {
                 if Dynamic.NSScreen.mainScreen.asObject == Dynamic.NSScreen.screens.first {
-                    return 1.6
+                    return mainScreenWidth / mainScreenHeight
                 }
             }
            
@@ -61,7 +63,7 @@ extension UIScreen {
         if let frame = Dynamic(Dynamic.NSScreen.mainScreen.asObject).frame.asCGRect {
             return frame.aspectRatio()
         }
-        return 1.6
+        return mainScreenWidth / mainScreenHeight
     }
 }
 
@@ -88,7 +90,6 @@ public final class PlayScreen : NSObject {
     @objc public static func sizeAspectRatio(_ size : CGSize) -> CGSize {
         return size.toAspectRatio()
     }
-    
     var fullscreen : Bool {
         return Dynamic(nsWindow).styleMask.contains(16384).asBool ?? false
     }
