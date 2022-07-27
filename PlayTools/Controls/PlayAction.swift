@@ -109,9 +109,9 @@ class JoystickAction : Action {
                 }
             } else{
                 if(!touch.equalTo(center)){
-                    moving = true
                     start.x += (touch.x - start.x) / 8
                     start.y += (touch.y - start.y) / 8
+                    moving = true
                     Toucher.touchcam(point: start, phase: UITouch.Phase.began, tid: id)
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
                         if(self.moving){
