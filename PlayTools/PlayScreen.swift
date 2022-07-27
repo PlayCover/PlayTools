@@ -58,10 +58,10 @@ extension UIScreen {
         let count = Dynamic.NSScreen.screens.count.asInt ?? 0
         if PlaySettings.shared.notch  {
             if count == 1 {
-                return 1.777777777777778 //1.6
+                return mainScreenWidth / mainScreenHeight //1.6
             } else {
                 if Dynamic.NSScreen.mainScreen.asObject == Dynamic.NSScreen.screens.first {
-                    return 1.777777777777778
+                    return mainScreenWidth / mainScreenHeight
                 }
             }
            
@@ -69,7 +69,7 @@ extension UIScreen {
         if let frame = Dynamic(Dynamic.NSScreen.mainScreen.asObject).frame.asCGRect {
             return frame.aspectRatio()
         }
-        return 1.777777777777778
+        return mainScreenWidth / mainScreenHeight
     }
 }
 
