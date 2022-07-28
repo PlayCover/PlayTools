@@ -8,6 +8,8 @@ final class EditorController : NSObject {
     
     static let shared = EditorController()
     
+    let lock = NSLock()
+    
     var focusedControl : ControlModel? = nil
     
     var controls : Array<ControlModel> = []
@@ -32,31 +34,29 @@ final class EditorController : NSObject {
         }
     }
     
-    var isReadyToBeOpened = true
-    
     public func switchMode(){
+        lock.lock()
         if EditorController.shared.editorMode {
             Toast.showOver(msg: "Keymapping saved")
         } else{
             Toast.showOver(msg: "Click to start keymmaping edit")
         }
+        
         if editorMode {
             KeymapHolder.shared.hide()
             saveButtons()
             view.removeFromSuperview()
             editorMode = false
             mode.show(false)
-            PlayCover.delay(0.1) {
-                self.isReadyToBeOpened = true
-            }
+            focusedControl = nil
         } else{
             mode.show(true)
             editorMode = true
             showButtons()
             screen.window?.addSubview(view)
             view.becomeFirstResponder()
-            self.isReadyToBeOpened = false
         }
+        lock.unlock()
     }
     
     var editorMode : Bool {

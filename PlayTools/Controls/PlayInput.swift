@@ -10,6 +10,9 @@ final class PlayInput: NSObject {
     
     var timeoutForBind = true
     
+    static private var lCmdPressed = false
+    static private var rCmdPressed = false
+    
     func invalidate(){
         MacroController.shared.stopReplaying()
         PlayMice.shared.stop()
@@ -33,14 +36,22 @@ final class PlayInput: NSObject {
         }
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             keyboard.keyChangedHandler = { (input, _, keyCode, pressed) in
-                if EditorController.shared.isReadyToBeOpened && !mode.visible && !editor.editorMode && keyCode == GCKeyCode.keyK && ( keyboard.button(forKeyCode: GCKeyCode(rawValue: 227))!.isPressed || keyboard.button(forKeyCode: GCKeyCode(rawValue: 231))!.isPressed ){
-                    mode.show(true)
-                    EditorController.shared.switchMode()
-                } else if editor.editorMode && !PlayInput.FORBIDDEN.contains(keyCode) && self.isSafeToBind(keyboard){
+                if editor.editorMode
+                    && !PlayInput.cmdPressed()
+                    && !PlayInput.FORBIDDEN.contains(keyCode)
+                    && self.isSafeToBind(keyboard){
+                    
                     EditorController.shared.setKeyCode(keyCode.rawValue)
                 }
                 
             }
+            keyboard.button(forKeyCode: GCKeyCode(rawValue: 227))?.pressedChangedHandler = {(key, keyCode, pressed) in
+                PlayInput.lCmdPressed = pressed
+            }
+            keyboard.button(forKeyCode: GCKeyCode(rawValue: 231))?.pressedChangedHandler = {(key, keyCode, pressed) in
+                PlayInput.rCmdPressed = pressed
+            }
+            
             keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { (key, keyCode, pressed) in
                 self.swapMode(pressed)
             }
@@ -48,6 +59,11 @@ final class PlayInput: NSObject {
                 self.swapMode(pressed)
             }
         }
+    }
+    
+    static public func cmdPressed() -> Bool {
+//        return keyboard.button(forKeyCode: GCKeyCode(rawValue: 227))!.isPressed || keyboard.button(forKeyCode: GCKeyCode(rawValue: 231))!.isPressed
+        return lCmdPressed || rCmdPressed
     }
     
     private func isSafeToBind(_ input : GCKeyboardInput) -> Bool {
@@ -110,15 +126,19 @@ final class PlayInput: NSObject {
         }
         
         setup()
-        fixBeepSound()
+        // fix beep sound
+        eliminateRedundantKeyPressEvents()
     }
     
-    private func fixBeepSound() {
-        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(1024, handler: { event in
-            if !mode.visible {
-                return nil
+    private func eliminateRedundantKeyPressEvents() {
+        // dont know how to dynamically get it here
+        let NSEventMaskKeyDown: UInt64 = 1024
+        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask( NSEventMaskKeyDown, handler: { event in
+            if (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed() {
+                return event
             }
-            return event
+//            Toast.showOver(msg: "mask: \(NSEventMaskKeyDown)")
+            return nil
         } as ResponseBlock)
     }
     
