@@ -89,6 +89,7 @@ class JoystickAction : Action {
     func update(){
         if !mode.visible {
             var touch = center
+            var start = center
             if(GCKeyboard.pressed(key: keys[0])){
                 touch.y = touch.y - shift / 3
             } else if(GCKeyboard.pressed(key: keys[1])){
@@ -102,15 +103,21 @@ class JoystickAction : Action {
             if(moving){
                 if(touch.equalTo(center)){
                     moving = false
-                    Toucher.touchcam(point: touch, phase: UITouch.Phase.cancelled, tid: id)
+                    Toucher.touchcam(point: touch, phase: UITouch.Phase.ended, tid: id)
                 } else{
                     Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: id)
                 }
             } else{
-                moving = true
-                Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: id)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
-                    Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: self.id)
+                if(!touch.equalTo(center)){
+                    start.x += (touch.x - start.x) / 8
+                    start.y += (touch.y - start.y) / 8
+                    moving = true
+                    Toucher.touchcam(point: start, phase: UITouch.Phase.began, tid: id)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
+                        if(self.moving){
+                            Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: self.id)
+                        }
+                    }
                 }
                
             }
