@@ -20,9 +20,20 @@ final public class PlayCover : NSObject {
     private override init() {}
     
     @objc static public func launch(){
+        quitWhenClose()
         PlaySettings.shared.setupLayout()
         PlayInput.shared.initialize()
         PlaySettings.shared.clearLegacy()
+    }
+    
+    @objc static public func quitWhenClose() {
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name(rawValue: "NSWindowWillCloseNotification"),
+            object: nil,
+            queue: OperationQueue.main
+        ) { _ in
+            exit(0)
+        }
     }
     
     @objc static public func initMenu( menu : NSObject){
