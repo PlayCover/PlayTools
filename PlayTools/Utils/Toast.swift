@@ -20,6 +20,7 @@ class Toast {
         toastContainer.alpha = 0.0
         toastContainer.layer.cornerRadius = 25;
         toastContainer.clipsToBounds  =  true
+        toastContainer.isUserInteractionEnabled = false
 
         let toastLabel = UILabel(frame: CGRect())
         toastLabel.textColor = UIColor.white
