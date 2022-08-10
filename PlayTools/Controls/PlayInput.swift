@@ -62,17 +62,11 @@ final class PlayInput: NSObject {
        }
     
     private static let FORBIDDEN : [GCKeyCode] = [
-        GCKeyCode.init(rawValue: 227),
-        GCKeyCode.init(rawValue: 231),
+        GCKeyCode.init(rawValue: 227), // LCmd
+        GCKeyCode.init(rawValue: 231), // RCmd
         .leftAlt,
         .rightAlt,
-        .escape,
-        .printScreen,
-        .F1,
-        .F2,
-        .F3,
-        .F4,
-        .F5
+        .printScreen
     ]
     
     private func swapMode(_ pressed : Bool){
