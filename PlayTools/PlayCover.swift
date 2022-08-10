@@ -31,8 +31,10 @@ final public class PlayCover : NSObject {
             forName: NSNotification.Name(rawValue: "NSWindowWillCloseNotification"),
             object: nil,
             queue: OperationQueue.main
-        ) { _ in
-            exit(0)
+        ) { noti in
+            if PlayScreen.shared.nsWindow?.isEqual(noti.object) ?? false {
+                exit(0)
+            }
         }
     }
     
