@@ -115,6 +115,30 @@ extension Dictionary {
         }
         return 1920.0
     }()
+    
+    private static let ipadModelKey = "pc.ipadModel"
+    @objc lazy public var GET_IPAD_MODEL : NSString = {
+        if let key = settings[PlaySettings.ipadModelKey] as? NSString {
+            return key
+        }
+        return "iPad8,6"
+    }()
+    
+    @objc lazy public var GET_OEM_ID : NSString = {
+        if let key = settings[PlaySettings.ipadModelKey] as? NSString {
+            switch (key) {
+                case "iPad6,7":
+                    return "J98aAP"
+                case "iPad8,6":
+                    return "J320xAP"
+                case "iPad13,8":
+                    return "J522AP"
+                default:
+                    return "J320xAP"
+            }
+        }
+        return "J320xAP"
+    }()
 
     static var isGame : Bool {
         if let info = Bundle.main.infoDictionary?.description{
