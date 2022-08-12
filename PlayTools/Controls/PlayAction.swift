@@ -35,7 +35,7 @@ class ButtonAction : Action {
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             if !PlayMice.shared.setMiceButtons(keyid, action: self){
                 keyboard.button(forKeyCode: key)?.pressedChangedHandler = { (key, keyCode, pressed) in
-                    if !mode.visible {
+                    if !mode.visible && !PlayInput.cmdPressed(){
                         self.update(pressed: pressed)
                     }
                 }
