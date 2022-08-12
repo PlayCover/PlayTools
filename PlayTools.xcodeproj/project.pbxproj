@@ -662,7 +662,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/PlayTools",
 				);
-				MARKETING_VERSION = 1.1.5;
+				MARKETING_VERSION = 1.1.6;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = io.playcover.PlayTools;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -706,7 +706,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/PlayTools",
 				);
-				MARKETING_VERSION = 1.1.5;
+				MARKETING_VERSION = 1.1.6;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = io.playcover.PlayTools;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
