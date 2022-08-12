@@ -32,22 +32,24 @@ extern void *dyld_get_base_platform(void *platform);
 void *my_dyld_get_base_platform(void *platform) { return 2; }
 
 // #define DEVICE_MODEL ("iPad13,8")
-#define DEVICE_MODEL ("iPad8,6")
+//#define DEVICE_MODEL ("iPad8,6")
 
 // find Mac by using sysctl of HW_TARGET
 // #define OEM_ID ("J522AP")
-#define OEM_ID ("J320xAP")
+// #define OEM_ID ("J320xAP")
+
+// get device model from playcover .plist
+#define DEVICE_MODEL ([[[PlaySettings shared] GET_IPAD_MODEL] UTF8String])
+#define OEM_ID ([[[PlaySettings shared] GET_OEM_ID] UTF8String])
 
 static int my_uname(struct utsname *uts) {
   int result = 0;
   NSString *nickname = @"ipad";
-//   NSString *productType = @"iPad13,8";
-  NSString *productType = @"iPad8,6";
   if (nickname.length == 0)
     result = uname(uts);
   else {
     strncpy(uts->nodename, [nickname UTF8String], nickname.length + 1);
-    strncpy(uts->machine, [productType UTF8String], productType.length + 1);
+    strncpy(uts->machine, DEVICE_MODEL, strlen(DEVICE_MODEL) + 1);
   }
   return result;
 }
@@ -150,6 +152,7 @@ extern int csops(pid_t pid, unsigned int ops, void *useraddr, size_t usersize);
 int my_csops(pid_t pid, uint32_t ops, user_addr_t useraddr, user_size_t usersize) {
   if (isGenshin) {
     if (ops == CS_OPS_STATUS || ops == CS_OPS_IDENTITY) {
+      printf("Hooking %s: %s wrapper \n", DEVICE_MODEL, OEM_ID);
       printf("Hooked CSOPS %d \n", ops);
       return 0;
     }
