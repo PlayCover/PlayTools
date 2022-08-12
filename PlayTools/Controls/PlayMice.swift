@@ -124,6 +124,8 @@ final class CameraControl {
 
     init(centerX : CGFloat = screen.width / 2, centerY : CGFloat = screen.height / 2) {
         self.center = CGPoint(x: centerX, y: centerY)
+        // in rare cases the cooldown reset task is lost by the dispatch queue
+        self.cooldown = false
     }
 
     var isMoving = false
@@ -133,39 +135,88 @@ final class CameraControl {
         DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
     }
 
-
+    // if max speed of this touch is high
+    var movingFast = false
+    // seq number for each move event. Used in closure to determine if this move is the last
+    var sequence = 0
+    // like sequence but resets when touch begins. Used to calc touch duration
     var counter = 0
+    // if should wait before beginning next touch
+    var cooldown = false
+    // if the touch point had been prevented from lifting off because of moving slow
+    var idled = false
 
     @objc func updated(_ dx: CGFloat, _ dy: CGFloat){
-        if mode.visible {
+        if mode.visible || cooldown{
             return
         }
-        counter+=1
-        
+        sequence += 1
+        // count touch duration
+        counter += 1
         if !isMoving{
             isMoving = true
+            movingFast = false
+            idled = false
             location = center
+            counter = 0
             Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: 1)
+        }
+        // if not moving fast, regard the user fine-tuning the camera(e.g. aiming)
+        // so hold the touch for longer to avoid cold startup
+        if dx.magnitude + dy.magnitude > 4 {
+            // if we had mistaken this as player aiming
+            if self.idled {
+                // since not aiming, re-touch to re-gain control
+                self.doLiftOff()
+                return
+            }
+            movingFast = true
         }
         self.location.x += dx * CGFloat(PlaySettings.shared.sensivity)
         self.location.y -= dy * CGFloat(PlaySettings.shared.sensivity)
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
-        let previous = counter
+        let previous = sequence
 
         delay(0.016){
-                if self.isMoving && previous == self.counter {
-                    Toucher.touchcam(point: self.center, phase: UITouch.Phase.ended, tid: 1)
-                    self.isMoving = false
+            // if no other touch events in the past 0.016 sec
+            if previous != self.sequence{
+                return
+            }
+            // and slow touch lasts for sufficient time
+            if self.movingFast || self.counter > 64{
+                self.doLiftOff()
+            }else {
+                self.idled = true
+                // idle for at most 4 seconds
+                self.delay(4){
+                    if previous != self.sequence {
+                        return
+                    }
+                    self.doLiftOff()
                 }
+            }
          }
 
     }
 
+    public func doLiftOff(){
+        if !self.isMoving{
+            return
+        }
+        Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: 1)
+        self.isMoving = false
+        // ending and beginning too frequently leads to the beginning event not recognized
+        // so let the beginning event wait some time
+        // 0.016 here is safe as long as the 0.016 above works
+        delay(0.016){
+            self.cooldown = false
+        }
+        cooldown = true
+    }
+    
     func stop() {
-        counter = 0
-        isMoving = false
-        Toucher.touchcam(point: center, phase: UITouch.Phase.ended, tid: 1)
-        location = center
+        sequence = 0
+        self.doLiftOff()
     }
 }
 
