@@ -44,14 +44,12 @@ void *my_dyld_get_base_platform(void *platform) { return 2; }
 
 static int my_uname(struct utsname *uts) {
   int result = 0;
-    NSString *nickname = @"ipad";
-  //   NSString *productType = @"iPad13,8";
-    NSString *productType =  [[PlaySettings shared] GET_IPAD_MODEL];
+  NSString *nickname = @"ipad";
   if (nickname.length == 0)
     result = uname(uts);
   else {
     strncpy(uts->nodename, [nickname UTF8String], nickname.length + 1);
-    strncpy(uts->machine, [productType UTF8String], productType.length + 1);
+    strncpy(uts->machine, DEVICE_MODEL, strlen(DEVICE_MODEL) + 1);
   }
   return result;
 }
@@ -154,7 +152,7 @@ extern int csops(pid_t pid, unsigned int ops, void *useraddr, size_t usersize);
 int my_csops(pid_t pid, uint32_t ops, user_addr_t useraddr, user_size_t usersize) {
   if (isGenshin) {
     if (ops == CS_OPS_STATUS || ops == CS_OPS_IDENTITY) {
-      printf("Hooking %s : %s \n", DEVICE_MODEL, OEM_ID);
+      printf("Hooking %s: %s wrapper \n", DEVICE_MODEL, OEM_ID);
       printf("Hooked CSOPS %d \n", ops);
       return 0;
     }
