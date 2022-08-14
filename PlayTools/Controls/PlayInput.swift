@@ -14,7 +14,6 @@ final class PlayInput: NSObject {
     static private var rCmdPressed = false
     
     func invalidate(){
-        MacroController.shared.stopReplaying()
         PlayMice.shared.stop()
         for c in self.actions{
             c.invalidate()
