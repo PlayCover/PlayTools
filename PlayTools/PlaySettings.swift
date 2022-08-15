@@ -5,9 +5,9 @@ let settings = PlaySettings.shared
 
 extension Dictionary {
 
-    func store(_ to: URL) throws {
+    func store(_ toURL: URL) throws {
         let data = try PropertyListSerialization.data(fromPropertyList: self, format: .xml, options: 0)
-        try data.write(to: to, options: .atomic)
+        try data.write(to: toURL, options: .atomic)
     }
 
     static func read( _ from: URL) throws -> Dictionary? {

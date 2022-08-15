@@ -13,6 +13,8 @@ class Toast {
         }
     }
 
+    // swiftlint:disable function_body_length
+
     private static func show(message: String, controller: UIViewController) {
         let toastContainer = UIView(frame: CGRect())
         toastContainer.backgroundColor = UIColor.black.withAlphaComponent(0.6)
@@ -35,58 +37,58 @@ class Toast {
         toastLabel.translatesAutoresizingMaskIntoConstraints = false
         toastContainer.translatesAutoresizingMaskIntoConstraints = false
 
-        let a1 = NSLayoutConstraint(item: toastLabel,
-                                    attribute: .leading,
-                                    relatedBy: .equal,
-                                    toItem: toastContainer,
-                                    attribute: .leading,
-                                    multiplier: 1,
-                                    constant: 15)
-        let a2 = NSLayoutConstraint(item: toastLabel,
-                                    attribute: .trailing,
-                                    relatedBy: .equal,
-                                    toItem: toastContainer,
-                                    attribute: .trailing,
-                                    multiplier: 1,
-                                    constant: -15)
-        let a3 = NSLayoutConstraint(item: toastLabel,
-                                    attribute: .bottom,
-                                    relatedBy: .equal,
-                                    toItem: toastContainer,
-                                    attribute: .bottom,
-                                    multiplier: 1,
-                                    constant: -15)
-        let a4 = NSLayoutConstraint(item: toastLabel,
-                                    attribute: .top,
-                                    relatedBy: .equal,
-                                    toItem: toastContainer,
-                                    attribute: .top,
-                                    multiplier: 1,
-                                    constant: 15)
-        toastContainer.addConstraints([a1, a2, a3, a4])
+        let toastConstraint1 = NSLayoutConstraint(item: toastLabel,
+                                                  attribute: .leading,
+                                                  relatedBy: .equal,
+                                                  toItem: toastContainer,
+                                                  attribute: .leading,
+                                                  multiplier: 1,
+                                                  constant: 15)
+        let toastConstraint2 = NSLayoutConstraint(item: toastLabel,
+                                                  attribute: .trailing,
+                                                  relatedBy: .equal,
+                                                  toItem: toastContainer,
+                                                  attribute: .trailing,
+                                                  multiplier: 1,
+                                                  constant: -15)
+        let toastConstraint3 = NSLayoutConstraint(item: toastLabel,
+                                                  attribute: .bottom,
+                                                  relatedBy: .equal,
+                                                  toItem: toastContainer,
+                                                  attribute: .bottom,
+                                                  multiplier: 1,
+                                                  constant: -15)
+        let toastConstraint4 = NSLayoutConstraint(item: toastLabel,
+                                                  attribute: .top,
+                                                  relatedBy: .equal,
+                                                  toItem: toastContainer,
+                                                  attribute: .top,
+                                                  multiplier: 1,
+                                                  constant: 15)
+        toastContainer.addConstraints([toastConstraint1, toastConstraint2, toastConstraint3, toastConstraint4])
 
-        let c1 = NSLayoutConstraint(item: toastContainer,
-                                    attribute: .leading,
-                                    relatedBy: .equal,
-                                    toItem: controller.view,
-                                    attribute: .leading,
-                                    multiplier: 1,
-                                    constant: 65)
-        let c2 = NSLayoutConstraint(item: toastContainer,
-                                    attribute: .trailing,
-                                    relatedBy: .equal,
-                                    toItem: controller.view,
-                                    attribute: .trailing,
-                                    multiplier: 1,
-                                    constant: -65)
-        let c3 = NSLayoutConstraint(item: toastContainer,
-                                    attribute: .bottom,
-                                    relatedBy: .equal,
-                                    toItem: controller.view,
-                                    attribute: .bottom,
-                                    multiplier: 1,
-                                    constant: -75)
-        controller.view.addConstraints([c1, c2, c3])
+        let controllerConstraint1 = NSLayoutConstraint(item: toastContainer,
+                                                       attribute: .leading,
+                                                       relatedBy: .equal,
+                                                       toItem: controller.view,
+                                                       attribute: .leading,
+                                                       multiplier: 1,
+                                                       constant: 65)
+        let controllerConstraint2 = NSLayoutConstraint(item: toastContainer,
+                                                       attribute: .trailing,
+                                                       relatedBy: .equal,
+                                                       toItem: controller.view,
+                                                       attribute: .trailing,
+                                                       multiplier: 1,
+                                                       constant: -65)
+        let controllerConstraint3 = NSLayoutConstraint(item: toastContainer,
+                                                       attribute: .bottom,
+                                                       relatedBy: .equal,
+                                                       toItem: controller.view,
+                                                       attribute: .bottom,
+                                                       multiplier: 1,
+                                                       constant: -75)
+        controller.view.addConstraints([controllerConstraint1, controllerConstraint2, controllerConstraint3])
 
         UIView.animate(withDuration: 0.5, delay: 0.0, options: .curveEaseIn, animations: {
             toastContainer.alpha = 1.0

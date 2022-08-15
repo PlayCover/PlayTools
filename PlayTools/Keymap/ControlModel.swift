@@ -100,14 +100,14 @@ class ControlModel {
         self.button.removeFromSuperview()
     }
 
-    func move(dy: CGFloat, dx: CGFloat) {
-        let nx = button.center.x + dx
-        let ny = button.center.y + dy
-        if nx > 0 && nx < screen.width {
-            data.xCoord = nx.relativeX
+    func move(deltaY: CGFloat, deltaX: CGFloat) {
+        let newX = button.center.x + deltaX
+        let newY = button.center.y + deltaY
+        if newX > 0 && newX < screen.width {
+            data.xCoord = newX.relativeX
         }
-        if ny > 0 && ny < screen.height {
-            data.yCoord = ny.relativeY
+        if newY > 0 && newY < screen.height {
+            data.yCoord = newY.relativeY
         }
         update()
     }
@@ -209,8 +209,8 @@ class JoystickButtonModel: ControlModel {
         }
     }
 
-    override func move(dy: CGFloat, dx: CGFloat) {
-        data.parent?.button.model?.move(dy: dy, dx: dx)
+    override func move(deltaY: CGFloat, deltaX: CGFloat) {
+        data.parent?.button.model?.move(deltaY: deltaY, deltaX: deltaX)
     }
 
     override func resize(down: Bool) {
@@ -291,15 +291,15 @@ class JoystickModel: ControlModel {
     func changeButtonsSize() {
         let btns = button.subviews
         let buttonSize = data.size.absoluteSize / 3
-        let x1 = (button.frame.width / 2) - buttonSize / 2
-        let y1 = buttonSize / 4.5
-        let x2 = (button.frame.width / 2) - buttonSize / 2
-        let y2 = button.frame.width - buttonSize - buttonSize / 4.5
+        let xCoord1 = (button.frame.width / 2) - buttonSize / 2
+        let yCoord1 = buttonSize / 4.5
+        let xCoord2 = (button.frame.width / 2) - buttonSize / 2
+        let yCoord2 = button.frame.width - buttonSize - buttonSize / 4.5
         if btns.count == 4 {
-            btns[0].frame = CGRect(x: x1, y: y1, width: buttonSize, height: buttonSize)
-            btns[1].frame = CGRect(x: x2, y: y2, width: buttonSize, height: buttonSize)
-            btns[2].frame = CGRect(x: y1, y: x1, width: buttonSize, height: buttonSize)
-            btns[3].frame = CGRect(x: y2, y: x2, width: buttonSize, height: buttonSize)
+            btns[0].frame = CGRect(x: xCoord1, y: yCoord1, width: buttonSize, height: buttonSize)
+            btns[1].frame = CGRect(x: xCoord2, y: yCoord2, width: buttonSize, height: buttonSize)
+            btns[2].frame = CGRect(x: yCoord1, y: xCoord1, width: buttonSize, height: buttonSize)
+            btns[3].frame = CGRect(x: yCoord2, y: xCoord2, width: buttonSize, height: buttonSize)
             btns[0].layer.cornerRadius = 0.5 * btns[0].bounds.size.width
             btns[1].layer.cornerRadius = 0.5 * btns[1].bounds.size.width
             btns[2].layer.cornerRadius = 0.5 * btns[2].bounds.size.width

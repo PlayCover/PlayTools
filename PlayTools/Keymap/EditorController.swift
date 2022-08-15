@@ -104,42 +104,42 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addButton(_ to: CGPoint) {
+    @objc public func addButton(_ toPoint: CGPoint) {
         if editorMode {
             addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-1],
                                                                     size: 5,
-                                                                    xCoord: to.x.relativeX,
-                                                                    yCoord: to.y.relativeY,
+                                                                    xCoord: toPoint.x.relativeX,
+                                                                    yCoord: toPoint.y.relativeY,
                                                                     parent: nil)))
         }
     }
 
-    @objc public func addRMB(_ to: CGPoint) {
+    @objc public func addRMB(_ toPoint: CGPoint) {
         if editorMode {
             addControlToView(control: RMBModel(data: ControlData(keyCodes: [-2],
                                                                  size: 5,
-                                                                 xCoord: to.x.relativeX,
-                                                                 yCoord: to.y.relativeY,
+                                                                 xCoord: toPoint.x.relativeX,
+                                                                 yCoord: toPoint.y.relativeY,
                                                                  parent: nil)))
         }
     }
 
-    @objc public func addLMB(_ to: CGPoint) {
+    @objc public func addLMB(_ toPoint: CGPoint) {
         if editorMode {
             addControlToView(control: LMBModel(data: ControlData(keyCodes: [-1],
                                                                  size: 5,
-                                                                 xCoord: to.x.relativeX,
-                                                                 yCoord: to.y.relativeY,
+                                                                 xCoord: toPoint.x.relativeX,
+                                                                 yCoord: toPoint.y.relativeY,
                                                                  parent: nil)))
         }
     }
 
-    @objc public func addMMB(_ to: CGPoint) {
+    @objc public func addMMB(_ toPoint: CGPoint) {
         if editorMode {
             addControlToView(control: MMBModel(data: ControlData(keyCodes: [-3],
                                                                  size: 5,
-                                                                 xCoord: to.x.relativeX,
-                                                                 yCoord: to.y.relativeY,
+                                                                 xCoord: toPoint.x.relativeX,
+                                                                 yCoord: toPoint.y.relativeY,
                                                                  parent: nil)))
         }
     }
@@ -214,8 +214,8 @@ class EditorView: UIView {
                 editor.updateFocus(button: ele)
             }
             let translation = sender.translation(in: self)
-            editor.focusedControl?.move(dy: translation.y,
-                                        dx: translation.x)
+            editor.focusedControl?.move(deltaY: translation.y,
+                                        deltaX: translation.x)
             sender.setTranslation(CGPoint.zero, in: self)
         }
     }

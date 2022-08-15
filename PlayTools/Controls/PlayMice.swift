@@ -47,9 +47,9 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
     public func setup(_ key: [CGFloat]) {
         camera = CameraControl(centerX: key[0].absoluteX, centerY: key[1].absoluteY)
         for mouse in GCMouse.mice() {
-            mouse.mouseInput?.mouseMovedHandler = { _, dX, dY in
+            mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
                 if !mode.visible {
-                    self.camera?.updated(CGFloat(dX), CGFloat(dY))
+                    self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
                 }
             }
         }
@@ -137,7 +137,7 @@ final class CameraControl {
     // if the touch point had been prevented from lifting off because of moving slow
     var idled = false
 
-    @objc func updated(_ dx: CGFloat, _ dy: CGFloat) {
+    @objc func updated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
         if mode.visible || cooldown {
             return
         }
@@ -154,7 +154,7 @@ final class CameraControl {
         }
         // if not moving fast, regard the user fine-tuning the camera(e.g. aiming)
         // so hold the touch for longer to avoid cold startup
-        if dx.magnitude + dy.magnitude > 4 {
+        if deltaX.magnitude + deltaY.magnitude > 4 {
             // if we had mistaken this as player aiming
             if self.idled {
                 // since not aiming, re-touch to re-gain control
@@ -163,8 +163,8 @@ final class CameraControl {
             }
             movingFast = true
         }
-        self.location.x += dx * CGFloat(PlaySettings.shared.sensivity)
-        self.location.y -= dy * CGFloat(PlaySettings.shared.sensivity)
+        self.location.x += deltaX * CGFloat(PlaySettings.shared.sensivity)
+        self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensivity)
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
         let previous = sequence
 
