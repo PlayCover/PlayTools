@@ -172,6 +172,7 @@ extension Dictionary {
     public func clearLegacy() {
         UserDefaults.standard.removeObject(forKey: "layout")
         UserDefaults.standard.removeObject(forKey: "pclayout")
+        UserDefaults.standard.removeObject(forKey: "playcover.macro")
         UserDefaults.standard.removeObject(forKey: PlaySettings.sensivityKey)
         UserDefaults.standard.removeObject(forKey: PlaySettings.refreshRateKey)
         UserDefaults.standard.removeObject(forKey: PlaySettings.keymappingKey)
