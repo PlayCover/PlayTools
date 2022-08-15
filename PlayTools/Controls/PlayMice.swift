@@ -12,16 +12,16 @@ typealias ResponseBlock = @convention(block) (_ event: Any) -> Any?
 
 typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
 
-@objc final public class PlayMice : NSObject {
+@objc final public class PlayMice: NSObject {
     
     @objc public static let shared = PlayMice()
 
-    private var camera : CameraControl?
-    
+    private var camera: CameraControl?
+
     private static var isInit = false
 
     private var acceptMouseEvents = !PlaySettings.shared.gamingMode
-    
+
     public override init() {
         super.init()
         if !PlayMice.isInit {
@@ -31,7 +31,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
             PlayMice.isInit = true
         }
     }
-    
+
     public var cursorPos: CGPoint {
         var point = CGPoint(x: 0, y: 0)
         if #available(macOS 11, *) {
@@ -63,8 +63,8 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         camera = nil
         mouseActions = [:]
     }
-    
-    func setMiceButtons(_ keyId : Int, action : ButtonAction) -> Bool {
+
+    func setMiceButtons(_ keyId: Int, action: ButtonAction) -> Bool {
         if (-3 ... -1).contains(keyId) {
             setMiceButton(keyId, action: action)
             return true
@@ -72,8 +72,8 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         return false
     }
 
-    var mouseActions: [Int:ButtonAction] = [:]
-    
+    var mouseActions: [Int: ButtonAction] = [:]
+
     private func setupMouseButton(_up: Int, _down: Int) {
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
             if !mode.visible || self.acceptMouseEvents {
@@ -105,7 +105,6 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         default:
             mouseActions[2] = action
         }
-        
     }
 }
 
@@ -169,7 +168,7 @@ final class CameraControl {
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
         let previous = sequence
 
-        delay(0.016){
+        delay(0.016) {
             // if no other touch events in the past 0.016 sec
             if previous != self.sequence {
                 return
@@ -180,7 +179,7 @@ final class CameraControl {
             } else {
                 self.idled = true
                 // idle for at most 4 seconds
-                self.delay(4){
+                self.delay(4) {
                     if previous != self.sequence {
                         return
                     }

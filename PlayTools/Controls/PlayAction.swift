@@ -20,7 +20,7 @@ class ButtonAction: Action {
     func invalidate() {
         Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: id)
     }
-    
+
     let key: GCKeyCode
     let keyid: Int
     let point: CGPoint
@@ -41,7 +41,7 @@ class ButtonAction: Action {
             }
         }
     }
-    
+
     func update(pressed: Bool) {
         if pressed {
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
@@ -52,13 +52,12 @@ class ButtonAction: Action {
 }
 
 class JoystickAction: Action {
-
-    let keys : [GCKeyCode]
+    let keys: [GCKeyCode]
     let center: CGPoint
     let shift: CGFloat
-    var id : Int
+    var id: Int
     var moving = false
-    
+
     init(id: Int, keys: [GCKeyCode], center: CGPoint, shift: CGFloat) {
         self.keys = keys
         self.center = center
@@ -84,8 +83,8 @@ class JoystickAction: Action {
         Toucher.touchcam(point: center, phase: UITouch.Phase.ended, tid: id)
         self.moving = false
     }
-    
-    func update(){
+
+    func update() {
         if !mode.visible {
             var touch = center
             var start = center

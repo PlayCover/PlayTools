@@ -6,13 +6,13 @@ final class PlayInput: NSObject {
     static let shared = PlayInput()
     var actions = [Action]()
     var timeoutForBind = true
-    
+
     static private var lCmdPressed = false
     static private var rCmdPressed = false
-    
+
     func invalidate() {
         PlayMice.shared.stop()
-        for action in self.actions{
+        for action in self.actions {
             action.invalidate()
         }
     }
@@ -29,10 +29,10 @@ final class PlayInput: NSObject {
                                                            y: key[2].absoluteY)))
             } else if key.count == 8 {
                 actions.append(JoystickAction(id: counter,
-                                              keys:  [GCKeyCode.init(rawValue: CFIndex(key[0])),
-                                                      GCKeyCode.init(rawValue: CFIndex(key[1])),
-                                                      GCKeyCode.init(rawValue: CFIndex(key[2])),
-                                                      GCKeyCode.init(rawValue: CFIndex(key[3]))],
+                                              keys: [GCKeyCode.init(rawValue: CFIndex(key[0])),
+                                                     GCKeyCode.init(rawValue: CFIndex(key[1])),
+                                                     GCKeyCode.init(rawValue: CFIndex(key[2])),
+                                                     GCKeyCode.init(rawValue: CFIndex(key[3]))],
                                               center: CGPoint(x: key[4].absoluteX,
                                                               y: key[5].absoluteY),
                                               shift: key[6].absoluteSize))
@@ -46,7 +46,7 @@ final class PlayInput: NSObject {
                 if editor.editorMode
                     && !PlayInput.cmdPressed()
                     && !PlayInput.FORBIDDEN.contains(keyCode)
-                    && self.isSafeToBind(keyboard){
+                    && self.isSafeToBind(keyboard) {
                     EditorController.shared.setKeyCode(keyCode.rawValue)
                 }
             }
@@ -71,7 +71,7 @@ final class PlayInput: NSObject {
         return lCmdPressed || rCmdPressed
     }
 
-    private func isSafeToBind(_ input : GCKeyboardInput) -> Bool {
+    private func isSafeToBind(_ input: GCKeyboardInput) -> Bool {
            var result = true
            for forbidden in PlayInput.FORBIDDEN {
                if input.button(forKeyCode: forbidden)?.isPressed ?? false {
@@ -82,7 +82,7 @@ final class PlayInput: NSObject {
            return result
        }
 
-    private static let FORBIDDEN : [GCKeyCode] = [
+    private static let FORBIDDEN: [GCKeyCode] = [
         GCKeyCode.init(rawValue: 227), // LCmd
         GCKeyCode.init(rawValue: 231), // RCmd
         .leftAlt,
@@ -113,7 +113,7 @@ final class PlayInput: NSObject {
 
         let centre = NotificationCenter.default
         let main = OperationQueue.main
-        
+
         centre.addObserver(forName: NSNotification.Name.GCKeyboardDidConnect, object: nil, queue: main) { _ in
             PlayInput.shared.setup()
         }

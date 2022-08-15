@@ -82,10 +82,10 @@ class ControlModel {
     func update() {}
 
     func focus(_ focus: Bool) {}
-    
+
     func unfocusChildren() {}
 
-    init(data : ControlData) {
+    init(data: ControlData) {
         button = Element()
         self.data = data
         button.model = self

@@ -15,43 +15,42 @@ extension CGSize {
     func aspectRatio() -> CGFloat {
         if mainScreenWidth > mainScreenHeight {
             return mainScreenWidth / mainScreenHeight
-        } else{
+        } else {
             return mainScreenHeight / mainScreenWidth
         }
     }
 
     func toAspectRatio() -> CGSize {
-        return CGSize(width: mainScreenHeight , height: mainScreenWidth)
+        return CGSize(width: mainScreenHeight, height: mainScreenWidth)
     }
 }
 
 extension CGRect {
 
-    func aspectRatio() -> CGFloat{
+    func aspectRatio() -> CGFloat {
         if mainScreenWidth > mainScreenHeight {
             return mainScreenWidth / mainScreenHeight
-        } else{
+        } else {
             return mainScreenHeight / mainScreenWidth
         }
     }
 
     func toAspectRatio() -> CGRect {
-        return CGRect(x: minX, y : minY, width: mainScreenHeight , height: mainScreenWidth)
+        return CGRect(x: minX, y: minY, width: mainScreenHeight, height: mainScreenWidth)
     }
 
     func toAspectRatioReversed() -> CGRect {
-        return CGRect(x: minX, y : minY, width: mainScreenWidth , height: mainScreenHeight)
+        return CGRect(x: minX, y: minY, width: mainScreenWidth, height: mainScreenHeight)
     }
-
 }
 
 extension UIScreen {
 
-    static var aspectRatio : CGFloat {
+    static var aspectRatio: CGFloat {
         let count = Dynamic.NSScreen.screens.count.asInt ?? 0
-        if PlaySettings.shared.notch  {
+        if PlaySettings.shared.notch {
             if count == 1 {
-                return mainScreenWidth / mainScreenHeight //1.6 or 1.77777778
+                return mainScreenWidth / mainScreenHeight // 1.6 or 1.77777778
             } else {
                 if Dynamic.NSScreen.mainScreen.asObject == Dynamic.NSScreen.screens.first {
                     return mainScreenWidth / mainScreenHeight
@@ -66,88 +65,87 @@ extension UIScreen {
     }
 }
 
-public final class PlayScreen : NSObject {
-
+public final class PlayScreen: NSObject {
     @objc public static let shared = PlayScreen()
 
-    @objc public static func frame(_ rect : CGRect) -> CGRect {
+    @objc public static func frame(_ rect: CGRect) -> CGRect {
         return rect.toAspectRatio()
     }
 
-    @objc public static func bounds(_ rect : CGRect) -> CGRect {
+    @objc public static func bounds(_ rect: CGRect) -> CGRect {
         return rect.toAspectRatioReversed()
     }
 
-    @objc public static func width(_ size : Int) -> Int {
-        return size;
+    @objc public static func width(_ size: Int) -> Int {
+        return size
     }
 
-    @objc public static func height(_ size : Int) -> Int {
+    @objc public static func height(_ size: Int) -> Int {
         return Int(size / Int(UIScreen.aspectRatio))
     }
 
     @objc public static func sizeAspectRatio(_ size : CGSize) -> CGSize {
         return size.toAspectRatio()
     }
-    var fullscreen : Bool {
+    var fullscreen: Bool {
         return Dynamic(nsWindow).styleMask.contains(16384).asBool ?? false
     }
 
-    @objc public var screenRect : CGRect {
+    @objc public var screenRect: CGRect {
         return UIScreen.main.bounds
     }
 
-    var width : CGFloat {
+    var width: CGFloat {
         screenRect.width
     }
 
-    var height : CGFloat {
+    var height: CGFloat {
         screenRect.height
     }
 
-    var max : CGFloat {
+    var max: CGFloat {
         Swift.max(width, height)
     }
 
-    var percent : CGFloat {
+    var percent: CGFloat {
         max / 100.0
     }
 
-    var window : UIWindow? {
+    var window: UIWindow? {
         return UIApplication.shared.windows.first
     }
 
-    var nsWindow : NSObject? {
+    var nsWindow: NSObject? {
         window?.nsWindow
     }
 
-    var nsScreen : NSObject? {
+    var nsScreen: NSObject? {
         Dynamic(nsWindow).nsScreen.asObject
     }
 
-    func switchDock(_ visible : Bool) {
+    func switchDock(_ visible: Bool) {
         Dynamic.NSMenu.setMenuBarVisible(visible)
     }
 
 }
 
 extension CGFloat {
-    var relativeY : CGFloat {
+    var relativeY: CGFloat {
         self / screen.height
     }
-    var relativeX : CGFloat {
+    var relativeX: CGFloat {
         self / screen.width
     }
-    var relativeSize : CGFloat {
+    var relativeSize: CGFloat {
         self / screen.percent
     }
-    var absoluteSize : CGFloat {
+    var absoluteSize: CGFloat {
         self * screen.percent
     }
-    var absoluteX : CGFloat {
+    var absoluteX: CGFloat {
         self * screen.width
     }
-    var absoluteY : CGFloat {
+    var absoluteY: CGFloat {
         self * screen.height
     }
 }
@@ -171,12 +169,14 @@ extension UIScreen {
 
     @available(iOS 15.0, *)
     @objc open var preferredFrameRateRange: CAFrameRateRange {
-        return CAFrameRateRange(minimum: 60, maximum: Float(PlaySettings.shared.refreshRate), __preferred: Float(PlaySettings.shared.refreshRate))
+        return CAFrameRateRange(minimum: 60,
+                                maximum: Float(PlaySettings.shared.refreshRate),
+                                __preferred: Float(PlaySettings.shared.refreshRate))
     }
 
 }
 
-@objc extension CADisplayLink {
+extension CADisplayLink {
     @objc open var preferredFramesPerSecond: Int {
         return PlaySettings.shared.refreshRate
     }
@@ -185,7 +185,8 @@ extension UIScreen {
 extension UIWindow {
 
     var nsWindow: NSObject? {
-        guard let nsWindows = NSClassFromString("NSApplication")?.value(forKeyPath: "sharedApplication.windows") as? [AnyObject] else { return nil }
+        guard let nsWindows = NSClassFromString("NSApplication")?
+            .value(forKeyPath: "sharedApplication.windows") as? [AnyObject] else { return nil }
         for nsWindow in nsWindows {
             let uiWindows = nsWindow.value(forKeyPath: "uiWindows") as? [UIWindow] ?? []
             if uiWindows.contains(self) {
@@ -197,7 +198,7 @@ extension UIWindow {
 }
 
 extension NSObject {
-    func call(_ method : String, object : CGSize) -> Bool{
+    func call(_ method: String, object: CGSize) -> Bool {
         if self.responds(to: Selector(method)) {
             self.perform(Selector(method), with: object)
             return true
@@ -205,7 +206,7 @@ extension NSObject {
             return false
         }
     }
-    func call(_ method : String) -> Bool{
+    func call(_ method: String) -> Bool {
         if self.responds(to: Selector(method)) {
             self.perform(Selector(method))
             return true
