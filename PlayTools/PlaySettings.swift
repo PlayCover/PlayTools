@@ -5,12 +5,12 @@ let settings = PlaySettings.shared
 
 extension Dictionary {
 
-    func store(_ to : URL) throws {
+    func store(_ to: URL) throws {
         let data = try PropertyListSerialization.data(fromPropertyList: self, format: .xml, options: 0)
         try data.write(to: to, options: .atomic)
     }
 
-    static func read( _ from : URL) throws -> Dictionary? {
+    static func read( _ from: URL) throws -> Dictionary? {
         var format = PropertyListSerialization.PropertyListFormat.xml
         if let data = FileManager.default.contents(atPath: from.path) {
             return try PropertyListSerialization
@@ -23,7 +23,7 @@ extension Dictionary {
 
 }
 
-@objc public final class PlaySettings : NSObject {
+@objc public final class PlaySettings: NSObject {
 
     private static let fileExtension = "plist"
 
@@ -33,7 +33,7 @@ extension Dictionary {
 
     private static let gamingmodeKey = "pc.gamingMode"
 
-    lazy var gamingMode : Bool = {
+    lazy var gamingMode: Bool = {
         if let key = settings[PlaySettings.gamingmodeKey] as? Bool {
             return key
         }
@@ -42,7 +42,7 @@ extension Dictionary {
 
     private static let notchKey = "pc.hasNotch"
 
-    lazy var notch : Bool = {
+    lazy var notch: Bool = {
         if let key = settings[PlaySettings.notchKey] as? Bool {
             return key
         }
@@ -51,7 +51,7 @@ extension Dictionary {
 
     private static let layoutKey = "pc.layout"
 
-    lazy var layout : Array<Array<CGFloat>> = [] {
+    lazy var layout: [[CGFloat]] = [] {
         didSet {
             do {
                 settings[PlaySettings.layoutKey] = layout
@@ -64,11 +64,11 @@ extension Dictionary {
     }
 
     public func setupLayout() {
-        layout = settings[PlaySettings.layoutKey] as? Array<Array<CGFloat>> ?? []
+        layout = settings[PlaySettings.layoutKey] as? [[CGFloat]] ?? []
     }
 
     private static let adaptiveDisplayKey = "pc.adaptiveDisplay"
-    @objc public var adaptiveDisplay : Bool {
+    @objc public var adaptiveDisplay: Bool {
         if let key = settings[PlaySettings.adaptiveDisplayKey] as? Bool {
             return key
         }
@@ -76,7 +76,7 @@ extension Dictionary {
     }
 
     private static let keymappingKey = "pc.keymapping"
-    @objc public var keymapping : Bool {
+    @objc public var keymapping: Bool {
         if let key = settings[PlaySettings.keymappingKey] as? Bool {
             return key
         }
@@ -84,7 +84,7 @@ extension Dictionary {
     }
 
     private static let refreshRateKey = "pc.refreshRate"
-    @objc lazy public var refreshRate : Int = {
+    @objc lazy public var refreshRate: Int = {
         if let key = settings[PlaySettings.refreshRateKey] as? Int {
             return key
         }
@@ -93,7 +93,7 @@ extension Dictionary {
 
     private static let sensivityKey = "pc.sensivity"
 
-    @objc lazy public var sensivity : Float = {
+    @objc lazy public var sensivity: Float = {
         if let key = settings[PlaySettings.sensivityKey] as? Float {
             return key / 100
         }
@@ -101,7 +101,7 @@ extension Dictionary {
     }()
 
     private static let gameWindowSizeHeight = "pc.gameWindowSizeHeight"
-    @objc lazy public var windowSizeHeight : CGFloat = {
+    @objc lazy public var windowSizeHeight: CGFloat = {
         if let key = settings[PlaySettings.gameWindowSizeHeight] as? CGFloat {
             return key
         }
@@ -109,41 +109,41 @@ extension Dictionary {
     }()
 
     private static let gameWindowSizeWidth = "pc.gameWindowSizeWidth"
-    @objc lazy public var windowSizeWidth : CGFloat = {
+    @objc lazy public var windowSizeWidth: CGFloat = {
         if let key = settings[PlaySettings.gameWindowSizeWidth] as? CGFloat {
             return key
         }
         return 1920.0
     }()
-    
+
     private static let ipadModelKey = "pc.ipadModel"
-    @objc lazy public var GET_IPAD_MODEL : NSString = {
+    @objc lazy public var GET_IPAD_MODEL: NSString = {
         if let key = settings[PlaySettings.ipadModelKey] as? NSString {
             return key
         }
         return "iPad8,6"
     }()
-    
-    @objc lazy public var GET_OEM_ID : NSString = {
+
+    @objc lazy public var GET_OEM_ID: NSString = {
         if let key = settings[PlaySettings.ipadModelKey] as? NSString {
-            switch (key) {
-                case "iPad6,7":
-                    return "J98aAP"
-                case "iPad8,6":
-                    return "J320xAP"
-                case "iPad13,8":
-                    return "J522AP"
-                default:
-                    return "J320xAP"
+            switch key {
+            case "iPad6,7":
+                return "J98aAP"
+            case "iPad8,6":
+                return "J320xAP"
+            case "iPad13,8":
+                return "J522AP"
+            default:
+                return "J320xAP"
             }
         }
         return "J320xAP"
     }()
 
-    static var isGame : Bool {
-        if let info = Bundle.main.infoDictionary?.description{
+    static var isGame: Bool {
+        if let info = Bundle.main.infoDictionary?.description {
             for keyword in PlaySettings.keywords {
-                if info.contains(keyword) && !info.contains("xbox"){
+                if info.contains(keyword) && !info.contains("xbox") {
                     return true
                 }
             }
@@ -151,16 +151,16 @@ extension Dictionary {
         return false
     }
 
-    lazy var settings : [String: Any] = {
-        if let prefs = allPrefs[Bundle.main.bundleIdentifier!] as? [String : Any] {
+    lazy var settings: [String: Any] = {
+        if let prefs = allPrefs[Bundle.main.bundleIdentifier!] as? [String: Any] {
             return prefs
         }
-        return [PlaySettings.adaptiveDisplayKey : PlaySettings.isGame, PlaySettings.keymappingKey : PlaySettings.isGame]
+        return [PlaySettings.adaptiveDisplayKey: PlaySettings.isGame, PlaySettings.keymappingKey: PlaySettings.isGame]
     }()
 
-    lazy var allPrefs : [String : Any] = {
+    lazy var allPrefs: [String: Any] = {
         do {
-            if let all = try Dictionary<String, Any>.read(PlaySettings.settingsUrl) {
+            if let all = try [String: Any].read(PlaySettings.settingsUrl) {
                 return all
             }
         } catch {
@@ -184,6 +184,5 @@ extension Dictionary {
 
     public static let settingsUrl = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Preferences/playcover.plist")
 
-    private static var keywords = ["game", "unity", "metal", "netflix", "opengl", "minecraft", "mihoyo", "disney"];
-
+    private static var keywords = ["game", "unity", "metal", "netflix", "opengl", "minecraft", "mihoyo", "disney"]
 }

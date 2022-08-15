@@ -13,7 +13,7 @@ typealias ResponseBlock = @convention(block) (_ event: Any) -> Any?
 typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
 
 @objc final public class PlayMice: NSObject {
-    
+
     @objc public static let shared = PlayMice()
 
     private var camera: CameraControl?

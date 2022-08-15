@@ -84,7 +84,7 @@ public final class PlayScreen: NSObject {
         return Int(size / Int(UIScreen.aspectRatio))
     }
 
-    @objc public static func sizeAspectRatio(_ size : CGSize) -> CGSize {
+    @objc public static func sizeAspectRatio(_ size: CGSize) -> CGSize {
         return size.toAspectRatio()
     }
     var fullscreen: Bool {
