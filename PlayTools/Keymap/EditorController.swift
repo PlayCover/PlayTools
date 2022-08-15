@@ -123,7 +123,7 @@ final class EditorController: NSObject {
                                                                  parent: nil)))
         }
     }
-    
+
     @objc public func addLMB(_ to: CGPoint) {
         if editorMode {
             addControlToView(control: LMBModel(data: ControlData(keyCodes: [-1],

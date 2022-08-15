@@ -12,7 +12,7 @@ class KeymapHolder: CircleMenuDelegate {
 
     private var menu: CircleMenu?
 
-    public func add(_ location : CGPoint) {
+    public func add(_ location: CGPoint) {
         if menu != nil {
             hide()
         }
@@ -82,5 +82,4 @@ class KeymapHolder: CircleMenuDelegate {
           "lb.rectangle.roundedbottom",
           "computermouse"
       ]
-    
 }
