@@ -3,46 +3,46 @@ import GameController
 @objc class ControlData: NSObject {
     var keyCodes: [Int]
     var size: CGFloat
-    var x: CGFloat
-    var y: CGFloat
+    var xCoord: CGFloat
+    var yCoord: CGFloat
     var parent: ControlModel?
 
-    init(keyCodes: [Int], size: CGFloat, x: CGFloat, y: CGFloat, parent: ControlModel?) {
+    init(keyCodes: [Int], size: CGFloat, xCoord: CGFloat, yCoord: CGFloat, parent: ControlModel?) {
         self.keyCodes = keyCodes
         self.size = size
-        self.x = x
-        self.y = y
+        self.xCoord = xCoord
+        self.yCoord = yCoord
         self.parent = parent
     }
 
-    init(keyCodes: [Int], size: CGFloat, x: CGFloat, y: CGFloat, sensivity: CGFloat) {
+    init(keyCodes: [Int], size: CGFloat, xCoord: CGFloat, yCoord: CGFloat, sensivity: CGFloat) {
         self.keyCodes = keyCodes
         self.size = size
-        self.x = x
-        self.y = y
+        self.xCoord = xCoord
+        self.yCoord = yCoord
     }
 
     init(keyCodes: [Int], parent: ControlModel) {
         self.keyCodes = keyCodes
         self.size = parent.data.size  / 3
-        self.x = 0
-        self.y = 0
+        self.xCoord = 0
+        self.yCoord = 0
         self.parent = parent
     }
 
-    init(size: CGFloat, x: CGFloat, y: CGFloat) {
+    init(size: CGFloat, xCoord: CGFloat, yCoord: CGFloat) {
         self.keyCodes = [0]
         self.size = size
-        self.x = x
-        self.y = y
+        self.xCoord = xCoord
+        self.yCoord = yCoord
         self.parent = nil
     }
 
-    init(keyCodes: [Int], size: CGFloat, x: CGFloat, y: CGFloat) {
+    init(keyCodes: [Int], size: CGFloat, xCoord: CGFloat, yCoord: CGFloat) {
         self.keyCodes = keyCodes
         self.size = size
-        self.x = x
-        self.y = y
+        self.xCoord = xCoord
+        self.yCoord = yCoord
         self.parent = nil
     }
 }
@@ -56,18 +56,18 @@ class ControlModel {
         if data.count == 4 {
             return ButtonModel(data: ControlData(keyCodes: [Int(data[0])],
                                                  size: data[3],
-                                                 x: data[1],
-                                                 y: data[2],
+                                                 xCoord: data[1],
+                                                 yCoord: data[2],
                                                  parent: nil))
         } else if data.count == 8 {
             return JoystickModel(data: ControlData(keyCodes: [Int(data[0]),
                                                               Int(data[1]), Int(data[2]),
                                                               Int(data[3])],
                                                    size: data[6],
-                                                   x: data[4],
-                                                   y: data[5]))
+                                                   xCoord: data[4],
+                                                   yCoord: data[5]))
         } else if data.count == 2 {
-            return MouseAreaModel(data: ControlData(size: 25, x: data[0], y: data[1]))
+            return MouseAreaModel(data: ControlData(size: 25, xCoord: data[0], yCoord: data[1]))
         }
         return nil
     }
@@ -104,10 +104,10 @@ class ControlModel {
         let nx = button.center.x + dx
         let ny = button.center.y + dy
         if nx > 0 && nx < screen.width {
-            data.x = nx.relativeX
+            data.xCoord = nx.relativeX
         }
         if ny > 0 && ny < screen.height {
-            data.y = ny.relativeY
+            data.yCoord = ny.relativeY
         }
         update()
     }
@@ -129,15 +129,15 @@ class ButtonModel: ControlModel {
     }
 
     override func save() -> [CGFloat] {
-        return [CGFloat(data.keyCodes[0]), data.x, data.y, data.size]
+        return [CGFloat(data.keyCodes[0]), data.xCoord, data.yCoord, data.size]
     }
 
     override func update() {
         self.setKeyCodes(keys: data.keyCodes)
         button.setWidth(width: data.size.absoluteSize)
         button.setHeight(height: data.size.absoluteSize)
-        button.setX(x: data.x.absoluteX)
-        button.setY(y: data.y.absoluteY)
+        button.setX(xCoord: data.xCoord.absoluteX)
+        button.setY(yCoord: data.yCoord.absoluteY)
         button.layer.cornerRadius = 0.5 * button.bounds.size.width
         button.clipsToBounds = true
         button.titleLabel?.minimumScaleFactor = 0.01
@@ -237,10 +237,10 @@ class JoystickModel: ControlModel {
 
     override func save() -> [CGFloat] {
         var data = [CGFloat]()
-        for j in joystickButtons {
-            data.append(CGFloat(j.data.keyCodes[0]))
+        for joystickButton in joystickButtons {
+            data.append(CGFloat(joystickButton.data.keyCodes[0]))
         }
-        data.append(contentsOf: [self.data.x, self.data.y, self.data.size, self.data.size])
+        data.append(contentsOf: [self.data.xCoord, self.data.yCoord, self.data.size, self.data.size])
         return data
     }
 
@@ -252,13 +252,13 @@ class JoystickModel: ControlModel {
     override func update() {
         button.setWidth(width: data.size.absoluteSize)
         button.setHeight(height: data.size.absoluteSize)
-        button.setX(x: data.x.absoluteX)
-        button.setY(y: data.y.absoluteY)
+        button.setX(xCoord: data.xCoord.absoluteX)
+        button.setY(yCoord: data.yCoord.absoluteY)
         button.layer.cornerRadius = 0.5 * button.bounds.size.width
         button.clipsToBounds = true
         if data.keyCodes.count == 4 && joystickButtons.count == 0 {
-            for i in data.keyCodes {
-                joystickButtons.append(JoystickButtonModel(data: ControlData(keyCodes: [i], parent: self)))
+            for keyCode in data.keyCodes {
+                joystickButtons.append(JoystickButtonModel(data: ControlData(keyCodes: [keyCode], parent: self)))
             }
         }
         changeButtonsSize()
@@ -310,7 +310,7 @@ class JoystickModel: ControlModel {
 
 class MouseAreaModel: ControlModel {
     override func save() -> [CGFloat] {
-        return [data.x, data.y]
+        return [data.xCoord, data.yCoord]
     }
 
     override func focus(_ focus: Bool) {
@@ -327,8 +327,8 @@ class MouseAreaModel: ControlModel {
     override func update() {
         button.setWidth(width: data.size.absoluteSize)
         button.setHeight(height: data.size.absoluteSize)
-        button.setX(x: data.x.absoluteX)
-        button.setY(y: data.y.absoluteY)
+        button.setX(xCoord: data.xCoord.absoluteX)
+        button.setY(yCoord: data.yCoord.absoluteY)
         button.layer.cornerRadius = 0.5 * button.bounds.size.width
         button.clipsToBounds = true
     }
@@ -340,12 +340,12 @@ class MouseAreaModel: ControlModel {
 }
 
 extension UIView {
-    func setX(x: CGFloat) {
-        self.center = CGPoint(x: x, y: self.center.y)
+    func setX(xCoord: CGFloat) {
+        self.center = CGPoint(x: xCoord, y: self.center.y)
     }
 
-    func setY(y: CGFloat) {
-        self.center = CGPoint(x: self.center.x, y: y)
+    func setY(yCoord: CGFloat) {
+        self.center = CGPoint(x: self.center.x, y: yCoord)
     }
 
     func setWidth(width: CGFloat) {

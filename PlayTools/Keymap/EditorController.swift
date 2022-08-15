@@ -12,7 +12,7 @@ final class EditorController: NSObject {
     var focusedControl: ControlModel?
 
     var controls: [ControlModel] = []
-    lazy var view: EditorView = EditorView(s: 0)
+    lazy var view: EditorView = EditorView()
 
     private func addControlToView(control: ControlModel) {
         controls.append(control)
@@ -99,8 +99,8 @@ final class EditorController: NSObject {
                                                                                  GCKeyCode.keyA.rawValue,
                                                                                  GCKeyCode.keyD.rawValue],
                                                                       size: 20,
-                                                                      x: center.x.relativeX,
-                                                                      y: center.y.relativeY)))
+                                                                      xCoord: center.x.relativeX,
+                                                                      yCoord: center.y.relativeY)))
         }
     }
 
@@ -108,8 +108,8 @@ final class EditorController: NSObject {
         if editorMode {
             addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-1],
                                                                     size: 5,
-                                                                    x: to.x.relativeX,
-                                                                    y: to.y.relativeY,
+                                                                    xCoord: to.x.relativeX,
+                                                                    yCoord: to.y.relativeY,
                                                                     parent: nil)))
         }
     }
@@ -118,8 +118,8 @@ final class EditorController: NSObject {
         if editorMode {
             addControlToView(control: RMBModel(data: ControlData(keyCodes: [-2],
                                                                  size: 5,
-                                                                 x: to.x.relativeX,
-                                                                 y: to.y.relativeY,
+                                                                 xCoord: to.x.relativeX,
+                                                                 yCoord: to.y.relativeY,
                                                                  parent: nil)))
         }
     }
@@ -128,8 +128,8 @@ final class EditorController: NSObject {
         if editorMode {
             addControlToView(control: LMBModel(data: ControlData(keyCodes: [-1],
                                                                  size: 5,
-                                                                 x: to.x.relativeX,
-                                                                 y: to.y.relativeY,
+                                                                 xCoord: to.x.relativeX,
+                                                                 yCoord: to.y.relativeY,
                                                                  parent: nil)))
         }
     }
@@ -138,8 +138,8 @@ final class EditorController: NSObject {
         if editorMode {
             addControlToView(control: MMBModel(data: ControlData(keyCodes: [-3],
                                                                  size: 5,
-                                                                 x: to.x.relativeX,
-                                                                 y: to.y.relativeY,
+                                                                 xCoord: to.x.relativeX,
+                                                                 yCoord: to.y.relativeY,
                                                                  parent: nil)))
         }
     }
@@ -147,8 +147,8 @@ final class EditorController: NSObject {
     @objc public func addMouseArea(_ center: CGPoint) {
         if editorMode {
             addControlToView(control: MouseAreaModel(data: ControlData(size: 25,
-                                                                       x: center.x.relativeX,
-                                                                       y: center.y.relativeY)))
+                                                                       xCoord: center.x.relativeX,
+                                                                       yCoord: center.y.relativeY)))
         }
     }
 
@@ -180,7 +180,7 @@ class EditorView: UIView {
         }
     }
 
-    init(s: Int) {
+    init() {
         super.init(frame: .zero)
         self.frame = screen.screenRect
         self.isUserInteractionEnabled = false

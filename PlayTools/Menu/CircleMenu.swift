@@ -199,7 +199,7 @@ open class CircleMenu: UIButton {
             return false
         }
 
-        for button in buttons where button.alpha == 0{
+        for button in buttons where button.alpha == 0 {
             return false
         }
         return true
@@ -227,7 +227,10 @@ open class CircleMenu: UIButton {
             } else {
                 buttonSize = bounds.size
             }
-            let button = customize(CircleMenuButton(size: buttonSize, platform: platform, distance: distance, angle: angle)) {
+            let button = customize(CircleMenuButton(size: buttonSize,
+                                                    platform: platform,
+                                                    distance: distance,
+                                                    angle: angle)) {
                 $0.tag = index
                 $0.addTarget(self, action: #selector(CircleMenu.buttonHandler(_:)), for: UIControl.Event.touchUpInside)
                 $0.alpha = 0

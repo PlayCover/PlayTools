@@ -18,7 +18,7 @@ final public class PlayCover: NSObject {
     var firstTime = true
 
     private override init() {}
-    
+
     @objc static public func launch() {
         quitWhenClose()
         PlaySettings.shared.setupLayout()
@@ -40,7 +40,9 @@ final public class PlayCover: NSObject {
 
     @objc static public func initMenu(menu: NSObject) {
         delay(0.005) {
-            shared.menuController = MenuController(with: menu as! UIMenuBuilder)
+            guard let menuBuilder = menu as? UIMenuBuilder else { return }
+
+            shared.menuController = MenuController(with: menuBuilder)
             delay(0.005) {
                 UIMenuSystem.main.setNeedsRebuild()
                 UIMenuSystem.main.setNeedsRevalidate()
@@ -48,14 +50,14 @@ final public class PlayCover: NSObject {
         }
     }
 
-    static func delay(_ delay:Double, closure:@escaping () -> Void) {
+    static func delay(_ delay: Double, closure:@escaping () -> Void) {
         let when = DispatchTime.now() + delay
         DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
     }
 
-    func processSubviews(of view: UIView?) {
-        if let v = view {
-            for subview in v.subviews {
+    func processSubviews(of viewOptional: UIView?) {
+        if let view = viewOptional {
+            for subview in view.subviews {
                 print(subview.description)
                 processSubviews(of: subview)
             }
