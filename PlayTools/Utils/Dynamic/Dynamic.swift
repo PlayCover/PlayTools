@@ -70,7 +70,7 @@ public class Dynamic: CustomDebugStringConvertible, Loggable {
 
     @discardableResult
     public func dynamicallyCall(withKeywordArguments pairs: KeyValuePairs<String, Any?>) -> Dynamic {
-        /// Constructors
+        // Constructors
         if object is AnyClass, memberName == nil {
             if pairs.isEmpty {
                 return self.`init`.dynamicallyCall(withKeywordArguments: pairs)
@@ -137,7 +137,7 @@ public class Dynamic: CustomDebugStringConvertible, Loggable {
 
         var invocation: Invocation
 
-        /// Call `alloc()` before `init()`
+        // Call `alloc()` before `init()`
         if target is AnyClass, selector.hasPrefix("init") {
             guard let allocated = allocate(type: target) else { return }
             target = allocated
@@ -179,7 +179,7 @@ public class Dynamic: CustomDebugStringConvertible, Loggable {
     }
 
     private func resolve() -> AnyObject? {
-        /// This is a class. Return it.
+        // This is a class. Return it.
         if object is AnyClass && memberName == nil {
             return object
         }
@@ -188,12 +188,12 @@ public class Dynamic: CustomDebugStringConvertible, Loggable {
             return nil
         }
 
-        /// This is a method we have called before. Return the result.
+        // This is a method we have called before. Return the result.
         if let result = invocation?.returnedObject {
             return result
         }
 
-        /// This is an error caused by a previous call. Just pass it.
+        // This is an error caused by a previous call. Just pass it.
         if object is Error {
             return object
         }
@@ -201,12 +201,12 @@ public class Dynamic: CustomDebugStringConvertible, Loggable {
             return error as AnyObject?
         }
 
-        /// This is a wrapped object. Return it.
+        // This is a wrapped object. Return it.
         guard let name = memberName else {
             return object
         }
 
-        /// This is a wrapped object with a member name. Return the member.
+        // This is a wrapped object with a member name. Return the member.
         if invocation?.isInvoked != true {
             callMethod(name)
         }
