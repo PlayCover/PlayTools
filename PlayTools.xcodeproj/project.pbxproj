@@ -32,7 +32,6 @@
 		AA7197AD287A481500623C15 /* EditorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979C287A481500623C15 /* EditorController.swift */; };
 		AA7197AE287A481500623C15 /* DragElementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979D287A481500623C15 /* DragElementsView.swift */; };
 		AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979E287A481500623C15 /* KeyCodeNames.swift */; };
-		AA7197B0287A481500623C15 /* MacroController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7197A0287A481500623C15 /* MacroController.swift */; };
 		AA719845287A81A000623C15 /* NSBundle+Swizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719816287A819F00623C15 /* NSBundle+Swizzle.m */; };
 		AA719846287A81A000623C15 /* IOHIDEvent+KIF.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719818287A819F00623C15 /* IOHIDEvent+KIF.h */; };
 		AA719847287A81A000623C15 /* UIAccessibilityElement-KIFAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719819287A819F00623C15 /* UIAccessibilityElement-KIFAdditions.m */; };
@@ -113,7 +112,6 @@
 		AA71979C287A481500623C15 /* EditorController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorController.swift; sourceTree = "<group>"; };
 		AA71979D287A481500623C15 /* DragElementsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DragElementsView.swift; sourceTree = "<group>"; };
 		AA71979E287A481500623C15 /* KeyCodeNames.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyCodeNames.swift; sourceTree = "<group>"; };
-		AA7197A0287A481500623C15 /* MacroController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MacroController.swift; sourceTree = "<group>"; };
 		AA719816287A819F00623C15 /* NSBundle+Swizzle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSBundle+Swizzle.m"; sourceTree = "<group>"; };
 		AA719818287A819F00623C15 /* IOHIDEvent+KIF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "IOHIDEvent+KIF.h"; sourceTree = "<group>"; };
 		AA719819287A819F00623C15 /* UIAccessibilityElement-KIFAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIAccessibilityElement-KIFAdditions.m"; sourceTree = "<group>"; };
@@ -200,7 +198,6 @@
 			children = (
 				AA719721287A480C00623C15 /* Controls */,
 				AA719799287A481500623C15 /* Keymap */,
-				AA71979F287A481500623C15 /* Macros */,
 				AA71978C287A481500623C15 /* Menu */,
 				AA719791287A481500623C15 /* Utils */,
 				AA71970A287A44D200623C15 /* Info.plist */,
@@ -269,14 +266,6 @@
 				AA71979E287A481500623C15 /* KeyCodeNames.swift */,
 			);
 			path = Keymap;
-			sourceTree = "<group>";
-		};
-		AA71979F287A481500623C15 /* Macros */ = {
-			isa = PBXGroup;
-			children = (
-				AA7197A0287A481500623C15 /* MacroController.swift */,
-			);
-			path = Macros;
 			sourceTree = "<group>";
 		};
 		AA719813287A813A00623C15 /* PTFakeTouch */ = {
@@ -405,6 +394,7 @@
 				AA7196D4287A447700623C15 /* Sources */,
 				AA7196D5287A447700623C15 /* Frameworks */,
 				AA7196D6287A447700623C15 /* Resources */,
+				6ED6ACAB28AAB30F0040D234 /* SwiftLint */,
 			);
 			buildRules = (
 			);
@@ -458,6 +448,27 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		6ED6ACAB28AAB30F0040D234 /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [[ -z \"$FASTLANE\" ]]; then\n    export PATH=\"$PATH:/opt/homebrew/bin\"\n    if which swiftlint > /dev/null; then\n        swiftlint\n    else\n        echo \"error: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\n        exit -1\n    fi\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		AA7196D4287A447700623C15 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -472,7 +483,6 @@
 				AA71984E287A81A000623C15 /* UIScrollView-KIFAdditions.m in Sources */,
 				AA719849287A81A000623C15 /* NSException-KIFAdditions.m in Sources */,
 				AA7197AB287A481500623C15 /* ControlModel.swift in Sources */,
-				AA7197B0287A481500623C15 /* MacroController.swift in Sources */,
 				AA7197A8287A481500623C15 /* TypeMapping.swift in Sources */,
 				AA7197AE287A481500623C15 /* DragElementsView.swift in Sources */,
 				AA7197A7287A481500623C15 /* Invocation.swift in Sources */,

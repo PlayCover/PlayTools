@@ -6,20 +6,20 @@
 import Foundation
 import SwiftUI
 
-class KeymapHolder : CircleMenuDelegate {
-    
+class KeymapHolder: CircleMenuDelegate {
+
     static let shared = KeymapHolder()
-    
-    private var menu : CircleMenu?
-    
-    public func add(_ location : CGPoint) {
-        if menu != nil{
+
+    private var menu: CircleMenu?
+
+    public func add(_ location: CGPoint) {
+        if menu != nil {
             hide()
         }
         menu = CircleMenu(
-            frame: CGRect(x: 0, y:0, width: 50, height: 50),
-            normalIcon:"xmark.circle.fill",
-            selectedIcon:"xmark.circle.fill",
+            frame: CGRect(x: 0, y: 0, width: 50, height: 50),
+            normalIcon: "xmark.circle.fill",
+            selectedIcon: "xmark.circle.fill",
             buttonsCount: 6,
             duration: 0.25,
             distance: 80)
@@ -31,25 +31,25 @@ class KeymapHolder : CircleMenuDelegate {
         menu?.backgroundColor = UIColor.black
         menu?.onTap()
     }
-    
+
     public func hide() {
-        if self.menu != nil{
+        if self.menu != nil {
             self.menu?.removeFromSuperview()
             self.menu = nil
         }
     }
-    
+
     public func hideWithAnimation() {
         if self.menu != nil {
-            PlayCover.delay(0.25){
+            PlayCover.delay(0.25) {
                 self.hide()
             }
         }
     }
-    
-    func circleMenu(_: CircleMenu, buttonWillSelected  btn : UIButton, atIndex: Int) {
+
+    func circleMenu(_: CircleMenu, buttonWillSelected btn: UIButton, atIndex: Int) {
         let globalPoint = menu!.superview?.convert(menu!.center, to: nil)
-        switch(atIndex){
+        switch atIndex {
         case 0:
             EditorController.shared.addButton(globalPoint!)
         case 1:
@@ -65,7 +65,7 @@ class KeymapHolder : CircleMenuDelegate {
         }
         hideWithAnimation()
     }
-    
+
     func circleMenu(_: CircleMenu, willDisplay button: UIButton, atIndex: Int) {
         button.backgroundColor = UIColor.black
         button.setImage(UIImage(systemName: items[atIndex]), for: .normal)
@@ -73,7 +73,7 @@ class KeymapHolder : CircleMenuDelegate {
         button.setImage(highlightedImage, for: .highlighted)
         button.tintColor = UIColor.white
     }
-    
+
     private let items: [String] = [
           "circle.circle",
           "dpad",
@@ -82,5 +82,4 @@ class KeymapHolder : CircleMenuDelegate {
           "lb.rectangle.roundedbottom",
           "computermouse"
       ]
-    
 }

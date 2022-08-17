@@ -12,16 +12,16 @@ typealias ResponseBlock = @convention(block) (_ event: Any) -> Any?
 
 typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
 
-@objc final public class PlayMice : NSObject {
-    
+@objc final public class PlayMice: NSObject {
+
     @objc public static let shared = PlayMice()
-    
-    private var camera : CameraControl? = nil
-    
+
+    private var camera: CameraControl?
+
     private static var isInit = false
-    
+
     private var acceptMouseEvents = !PlaySettings.shared.gamingMode
-    
+
     public override init() {
         super.init()
         if !PlayMice.isInit {
@@ -31,56 +31,51 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
             PlayMice.isInit = true
         }
     }
-    
-    public var cursorPos : CGPoint {
-        var point = CGPoint(x: 0,y: 0)
+
+    public var cursorPos: CGPoint {
+        var point = CGPoint(x: 0, y: 0)
         if #available(macOS 11, *) {
             point = Dynamic(screen.nsWindow).mouseLocationOutsideOfEventStream.asCGPoint!
         }
-        if let rect = (Dynamic(screen.nsWindow).frame.asCGRect){
+        if let rect = (Dynamic(screen.nsWindow).frame.asCGRect) {
             point.x = (point.x / rect.width) * screen.screenRect.width
             point.y = screen.screenRect.height - ((point.y / rect.height) * screen.screenRect.height)
         }
-        
         return point
     }
-    
-    public func setup(_ key : Array<CGFloat> ){
+
+    public func setup(_ key: [CGFloat]) {
         camera = CameraControl(centerX: key[0].absoluteX, centerY: key[1].absoluteY)
-        for m in GCMouse.mice(){
-            m.mouseInput?.mouseMovedHandler = {
-                (mouse, dX, dY) in
-                if !mode.visible{
-                    self.camera?.updated(CGFloat(dX), CGFloat(dY))
+        for mouse in GCMouse.mice() {
+            mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
+                if !mode.visible {
+                    self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
                 }
             }
         }
     }
-    
+
     public func stop() {
-        for m in GCMouse.mice(){
-            m.mouseInput?.mouseMovedHandler = nil
+        for mouse in GCMouse.mice() {
+            mouse.mouseInput?.mouseMovedHandler = nil
         }
         camera?.stop()
         camera = nil
         mouseActions = [:]
     }
-    
-    func setMiceButtons(_ keyId : Int, action : ButtonAction) -> Bool {
-        if  (-3 ... -1).contains(keyId){
+
+    func setMiceButtons(_ keyId: Int, action: ButtonAction) -> Bool {
+        if (-3 ... -1).contains(keyId) {
             setMiceButton(keyId, action: action)
             return true
         }
         return false
     }
-    
-    var mouseActions : [Int:ButtonAction] = [:]
-    
-    private func setupMouseButton(_up : Int, _down : Int){
+
+    var mouseActions: [Int: ButtonAction] = [:]
+
+    private func setupMouseButton(_up: Int, _down: Int) {
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
-            if self.mouseActions[_up] == nil {
-                          MacroController.shared.recordEvent(point: self.cursorPos, phase: UITouch.Phase.began, tid: 1)
-                      }
             if !mode.visible || self.acceptMouseEvents {
                 self.mouseActions[_up]?.update(pressed: true)
                 if self.acceptMouseEvents {
@@ -91,9 +86,6 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
             return event
         } as ResponseBlock)
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_down, handler: { event in
-            if self.mouseActions[_up] == nil {
-                          MacroController.shared.recordEvent(point: self.cursorPos, phase: UITouch.Phase.began, tid: 1)
-                      }
             if !mode.visible || self.acceptMouseEvents {
                 self.mouseActions[_up]?.update(pressed: false)
                 if self.acceptMouseEvents {
@@ -104,25 +96,24 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
             return event
         } as ResponseBlock)
     }
-    
-    private func setMiceButton(_ keyId : Int, action : ButtonAction) {
-        switch(keyId){
-        case -1: mouseActions[2] = action;
-        case -2: mouseActions[8] = action;
-        case -3: mouseActions[33554432] = action;
+
+    private func setMiceButton(_ keyId: Int, action: ButtonAction) {
+        switch keyId {
+        case -1: mouseActions[2] = action
+        case -2: mouseActions[8] = action
+        case -3: mouseActions[33554432] = action
         default:
-            mouseActions[2] = action;
+            mouseActions[2] = action
         }
-        
     }
 }
 
 final class CameraControl {
 
-    var center : CGPoint = CGPoint.zero
-    var location : CGPoint = CGPoint.zero
+    var center: CGPoint = CGPoint.zero
+    var location: CGPoint = CGPoint.zero
 
-    init(centerX : CGFloat = screen.width / 2, centerY : CGFloat = screen.height / 2) {
+    init(centerX: CGFloat = screen.width / 2, centerY: CGFloat = screen.height / 2) {
         self.center = CGPoint(x: centerX, y: centerY)
         // in rare cases the cooldown reset task is lost by the dispatch queue
         self.cooldown = false
@@ -130,7 +121,7 @@ final class CameraControl {
 
     var isMoving = false
 
-    func delay(_ delay:Double, closure:@escaping ()->()) {
+    func delay(_ delay: Double, closure: @escaping () -> Void) {
         let when = DispatchTime.now() + delay
         DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
     }
@@ -146,14 +137,14 @@ final class CameraControl {
     // if the touch point had been prevented from lifting off because of moving slow
     var idled = false
 
-    @objc func updated(_ dx: CGFloat, _ dy: CGFloat){
-        if mode.visible || cooldown{
+    @objc func updated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
+        if mode.visible || cooldown {
             return
         }
         sequence += 1
         // count touch duration
         counter += 1
-        if !isMoving{
+        if !isMoving {
             isMoving = true
             movingFast = false
             idled = false
@@ -163,7 +154,7 @@ final class CameraControl {
         }
         // if not moving fast, regard the user fine-tuning the camera(e.g. aiming)
         // so hold the touch for longer to avoid cold startup
-        if dx.magnitude + dy.magnitude > 4 {
+        if deltaX.magnitude + deltaY.magnitude > 4 {
             // if we had mistaken this as player aiming
             if self.idled {
                 // since not aiming, re-touch to re-gain control
@@ -172,23 +163,23 @@ final class CameraControl {
             }
             movingFast = true
         }
-        self.location.x += dx * CGFloat(PlaySettings.shared.sensivity)
-        self.location.y -= dy * CGFloat(PlaySettings.shared.sensivity)
+        self.location.x += deltaX * CGFloat(PlaySettings.shared.sensivity)
+        self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensivity)
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
         let previous = sequence
 
-        delay(0.016){
+        delay(0.016) {
             // if no other touch events in the past 0.016 sec
-            if previous != self.sequence{
+            if previous != self.sequence {
                 return
             }
             // and slow touch lasts for sufficient time
-            if self.movingFast || self.counter > 64{
+            if self.movingFast || self.counter > 64 {
                 self.doLiftOff()
-            }else {
+            } else {
                 self.idled = true
                 // idle for at most 4 seconds
-                self.delay(4){
+                self.delay(4) {
                     if previous != self.sequence {
                         return
                     }
@@ -199,8 +190,8 @@ final class CameraControl {
 
     }
 
-    public func doLiftOff(){
-        if !self.isMoving{
+    public func doLiftOff() {
+        if !self.isMoving {
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: 1)
@@ -208,16 +199,14 @@ final class CameraControl {
         // ending and beginning too frequently leads to the beginning event not recognized
         // so let the beginning event wait some time
         // 0.016 here is safe as long as the 0.016 above works
-        delay(0.016){
+        delay(0.016) {
             self.cooldown = false
         }
         cooldown = true
     }
-    
+
     func stop() {
         sequence = 0
         self.doLiftOff()
     }
 }
-
-

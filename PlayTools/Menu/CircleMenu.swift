@@ -22,6 +22,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// swiftlint:disable type_body_length
+// swiftlint:disable file_length
+// swiftlint:disable line_length
+
 import UIKit
 
 // MARK: helpers
@@ -199,10 +203,8 @@ open class CircleMenu: UIButton {
             return false
         }
 
-        for button in buttons {
-            if button.alpha == 0 {
-                return false
-            }
+        for button in buttons where button.alpha == 0 {
+            return false
         }
         return true
 
@@ -229,7 +231,10 @@ open class CircleMenu: UIButton {
             } else {
                 buttonSize = bounds.size
             }
-            let button = customize(CircleMenuButton(size: buttonSize, platform: platform, distance: distance, angle: angle)) {
+            let button = customize(CircleMenuButton(size: buttonSize,
+                                                    platform: platform,
+                                                    distance: distance,
+                                                    angle: angle)) {
                 $0.tag = index
                 $0.addTarget(self, action: #selector(CircleMenu.buttonHandler(_:)), for: UIControl.Event.touchUpInside)
                 $0.alpha = 0
@@ -347,8 +352,8 @@ open class CircleMenu: UIButton {
 
         tapBounceAnimation(duration: 0.5) { [weak self] _ in self?.isBounceAnimating = false }
         tapRotatedAnimation(0.3, isSelected: isShow)
-        
-        if !buttonsIsShown(){
+
+        if !buttonsIsShown() {
             KeymapHolder.shared.hide()
         }
     }
@@ -357,7 +362,7 @@ open class CircleMenu: UIButton {
         guard let platform = self.platform else { return }
 
         delegate?.circleMenu?(self, buttonWillSelected: sender, atIndex: sender.tag)
-        
+
         let strokeWidth: CGFloat
         if let radius = self.subButtonsRadius {
             strokeWidth = radius * 2
@@ -419,7 +424,7 @@ open class CircleMenu: UIButton {
         }
     }
 
-    fileprivate func tapBounceAnimation(duration: TimeInterval, completion: ((Bool)->())? = nil) {
+    fileprivate func tapBounceAnimation(duration: TimeInterval, completion: ((Bool) -> Void)? = nil) {
         transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
         UIView.animate(withDuration: duration, delay: 0, usingSpringWithDamping: 0.3, initialSpringVelocity: 5,
                        options: UIView.AnimationOptions.curveLinear,
