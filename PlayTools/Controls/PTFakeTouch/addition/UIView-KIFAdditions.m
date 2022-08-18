@@ -397,19 +397,20 @@ NS_INLINE BOOL StringsMatchExceptLineBreaks(NSString *expected, NSString *actual
     // Web views don't handle touches in a normal fashion, but they do have a method we can call to tap them
     // This may not be necessary anymore. We didn't properly support controls that used gesture recognizers
     // when this was added, but we now do. It needs to be tested before we can get rid of it.
-    id /*UIWebBrowserView*/ webBrowserView = nil;
-    
-    if ([NSStringFromClass([self class]) isEqual:@"UIWebBrowserView"]) {
-        webBrowserView = self;
-    } else if ([self isKindOfClass:[UIWebView class]]) {
-        id webViewInternal = [self valueForKey:@"_internal"];
-        webBrowserView = [webViewInternal valueForKey:@"browserView"];
-    }
-    
-    if (webBrowserView) {
-        [webBrowserView tapInteractionWithLocation:point];
-        return;
-    }
+    // Xyct: indeed unnecessary. UIWebView already depracated.
+//    id /*UIWebBrowserView*/ webBrowserView = nil;
+//
+//    if ([NSStringFromClass([self class]) isEqual:@"UIWebBrowserView"]) {
+//        webBrowserView = self;
+//    } else if ([self isKindOfClass:[UIWebView class]]) {
+//        id webViewInternal = [self valueForKey:@"_internal"];
+//        webBrowserView = [webViewInternal valueForKey:@"browserView"];
+//    }
+//
+//    if (webBrowserView) {
+//        [webBrowserView tapInteractionWithLocation:point];
+//        return;
+//    }
     
     // Handle touches in the normal way for other views
     UITouch *touch = [[UITouch alloc] initAtPoint:point inView:self];
