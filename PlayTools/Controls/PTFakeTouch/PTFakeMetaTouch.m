@@ -78,21 +78,22 @@ void moveCursorTo(CGPoint point){
     return nil;
 }
 
-+ (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase{
++ (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase inWindow:(UIWindow*)window{
     pointId = pointId - 1;
     UITouch *touch = [touchAry objectAtIndex:pointId];
     if (phase == UITouchPhaseBegan) {
         touch = nil;
-        touch = [[UITouch alloc] initAtPoint:point inWindow:[UIApplication sharedApplication].keyWindow];
+        touch = [[UITouch alloc] initAtPoint:point inWindow:window];
         
-#warning - Keyboard -
-        //// Keyboard FIX: Artem Levkovich, ITRex Group: http://itrexgroup.com
-        CGRect keyboardFrame;
-        // AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-        // keyboardFrame = appDelegate.keyboardFrame; (get keyboard frame using UIKeyboardDidShowNotification)
-        if([[[UIApplication sharedApplication].windows lastObject] isKindOfClass:NSClassFromString(@"UIRemoteKeyboardWindow")] && (CGRectContainsPoint(CGRectMake(0, [UIApplication sharedApplication].keyWindow.frame.size.height-keyboardFrame.size.height, [UIApplication sharedApplication].keyWindow.frame.size.width, keyboardFrame.size.height), point))) {
-            touch = [[UITouch alloc] initAtPoint:point inWindow:[[UIApplication sharedApplication].windows lastObject]];
-        }
+        // Xyct: commented out, cause this would crash once executed
+//#warning - Keyboard -
+//        //// Keyboard FIX: Artem Levkovich, ITRex Group: http://itrexgroup.com
+//        CGRect keyboardFrame;
+//        // AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+//        // keyboardFrame = appDelegate.keyboardFrame; (get keyboard frame using UIKeyboardDidShowNotification)
+//        if([[[UIApplication sharedApplication].windows lastObject] isKindOfClass:NSClassFromString(@"UIRemoteKeyboardWindow")] && (CGRectContainsPoint(CGRectMake(0, [UIApplication sharedApplication].keyWindow.frame.size.height-keyboardFrame.size.height, [UIApplication sharedApplication].keyWindow.frame.size.width, keyboardFrame.size.height), point))) {
+//            touch = [[UITouch alloc] initAtPoint:point inWindow:[[UIApplication sharedApplication].windows lastObject]];
+//        }
         
         [touchAry replaceObjectAtIndex:pointId withObject:touch];
         [touch setLocationInWindow:point];
