@@ -19,25 +19,26 @@ typedef struct {
 double ColourDistance(RGB e1, RGB e2);
 
 @interface PTFakeMetaTouch : NSObject
-/**
- *  Fake a touch event 构造一个触屏基础操作
- *
- *  @param pointId 触屏操作的序列号
- *  @param point   操作的目的位置
- *  @param phase   操作的类别
- *
- *  @return pointId 返回操作的序列号
- */
-
 + (void)load;
 
 + (UITouch* ) touch: (NSInteger) pointId;
 
-+ (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase;
 /**
- *  Get a not used pointId 获取一个没有使用过的触屏序列号
+ *  Fake a touch event 构造一个触屏基础操作 construct a touchscreen basic operation
  *
- *  @return pointId 返回序列号
+ *  @param pointId 触屏操作的序列号 sequence number of touch screen operation
+ *  @param point   操作的目的位置 target position of the operation
+ *  @param phase   操作的类别 type of the operation
+ *  @param window  key window in which touch event is to happen
+ *
+ *  @return pointId 返回操作的序列号 returns sequence number of the operation
+ */
+
++ (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase inWindow:(UIWindow*)window;
+/**
+ *  Get a not used pointId 获取一个没有使用过的触屏序列号 obtain a never used touch screen sequence number
+ *
+ *  @return pointId 返回序列号 returns sequence number
  */
 + (NSInteger)getAvailablePointId;
 
