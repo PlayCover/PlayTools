@@ -81,6 +81,9 @@
 		AA818CB9287ABFB1000BEE9D /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CB8287ABFB1000BEE9D /* IOKit.framework */; };
 		AA818CBB287ABFD5000BEE9D /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
 		B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */; };
+		B127172228817AB90025112B /* SwordRPC in Frameworks */ = {isa = PBXBuildFile; productRef = B127172128817AB90025112B /* SwordRPC */; };
+		B127172528817C040025112B /* DiscordIPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B127172428817C040025112B /* DiscordIPC.swift */; };
+		B1271729288284BE0025112B /* DiscordActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1271728288284BE0025112B /* DiscordActivity.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -162,6 +165,8 @@
 		AA818CB8287ABFB1000BEE9D /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/IOKit.framework; sourceTree = DEVELOPER_DIR; };
 		AA818CBA287ABFD5000BEE9D /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/iOSSupport/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keymapping.swift; sourceTree = "<group>"; };
+		B127172428817C040025112B /* DiscordIPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordIPC.swift; sourceTree = "<group>"; };
+		B1271728288284BE0025112B /* DiscordActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordActivity.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -169,6 +174,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B127172228817AB90025112B /* SwordRPC in Frameworks */,
 				AA818CB9287ABFB1000BEE9D /* IOKit.framework in Frameworks */,
 				AA818CBB287ABFD5000BEE9D /* UIKit.framework in Frameworks */,
 			);
@@ -198,6 +204,7 @@
 		AA7196DA287A447700623C15 /* PlayTools */ = {
 			isa = PBXGroup;
 			children = (
+				B127172328817AC70025112B /* DiscordActivity */,
 				AA719721287A480C00623C15 /* Controls */,
 				AA719799287A481500623C15 /* Keymap */,
 				AA71978C287A481500623C15 /* Menu */,
@@ -349,6 +356,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		B127172328817AC70025112B /* DiscordActivity */ = {
+			isa = PBXGroup;
+			children = (
+				B127172428817C040025112B /* DiscordIPC.swift */,
+				B1271728288284BE0025112B /* DiscordActivity.swift */,
+			);
+			path = DiscordActivity;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -404,6 +420,9 @@
 			dependencies = (
 			);
 			name = PlayTools;
+			packageProductDependencies = (
+				B127172128817AB90025112B /* SwordRPC */,
+			);
 			productName = PlayTools;
 			productReference = AA7196D8287A447700623C15 /* PlayTools.framework */;
 			productType = "com.apple.product-type.framework";
@@ -432,6 +451,9 @@
 				Base,
 			);
 			mainGroup = AA7196CE287A447700623C15;
+			packageReferences = (
+				B127172028817AB90025112B /* XCRemoteSwiftPackageReference "swordRPC" */,
+			);
 			productRefGroup = AA7196D9287A447700623C15 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -483,6 +505,7 @@
 				AA71975A287A480D00623C15 /* Toucher.swift in Sources */,
 				AA71984A287A81A000623C15 /* NSString+KIFAdditions.m in Sources */,
 				AA7197A1287A481500623C15 /* CircleMenuLoader.swift in Sources */,
+				B1271729288284BE0025112B /* DiscordActivity.swift in Sources */,
 				AA71984E287A81A000623C15 /* UIScrollView-KIFAdditions.m in Sources */,
 				AA719849287A81A000623C15 /* NSException-KIFAdditions.m in Sources */,
 				AA7197AB287A481500623C15 /* ControlModel.swift in Sources */,
@@ -517,6 +540,7 @@
 				AA71970C287A44D200623C15 /* PlayScreen.swift in Sources */,
 				AA71986C287A81A000623C15 /* NSObject+Swizzle.m in Sources */,
 				AA71970F287A44D200623C15 /* PlayCover.swift in Sources */,
+				B127172528817C040025112B /* DiscordIPC.swift in Sources */,
 				AA719850287A81A000623C15 /* UITouch-KIFAdditions.m in Sources */,
 				AA71985F287A81A000623C15 /* IOHIDEvent+KIF.m in Sources */,
 				AA719861287A81A000623C15 /* NSFileManager-KIFAdditions.m in Sources */,
@@ -758,6 +782,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B127172028817AB90025112B /* XCRemoteSwiftPackageReference "swordRPC" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/khoralee/swordRPC";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B127172128817AB90025112B /* SwordRPC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B127172028817AB90025112B /* XCRemoteSwiftPackageReference "swordRPC" */;
+			productName = SwordRPC;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AA7196CF287A447700623C15 /* Project object */;
 }

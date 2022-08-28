@@ -37,6 +37,8 @@ let settings = PlaySettings.shared
         return false
     }()
 
+    lazy var discordActivity = settingsData.discordActivity
+
     lazy var keymapping = settingsData.keymapping
 
     lazy var gamingMode: Bool = isGame
@@ -84,5 +86,6 @@ struct AppSettingsData: Codable {
     var aspectRatio = 1
     var notch = false
     var bypass = false
+    var discordActivity = DiscordActivity()
     var version = "2.0.0"
 }
