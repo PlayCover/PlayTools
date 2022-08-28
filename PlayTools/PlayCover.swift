@@ -21,9 +21,7 @@ final public class PlayCover: NSObject {
 
     @objc static public func launch() {
         quitWhenClose()
-        PlaySettings.shared.setupLayout()
         PlayInput.shared.initialize()
-        PlaySettings.shared.clearLegacy()
     }
 
     @objc static public func quitWhenClose() {

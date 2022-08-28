@@ -20,7 +20,7 @@ final class PlayInput: NSObject {
     func setup() {
         actions = []
         var counter = 2
-        for key in settings.layout {
+        for key in settings.keymap {
             if key.count == 4 {
                 actions.append(ButtonAction(id: counter,
                                             keyid: Int(key[0]),
@@ -107,7 +107,7 @@ final class PlayInput: NSObject {
     }
 
     func initialize() {
-        if PlaySettings.shared.keymapping == false {
+        if !PlaySettings.shared.keymapping {
             return
         }
 
