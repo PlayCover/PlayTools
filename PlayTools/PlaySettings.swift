@@ -39,20 +39,6 @@ let settings = PlaySettings.shared
 
     lazy var keymapping = settingsData.keymapping
 
-    lazy var keymap = settingsData.keymap {
-        didSet {
-            settingsData.keymap = keymap
-            let encoder = PropertyListEncoder()
-            encoder.outputFormat = .xml
-            do {
-                let data = try encoder.encode(settingsData)
-                try data.write(to: settingsUrl)
-            } catch {
-                os_log("[PlayTools] PlaySettings encode failed.\n%@", type: .error, error as CVarArg)
-            }
-        }
-    }
-
     lazy var gamingMode: Bool = isGame
 
     lazy var notch = settingsData.notch
@@ -87,7 +73,6 @@ let settings = PlaySettings.shared
 struct AppSettingsData: Codable {
     var keymapping = true
     var mouseMapping = true
-    var keymap: [[CGFloat]] = []
     var sensitivity: Float = 50
 
     var disableTimeout = false

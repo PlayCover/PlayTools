@@ -80,6 +80,7 @@
 		AA719872287A81A000623C15 /* UITouch+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719844287A81A000623C15 /* UITouch+Private.h */; };
 		AA818CB9287ABFB1000BEE9D /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CB8287ABFB1000BEE9D /* IOKit.framework */; };
 		AA818CBB287ABFD5000BEE9D /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
+		B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -160,6 +161,7 @@
 		AA719844287A81A000623C15 /* UITouch+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UITouch+Private.h"; sourceTree = "<group>"; };
 		AA818CB8287ABFB1000BEE9D /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/IOKit.framework; sourceTree = DEVELOPER_DIR; };
 		AA818CBA287ABFD5000BEE9D /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/iOSSupport/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keymapping.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -264,6 +266,7 @@
 				AA71979C287A481500623C15 /* EditorController.swift */,
 				AA71979D287A481500623C15 /* DragElementsView.swift */,
 				AA71979E287A481500623C15 /* KeyCodeNames.swift */,
+				B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */,
 			);
 			path = Keymap;
 			sourceTree = "<group>";
@@ -517,6 +520,7 @@
 				AA719850287A81A000623C15 /* UITouch-KIFAdditions.m in Sources */,
 				AA71985F287A81A000623C15 /* IOHIDEvent+KIF.m in Sources */,
 				AA719861287A81A000623C15 /* NSFileManager-KIFAdditions.m in Sources */,
+				B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */,
 				AA71985A287A81A000623C15 /* UIApplication-KIFAdditions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
