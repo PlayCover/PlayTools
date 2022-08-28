@@ -75,7 +75,7 @@ final class EditorController: NSObject {
     }
 
     func showButtons() {
-        for btn in settings.layout {
+        for btn in settings.keymap {
             if let ctrl = ControlModel.createControlFromData(data: btn) {
                 addControlToView(control: ctrl)
             }
@@ -87,7 +87,7 @@ final class EditorController: NSObject {
         for model in controls {
             updatedLayout.append(model.save())
         }
-        settings.layout = updatedLayout
+        settings.keymap = updatedLayout
         controls = []
         view.subviews.forEach { $0.removeFromSuperview() }
     }
