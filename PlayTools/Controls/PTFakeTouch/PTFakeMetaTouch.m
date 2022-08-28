@@ -99,8 +99,16 @@ void moveCursorTo(CGPoint point){
         [touch setPhaseAndUpdateTimestamp:phase];
     }
     
-    UIEvent *event = [self eventWithTouches:livingTouchAry];
-    [[UIApplication sharedApplication] sendEvent:event];
+//    UIEvent *event = [self eventWithTouches:livingTouchAry];
+    UIEvent *event = [[UIApplication sharedApplication] _touchesEvent];
+    [event kif_setEventWithTouches:livingTouchAry];
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        [event _clearTouches];
+        for (UITouch *aTouch in livingTouchAry) {
+            [event _addTouch:aTouch forDelayedDelivery:NO];
+        }
+        [[UIApplication sharedApplication] sendEvent:event];
+    });
     if ((touch.phase==UITouchPhaseBegan)||touch.phase==UITouchPhaseMoved) {
         [touch setPhaseAndUpdateTimestamp:UITouchPhaseStationary];
     }
