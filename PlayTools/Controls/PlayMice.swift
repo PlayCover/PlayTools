@@ -44,8 +44,10 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         return point
     }
 
-    public func setup(_ key: [CGFloat]) {
-        camera = CameraControl(centerX: key[0].absoluteX, centerY: key[1].absoluteY)
+    func setup(_ data: MouseArea) {
+        camera = CameraControl(
+            centerX: data.transform.xCoord.absoluteX,
+            centerY: data.transform.yCoord.absoluteY)
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
                 if !mode.visible {

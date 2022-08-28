@@ -20,26 +20,20 @@ final class PlayInput: NSObject {
     func setup() {
         actions = []
         var counter = 2
-        for key in settings.keymap {
-            if key.count == 4 {
-                actions.append(ButtonAction(id: counter,
-                                            keyid: Int(key[0]),
-                                            key: GCKeyCode.init(rawValue: CFIndex(key[0])),
-                                            point: CGPoint(x: key[1].absoluteX,
-                                                           y: key[2].absoluteY)))
-            } else if key.count == 8 {
-                actions.append(JoystickAction(id: counter,
-                                              keys: [GCKeyCode.init(rawValue: CFIndex(key[0])),
-                                                     GCKeyCode.init(rawValue: CFIndex(key[1])),
-                                                     GCKeyCode.init(rawValue: CFIndex(key[2])),
-                                                     GCKeyCode.init(rawValue: CFIndex(key[3]))],
-                                              center: CGPoint(x: key[4].absoluteX,
-                                                              y: key[5].absoluteY),
-                                              shift: key[6].absoluteSize))
-            } else if key.count == 2 && PlaySettings.shared.gamingMode {
-                PlayMice.shared.setup(key)
-            }
+        for button in keymap.keymapData.buttonModels {
+            actions.append(ButtonAction(id: counter, data: button))
             counter += 1
+        }
+
+        for joystick in keymap.keymapData.joystickModel {
+            actions.append(JoystickAction(id: counter, data: joystick))
+            counter += 1
+        }
+        if settings.gamingMode {
+            for mouse in keymap.keymapData.mouseAreaModel {
+                PlayMice.shared.setup(mouse)
+                counter += 1
+            }
         }
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             keyboard.keyChangedHandler = { _, _, keyCode, _ in
