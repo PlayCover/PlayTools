@@ -101,7 +101,6 @@ void moveCursorTo(CGPoint point){
     
 //    UIEvent *event = [self eventWithTouches:livingTouchAry];
     UIEvent *event = [[UIApplication sharedApplication] _touchesEvent];
-    [event kif_setEventWithTouches:livingTouchAry];
     dispatch_sync(dispatch_get_main_queue(), ^{
         [event _clearTouches];
         for (UITouch *aTouch in livingTouchAry) {
