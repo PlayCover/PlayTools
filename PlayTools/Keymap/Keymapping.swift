@@ -14,7 +14,7 @@ class Keymapping {
     static let shared = Keymapping()
 
     let bundleIdentifier = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
-    let keymapUrl: URL
+    var keymapUrl: URL
     var keymapData: KeymappingData {
         didSet {
             encode()
@@ -24,7 +24,17 @@ class Keymapping {
     init() {
         keymapUrl = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("Keymapping")
-            .appendingPathComponent("\(bundleIdentifier).plist")
+        if !FileManager.default.fileExists(atPath: keymapUrl.path) {
+            do {
+                try FileManager.default.createDirectory(
+                    atPath: keymapUrl.path,
+                    withIntermediateDirectories: true,
+                    attributes: [:])
+            } catch {
+                os_log("[PlayTools] Failed to create Keymapping directory.\n%@", type: .error, error as CVarArg)
+            }
+        }
+        keymapUrl.appendPathComponent("\(bundleIdentifier).plist")
         keymapData = KeymappingData(bundleIdentifier: bundleIdentifier)
         if !decode() {
             encode()
