@@ -42,6 +42,16 @@ class ButtonAction: Action {
         }
     }
 
+    convenience init(id: Int, data: Button) {
+        self.init(
+            id: id,
+            keyid: data.keyCode,
+            key: GCKeyCode(rawValue: CFIndex(data.keyCode)),
+            point: CGPoint(
+                x: data.transform.xCoord.absoluteX,
+                y: data.transform.yCoord.absoluteY))
+    }
+
     func update(pressed: Bool) {
         if pressed {
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
@@ -77,6 +87,21 @@ class JoystickAction: Action {
                 self.update()
             }
         }
+    }
+
+    convenience init(id: Int, data: Joystick) {
+        self.init(
+            id: id,
+            keys: [
+                GCKeyCode(rawValue: CFIndex(data.upKeyCode)),
+                GCKeyCode(rawValue: CFIndex(data.downKeyCode)),
+                GCKeyCode(rawValue: CFIndex(data.leftKeyCode)),
+                GCKeyCode(rawValue: CFIndex(data.rightKeyCode))
+            ],
+            center: CGPoint(
+                x: data.transform.xCoord.absoluteX,
+                y: data.transform.yCoord.absoluteY),
+            shift: data.transform.size.absoluteSize)
     }
 
     func invalidate() {
