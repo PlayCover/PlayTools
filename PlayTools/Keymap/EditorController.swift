@@ -75,19 +75,48 @@ final class EditorController: NSObject {
     }
 
     func showButtons() {
-        for btn in settings.layout {
-            if let ctrl = ControlModel.createControlFromData(data: btn) {
-                addControlToView(control: ctrl)
-            }
+        for button in keymap.keymapData.buttonModels {
+            let ctrl = ButtonModel(data: ControlData(
+                keyCodes: [button.keyCode],
+                size: button.transform.size,
+                xCoord: button.transform.xCoord,
+                yCoord: button.transform.yCoord,
+                parent: nil))
+            addControlToView(control: ctrl)
+        }
+        for joystick in keymap.keymapData.joystickModel {
+            let ctrl = JoystickModel(data: ControlData(
+                keyCodes: [joystick.upKeyCode, joystick.downKeyCode, joystick.leftKeyCode, joystick.rightKeyCode],
+                size: joystick.transform.size,
+                xCoord: joystick.transform.xCoord,
+                yCoord: joystick.transform.yCoord))
+            addControlToView(control: ctrl)
+        }
+        for mouse in keymap.keymapData.mouseAreaModel {
+            let ctrl =
+                MouseAreaModel(data: ControlData(
+                    size: mouse.transform.size,
+                    xCoord: mouse.transform.xCoord,
+                    yCoord: mouse.transform.yCoord))
+            addControlToView(control: ctrl)
         }
     }
 
     func saveButtons() {
-        var updatedLayout = [[CGFloat]]()
-        for model in controls {
-            updatedLayout.append(model.save())
+        var keymapData = KeymappingData(bundleIdentifier: keymap.bundleIdentifier)
+        controls.forEach {
+            switch $0 {
+            case let model as JoystickModel:
+                keymapData.joystickModel.append(model.save())
+            case let model as MouseAreaModel:
+                keymapData.mouseAreaModel.append(model.save())
+            case let model as ButtonModel:
+                keymapData.buttonModels.append(model.save())
+            default:
+                break
+            }
         }
-        settings.layout = updatedLayout
+        keymap.keymapData = keymapData
         controls = []
         view.subviews.forEach { $0.removeFromSuperview() }
     }
