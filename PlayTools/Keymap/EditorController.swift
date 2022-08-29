@@ -152,6 +152,15 @@ final class EditorController: NSObject {
         }
     }
 
+    @objc public func addDraggableButton(_ center: CGPoint, _ keyCode: Int) {
+        if editorMode {
+            addControlToView(control: DraggableButtonModel(data: ControlData(keyCodes: [keyCode],
+                                                                       size: 15,
+                                                                       xCoord: center.x,
+                                                                       yCoord: center.y)))
+        }
+    }
+
     func updateEditorText(_ str: String) {
         view.label?.text = str
     }
