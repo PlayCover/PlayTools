@@ -165,8 +165,8 @@ final class CameraControl {
             }
             movingFast = true
         }
-        self.location.x += deltaX * CGFloat(PlaySettings.shared.sensivity)
-        self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensivity)
+        self.location.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
+        self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
         let previous = sequence
 

@@ -15,7 +15,7 @@ import GameController
         self.parent = parent
     }
 
-    init(keyCodes: [Int], size: CGFloat, xCoord: CGFloat, yCoord: CGFloat, sensivity: CGFloat) {
+    init(keyCodes: [Int], size: CGFloat, xCoord: CGFloat, yCoord: CGFloat, sensitivity: CGFloat) {
         self.keyCodes = keyCodes
         self.size = size
         self.xCoord = xCoord

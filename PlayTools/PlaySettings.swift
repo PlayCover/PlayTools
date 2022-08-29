@@ -45,7 +45,7 @@ let settings = PlaySettings.shared
 
     lazy var notch = settingsData.notch
 
-    lazy var sensivity = settingsData.sensitivity
+    lazy var sensitivity = settingsData.sensitivity / 100
 
     lazy var windowSizeHeight = CGFloat(settingsData.windowHeight)
 
