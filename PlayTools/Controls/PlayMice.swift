@@ -46,10 +46,18 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
 
     public func setup(_ key: [CGFloat]) {
         camera = CameraControl(centerX: key[0].absoluteX, centerY: key[1].absoluteY)
+        setupMouseMovedHandler()
+    }
+
+    public func setupMouseMovedHandler() {
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
                 if !mode.visible {
-                    self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
+                    if let draggableButton = DraggableButtonAction.activeButton {
+                        draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
+                    } else {
+                        self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
+                    }
                 }
             }
         }
