@@ -88,9 +88,14 @@
             [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
             [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
         }
+        
+        if ([[PlaySettings shared] refreshRate] == 75){
+         [objc_getClass("UnityAppController") swizzleInstanceMethod:@selector(callbackFramerateChange:)
+                                                         withMethod:@selector(hook_callbackFramerateChange75:)];
+        }
 
         if ([[PlaySettings shared] refreshRate] == 120){
-         [objc_getClass("UnityAppController") swizzleInstanceMethod:@selector(callbackFramerateChange:) withMethod:@selector(hook_callbackFramerateChange:)];
+         [objc_getClass("UnityAppController") swizzleInstanceMethod:@selector(callbackFramerateChange:) withMethod:@selector(hook_callbackFramerateChange120:)];
         }
 
         [objc_getClass("NSMenuItem") swizzleClassMethod:@selector(enabled) withMethod:@selector(hook_enabled)];
@@ -111,9 +116,14 @@
     return false;
 }
 
-- (void) hook_callbackFramerateChange:(int)targetFPS {
+- (void) hook_callbackFramerateChange75:(int)targetFPS {
     printf("FPS %d", targetFPS);
-    [self hook_callbackFramerateChange:120];
+    [self hook_callbackFramerateChange75:75];
+}
+
+- (void) hook_callbackFramerateChange120:(int)targetFPS {
+    printf("FPS %d", targetFPS);
+    [self hook_callbackFramerateChange120:120];
 }
 
 - (MTLPixelFormat) hook_stencilAttachmentPixelFormat {
