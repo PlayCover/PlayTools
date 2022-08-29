@@ -41,7 +41,7 @@ let settings = PlaySettings.shared
 
     lazy var keymapping = settingsData.keymapping
 
-    lazy var gamingMode: Bool = isGame
+    lazy var mouseMapping = settingsData.mouseMapping
 
     lazy var notch = settingsData.notch
 
@@ -51,7 +51,7 @@ let settings = PlaySettings.shared
 
     lazy var windowSizeWidth = CGFloat(settingsData.windowWidth)
 
-    @objc lazy var adaptiveDisplay = isGame
+    @objc lazy var adaptiveDisplay = settingsData.resolution == 0 ? false : true
 
     @objc lazy var deviceModel = settingsData.iosDeviceModel as NSString
 
@@ -82,7 +82,7 @@ struct AppSettingsData: Codable {
     var refreshRate = 60
     var windowWidth = 1920
     var windowHeight = 1080
-    var resolution = 2
+    var resolution = 0
     var aspectRatio = 1
     var notch = false
     var bypass = false
