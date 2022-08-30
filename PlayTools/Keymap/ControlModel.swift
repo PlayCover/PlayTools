@@ -59,6 +59,11 @@ class ControlModel {
                                                  xCoord: data[1],
                                                  yCoord: data[2],
                                                  parent: nil))
+        } else if data.count == 5 {
+            return DraggableButtonModel(data: ControlData(keyCodes: [Int(data[0])],
+                                                          size: data[3],
+                                                          xCoord: data[1],
+                                                          yCoord: data[2]))
         } else if data.count == 8 {
             return JoystickModel(data: ControlData(keyCodes: [Int(data[0]),
                                                               Int(data[1]), Int(data[2]),
@@ -232,6 +237,36 @@ class JoystickButtonModel: ControlModel {
     }
 }
 
+class DraggableButtonModel: MouseAreaModel {
+    var childButton: JoystickButtonModel?
+
+    override func save() -> [CGFloat] {
+        return [CGFloat(childButton!.data.keyCodes[0]),
+                self.data.xCoord, self.data.yCoord, self.data.size, self.data.size]
+    }
+
+    override func setKeyCodes(keys: [Int]) {
+        childButton!.setKeyCodes(keys: keys)
+    }
+    override func focus(_ focus: Bool) {
+        super.focus(focus)
+        if !focus {
+            childButton?.focus(false)
+        }
+    }
+    override func update() {
+        super.update()
+        if childButton == nil {
+            childButton = JoystickButtonModel(data: ControlData(keyCodes: [data.keyCodes[0]], parent: self))
+        }
+        let btn = button.subviews[0]
+        let buttonSize = data.size.absoluteSize / 3
+        let coord = (button.frame.width - buttonSize) / 2
+        btn.frame = CGRect(x: coord, y: coord, width: buttonSize, height: buttonSize)
+        btn.layer.cornerRadius = 0.5 * btn.bounds.size.width
+    }
+}
+
 class JoystickModel: ControlModel {
     var joystickButtons = [JoystickButtonModel]()
 
@@ -280,6 +315,11 @@ class JoystickModel: ControlModel {
         for joystickButton in joystickButtons {
             joystickButton.focus(false)
         }
+    }
+
+    override func setKeyCodes(keys: [Int]) {
+        // I'm trying to be an easter egg
+        Toast.showOver(msg: "U~w~U")
     }
 
     override func resize(down: Bool) {
@@ -331,6 +371,11 @@ class MouseAreaModel: ControlModel {
         button.setY(yCoord: data.yCoord.absoluteY)
         button.layer.cornerRadius = 0.5 * button.bounds.size.width
         button.clipsToBounds = true
+    }
+
+    override func setKeyCodes(keys: [Int]) {
+        EditorController.shared.removeControl()
+        EditorController.shared.addDraggableButton(CGPoint(x: data.xCoord, y: data.yCoord), keys[0])
     }
 
     override init(data: ControlData) {

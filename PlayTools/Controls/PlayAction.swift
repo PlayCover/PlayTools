@@ -51,6 +51,41 @@ class ButtonAction: Action {
     }
 }
 
+class DraggableButtonAction: ButtonAction {
+    static public var activeButton: DraggableButtonAction?
+
+    var releasePoint: CGPoint
+
+    override init(id: Int, keyid: Int, key: GCKeyCode, point: CGPoint) {
+        self.releasePoint = point
+        super.init(id: id, keyid: keyid, key: key, point: point)
+        PlayMice.shared.setupMouseMovedHandler()
+    }
+
+    override func update(pressed: Bool) {
+        if pressed {
+            Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
+            self.releasePoint = point
+            DraggableButtonAction.activeButton = self
+        } else {
+            DraggableButtonAction.activeButton = nil
+            Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: id)
+        }
+    }
+
+    override func invalidate() {
+        DraggableButtonAction.activeButton = nil
+        PlayMice.shared.stop()
+        super.invalidate()
+    }
+
+    func onMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
+        self.releasePoint.x += deltaX * CGFloat(PlaySettings.shared.sensivity)
+        self.releasePoint.y -= deltaY * CGFloat(PlaySettings.shared.sensivity)
+        Toucher.touchcam(point: self.releasePoint, phase: UITouch.Phase.moved, tid: id)
+    }
+}
+
 class JoystickAction: Action {
     let keys: [GCKeyCode]
     let center: CGPoint
