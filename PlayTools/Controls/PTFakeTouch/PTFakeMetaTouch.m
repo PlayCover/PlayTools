@@ -13,6 +13,7 @@
 #include <dlfcn.h>
 
 static NSMutableArray *touchAry;
+static NSMutableArray *livingTouchAry;
 
 void disableCursor(boolean_t disable){
        void *handle;
@@ -63,6 +64,7 @@ void moveCursorTo(CGPoint point){
 + (void)load{
     KW_ENABLE_CATEGORY(UITouch_KIFAdditions);
     KW_ENABLE_CATEGORY(UIEvent_KIFAdditions);
+    livingTouchAry = [[NSMutableArray alloc] init];
     touchAry = [[NSMutableArray alloc] init];
     for (NSInteger i = 0; i< 100; i++) {
         UITouch *touch = [[UITouch alloc] initTouch];
@@ -78,35 +80,43 @@ void moveCursorTo(CGPoint point){
     return nil;
 }
 
-+ (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase{
-    pointId = pointId - 1;
-    UITouch *touch = [touchAry objectAtIndex:pointId];
-    if (phase == UITouchPhaseBegan) {
-        touch = nil;
-        touch = [[UITouch alloc] initAtPoint:point inWindow:[UIApplication sharedApplication].keyWindow];
-        
-#warning - Keyboard -
-        //// Keyboard FIX: Artem Levkovich, ITRex Group: http://itrexgroup.com
-        CGRect keyboardFrame;
-        // AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-        // keyboardFrame = appDelegate.keyboardFrame; (get keyboard frame using UIKeyboardDidShowNotification)
-        if([[[UIApplication sharedApplication].windows lastObject] isKindOfClass:NSClassFromString(@"UIRemoteKeyboardWindow")] && (CGRectContainsPoint(CGRectMake(0, [UIApplication sharedApplication].keyWindow.frame.size.height-keyboardFrame.size.height, [UIApplication sharedApplication].keyWindow.frame.size.width, keyboardFrame.size.height), point))) {
-            touch = [[UITouch alloc] initAtPoint:point inWindow:[[UIApplication sharedApplication].windows lastObject]];
-        }
-        
-        [touchAry replaceObjectAtIndex:pointId withObject:touch];
-        [touch setLocationInWindow:point];
-    }else{
-        [touch setLocationInWindow:point];
++ (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase inWindow:(UIWindow*)window{
+    pointId -= 1;
+    // ideally should be phase began when this hit
+    // but if by any means other phases come... well lets be forgiving
+    NSUInteger livingIndex = [livingTouchAry indexOfObjectIdenticalTo:touchAry[pointId]];
+    if(livingIndex == NSNotFound) {
+        if(phase == UITouchPhaseEnded) return -1;
+        UITouch *touch = [[UITouch alloc] initAtPoint:point inWindow:window];
+        livingIndex = livingTouchAry.count;
+        [livingTouchAry addObject:touch];
+        [touchAry setObject:touch atIndexedSubscript:pointId ];
+    }
+    UITouch *touch = [livingTouchAry objectAtIndex:livingIndex];
+    
+    [touch setLocationInWindow:point];
+    if(touch.phase!=UITouchPhaseBegan){
         [touch setPhaseAndUpdateTimestamp:phase];
     }
     
-    UIEvent *event = [self eventWithTouches:touchAry];
-    [[UIApplication sharedApplication] sendEvent:event];
+//    UIEvent *event = [self eventWithTouches:livingTouchAry];
+    UIEvent *event = [[UIApplication sharedApplication] _touchesEvent];
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        [event _clearTouches];
+        for (UITouch *aTouch in livingTouchAry) {
+            [event _addTouch:aTouch forDelayedDelivery:NO];
+        }
+        [[UIApplication sharedApplication] sendEvent:event];
+    });
     if ((touch.phase==UITouchPhaseBegan)||touch.phase==UITouchPhaseMoved) {
         [touch setPhaseAndUpdateTimestamp:UITouchPhaseStationary];
     }
-    return (pointId+1);
+    
+    if (phase == UITouchPhaseEnded) {
+        [livingTouchAry removeObjectAtIndex:livingIndex];
+//        [touchAry removeObjectAtIndex:pointId];
+    }
+    return livingIndex;
 }
 
 

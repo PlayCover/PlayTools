@@ -50,8 +50,10 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
             centerY: data.transform.yCoord.absoluteY)
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
-                if !mode.visible {
-                    self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
+                Toucher.touchQueue.async {
+                    if !mode.visible {
+                        self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
+                    }
                 }
             }
         }
@@ -125,7 +127,7 @@ final class CameraControl {
 
     func delay(_ delay: Double, closure: @escaping () -> Void) {
         let when = DispatchTime.now() + delay
-        DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
+        Toucher.touchQueue.asyncAfter(deadline: when, execute: closure)
     }
 
     // if max speed of this touch is high
