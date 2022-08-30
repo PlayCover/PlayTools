@@ -74,18 +74,20 @@ class JoystickAction: Action {
         self.shift = shift / 2
         self.id = id
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            keyboard.button(forKeyCode: keys[0])?.pressedChangedHandler = { _, _, _ in
-                self.update()
+            for key in keys {
+                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { _, _, _ in
+                    Toucher.touchQueue.async(execute: self.update)
+                }
             }
-            keyboard.button(forKeyCode: keys[1])?.pressedChangedHandler = { _, _, _ in
-                self.update()
-            }
-            keyboard.button(forKeyCode: keys[2])?.pressedChangedHandler = { _, _, _ in
-                self.update()
-            }
-            keyboard.button(forKeyCode: keys[3])?.pressedChangedHandler = { _, _, _ in
-                self.update()
-            }
+//            keyboard.button(forKeyCode: keys[1])?.pressedChangedHandler = { _, _, _ in
+//                self.update()
+//            }
+//            keyboard.button(forKeyCode: keys[2])?.pressedChangedHandler = { _, _, _ in
+//                self.update()
+//            }
+//            keyboard.button(forKeyCode: keys[3])?.pressedChangedHandler = { _, _, _ in
+//                self.update()
+//            }
         }
     }
 
@@ -136,7 +138,7 @@ class JoystickAction: Action {
                     start.y += (touch.y - start.y) / 8
                     moving = true
                     Toucher.touchcam(point: start, phase: UITouch.Phase.began, tid: id)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
+                    Toucher.touchQueue.asyncAfter(deadline: .now() + 0.04) {
                         if self.moving {
                             Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: self.id)
                         }

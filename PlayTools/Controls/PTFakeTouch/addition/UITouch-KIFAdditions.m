@@ -73,7 +73,7 @@ typedef struct {
 
 - (void)resetTouch{
     // Create a fake tap touch
-    UIWindow *window = [[UIApplication sharedApplication] keyWindow];
+    UIWindow *window = [[UIApplication sharedApplication].windows lastObject];
     CGPoint point = CGPointMake(0, 0);
     [self setWindow:window]; // Wipes out some values.  Needs to be first.
     
@@ -112,7 +112,7 @@ typedef struct {
     if (self == nil) {
         return nil;
     }
-    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    UIWindow *window = [[UIApplication sharedApplication].windows lastObject];
     CGPoint point = CGPointMake(0, 0);
     [self setWindow:window]; // Wipes out some values.  Needs to be first.
     
