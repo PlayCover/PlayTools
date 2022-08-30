@@ -31,7 +31,7 @@ double ColourDistance(RGB e1, RGB e2);
  *  @param phase   操作的类别 type of the operation
  *  @param window  key window in which touch event is to happen
  *
- *  @return pointId 返回操作的序列号 returns sequence number of the operation
+ *  @return realid returns the allocated ID for this touch point, or -1 if no such point
  */
 
 + (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase inWindow:(UIWindow*)window;
