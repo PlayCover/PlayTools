@@ -27,6 +27,12 @@ final class PlayInput: NSObject {
                                             key: GCKeyCode.init(rawValue: CFIndex(key[0])),
                                             point: CGPoint(x: key[1].absoluteX,
                                                            y: key[2].absoluteY)))
+            } else if key.count == 5 {
+                actions.append(DraggableButtonAction(id: counter,
+                                                     keyid: Int(key[0]),
+                                                     key: GCKeyCode.init(rawValue: CFIndex(key[0])),
+                                                     point: CGPoint(x: key[1].absoluteX,
+                                                                    y: key[2].absoluteY)))
             } else if key.count == 8 {
                 actions.append(JoystickAction(id: counter,
                                               keys: [GCKeyCode.init(rawValue: CFIndex(key[0])),
