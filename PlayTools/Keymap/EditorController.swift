@@ -20,7 +20,7 @@ final class EditorController: NSObject {
     lazy var editorWindow: UIWindow = initWindow()
     var previousWindow: UIWindow?
     var controls: [ControlModel] = []
-    var viewController = EditorViewController(nibName: nil, bundle: nil)
+    lazy var viewController = EditorViewController(nibName: nil, bundle: nil)
     lazy var view: EditorView! = viewController.view as? EditorView
 
     private func initWindow() -> UIWindow {
