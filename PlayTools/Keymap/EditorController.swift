@@ -55,7 +55,7 @@ final class EditorController: NSObject {
             KeymapHolder.shared.hide()
             saveButtons()
             editorMode = false
-            editorWindow.windowScene = nil
+//            editorWindow.windowScene = nil
             previousWindow?.makeKeyAndVisible()
             mode.show(false)
             focusedControl = nil
@@ -63,7 +63,7 @@ final class EditorController: NSObject {
         } else {
             mode.show(true)
             previousWindow = screen.keyWindow
-            editorWindow.windowScene = screen.windowScene
+//            editorWindow.windowScene = screen.windowScene
             editorMode = true
             editorWindow.makeKeyAndVisible()
             showButtons()
