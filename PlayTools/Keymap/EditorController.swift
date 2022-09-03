@@ -3,6 +3,12 @@ import SwiftUI
 
 let editor = EditorController.shared
 
+class EditorViewController: UIViewController {
+    override func loadView() {
+        view = EditorView()
+    }
+}
+
 final class EditorController: NSObject {
 
     static let shared = EditorController()
@@ -11,8 +17,17 @@ final class EditorController: NSObject {
 
     var focusedControl: ControlModel?
 
+    lazy var editorWindow: UIWindow = initWindow()
+    var previousWindow: UIWindow?
     var controls: [ControlModel] = []
-    lazy var view: EditorView = EditorView()
+    lazy var viewController = EditorViewController(nibName: nil, bundle: nil)
+    lazy var view: EditorView! = viewController.view as? EditorView
+
+    private func initWindow() -> UIWindow {
+        let window = UIWindow(windowScene: screen.windowScene!)
+        window.rootViewController = viewController
+        return window
+    }
 
     private func addControlToView(control: ControlModel) {
         controls.append(control)
@@ -35,32 +50,31 @@ final class EditorController: NSObject {
 
     public func switchMode() {
         lock.lock()
-        if EditorController.shared.editorMode {
-            Toast.showOver(msg: "Keymapping saved")
-        } else {
-            Toast.showOver(msg: "Click to start keymmaping edit")
-        }
 
         if editorMode {
             KeymapHolder.shared.hide()
             saveButtons()
-            view.removeFromSuperview()
             editorMode = false
+//            editorWindow.windowScene = nil
+            previousWindow?.makeKeyAndVisible()
             mode.show(false)
             focusedControl = nil
+            Toast.showOver(msg: "Keymapping saved")
         } else {
             mode.show(true)
+            previousWindow = screen.keyWindow
+//            editorWindow.windowScene = screen.windowScene
             editorMode = true
+            editorWindow.makeKeyAndVisible()
             showButtons()
-            screen.window?.addSubview(view)
-            view.becomeFirstResponder()
+            Toast.showOver(msg: "Click to start keymmaping edit")
         }
         lock.unlock()
     }
 
     var editorMode: Bool {
-        get { view.isUserInteractionEnabled }
-        set { view.isUserInteractionEnabled = newValue}
+        get { !editorWindow.isHidden }
+        set { editorWindow.isHidden = !newValue}
     }
 
     public func setKeyCode(_ key: Int) {
@@ -174,7 +188,6 @@ extension UIResponder {
 
 class EditorView: UIView {
     override var preferredFocusEnvironments: [UIFocusEnvironment] {
-        if !isUserInteractionEnabled { return [self] }
         if let btn = editor.focusedControl?.button {
             return [btn]
         }
@@ -192,7 +205,7 @@ class EditorView: UIView {
     init() {
         super.init(frame: .zero)
         self.frame = screen.screenRect
-        self.isUserInteractionEnabled = false
+        self.isUserInteractionEnabled = true
         let single = UITapGestureRecognizer(target: self, action: #selector(self.doubleClick(sender:)))
         single.numberOfTapsRequired = 1
         self.addGestureRecognizer(single)
@@ -208,7 +221,6 @@ class EditorView: UIView {
     var label: UILabel?
 
     @objc func pressed(sender: UIButton!) {
-        if !isUserInteractionEnabled { return }
         if let button = sender as? Element {
             if editor.focusedControl?.button == nil || editor.focusedControl?.button != button {
                 editor.updateFocus(button: sender)
@@ -217,7 +229,6 @@ class EditorView: UIView {
     }
 
     @objc func dragged(_ sender: UIPanGestureRecognizer) {
-        if !isUserInteractionEnabled { return }
         if let ele = sender.view as? Element {
             if editor.focusedControl?.button == nil || editor.focusedControl?.button != ele {
                 editor.updateFocus(button: ele)
