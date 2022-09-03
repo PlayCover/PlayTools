@@ -111,6 +111,18 @@ public final class PlayScreen: NSObject {
         max / 100.0
     }
 
+    var keyWindow: UIWindow? {
+        return UIApplication
+            .shared
+            .connectedScenes
+            .flatMap { ($0 as? UIWindowScene)?.windows ?? [] }
+            .first { $0.isKeyWindow }
+    }
+
+    var windowScene: UIWindowScene? {
+        window?.windowScene
+    }
+
     var window: UIWindow? {
         return UIApplication.shared.windows.first
     }

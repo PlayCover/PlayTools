@@ -8,14 +8,14 @@ import UIKit
 
 class Toast {
     public static func showOver(msg: String) {
-        if let controller =  PlayInput.shared.root {
-            Toast.show(message: msg, controller: controller)
+        if let parent = screen.keyWindow {
+            Toast.show(message: msg, parent: parent)
         }
     }
 
     // swiftlint:disable function_body_length
 
-    private static func show(message: String, controller: UIViewController) {
+    private static func show(message: String, parent: UIView) {
         let toastContainer = UIView(frame: CGRect())
         toastContainer.backgroundColor = UIColor.black.withAlphaComponent(0.6)
         toastContainer.alpha = 0.0
@@ -32,7 +32,7 @@ class Toast {
         toastLabel.numberOfLines = 0
 
         toastContainer.addSubview(toastLabel)
-        controller.view.addSubview(toastContainer)
+        parent.addSubview(toastContainer)
 
         toastLabel.translatesAutoresizingMaskIntoConstraints = false
         toastContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -70,25 +70,25 @@ class Toast {
         let controllerConstraint1 = NSLayoutConstraint(item: toastContainer,
                                                        attribute: .leading,
                                                        relatedBy: .equal,
-                                                       toItem: controller.view,
+                                                       toItem: parent,
                                                        attribute: .leading,
                                                        multiplier: 1,
                                                        constant: 65)
         let controllerConstraint2 = NSLayoutConstraint(item: toastContainer,
                                                        attribute: .trailing,
                                                        relatedBy: .equal,
-                                                       toItem: controller.view,
+                                                       toItem: parent,
                                                        attribute: .trailing,
                                                        multiplier: 1,
                                                        constant: -65)
         let controllerConstraint3 = NSLayoutConstraint(item: toastContainer,
                                                        attribute: .bottom,
                                                        relatedBy: .equal,
-                                                       toItem: controller.view,
+                                                       toItem: parent,
                                                        attribute: .bottom,
                                                        multiplier: 1,
                                                        constant: -75)
-        controller.view.addConstraints([controllerConstraint1, controllerConstraint2, controllerConstraint3])
+        parent.addConstraints([controllerConstraint1, controllerConstraint2, controllerConstraint3])
 
         UIView.animate(withDuration: 0.5, delay: 0.0, options: .curveEaseIn, animations: {
             toastContainer.alpha = 1.0

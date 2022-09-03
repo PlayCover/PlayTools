@@ -7,7 +7,7 @@
 
 import UIKit
 
-extension UIViewController {
+extension UIWindow {
     @objc
     func switchEditorMode(_ sender: AnyObject) {
         EditorController.shared.switchMode()
@@ -37,10 +37,10 @@ var keymapping = ["Open/Close Keymapping Editor",
                   "Delete selected element",
                   "Upsize selected element",
                   "Downsize selected element"]
-var keymappingSelectors = [#selector(UIViewController.switchEditorMode(_:)),
-                           #selector(UIViewController.removeElement(_:)),
-                           #selector(UIViewController.upscaleElement(_:)),
-                           #selector(UIViewController.downscaleElement(_:))]
+var keymappingSelectors = [#selector(UIWindow.switchEditorMode(_:)),
+                           #selector(UIWindow.removeElement(_:)),
+                           #selector(UIWindow.upscaleElement(_:)),
+                           #selector(UIWindow.downscaleElement(_:))]
 
 class MenuController {
     init(with builder: UIMenuBuilder) {

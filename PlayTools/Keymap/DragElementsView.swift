@@ -27,7 +27,7 @@ class KeymapHolder: CircleMenuDelegate {
         menu?.center = location
         menu?.backgroundColor = UIColor.gray
         menu?.layer.cornerRadius = menu!.frame.size.width / 2
-        screen.window?.addSubview(menu!)
+        screen.keyWindow?.addSubview(menu!)
         menu?.backgroundColor = UIColor.black
         menu?.onTap()
     }
