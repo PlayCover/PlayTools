@@ -17,15 +17,14 @@ final class EditorController: NSObject {
 
     var focusedControl: ControlModel?
 
-    lazy var editorWindow: UIWindow = initWindow()
-    var previousWindow: UIWindow?
+    var editorWindow: UIWindow?
+    weak var previousWindow: UIWindow?
     var controls: [ControlModel] = []
-    lazy var viewController = EditorViewController(nibName: nil, bundle: nil)
-    lazy var view: EditorView! = viewController.view as? EditorView
+    var view: EditorView! {editorWindow?.rootViewController?.view as? EditorView}
 
     private func initWindow() -> UIWindow {
         let window = UIWindow(windowScene: screen.windowScene!)
-        window.rootViewController = viewController
+        window.rootViewController = EditorViewController(nibName: nil, bundle: nil)
         return window
     }
 
@@ -50,12 +49,14 @@ final class EditorController: NSObject {
 
     public func switchMode() {
         lock.lock()
-
         if editorMode {
             KeymapHolder.shared.hide()
             saveButtons()
-            editorMode = false
-//            editorWindow.windowScene = nil
+            editorWindow?.isHidden = true
+            editorWindow?.windowScene = nil
+            editorWindow?.rootViewController = nil
+            // menu still holds this object until next responder hit test
+            editorWindow = nil
             previousWindow?.makeKeyAndVisible()
             mode.show(false)
             focusedControl = nil
@@ -63,19 +64,16 @@ final class EditorController: NSObject {
         } else {
             mode.show(true)
             previousWindow = screen.keyWindow
-//            editorWindow.windowScene = screen.windowScene
-            editorMode = true
-            editorWindow.makeKeyAndVisible()
+            editorWindow = initWindow()
+            editorWindow?.makeKeyAndVisible()
             showButtons()
             Toast.showOver(msg: "Click to start keymmaping edit")
         }
+//        Toast.showOver(msg: "\(UIApplication.shared.windows.count)")
         lock.unlock()
     }
 
-    var editorMode: Bool {
-        get { !editorWindow.isHidden }
-        set { editorWindow.isHidden = !newValue}
-    }
+    var editorMode: Bool { !(editorWindow?.isHidden ?? true)}
 
     public func setKeyCode(_ key: Int) {
         if editorMode {
