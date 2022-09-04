@@ -7,7 +7,24 @@
 
 import UIKit
 
-extension UIWindow {
+class RotateViewController: UIViewController {
+    static let orientationList: [UIInterfaceOrientation] = [
+        .landscapeLeft, .portrait, .landscapeRight, .portraitUpsideDown]
+    static var orientationTraverser = 0
+
+    static func rotate() {
+        orientationTraverser += 1
+    }
+
+    override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
+        RotateViewController.orientationList[
+            RotateViewController.orientationTraverser % RotateViewController.orientationList.count]
+    }
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask { .all }
+    override var modalPresentationStyle: UIModalPresentationStyle { get {.fullScreen} set {} }
+}
+
+extension UIApplication {
     @objc
     func switchEditorMode(_ sender: AnyObject) {
         EditorController.shared.switchMode()
@@ -27,6 +44,20 @@ extension UIWindow {
     func downscaleElement(_ sender: AnyObject) {
         EditorController.shared.focusedControl?.resize(down: true)
     }
+
+    @objc
+    func rotateView(_ sender: AnyObject) {
+        RotateViewController.rotate()
+        let viewController = RotateViewController(nibName: nil, bundle: nil)
+        var parent = screen.keyWindow?.rootViewController
+        while parent?.presentedViewController != nil {
+            parent = parent?.presentedViewController
+        }
+        parent?.present(viewController, animated: true)
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1, execute: {
+            viewController.dismiss(animated: true)
+        })
+    }
 }
 
 struct CommandsList {
@@ -36,11 +67,13 @@ struct CommandsList {
 var keymapping = ["Open/Close Keymapping Editor",
                   "Delete selected element",
                   "Upsize selected element",
-                  "Downsize selected element"]
-var keymappingSelectors = [#selector(UIWindow.switchEditorMode(_:)),
-                           #selector(UIWindow.removeElement(_:)),
-                           #selector(UIWindow.upscaleElement(_:)),
-                           #selector(UIWindow.downscaleElement(_:))]
+                  "Downsize selected element",
+                  "Rotate display area"]
+var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
+                           #selector(UIApplication.removeElement(_:)),
+                           #selector(UIApplication.upscaleElement(_:)),
+                           #selector(UIApplication.downscaleElement(_:)),
+                           #selector(UIApplication.rotateView(_:))]
 
 class MenuController {
     init(with builder: UIMenuBuilder) {
@@ -51,7 +84,7 @@ class MenuController {
 
     @available(iOS 15.0, *)
     class func keymappingMenu() -> UIMenu {
-        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow ]
+        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R" ]
 
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
