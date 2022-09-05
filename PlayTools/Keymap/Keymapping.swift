@@ -90,6 +90,7 @@ struct MouseArea: Codable {
 
 struct KeymappingData: Codable {
     var buttonModels: [Button] = []
+    var draggableButtonModels: [Button] = []
     var joystickModel: [Joystick] = []
     var mouseAreaModel: [MouseArea] = []
     var bundleIdentifier: String
