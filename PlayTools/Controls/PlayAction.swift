@@ -42,6 +42,16 @@ class ButtonAction: Action {
         }
     }
 
+    convenience init(id: Int, data: Button) {
+        self.init(
+            id: id,
+            keyid: data.keyCode,
+            key: GCKeyCode(rawValue: CFIndex(data.keyCode)),
+            point: CGPoint(
+                x: data.transform.xCoord.absoluteX,
+                y: data.transform.yCoord.absoluteY))
+    }
+
     func update(pressed: Bool) {
         if pressed {
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
@@ -59,7 +69,9 @@ class DraggableButtonAction: ButtonAction {
     override init(id: Int, keyid: Int, key: GCKeyCode, point: CGPoint) {
         self.releasePoint = point
         super.init(id: id, keyid: keyid, key: key, point: point)
-        PlayMice.shared.setupMouseMovedHandler()
+        if settings.gamingMode {
+            PlayMice.shared.setupMouseMovedHandler()
+        }
     }
 
     override func update(pressed: Bool) {
@@ -80,8 +92,8 @@ class DraggableButtonAction: ButtonAction {
     }
 
     func onMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
-        self.releasePoint.x += deltaX * CGFloat(PlaySettings.shared.sensivity)
-        self.releasePoint.y -= deltaY * CGFloat(PlaySettings.shared.sensivity)
+        self.releasePoint.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
+        self.releasePoint.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
         Toucher.touchcam(point: self.releasePoint, phase: UITouch.Phase.moved, tid: id)
     }
 }
@@ -114,6 +126,21 @@ class JoystickAction: Action {
 //                self.update()
 //            }
         }
+    }
+
+    convenience init(id: Int, data: Joystick) {
+        self.init(
+            id: id,
+            keys: [
+                GCKeyCode(rawValue: CFIndex(data.upKeyCode)),
+                GCKeyCode(rawValue: CFIndex(data.downKeyCode)),
+                GCKeyCode(rawValue: CFIndex(data.leftKeyCode)),
+                GCKeyCode(rawValue: CFIndex(data.rightKeyCode))
+            ],
+            center: CGPoint(
+                x: data.transform.xCoord.absoluteX,
+                y: data.transform.yCoord.absoluteY),
+            shift: data.transform.size.absoluteSize)
     }
 
     func invalidate() {

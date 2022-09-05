@@ -44,16 +44,14 @@ extension UIApplication {
     func downscaleElement(_ sender: AnyObject) {
         EditorController.shared.focusedControl?.resize(down: true)
     }
+}
 
+extension UIViewController {
     @objc
     func rotateView(_ sender: AnyObject) {
         RotateViewController.rotate()
         let viewController = RotateViewController(nibName: nil, bundle: nil)
-        var parent = screen.keyWindow?.rootViewController
-        while parent?.presentedViewController != nil {
-            parent = parent?.presentedViewController
-        }
-        parent?.present(viewController, animated: true)
+        self.present(viewController, animated: true)
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1, execute: {
             viewController.dismiss(animated: true)
         })
@@ -73,7 +71,7 @@ var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIApplication.rotateView(_:))]
+                           #selector(UIViewController.rotateView(_:))]
 
 class MenuController {
     init(with builder: UIMenuBuilder) {
