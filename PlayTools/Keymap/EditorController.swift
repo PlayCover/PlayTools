@@ -105,20 +105,20 @@ final class EditorController: NSObject {
                 parent: nil))
             addControlToView(control: ctrl)
         }
-        for joystick in keymap.keymapData.joystickModel {
-            let ctrl = JoystickModel(data: ControlData(
-                keyCodes: [joystick.upKeyCode, joystick.downKeyCode, joystick.leftKeyCode, joystick.rightKeyCode],
-                size: joystick.transform.size,
-                xCoord: joystick.transform.xCoord,
-                yCoord: joystick.transform.yCoord))
-            addControlToView(control: ctrl)
-        }
         for mouse in keymap.keymapData.mouseAreaModel {
             let ctrl =
                 MouseAreaModel(data: ControlData(
                     size: mouse.transform.size,
                     xCoord: mouse.transform.xCoord,
                     yCoord: mouse.transform.yCoord))
+            addControlToView(control: ctrl)
+        }
+        for joystick in keymap.keymapData.joystickModel {
+            let ctrl = JoystickModel(data: ControlData(
+                keyCodes: [joystick.upKeyCode, joystick.downKeyCode, joystick.leftKeyCode, joystick.rightKeyCode],
+                size: joystick.transform.size,
+                xCoord: joystick.transform.xCoord,
+                yCoord: joystick.transform.yCoord))
             addControlToView(control: ctrl)
         }
     }
@@ -129,12 +129,13 @@ final class EditorController: NSObject {
             switch $0 {
             case let model as JoystickModel:
                 keymapData.joystickModel.append(model.save())
+            // subclasses must be checked first
+            case let model as DraggableButtonModel:
+                keymapData.draggableButtonModels.append(model.save())
             case let model as MouseAreaModel:
                 keymapData.mouseAreaModel.append(model.save())
             case let model as ButtonModel:
                 keymapData.buttonModels.append(model.save())
-            case let model as DraggableButtonModel:
-                keymapData.draggableButtonModels.append(model.save())
             default:
                 break
             }
@@ -168,7 +169,7 @@ final class EditorController: NSObject {
 
     @objc public func addRMB(_ toPoint: CGPoint) {
         if editorMode {
-            addControlToView(control: RMBModel(data: ControlData(keyCodes: [-2],
+            addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-2],
                                                                  size: 5,
                                                                  xCoord: toPoint.x.relativeX,
                                                                  yCoord: toPoint.y.relativeY,
@@ -178,7 +179,7 @@ final class EditorController: NSObject {
 
     @objc public func addLMB(_ toPoint: CGPoint) {
         if editorMode {
-            addControlToView(control: LMBModel(data: ControlData(keyCodes: [-1],
+            addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-1],
                                                                  size: 5,
                                                                  xCoord: toPoint.x.relativeX,
                                                                  yCoord: toPoint.y.relativeY,
@@ -188,7 +189,7 @@ final class EditorController: NSObject {
 
     @objc public func addMMB(_ toPoint: CGPoint) {
         if editorMode {
-            addControlToView(control: MMBModel(data: ControlData(keyCodes: [-3],
+            addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-3],
                                                                  size: 5,
                                                                  xCoord: toPoint.x.relativeX,
                                                                  yCoord: toPoint.y.relativeY,
@@ -253,6 +254,7 @@ class EditorView: UIView {
         for cntrl in editor.controls {
             cntrl.focus(false)
         }
+        editor.focusedControl = nil
         KeymapHolder.shared.add(sender.location(in: self))
     }
 
