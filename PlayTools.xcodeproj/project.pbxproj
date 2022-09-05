@@ -80,10 +80,10 @@
 		AA719872287A81A000623C15 /* UITouch+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719844287A81A000623C15 /* UITouch+Private.h */; };
 		AA818CB9287ABFB1000BEE9D /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CB8287ABFB1000BEE9D /* IOKit.framework */; };
 		AA818CBB287ABFD5000BEE9D /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
-		B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */; };
 		B127172228817AB90025112B /* SwordRPC in Frameworks */ = {isa = PBXBuildFile; productRef = B127172128817AB90025112B /* SwordRPC */; };
 		B127172528817C040025112B /* DiscordIPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B127172428817C040025112B /* DiscordIPC.swift */; };
 		B1271729288284BE0025112B /* DiscordActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1271728288284BE0025112B /* DiscordActivity.swift */; };
+		B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -164,9 +164,9 @@
 		AA719844287A81A000623C15 /* UITouch+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UITouch+Private.h"; sourceTree = "<group>"; };
 		AA818CB8287ABFB1000BEE9D /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/IOKit.framework; sourceTree = DEVELOPER_DIR; };
 		AA818CBA287ABFD5000BEE9D /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/iOSSupport/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
-		B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keymapping.swift; sourceTree = "<group>"; };
 		B127172428817C040025112B /* DiscordIPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordIPC.swift; sourceTree = "<group>"; };
 		B1271728288284BE0025112B /* DiscordActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordActivity.swift; sourceTree = "<group>"; };
+		B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keymapping.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -700,7 +700,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/PlayTools",
 				);
-				MARKETING_VERSION = 1.1.6;
+				MARKETING_VERSION = 1.1.7;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = io.playcover.PlayTools;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -744,7 +744,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/PlayTools",
 				);
-				MARKETING_VERSION = 1.1.6;
+				MARKETING_VERSION = 1.1.7;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = io.playcover.PlayTools;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";

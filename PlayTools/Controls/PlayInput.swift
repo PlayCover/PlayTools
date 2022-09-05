@@ -19,22 +19,30 @@ final class PlayInput: NSObject {
 
     func setup() {
         actions = []
+        // ID 1 is left for mouse area
         var counter = 2
         for button in keymap.keymapData.buttonModels {
             actions.append(ButtonAction(id: counter, data: button))
             counter += 1
         }
 
-        for joystick in keymap.keymapData.joystickModel {
-            actions.append(JoystickAction(id: counter, data: joystick))
-            counter += 1
+        for draggableButton in keymap.keymapData.draggableButtonModels {
+                actions.append(DraggableButtonAction(id: counter, data: draggableButton))
+                counter += 1
         }
+
         if settings.gamingMode {
             for mouse in keymap.keymapData.mouseAreaModel {
                 PlayMice.shared.setup(mouse)
                 counter += 1
             }
         }
+
+        for joystick in keymap.keymapData.joystickModel {
+            actions.append(JoystickAction(id: counter, data: joystick))
+            counter += 1
+        }
+
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             keyboard.keyChangedHandler = { _, _, keyCode, _ in
                 if editor.editorMode
@@ -122,13 +130,12 @@ final class PlayInput: NSObject {
     }
 
     private func eliminateRedundantKeyPressEvents() {
-        // dont know how to dynamically get it here
+        // TODO later: should not be hard-coded
         let NSEventMaskKeyDown: UInt64 = 1024
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask( NSEventMaskKeyDown, handler: { event in
             if (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed() {
                 return event
             }
-//            Toast.showOver(msg: "mask: \(NSEventMaskKeyDown)")
             return nil
         } as ResponseBlock)
     }

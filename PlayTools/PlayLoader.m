@@ -23,13 +23,13 @@
 #define CS_OPS_ENTITLEMENTS_BLOB 7 /* get entitlements blob */
 #define CS_OPS_IDENTITY 11         /* get codesign identity */
 
-int dyld_get_active_platform();
+int dyld_get_active_platform(void);
 
-int my_dyld_get_active_platform() { return 2; }
+int my_dyld_get_active_platform(void) { return 2; }
 
-extern void *dyld_get_base_platform(void *platform);
+extern uint64_t dyld_get_base_platform(void *platform);
 
-void *my_dyld_get_base_platform(void *platform) { return 2; }
+uint64_t my_dyld_get_base_platform(void *platform) { return 2; }
 
 // #define DEVICE_MODEL ("iPad13,8")
 //#define DEVICE_MODEL ("iPad8,6")
@@ -149,7 +149,7 @@ static int my_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
 
 static bool isGenshin = false;
 
-extern int csops(pid_t pid, unsigned int ops, void *useraddr, size_t usersize);
+extern int csops(pid_t pid, unsigned int ops, user_addr_t useraddr, size_t usersize);
 
 int my_csops(pid_t pid, uint32_t ops, user_addr_t useraddr, user_size_t usersize) {
   if (isGenshin) {
