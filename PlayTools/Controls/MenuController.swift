@@ -53,7 +53,7 @@ extension UIViewController {
         let viewController = RotateViewController(nibName: nil, bundle: nil)
         self.present(viewController, animated: true)
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1, execute: {
-            viewController.dismiss(animated: true)
+            self.dismiss(animated: true)
         })
     }
 }

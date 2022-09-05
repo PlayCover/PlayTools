@@ -147,27 +147,6 @@ class ButtonModel: ControlModel {
     }
 }
 
-class RMBModel: ButtonModel {
-    override func setKeyCodes(keys: [Int]) {
-        data.keyCodes = [-2]
-        button.setTitle("RMB", for: UIControl.State.normal)
-    }
-}
-
-class LMBModel: ButtonModel {
-    override func setKeyCodes(keys: [Int]) {
-        data.keyCodes = [-1]
-        button.setTitle("LMB", for: UIControl.State.normal)
-    }
-}
-
-class MMBModel: ButtonModel {
-    override func setKeyCodes(keys: [Int]) {
-        data.keyCodes = [-3]
-        button.setTitle("MMB", for: UIControl.State.normal)
-    }
-}
-
 class JoystickButtonModel: ControlModel {
     override init(data: ControlData) {
         super.init(data: data)
