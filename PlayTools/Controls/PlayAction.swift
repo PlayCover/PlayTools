@@ -116,15 +116,6 @@ class JoystickAction: Action {
                     Toucher.touchQueue.async(execute: self.update)
                 }
             }
-//            keyboard.button(forKeyCode: keys[1])?.pressedChangedHandler = { _, _, _ in
-//                self.update()
-//            }
-//            keyboard.button(forKeyCode: keys[2])?.pressedChangedHandler = { _, _, _ in
-//                self.update()
-//            }
-//            keyboard.button(forKeyCode: keys[3])?.pressedChangedHandler = { _, _, _ in
-//                self.update()
-//            }
         }
     }
 

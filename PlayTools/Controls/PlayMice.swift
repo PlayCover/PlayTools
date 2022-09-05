@@ -94,6 +94,12 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
                     return event
                 }
                 return nil
+            } else if EditorController.shared.editorMode {
+                if _up == 8 {
+                    EditorController.shared.setKeyCode(-2)
+                } else if _up == 33554432 {
+                    EditorController.shared.setKeyCode(-3)
+                }
             }
             return event
         } as ResponseBlock)
