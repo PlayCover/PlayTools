@@ -44,8 +44,10 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         return point
     }
 
-    public func setup(_ key: [CGFloat]) {
-        camera = CameraControl(centerX: key[0].absoluteX, centerY: key[1].absoluteY)
+    func setup(_ data: MouseArea) {
+        camera = CameraControl(
+            centerX: data.transform.xCoord.absoluteX,
+            centerY: data.transform.yCoord.absoluteY)
         setupMouseMovedHandler()
     }
 
@@ -173,8 +175,8 @@ final class CameraControl {
             }
             movingFast = true
         }
-        self.location.x += deltaX * CGFloat(PlaySettings.shared.sensivity)
-        self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensivity)
+        self.location.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
+        self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
         let previous = sequence
 

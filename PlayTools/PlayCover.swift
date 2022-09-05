@@ -21,9 +21,8 @@ final public class PlayCover: NSObject {
 
     @objc static public func launch() {
         quitWhenClose()
-        PlaySettings.shared.setupLayout()
         PlayInput.shared.initialize()
-        PlaySettings.shared.clearLegacy()
+        DiscordIPC.shared.initailize()
     }
 
     @objc static public func quitWhenClose() {
