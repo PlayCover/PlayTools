@@ -48,10 +48,20 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         camera = CameraControl(
             centerX: data.transform.xCoord.absoluteX,
             centerY: data.transform.yCoord.absoluteY)
+        setupMouseMovedHandler()
+    }
+
+    public func setupMouseMovedHandler() {
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
-                if !mode.visible {
-                    self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
+                Toucher.touchQueue.async {
+                    if !mode.visible {
+                        if let draggableButton = DraggableButtonAction.activeButton {
+                            draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
+                        } else {
+                            self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
+                        }
+                    }
                 }
             }
         }
@@ -84,6 +94,12 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
                     return event
                 }
                 return nil
+            } else if EditorController.shared.editorMode {
+                if _up == 8 {
+                    EditorController.shared.setKeyCode(-2)
+                } else if _up == 33554432 {
+                    EditorController.shared.setKeyCode(-3)
+                }
             }
             return event
         } as ResponseBlock)
@@ -125,7 +141,7 @@ final class CameraControl {
 
     func delay(_ delay: Double, closure: @escaping () -> Void) {
         let when = DispatchTime.now() + delay
-        DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
+        Toucher.touchQueue.asyncAfter(deadline: when, execute: closure)
     }
 
     // if max speed of this touch is high

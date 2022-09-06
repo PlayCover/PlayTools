@@ -61,6 +61,43 @@ class ButtonAction: Action {
     }
 }
 
+class DraggableButtonAction: ButtonAction {
+    static public var activeButton: DraggableButtonAction?
+
+    var releasePoint: CGPoint
+
+    override init(id: Int, keyid: Int, key: GCKeyCode, point: CGPoint) {
+        self.releasePoint = point
+        super.init(id: id, keyid: keyid, key: key, point: point)
+        if settings.gamingMode {
+            PlayMice.shared.setupMouseMovedHandler()
+        }
+    }
+
+    override func update(pressed: Bool) {
+        if pressed {
+            Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
+            self.releasePoint = point
+            DraggableButtonAction.activeButton = self
+        } else {
+            DraggableButtonAction.activeButton = nil
+            Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: id)
+        }
+    }
+
+    override func invalidate() {
+        DraggableButtonAction.activeButton = nil
+        PlayMice.shared.stop()
+        super.invalidate()
+    }
+
+    func onMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
+        self.releasePoint.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
+        self.releasePoint.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
+        Toucher.touchcam(point: self.releasePoint, phase: UITouch.Phase.moved, tid: id)
+    }
+}
+
 class JoystickAction: Action {
     let keys: [GCKeyCode]
     let center: CGPoint
@@ -74,17 +111,10 @@ class JoystickAction: Action {
         self.shift = shift / 2
         self.id = id
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            keyboard.button(forKeyCode: keys[0])?.pressedChangedHandler = { _, _, _ in
-                self.update()
-            }
-            keyboard.button(forKeyCode: keys[1])?.pressedChangedHandler = { _, _, _ in
-                self.update()
-            }
-            keyboard.button(forKeyCode: keys[2])?.pressedChangedHandler = { _, _, _ in
-                self.update()
-            }
-            keyboard.button(forKeyCode: keys[3])?.pressedChangedHandler = { _, _, _ in
-                self.update()
+            for key in keys {
+                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { _, _, _ in
+                    Toucher.touchQueue.async(execute: self.update)
+                }
             }
         }
     }
@@ -136,7 +166,7 @@ class JoystickAction: Action {
                     start.y += (touch.y - start.y) / 8
                     moving = true
                     Toucher.touchcam(point: start, phase: UITouch.Phase.began, tid: id)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
+                    Toucher.touchQueue.asyncAfter(deadline: .now() + 0.04) {
                         if self.moving {
                             Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: self.id)
                         }
