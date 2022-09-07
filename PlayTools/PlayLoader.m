@@ -88,9 +88,9 @@ static int my_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
       (strcmp(name, "hw.model") == 0)) {
     if (oldp != NULL) {
       int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-      const char *mechine = DEVICE_MODEL;
-      strncpy((char *)oldp, mechine, strlen(mechine));
-      *oldlenp = strlen(mechine);
+      const char *machine = DEVICE_MODEL;
+      strncpy((char *)oldp, machine, strlen(machine));
+      *oldlenp = strlen(machine);
       return ret;
     } else {
       int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
@@ -99,9 +99,9 @@ static int my_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
   } else if ((strcmp(name, "hw.target") == 0)) {
     if (oldp != NULL) {
       int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-      const char *mechine = OEM_ID;
-      strncpy((char *)oldp, mechine, strlen(mechine));
-      *oldlenp = strlen(mechine);
+      const char *machine = OEM_ID;
+      strncpy((char *)oldp, machine, strlen(machine));
+      *oldlenp = strlen(machine);
       return ret;
     } else {
       int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
