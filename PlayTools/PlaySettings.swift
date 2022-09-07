@@ -54,9 +54,6 @@ let settings = PlaySettings.shared
             return "J320xAP"
         }
     }()
-
-    @objc lazy var refreshRate = settingsData.refreshRate
-
 }
 
 struct AppSettingsData: Codable {
@@ -65,8 +62,7 @@ struct AppSettingsData: Codable {
     var sensitivity: Float = 50
 
     var disableTimeout = false
-    var iosDeviceModel = "iPad8,6"
-    var refreshRate = 60
+    var iosDeviceModel = "iPad13,8"
     var windowWidth = 1920
     var windowHeight = 1080
     var resolution = 2
