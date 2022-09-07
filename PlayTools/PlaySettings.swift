@@ -7,8 +7,6 @@ let settings = PlaySettings.shared
 @objc public final class PlaySettings: NSObject {
     @objc public static let shared = PlaySettings()
 
-    private static let keywords = ["game", "unity", "metal", "netflix", "opengl", "minecraft", "mihoyo", "disney"]
-
     let bundleIdentifier = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
     let settingsUrl: URL
     var settingsData: AppSettingsData
@@ -25,17 +23,6 @@ let settings = PlaySettings.shared
             os_log("[PlayTools] PlaySettings decode failed.\n%@", type: .error, error as CVarArg)
         }
     }
-
-    var isGame: Bool = {
-        if let info = Bundle.main.infoDictionary?.description {
-            for keyword in PlaySettings.keywords {
-                if info.contains(keyword) && !info.contains("xbox") {
-                    return true
-                }
-            }
-        }
-        return false
-    }()
 
     lazy var discordActivity = settingsData.discordActivity
 
@@ -82,7 +69,7 @@ struct AppSettingsData: Codable {
     var refreshRate = 60
     var windowWidth = 1920
     var windowHeight = 1080
-    var resolution = 0
+    var resolution = 2
     var aspectRatio = 1
     var notch = false
     var bypass = false
