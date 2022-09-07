@@ -20,7 +20,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
 
     private static var isInit = false
 
-    private var acceptMouseEvents = !PlaySettings.shared.gamingMode
+    private var acceptMouseEvents = !PlaySettings.shared.mouseMapping
 
     public override init() {
         super.init()

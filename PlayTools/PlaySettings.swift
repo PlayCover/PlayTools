@@ -7,8 +7,6 @@ let settings = PlaySettings.shared
 @objc public final class PlaySettings: NSObject {
     @objc public static let shared = PlaySettings()
 
-    private static let keywords = ["game", "unity", "metal", "netflix", "opengl", "minecraft", "mihoyo", "disney"]
-
     let bundleIdentifier = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
     let settingsUrl: URL
     var settingsData: AppSettingsData
@@ -26,22 +24,11 @@ let settings = PlaySettings.shared
         }
     }
 
-    var isGame: Bool = {
-        if let info = Bundle.main.infoDictionary?.description {
-            for keyword in PlaySettings.keywords {
-                if info.contains(keyword) && !info.contains("xbox") {
-                    return true
-                }
-            }
-        }
-        return false
-    }()
-
     lazy var discordActivity = settingsData.discordActivity
 
     lazy var keymapping = settingsData.keymapping
 
-    lazy var gamingMode: Bool = isGame
+    lazy var mouseMapping = settingsData.mouseMapping
 
     lazy var notch = settingsData.notch
 
@@ -51,7 +38,7 @@ let settings = PlaySettings.shared
 
     lazy var windowSizeWidth = CGFloat(settingsData.windowWidth)
 
-    @objc lazy var adaptiveDisplay = isGame
+    @objc lazy var adaptiveDisplay = settingsData.resolution == 0 ? false : true
 
     @objc lazy var deviceModel = settingsData.iosDeviceModel as NSString
 

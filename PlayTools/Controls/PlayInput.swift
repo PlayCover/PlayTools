@@ -31,7 +31,7 @@ final class PlayInput: NSObject {
                 counter += 1
         }
 
-        if settings.gamingMode {
+        if settings.mouseMapping {
             for mouse in keymap.keymapData.mouseAreaModel {
                 PlayMice.shared.setup(mouse)
                 counter += 1
@@ -93,7 +93,7 @@ final class PlayInput: NSObject {
     ]
 
     private func swapMode(_ pressed: Bool) {
-        if !PlaySettings.shared.gamingMode {
+        if !settings.mouseMapping {
             return
         }
         if pressed {
