@@ -69,7 +69,7 @@ class DraggableButtonAction: ButtonAction {
     override init(id: Int, keyid: Int, key: GCKeyCode, point: CGPoint) {
         self.releasePoint = point
         super.init(id: id, keyid: keyid, key: key, point: point)
-        if settings.gamingMode {
+        if settings.mouseMapping {
             PlayMice.shared.setupMouseMovedHandler()
         }
     }

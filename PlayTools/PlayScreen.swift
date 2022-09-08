@@ -173,27 +173,6 @@ extension UIView {
     }
 }
 
-extension UIScreen {
-
-    @objc open var maximumFramesPerSecond: Int {
-        return PlaySettings.shared.refreshRate
-    }
-
-    @available(iOS 15.0, *)
-    @objc open var preferredFrameRateRange: CAFrameRateRange {
-        return CAFrameRateRange(minimum: 60,
-                                maximum: Float(PlaySettings.shared.refreshRate),
-                                __preferred: Float(PlaySettings.shared.refreshRate))
-    }
-
-}
-
-extension CADisplayLink {
-    @objc open var preferredFramesPerSecond: Int {
-        return PlaySettings.shared.refreshRate
-    }
-}
-
 extension UIWindow {
 
     var nsWindow: NSObject? {
