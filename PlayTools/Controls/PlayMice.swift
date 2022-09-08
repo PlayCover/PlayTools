@@ -29,8 +29,13 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
             setupMouseButton(_up: 8, _down: 16)
             setupMouseButton(_up: 33554432, _down: 67108864)
             PlayMice.isInit = true
+            if acceptMouseEvents {
+                setupMouseMovedHandler()
+            }
         }
     }
+
+    var fakedMousePressed = false
 
     public var cursorPos: CGPoint {
         var point = CGPoint(x: 0, y: 0)
@@ -38,8 +43,22 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
             point = Dynamic(screen.nsWindow).mouseLocationOutsideOfEventStream.asCGPoint!
         }
         if let rect = (Dynamic(screen.nsWindow).frame.asCGRect) {
-            point.x = (point.x / rect.width) * screen.screenRect.width
-            point.y = screen.screenRect.height - ((point.y / rect.height) * screen.screenRect.height)
+            let viewRect: CGRect = screen.screenRect
+            let widthRate = viewRect.width / rect.width
+            var rate = viewRect.height / rect.height
+            if widthRate > rate {
+                // keep aspect ratio
+                rate = widthRate
+            }
+            // horizontally in center
+            point.x -= (rect.width - viewRect.width / rate)/2
+            point.x *= rate
+            if screen.fullscreen {
+                // vertically in center
+                point.y -= (rect.height - viewRect.height / rate)/2
+            }
+            point.y *= rate
+            point.y = viewRect.height - point.y
         }
         return point
     }
@@ -62,15 +81,19 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
                             self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
                         }
                     }
+                    if self.acceptMouseEvents && self.fakedMousePressed {
+                        Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.moved, tid: 1)
+                    }
                 }
+//                Toast.showOver(msg: "\(self.cursorPos)")
             }
         }
     }
 
     public func stop() {
-        for mouse in GCMouse.mice() {
-            mouse.mouseInput?.mouseMovedHandler = nil
-        }
+//        for mouse in GCMouse.mice() {
+//            mouse.mouseInput?.mouseMovedHandler = nil
+//        }
         camera?.stop()
         camera = nil
         mouseActions = [:]
@@ -87,11 +110,21 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
     var mouseActions: [Int: ButtonAction] = [:]
 
     private func setupMouseButton(_up: Int, _down: Int) {
+        // no this is not up, this is down. And the later down is up.
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
             if !mode.visible || self.acceptMouseEvents {
                 self.mouseActions[_up]?.update(pressed: true)
                 if self.acceptMouseEvents {
-                    return event
+                    let window = Dynamic(event, memberName: "window").asObject
+                    if !self.fakedMousePressed
+                        // for traffic light buttons when not fullscreen
+                        && self.cursorPos.y > 0
+                        // for traffic light buttons when fullscreen
+                        && window == screen.nsWindow {
+                        Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.began, tid: 1)
+                        self.fakedMousePressed = true
+                        return nil
+                    }
                 }
                 return nil
             } else if EditorController.shared.editorMode {
@@ -100,6 +133,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
                 } else if _up == 33554432 {
                     EditorController.shared.setKeyCode(-3)
                 }
+                return event
             }
             return event
         } as ResponseBlock)
@@ -107,7 +141,11 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
             if !mode.visible || self.acceptMouseEvents {
                 self.mouseActions[_up]?.update(pressed: false)
                 if self.acceptMouseEvents {
-                    return event
+                    if self.fakedMousePressed {
+                        self.fakedMousePressed = false
+                        Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.ended, tid: 1)
+                        return nil
+                    }
                 }
                 return nil
             }
