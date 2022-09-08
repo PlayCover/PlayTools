@@ -10,7 +10,7 @@ let mode = ControlMode.mode
 @objc final public class ControlMode: NSObject {
 
     @objc static public let mode = ControlMode()
-    @objc public var visible: Bool = PlaySettings.shared.gamingMode
+    @objc public var visible: Bool = PlaySettings.shared.mouseMapping
 
     @objc static public func isMouseClick(_ event: Any) -> Bool {
         return [1, 2].contains(Dynamic(event).type.asInt)
@@ -23,7 +23,7 @@ let mode = ControlMode.mode
                     if screen.fullscreen {
                         screen.switchDock(true)
                     }
-                    if PlaySettings.shared.gamingMode {
+                    if PlaySettings.shared.mouseMapping {
                         Dynamic.NSCursor.unhide()
 						disableCursor(1)
                     }
@@ -31,7 +31,7 @@ let mode = ControlMode.mode
                 }
             } else {
                 if visible {
-                    if PlaySettings.shared.gamingMode {
+                    if PlaySettings.shared.mouseMapping {
                         Dynamic.NSCursor.hide()
                         disableCursor(0)
                     }
