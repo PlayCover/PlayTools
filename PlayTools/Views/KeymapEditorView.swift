@@ -109,12 +109,16 @@ struct JoystickView: View {
                 .frame(width: size, height: size)
             HStack {
                 VStack {
-                    ButtonView(xCoord: xCoord, yCoord: yCoord, size: size, key: upKey)
-                    ButtonView(xCoord: xCoord, yCoord: yCoord, size: size, key: rightKey)
+                    Text(upKey)
+                        .rotationEffect(Angle(degrees: -45))
+                    Text(rightKey)
+                        .rotationEffect(Angle(degrees: -45))
                 }
                 VStack {
-                    ButtonView(xCoord: xCoord, yCoord: yCoord, size: size, key: leftKey)
-                    ButtonView(xCoord: xCoord, yCoord: yCoord, size: size, key: downKey)
+                    Text(leftKey)
+                        .rotationEffect(Angle(degrees: -45))
+                    Text(downKey)
+                        .rotationEffect(Angle(degrees: -45))
                 }
             }
             .rotationEffect(Angle(degrees: 45))
