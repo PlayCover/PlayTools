@@ -12,6 +12,8 @@ struct KeymapEditorView: View {
         Group {
             Text("SwiftUI")
         }
+        .ignoresSafeArea(.all)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.blue.opacity(0.3))
         .contextMenu {
             SwiftUI.Button(action: {
