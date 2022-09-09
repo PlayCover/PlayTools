@@ -22,7 +22,6 @@ struct KeymapEditorView: View {
                                yCoord: data.transform.yCoord * screen.height,
                                size: data.transform.size * 10,
                                key: data.keyCode.keyCodeString())
-                    
                 })
                 ForEach(Keymapping.shared.keymapData.joystickModel, id: \.transform, content: { data in
                     JoystickView(xCoord: data.transform.xCoord * screen.width,
@@ -32,13 +31,11 @@ struct KeymapEditorView: View {
                                  rightKey: data.rightKeyCode.keyCodeString(),
                                  downKey: data.downKeyCode.keyCodeString(),
                                  leftKey: data.leftKeyCode.keyCodeString())
-                    
                 })
                 ForEach(Keymapping.shared.keymapData.mouseAreaModel, id: \.transform, content: { data in
-                    MouseArea(xCoord: data.transform.xCoord * screen.width,
-                               yCoord: data.transform.yCoord * screen.height,
-                               size: data.transform.size * 10)
-                    
+                    MouseAreaView(xCoord: data.transform.xCoord * screen.width,
+                                  yCoord: data.transform.yCoord * screen.height,
+                                  size: data.transform.size * 10)
                 })
             }
         }
