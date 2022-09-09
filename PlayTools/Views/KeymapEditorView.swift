@@ -13,7 +13,7 @@ struct KeymapEditorView: View {
             ZStack {
                 ForEach(Keymapping.shared.keymapData.buttonModels, id: \.transform, content: { data in
                     ButtonView(xCoord: data.transform.xCoord * screen.width,
-                               yCoord: (data.transform.yCoord - 0.5) * screen.height,
+                               yCoord: data.transform.yCoord * screen.height,
                                key: KeyCodeNames.keyCodes[data.keyCode]!,
                                size: data.transform.size*10)
                 })
