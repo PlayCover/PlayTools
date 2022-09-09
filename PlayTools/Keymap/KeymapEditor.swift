@@ -7,15 +7,6 @@
 
 import SwiftUI
 
-@main
-struct PlayToolsApp: App {
-    var body: some Scene {
-        WindowGroup {
-            KeymapEditor()
-        }
-    }
-}
-
 struct KeymapEditor: View {
     var body: some View {
         ZStack {

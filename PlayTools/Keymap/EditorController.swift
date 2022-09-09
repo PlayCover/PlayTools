@@ -3,14 +3,6 @@ import SwiftUI
 
 let editor = EditorController.shared
 
-class EditorViewController: UIViewController {
-    let swiftUIController = UIHostingController(rootView: KeymapEditor())
-
-    override func loadView() {
-
-    }
-}
-
 final class EditorController: NSObject {
 
     static let shared = EditorController()
@@ -26,7 +18,7 @@ final class EditorController: NSObject {
 
     private func initWindow() -> UIWindow {
         let window = UIWindow(windowScene: screen.windowScene!)
-        window.rootViewController = EditorViewController(nibName: nil, bundle: nil)
+        window.rootViewController = UIHostingController(rootView: KeymapEditor())
         return window
     }
 
