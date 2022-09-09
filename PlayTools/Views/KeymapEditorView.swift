@@ -40,12 +40,8 @@ struct ButtonView: View {
         ZStack {
             if #available(iOS 15.0, *) {
                 Circle()
-                    .frame(width: 20, height: 20)
                     .background(.regularMaterial)
-            } else {
-               Circle()
-                    .fill(.red)
-                    .frame(width: 20, height: 20)
+                    .frame(width: 40, height: 40)
             }
         }
     }
