@@ -25,9 +25,9 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
     public override init() {
         super.init()
         if !PlayMice.isInit {
-            setupMouseButton(_up: 2, _down: 4)
+            /*setupMouseButton(_up: 2, _down: 4)
             setupMouseButton(_up: 8, _down: 16)
-            setupMouseButton(_up: 33554432, _down: 67108864)
+            setupMouseButton(_up: 33554432, _down: 67108864)*/
             PlayMice.isInit = true
         }
     }
@@ -86,7 +86,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
 
     var mouseActions: [Int: ButtonAction] = [:]
 
-    private func setupMouseButton(_up: Int, _down: Int) {
+    /*private func setupMouseButton(_up: Int, _down: Int) {
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
             if !mode.visible || self.acceptMouseEvents {
                 self.mouseActions[_up]?.update(pressed: true)
@@ -113,7 +113,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
             }
             return event
         } as ResponseBlock)
-    }
+    }*/
 
     private func setMiceButton(_ keyId: Int, action: ButtonAction) {
         switch keyId {

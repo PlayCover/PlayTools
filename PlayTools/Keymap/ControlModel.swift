@@ -327,8 +327,8 @@ class MouseAreaModel: ControlModel {
     }
 
     override func setKeyCodes(keys: [Int]) {
-        EditorController.shared.removeControl()
-        EditorController.shared.addDraggableButton(CGPoint(x: data.xCoord, y: data.yCoord), keys[0])
+        /*EditorController.shared.removeControl()
+        EditorController.shared.addDraggableButton(CGPoint(x: data.xCoord, y: data.yCoord), keys[0])*/
     }
 
     override init(data: ControlData) {

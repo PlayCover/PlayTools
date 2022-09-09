@@ -49,7 +49,7 @@ final class PlayInput: NSObject {
                     && !PlayInput.cmdPressed()
                     && !PlayInput.FORBIDDEN.contains(keyCode)
                     && self.isSafeToBind(keyboard) {
-                    EditorController.shared.setKeyCode(keyCode.rawValue)
+                    //EditorController.shared.setKeyCode(keyCode.rawValue)
                 }
             }
             keyboard.button(forKeyCode: GCKeyCode(rawValue: 227))?.pressedChangedHandler = { _, _, pressed in

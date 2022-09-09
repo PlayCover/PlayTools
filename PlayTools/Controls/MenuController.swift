@@ -29,21 +29,6 @@ extension UIApplication {
     func switchEditorMode(_ sender: AnyObject) {
         EditorController.shared.switchMode()
     }
-
-    @objc
-    func removeElement(_ sender: AnyObject) {
-        EditorController.shared.removeControl()
-    }
-
-    @objc
-    func upscaleElement(_ sender: AnyObject) {
-        EditorController.shared.focusedControl?.resize(down: false)
-    }
-
-    @objc
-    func downscaleElement(_ sender: AnyObject) {
-        EditorController.shared.focusedControl?.resize(down: true)
-    }
 }
 
 extension UIViewController {
@@ -63,14 +48,14 @@ struct CommandsList {
 }
 
 var keymapping = ["Open/Close Keymapping Editor",
-                  "Delete selected element",
+                  /*"Delete selected element",
                   "Upsize selected element",
-                  "Downsize selected element",
+                  "Downsize selected element",*/
                   "Rotate display area"]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
-                           #selector(UIApplication.removeElement(_:)),
+                           /*#selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
-                           #selector(UIApplication.downscaleElement(_:)),
+                           #selector(UIApplication.downscaleElement(_:)),*/
                            #selector(UIViewController.rotateView(_:))]
 
 class MenuController {
