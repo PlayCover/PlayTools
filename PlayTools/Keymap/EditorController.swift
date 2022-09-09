@@ -31,6 +31,9 @@ final class EditorController: NSObject {
     private func addControlToView(control: ControlModel) {
         controls.append(control)
         view.addSubview(control.button)
+        let childView = UIHostingController(rootView: Color.red)
+        view.addSubview(childView.view)
+        
         updateFocus(button: control.button)
     }
 
