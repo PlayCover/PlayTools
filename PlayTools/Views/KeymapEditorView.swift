@@ -39,7 +39,7 @@ struct ButtonView: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(.regularMaterial)
+                .fill(.thinMaterial)
                 .frame(width: 100, height: 100)
         }
     }
