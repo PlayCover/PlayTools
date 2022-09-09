@@ -14,7 +14,6 @@ final class EditorController: NSObject {
     var editorWindow: UIWindow?
     weak var previousWindow: UIWindow?
     var controls: [ControlModel] = []
-    var view: EditorView! {editorWindow?.rootViewController?.view as? EditorView}
 
     private func initWindow() -> UIWindow {
         let window = UIWindow(windowScene: screen.windowScene!)
@@ -24,16 +23,10 @@ final class EditorController: NSObject {
 
     private func addControlToView(control: ControlModel) {
         controls.append(control)
-        view.addSubview(control.button)
-        let childView = UIHostingController(rootView: Color.red)
-        view.addSubview(childView.view)
-        
         updateFocus(button: control.button)
     }
 
     public func updateFocus(button: UIButton) {
-        view.setNeedsFocusUpdate()
-        view.updateFocusIfNeeded()
         for cntrl in controls {
             cntrl.focus(false)
         }
@@ -139,7 +132,6 @@ final class EditorController: NSObject {
         }
         keymap.keymapData = keymapData
         controls = []
-        view.subviews.forEach { $0.removeFromSuperview() }
     }
 
     @objc public func addJoystick(_ center: CGPoint) {
@@ -210,74 +202,10 @@ final class EditorController: NSObject {
                                                                        yCoord: center.y)))
         }
     }
-
-    func updateEditorText(_ str: String) {
-        view.label?.text = str
-    }
 }
 
 extension UIResponder {
     public var parentViewController: UIViewController? {
         return next as? UIViewController ?? next?.parentViewController
-    }
-}
-
-class EditorView: UIView {
-    override var preferredFocusEnvironments: [UIFocusEnvironment] {
-        if let btn = editor.focusedControl?.button {
-            return [btn]
-        }
-        return [self]
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-
-        for control in editor.controls {
-            control.update()
-        }
-    }
-
-    init() {
-        super.init(frame: .zero)
-        self.frame = screen.screenRect
-        self.isUserInteractionEnabled = true
-        let single = UITapGestureRecognizer(target: self, action: #selector(self.doubleClick(sender:)))
-        single.numberOfTapsRequired = 1
-        self.addGestureRecognizer(single)
-    }
-
-    @objc func doubleClick(sender: UITapGestureRecognizer) {
-        for cntrl in editor.controls {
-            cntrl.focus(false)
-        }
-        editor.focusedControl = nil
-        //KeymapHolder.shared.add(sender.location(in: self))
-    }
-
-    var label: UILabel?
-
-    @objc func pressed(sender: UIButton!) {
-        if let button = sender as? Element {
-            if editor.focusedControl?.button == nil || editor.focusedControl?.button != button {
-                editor.updateFocus(button: sender)
-            }
-        }
-    }
-
-    @objc func dragged(_ sender: UIPanGestureRecognizer) {
-        if let ele = sender.view as? Element {
-            if editor.focusedControl?.button == nil || editor.focusedControl?.button != ele {
-                editor.updateFocus(button: ele)
-            }
-            let translation = sender.translation(in: self)
-            editor.focusedControl?.move(deltaY: translation.y,
-                                        deltaX: translation.x)
-            sender.setTranslation(CGPoint.zero, in: self)
-        }
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }
