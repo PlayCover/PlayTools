@@ -110,15 +110,11 @@ struct JoystickView: View {
             VStack(spacing: 10) {
                 VStack(spacing: 10) {
                     Text(upKey)
-                        .rotationEffect(Angle(degrees: -45))
                     Text(rightKey)
-                        .rotationEffect(Angle(degrees: -45))
                 }
                 VStack(spacing: 10) {
                     Text(leftKey)
-                        .rotationEffect(Angle(degrees: -45))
                     Text(downKey)
-                        .rotationEffect(Angle(degrees: -45))
                 }
             }
             .rotationEffect(Angle(degrees: 45))
