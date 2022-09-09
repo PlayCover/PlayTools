@@ -67,9 +67,9 @@ class ControlModel {
         self.data = data
         button.model = self
         button.backgroundColor = UIColor.gray.withAlphaComponent(0.8)
-        button.addTarget(editor.view, action: #selector(editor.view.pressed(sender:)), for: .touchUpInside)
-        let recognizer = UIPanGestureRecognizer(target: editor.view, action: #selector(editor.view.dragged(_:)))
-        button.addGestureRecognizer(recognizer)
+        //button.addTarget(editor.view, action: #selector(editor.view.pressed(sender:)), for: .touchUpInside)
+        //let recognizer = UIPanGestureRecognizer(target: editor.view, action: #selector(editor.view.dragged(_:)))
+        //button.addGestureRecognizer(recognizer)
         button.isUserInteractionEnabled = true
     }
 
