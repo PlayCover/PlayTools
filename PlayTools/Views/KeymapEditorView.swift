@@ -14,7 +14,7 @@ struct KeymapEditorView: View {
         }
         .ignoresSafeArea(.all)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.opacity(0.3))
+        //.background(Color.black.opacity(0.3))
         .contextMenu {
             SwiftUI.Button(action: {
                 print("Single Key")
@@ -38,11 +38,9 @@ struct KeymapEditorView: View {
 struct ButtonView: View {
     var body: some View {
         ZStack {
-            if #available(iOS 15.0, *) {
-                Circle()
-                    .fill(.regularMaterial)
-                    .frame(width: 40, height: 40)
-            }
+            Circle()
+                .fill(.regularMaterial)
+                .frame(width: 100, height: 100)
         }
     }
 }
