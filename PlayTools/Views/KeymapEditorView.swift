@@ -48,7 +48,7 @@ struct ButtonView: View {
         .gesture(
             DragGesture()
                 .onChanged { gesture in
-                    offset = gesture.translation
+                    offset = gesture.location
                 }
         )
     }
