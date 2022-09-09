@@ -11,10 +11,10 @@ struct KeymapEditorView: View {
     var body: some View {
         Group {
             ForEach(Keymapping.shared.keymapData.buttonModels, id: \.transform, content: { data in
-                ButtonView(xCoord: data.transform.xCoord,
-                           yCoord: data.transform.yCoord,
+                ButtonView(xCoord: data.transform.xCoord * screen.width,
+                           yCoord: data.transform.yCoord * screen.height,
                            key: KeyCodeNames.keyCodes[data.keyCode]!,
-                           size: data.transform.size)
+                           size: data.transform.size*10)
             })
         }
         .ignoresSafeArea(.all)
