@@ -65,7 +65,7 @@ class Keymapping {
     }
 }
 
-struct KeyModelTransform: Codable {
+struct KeyModelTransform: Codable, Hashable {
     var size: CGFloat
     var xCoord: CGFloat
     var yCoord: CGFloat

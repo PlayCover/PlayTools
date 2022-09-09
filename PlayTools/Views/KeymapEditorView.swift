@@ -10,11 +10,16 @@ import SwiftUI
 struct KeymapEditorView: View {
     var body: some View {
         Group {
-            ButtonView()
+            ForEach(Keymapping.shared.keymapData.buttonModels, id: \.transform, content: { data in
+                ButtonView(xCoord: data.transform.xCoord,
+                           yCoord: data.transform.yCoord,
+                           key: KeyCodeNames.keyCodes[data.keyCode]!,
+                           size: data.transform.size)
+            })
         }
         .ignoresSafeArea(.all)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        //.background(Color.black.opacity(0.3))
+        .background(Color.black.opacity(0.3))
         .contextMenu {
             SwiftUI.Button(action: {
                 print("Single Key")
@@ -36,19 +41,24 @@ struct KeymapEditorView: View {
 }
 
 struct ButtonView: View {
-    @State private var position = CGPoint.zero
+    @State var xCoord: CGFloat
+    @State var yCoord: CGFloat
+    @State var key: String
+    @State var size: CGFloat
 
     var body: some View {
         ZStack {
             Circle()
                 .fill(.thinMaterial)
-                .frame(width: 100, height: 100)
+                .frame(width: size, height: size)
+            Text(key)
         }
-        .position(position)
+        .position(x: xCoord, y: yCoord)
         .gesture(
             DragGesture()
                 .onChanged { gesture in
-                    position = gesture.location
+                    xCoord = gesture.location.x
+                    yCoord = gesture.location.y
                 }
         )
     }
