@@ -36,11 +36,20 @@ struct KeymapEditorView: View {
 }
 
 struct ButtonView: View {
+    @State private var offset = CGSize.zero
+
     var body: some View {
         ZStack {
             Circle()
                 .fill(.thinMaterial)
                 .frame(width: 100, height: 100)
         }
+        .offset(offset)
+        .gesture(
+            DragGesture()
+                .onChanged { gesture in
+                    offset = gesture.translation
+                }
+        )
     }
 }
