@@ -9,12 +9,7 @@ import SwiftUI
 
 struct KeymapEditor: View {
     var body: some View {
-        ZStack {
-            Color.red
-                .ignoresSafeArea(.all)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            Text("Test")
-                .font(.largeTitle)
-        }
+        Text("Test")
+            .font(.largeTitle)
     }
 }
