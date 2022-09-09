@@ -12,6 +12,7 @@ struct KeymapEditorView: View {
         Group {
             Text("SwiftUI")
         }
+        .background(Color.blue.opacity(0.3))
         .contextMenu {
             SwiftUI.Button(action: {
                 print("Single Key")

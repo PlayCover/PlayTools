@@ -26,7 +26,6 @@
 		AA7197A7287A481500623C15 /* Invocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719795287A481500623C15 /* Invocation.swift */; };
 		AA7197A8287A481500623C15 /* TypeMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719796287A481500623C15 /* TypeMapping.swift */; };
 		AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719797287A481500623C15 /* PlayInfo.swift */; };
-		AA7197AB287A481500623C15 /* ControlModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979A287A481500623C15 /* ControlModel.swift */; };
 		AA7197AD287A481500623C15 /* EditorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979C287A481500623C15 /* EditorController.swift */; };
 		AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979E287A481500623C15 /* KeyCodeNames.swift */; };
 		AA719845287A81A000623C15 /* NSBundle+Swizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719816287A819F00623C15 /* NSBundle+Swizzle.m */; };
@@ -107,7 +106,6 @@
 		AA719795287A481500623C15 /* Invocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Invocation.swift; sourceTree = "<group>"; };
 		AA719796287A481500623C15 /* TypeMapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeMapping.swift; sourceTree = "<group>"; };
 		AA719797287A481500623C15 /* PlayInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayInfo.swift; sourceTree = "<group>"; };
-		AA71979A287A481500623C15 /* ControlModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControlModel.swift; sourceTree = "<group>"; };
 		AA71979C287A481500623C15 /* EditorController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorController.swift; sourceTree = "<group>"; };
 		AA71979E287A481500623C15 /* KeyCodeNames.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyCodeNames.swift; sourceTree = "<group>"; };
 		AA719816287A819F00623C15 /* NSBundle+Swizzle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSBundle+Swizzle.m"; sourceTree = "<group>"; };
@@ -261,9 +259,8 @@
 		AA719799287A481500623C15 /* Keymap */ = {
 			isa = PBXGroup;
 			children = (
-				AA71979A287A481500623C15 /* ControlModel.swift */,
-				AA71979C287A481500623C15 /* EditorController.swift */,
 				AA71979E287A481500623C15 /* KeyCodeNames.swift */,
+				AA71979C287A481500623C15 /* EditorController.swift */,
 				B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */,
 			);
 			path = Keymap;
@@ -498,7 +495,6 @@
 				B1271729288284BE0025112B /* DiscordActivity.swift in Sources */,
 				AA71984E287A81A000623C15 /* UIScrollView-KIFAdditions.m in Sources */,
 				AA719849287A81A000623C15 /* NSException-KIFAdditions.m in Sources */,
-				AA7197AB287A481500623C15 /* ControlModel.swift in Sources */,
 				AA7197A8287A481500623C15 /* TypeMapping.swift in Sources */,
 				AA7197A7287A481500623C15 /* Invocation.swift in Sources */,
 				AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */,
