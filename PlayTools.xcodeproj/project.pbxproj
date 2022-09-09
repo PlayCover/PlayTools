@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6EE76F1328CB770400846C3E /* KeymapEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE76F1228CB770400846C3E /* KeymapEditor.swift */; };
+		6EB759C628CBE5E700033B13 /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EB759C528CBE5E700033B13 /* ToastView.swift */; };
+		6EE76F1328CB770400846C3E /* KeymapEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE76F1228CB770400846C3E /* KeymapEditorView.swift */; };
 		AA71970B287A44D200623C15 /* PlayLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719702287A44D200623C15 /* PlayLoader.m */; };
 		AA71970C287A44D200623C15 /* PlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719703287A44D200623C15 /* PlayScreen.swift */; };
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
@@ -83,7 +84,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		6EE76F1228CB770400846C3E /* KeymapEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapEditor.swift; sourceTree = "<group>"; };
+		6EB759C528CBE5E700033B13 /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
+		6EE76F1228CB770400846C3E /* KeymapEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapEditorView.swift; sourceTree = "<group>"; };
 		AA3430B0287AB7F2004E208A /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		AA7196D8287A447700623C15 /* PlayTools.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PlayTools.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA719702287A44D200623C15 /* PlayLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlayLoader.m; sourceTree = "<group>"; };
@@ -175,6 +177,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6EB759C428CBE57B00033B13 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				6EE76F1228CB770400846C3E /* KeymapEditorView.swift */,
+				6EB759C528CBE5E700033B13 /* ToastView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		AA7196CE287A447700623C15 = {
 			isa = PBXGroup;
 			children = (
@@ -199,6 +210,7 @@
 				B127172328817AC70025112B /* DiscordActivity */,
 				AA719721287A480C00623C15 /* Controls */,
 				AA719799287A481500623C15 /* Keymap */,
+				6EB759C428CBE57B00033B13 /* Views */,
 				AA719791287A481500623C15 /* Utils */,
 				AA71970A287A44D200623C15 /* Info.plist */,
 				AA719706287A44D200623C15 /* PlayCover.swift */,
@@ -253,7 +265,6 @@
 				AA71979C287A481500623C15 /* EditorController.swift */,
 				AA71979E287A481500623C15 /* KeyCodeNames.swift */,
 				B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */,
-				6EE76F1228CB770400846C3E /* KeymapEditor.swift */,
 			);
 			path = Keymap;
 			sourceTree = "<group>";
@@ -507,13 +518,14 @@
 				AA719860287A81A000623C15 /* UIView-KIFAdditions.m in Sources */,
 				AA7197A6287A481500623C15 /* Logger.swift in Sources */,
 				AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */,
+				6EB759C628CBE5E700033B13 /* ToastView.swift in Sources */,
 				AA71978A287A480D00623C15 /* ControlMode.swift in Sources */,
 				AA719758287A480D00623C15 /* PlayMice.swift in Sources */,
 				AA7197AD287A481500623C15 /* EditorController.swift in Sources */,
 				AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */,
 				AA71986A287A81A000623C15 /* PTFakeMetaTouch.m in Sources */,
 				AA71970C287A44D200623C15 /* PlayScreen.swift in Sources */,
-				6EE76F1328CB770400846C3E /* KeymapEditor.swift in Sources */,
+				6EE76F1328CB770400846C3E /* KeymapEditorView.swift in Sources */,
 				AA71986C287A81A000623C15 /* NSObject+Swizzle.m in Sources */,
 				AA71970F287A44D200623C15 /* PlayCover.swift in Sources */,
 				B127172528817C040025112B /* DiscordIPC.swift in Sources */,
