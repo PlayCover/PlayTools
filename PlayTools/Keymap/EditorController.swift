@@ -53,8 +53,10 @@ final class EditorController: NSObject {
     public func switchMode() {
         lock.lock()
         if editorMode {
-            KeymapHolder.shared.hide()
+            //KeymapHolder.shared.hide()
             saveButtons()
+            let view = UIHostingController(rootView: KeymapEditor())
+            editorWindow?.addSubview(view.view)
             editorWindow?.isHidden = true
             editorWindow?.windowScene = nil
             editorWindow?.rootViewController = nil
@@ -258,7 +260,7 @@ class EditorView: UIView {
             cntrl.focus(false)
         }
         editor.focusedControl = nil
-        KeymapHolder.shared.add(sender.location(in: self))
+        //KeymapHolder.shared.add(sender.location(in: self))
     }
 
     var label: UILabel?
