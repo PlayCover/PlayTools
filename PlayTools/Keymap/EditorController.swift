@@ -4,8 +4,10 @@ import SwiftUI
 let editor = EditorController.shared
 
 class EditorViewController: UIViewController {
+    let swiftUIController = UIHostingController(rootView: KeymapEditor())
+
     override func loadView() {
-        view = EditorView()
+        view = swiftUIController.view
     }
 }
 
@@ -55,8 +57,6 @@ final class EditorController: NSObject {
         if editorMode {
             //KeymapHolder.shared.hide()
             saveButtons()
-            let view = UIHostingController(rootView: KeymapEditor())
-            editorWindow?.addSubview(view.view)
             editorWindow?.isHidden = true
             editorWindow?.windowScene = nil
             editorWindow?.rootViewController = nil
