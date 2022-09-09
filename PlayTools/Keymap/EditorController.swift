@@ -17,7 +17,10 @@ final class EditorController: NSObject {
 
     private func initWindow() -> UIWindow {
         let window = UIWindow(windowScene: screen.windowScene!)
-        window.rootViewController = UIHostingController(rootView: KeymapEditor())
+        let controller = UIHostingController(rootView: KeymapEditor())
+        controller.view!.backgroundColor = .clear
+
+        window.rootViewController = controller
         return window
     }
 
