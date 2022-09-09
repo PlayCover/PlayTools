@@ -7,6 +7,9 @@ class EditorViewController: UIViewController {
     let swiftUIController = UIHostingController(rootView: KeymapEditor())
 
     override func loadView() {
+        swiftUIController.view.frame = screen.screenRect
+        swiftUIController.view.isUserInteractionEnabled = true
+
         view = swiftUIController.view
     }
 }
