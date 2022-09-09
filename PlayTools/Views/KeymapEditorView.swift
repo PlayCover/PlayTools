@@ -10,11 +10,11 @@ import SwiftUI
 struct KeymapEditorView: View {
     var body: some View {
         Group {
-            Text("SwiftUI")
+            ButtonView()
         }
         .ignoresSafeArea(.all)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.blue.opacity(0.3))
+        .background(Color.black.opacity(0.3))
         .contextMenu {
             SwiftUI.Button(action: {
                 print("Single Key")
@@ -27,10 +27,26 @@ struct KeymapEditorView: View {
                 Text("Joystick")
             })
             SwiftUI.Button(action: {
-                print("D-Pad")
+                print("Mouse")
             }, label: {
-                Text("D-Pad")
+                Text("Mouse")
             })
+        }
+    }
+}
+
+struct ButtonView: View {
+    var body: some View {
+        ZStack {
+            if #available(iOS 15.0, *) {
+                Circle()
+                    .frame(width: 20, height: 20)
+                    .background(.regularMaterial)
+            } else {
+               Circle()
+                    .fill(.red)
+                    .frame(width: 20, height: 20)
+            }
         }
     }
 }
