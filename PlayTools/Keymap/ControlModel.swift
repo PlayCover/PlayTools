@@ -272,7 +272,7 @@ class JoystickModel: ControlModel {
 
     override func setKeyCodes(keys: [Int]) {
         // I'm trying to be an easter egg
-        Toast.showOver(msg: "U~w~U")
+        // Toast.showOver(msg: "U~w~U")
     }
 
     override func resize(down: Bool) {

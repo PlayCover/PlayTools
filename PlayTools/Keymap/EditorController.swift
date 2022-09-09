@@ -50,14 +50,14 @@ final class EditorController: NSObject {
             previousWindow?.makeKeyAndVisible()
             mode.show(false)
             focusedControl = nil
-            Toast.showOver(msg: "Keymapping saved")
+            // Toast.showOver(msg: "Keymapping saved")
         } else {
             mode.show(true)
             previousWindow = screen.keyWindow
             editorWindow = initWindow()
             editorWindow?.makeKeyAndVisible()
             showButtons()
-            Toast.showOver(msg: "Click to start keymmaping edit")
+            // Toast.showOver(msg: "Click to start keymmaping edit")
         }
 //        Toast.showOver(msg: "\(UIApplication.shared.windows.count)")
         lock.unlock()
