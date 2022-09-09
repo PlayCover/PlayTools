@@ -18,8 +18,12 @@ struct PlayToolsApp: App {
 
 struct KeymapEditor: View {
     var body: some View {
-        Color.blue
-            .ignoresSafeArea(.all)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ZStack {
+            Color.red
+                .ignoresSafeArea(.all)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            Text("Test")
+                .font(.largeTitle)
+        }
     }
 }
