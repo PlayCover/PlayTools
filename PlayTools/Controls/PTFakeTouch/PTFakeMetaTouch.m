@@ -19,7 +19,7 @@ static NSMutableArray *livingTouchAry;
 static CFRunLoopSourceRef source;
 
 static UITouch* toRemove = NULL, *toStationarify = NULL;
-
+bool needsCopy = false;
 NSArray *safeTouchAry;
 
 void disableCursor(boolean_t disable){
@@ -69,22 +69,25 @@ void moveCursorTo(CGPoint point){
 void eventSendCallback(void* info) {
     UIEvent *event = [[UIApplication sharedApplication] _touchesEvent];
     // to retain objects from being released
-    [event _clearTouches];
-    NSArray *myAry = safeTouchAry;
-    for (UITouch *aTouch in myAry) {
-        switch (aTouch.phase) {
-            case UITouchPhaseEnded:
-            case UITouchPhaseCancelled:
-                toRemove = aTouch;
-                break;
-            case UITouchPhaseBegan:
-//            case UITouchPhaseMoved:
-                toStationarify = aTouch;
-                break;
-            default:
-                break;
+    if(needsCopy){
+        needsCopy = false;
+        [event _clearTouches];
+        NSArray *myAry = safeTouchAry;
+        for (UITouch *aTouch in myAry) {
+            switch (aTouch.phase) {
+                case UITouchPhaseEnded:
+                case UITouchPhaseCancelled:
+                    toRemove = aTouch;
+                    break;
+                case UITouchPhaseBegan:
+    //            case UITouchPhaseMoved:
+                    toStationarify = aTouch;
+                    break;
+                default:
+                    break;
+            }
+            [event _addTouch:aTouch forDelayedDelivery:NO];
         }
-        [event _addTouch:aTouch forDelayedDelivery:NO];
     }
     [[UIApplication sharedApplication] sendEvent:event];
 }
@@ -105,7 +108,7 @@ void eventSendCallback(void* info) {
     memset(&context, 0, sizeof(CFRunLoopSourceContext));
     context.perform = eventSendCallback;
     // content of context is copied
-    source = CFRunLoopSourceCreate(NULL, -1, &context);
+    source = CFRunLoopSourceCreate(NULL, -2, &context);
     CFRunLoopRef loop = CFRunLoopGetMain();
     CFRunLoopAddSource(loop, source, kCFRunLoopCommonModes);
 //    CFRunLoopMode mode = (CFRunLoopMode)UITrackingRunLoopMode;
@@ -148,8 +151,14 @@ void eventSendCallback(void* info) {
         [livingTouchAry addObject:touch];
         [touchAry setObject:touch atIndexedSubscript:pointId ];
     } else {
+        if(touch.phase == UITouchPhaseBegan && phase == UITouchPhaseMoved) {
+            return deleted;
+        }
         [touch setPhaseAndUpdateTimestamp:phase];
         [touch setLocationInWindow:point];
+    }
+    if(phase != UITouchPhaseMoved) {
+        needsCopy = true;
     }
 //    CFRunLoopSourceContext context;
 //    CFRunLoopSourceGetContext(source, &context);
