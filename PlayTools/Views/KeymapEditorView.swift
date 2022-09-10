@@ -106,7 +106,7 @@ struct JoystickView: View {
             Circle()
                 .stroke(.white, lineWidth: 1)
                 .frame(width: 200, height: 200)
-                .background(Circle().fill(.regularMaterial)))
+                .background(Circle().fill(.regularMaterial))
             VStack(alignment: .center, spacing: 15) {
                 HStack(alignment: .center, spacing: 15) {
                     Text(upKey)
