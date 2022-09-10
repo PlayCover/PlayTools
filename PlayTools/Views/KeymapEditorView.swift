@@ -40,11 +40,13 @@ struct KeymapEditorView: View {
                                                 Keymapping.shared.keymapData.buttonModels[index].transform.xCoord * screen.width
                                             }, set: {
                                                 Keymapping.shared.keymapData.buttonModels[index].transform.xCoord = $0 / screen.width
+                                                Keymapping.shared.encode()
                                             }),
                            yCoord: Binding(get: {
                                                 Keymapping.shared.keymapData.buttonModels[index].transform.yCoord * screen.height
                                             }, set: {
                                                 Keymapping.shared.keymapData.buttonModels[index].transform.yCoord = $0 / screen.height
+                                                Keymapping.shared.encode()
                                             }),
                            size: element.transform.size * 10,
                            key: element.keyCode.keyCodeString())
