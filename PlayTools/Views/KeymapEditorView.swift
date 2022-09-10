@@ -107,22 +107,26 @@ struct JoystickView: View {
             Circle()
                 .fill(.thinMaterial)
                 .frame(width: size, height: size)
-            VStack(alignment: .center, spacing: 30) {
-                HStack(alignment: .center, spacing: 30) {
-                    Circle()
-                        .fill(.red)
-                        .frame(width: 20, height: 20)
-                    Circle()
-                        .fill(.red)
-                        .frame(width: 20, height: 20)
+            VStack(alignment: .center, spacing: 20) {
+                HStack(alignment: .center, spacing: 20) {
+                    Text(upKey)
+                        .frame(width: 40, height: 40)
+                        .background(Circle().stroke(.white, lineWidth: 5))
+                        .rotationEffect(Angle(degrees: -45))
+                    Text(rightKey)
+                        .frame(width: 40, height: 40)
+                        .background(Circle().stroke(.white, lineWidth: 5))
+                        .rotationEffect(Angle(degrees: -45))
                 }
-                HStack(alignment: .center, spacing: 30) {
-                    Circle()
-                        .fill(.red)
-                        .frame(width: 20, height: 20)
-                    Circle()
-                        .fill(.red)
-                        .frame(width: 20, height: 20)
+                HStack(alignment: .center, spacing: 20) {
+                    Text(leftKey)
+                        .frame(width: 40, height: 40)
+                        .background(Circle().stroke(.white, lineWidth: 5))
+                        .rotationEffect(Angle(degrees: -45))
+                    Text(downKey)
+                        .frame(width: 40, height: 40)
+                        .background(Circle().stroke(.white, lineWidth: 5))
+                        .rotationEffect(Angle(degrees: -45))
                 }
             }
             .rotationEffect(Angle(degrees: 45))
