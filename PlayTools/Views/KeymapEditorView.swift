@@ -41,7 +41,7 @@ struct KeymapEditorView: View {
         }
         .ignoresSafeArea(.all)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.opacity(0.3).blur(radius: 10))
+        .background(Color.black.opacity(0.3))
         .contextMenu {
             SwiftUI.Button(action: {
                 print("Button")
@@ -107,18 +107,30 @@ struct JoystickView: View {
             Circle()
                 .fill(.thinMaterial)
                 .frame(width: size*2, height: size*2)
-            VStack(spacing: 10) {
-                HStack(spacing: 10) {
+            VStack(alignment: .center, spacing: 10) {
+                HStack(alignment: .center, spacing: 10) {
                     Text(upKey)
                         .rotationEffect(Angle(degrees: -45))
+                        .lineLimit(1)
+                        .multilineTextAlignment(.center)
+                        .mask(Circle())
                     Text(rightKey)
                         .rotationEffect(Angle(degrees: -45))
+                        .lineLimit(1)
+                        .multilineTextAlignment(.center)
+                        .mask(Circle())
                 }
-                HStack(spacing: 10) {
+                HStack(alignment: .center, spacing: 10) {
                     Text(leftKey)
                         .rotationEffect(Angle(degrees: -45))
+                        .lineLimit(1)
+                        .multilineTextAlignment(.center)
+                        .mask(Circle())
                     Text(downKey)
                         .rotationEffect(Angle(degrees: -45))
+                        .lineLimit(1)
+                        .multilineTextAlignment(.center)
+                        .mask(Circle())
                 }
             }
             .rotationEffect(Angle(degrees: 45))
