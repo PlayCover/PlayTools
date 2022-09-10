@@ -106,34 +106,37 @@ struct JoystickView: View {
         ZStack {
             Circle()
                 .fill(.thinMaterial)
-                .frame(width: size*2, height: size*2)
-            VStack(alignment: .center, spacing: 10) {
-                HStack(alignment: .center, spacing: 10) {
-                    Text(upKey)
-                        .rotationEffect(Angle(degrees: -45))
-                        .lineLimit(1)
-                        .multilineTextAlignment(.center)
-                        .mask(Circle())
-                    Text(rightKey)
-                        .rotationEffect(Angle(degrees: -45))
-                        .lineLimit(1)
-                        .multilineTextAlignment(.center)
-                        .mask(Circle())
+                .frame(width: size, height: size)
+            GeometryReader { geom in
+                VStack(alignment: .center, spacing: .infinity) {
+                    HStack(alignment: .center, spacing: 10) {
+                        Text(upKey)
+                            .rotationEffect(Angle(degrees: -45))
+                            .lineLimit(1)
+                            .multilineTextAlignment(.center)
+                            .mask(Circle())
+                        Text(rightKey)
+                            .rotationEffect(Angle(degrees: -45))
+                            .lineLimit(1)
+                            .multilineTextAlignment(.center)
+                            .mask(Circle())
+                    }
+                    HStack(alignment: .center, spacing: 10) {
+                        Text(leftKey)
+                            .rotationEffect(Angle(degrees: -45))
+                            .lineLimit(1)
+                            .multilineTextAlignment(.center)
+                            .mask(Circle())
+                        Text(downKey)
+                            .rotationEffect(Angle(degrees: -45))
+                            .lineLimit(1)
+                            .multilineTextAlignment(.center)
+                            .mask(Circle())
+                    }
                 }
-                HStack(alignment: .center, spacing: 10) {
-                    Text(leftKey)
-                        .rotationEffect(Angle(degrees: -45))
-                        .lineLimit(1)
-                        .multilineTextAlignment(.center)
-                        .mask(Circle())
-                    Text(downKey)
-                        .rotationEffect(Angle(degrees: -45))
-                        .lineLimit(1)
-                        .multilineTextAlignment(.center)
-                        .mask(Circle())
-                }
+                .frame(maxHeight: geom.size.width)
+                .rotationEffect(Angle(degrees: 45))
             }
-            .rotationEffect(Angle(degrees: 45))
         }
         .position(x: xCoord, y: yCoord)
         .gesture(
