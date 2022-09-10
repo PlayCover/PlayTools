@@ -107,36 +107,25 @@ struct JoystickView: View {
             Circle()
                 .fill(.thinMaterial)
                 .frame(width: size, height: size)
-            GeometryReader { geom in
-                VStack(alignment: .center, spacing: .infinity) {
-                    HStack(alignment: .center, spacing: 10) {
-                        Text(upKey)
-                            .rotationEffect(Angle(degrees: -45))
-                            .lineLimit(1)
-                            .multilineTextAlignment(.center)
-                            .mask(Circle())
-                        Text(rightKey)
-                            .rotationEffect(Angle(degrees: -45))
-                            .lineLimit(1)
-                            .multilineTextAlignment(.center)
-                            .mask(Circle())
-                    }
-                    HStack(alignment: .center, spacing: 10) {
-                        Text(leftKey)
-                            .rotationEffect(Angle(degrees: -45))
-                            .lineLimit(1)
-                            .multilineTextAlignment(.center)
-                            .mask(Circle())
-                        Text(downKey)
-                            .rotationEffect(Angle(degrees: -45))
-                            .lineLimit(1)
-                            .multilineTextAlignment(.center)
-                            .mask(Circle())
-                    }
+            VStack(alignment: .center, spacing: 30) {
+                HStack(alignment: .center, spacing: 30) {
+                    Circle()
+                        .fill(.red)
+                        .frame(width: 20, height: 20)
+                    Circle()
+                        .fill(.red)
+                        .frame(width: 20, height: 20)
                 }
-                .frame(maxHeight: geom.size.width)
-                .rotationEffect(Angle(degrees: 45))
+                HStack(alignment: .center, spacing: 30) {
+                    Circle()
+                        .fill(.red)
+                        .frame(width: 20, height: 20)
+                    Circle()
+                        .fill(.red)
+                        .frame(width: 20, height: 20)
+                }
             }
+            .rotationEffect(Angle(degrees: 45))
         }
         .position(x: xCoord, y: yCoord)
         .gesture(
