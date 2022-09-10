@@ -54,7 +54,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
     public func setupMouseMovedHandler() {
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
-                Toucher.touchQueue.async {
+//                Toucher.touchQueue.async {
                     if !mode.visible {
                         if let draggableButton = DraggableButtonAction.activeButton {
                             draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
@@ -62,7 +62,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
                             self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
                         }
                     }
-                }
+//                }
             }
         }
     }
@@ -186,8 +186,9 @@ final class CameraControl {
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
         let previous = sequence
 
-        delay(0.016) {
-            // if no other touch events in the past 0.016 sec
+        // if mouse not moving during this time, then an ended event is sent.
+        delay(0.2) {
+            // if no other touch events in this period
             if previous != self.sequence {
                 return
             }
