@@ -107,26 +107,30 @@ struct JoystickView: View {
             Circle()
                 .fill(.thinMaterial)
                 .frame(width: size, height: size)
-            VStack(alignment: .center, spacing: 20) {
-                HStack(alignment: .center, spacing: 20) {
+            VStack(alignment: .center, spacing: 15) {
+                HStack(alignment: .center, spacing: 15) {
                     Text(upKey)
-                        .frame(width: 40, height: 40)
-                        .background(Circle().stroke(.white, lineWidth: 5))
+                        .frame(width: 50, height: 50)
+                        .background(Circle().stroke(.white, lineWidth: 1))
                         .rotationEffect(Angle(degrees: -45))
+                        .shadow(radius: 4)
                     Text(rightKey)
-                        .frame(width: 40, height: 40)
-                        .background(Circle().stroke(.white, lineWidth: 5))
+                        .frame(width: 50, height: 50)
+                        .background(Circle().stroke(.white, lineWidth: 1))
                         .rotationEffect(Angle(degrees: -45))
+                        .shadow(radius: 4)
                 }
-                HStack(alignment: .center, spacing: 20) {
+                HStack(alignment: .center, spacing: 15) {
                     Text(leftKey)
-                        .frame(width: 40, height: 40)
-                        .background(Circle().stroke(.white, lineWidth: 5))
+                        .frame(width: 50, height: 50)
+                        .background(Circle().stroke(.white, lineWidth: 1))
                         .rotationEffect(Angle(degrees: -45))
+                        .shadow(radius: 4)
                     Text(downKey)
-                        .frame(width: 40, height: 40)
-                        .background(Circle().stroke(.white, lineWidth: 5))
+                        .frame(width: 50, height: 50)
+                        .background(Circle().stroke(.white, lineWidth: 1))
                         .rotationEffect(Angle(degrees: -45))
+                        .shadow(radius: 4)
                 }
             }
             .rotationEffect(Angle(degrees: 45))
