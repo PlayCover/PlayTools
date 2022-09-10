@@ -9,61 +9,61 @@ import SwiftUI
 
 struct KeymapEditorView: View {
     var body: some View {
-        Group {
-            ZStack {
-                ForEach(Keymapping.shared.keymapData.buttonModels, id: \.transform, content: { data in
-                    ButtonView(xCoord: data.transform.xCoord * screen.width,
-                               yCoord: data.transform.yCoord * screen.height,
-                               size: data.transform.size * 10,
-                               key: data.keyCode.keyCodeString())
-                })
-                ForEach(Keymapping.shared.keymapData.draggableButtonModels, id: \.transform, content: { data in
-                    ButtonView(xCoord: data.transform.xCoord * screen.width,
-                               yCoord: data.transform.yCoord * screen.height,
-                               size: data.transform.size * 10,
-                               key: data.keyCode.keyCodeString())
-                })
-                ForEach(Keymapping.shared.keymapData.joystickModel, id: \.transform, content: { data in
-                    JoystickView(xCoord: data.transform.xCoord * screen.width,
-                                 yCoord: data.transform.yCoord * screen.height,
-                                 size: data.transform.size * 10,
-                                 upKey: data.upKeyCode.keyCodeString(),
-                                 rightKey: data.rightKeyCode.keyCodeString(),
-                                 downKey: data.downKeyCode.keyCodeString(),
-                                 leftKey: data.leftKeyCode.keyCodeString())
-                })
-                ForEach(Keymapping.shared.keymapData.mouseAreaModel, id: \.transform, content: { data in
-                    MouseAreaView(xCoord: data.transform.xCoord * screen.width,
-                                  yCoord: data.transform.yCoord * screen.height,
-                                  size: data.transform.size * 10)
-                })
-            }
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea(.all)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contextMenu {
+                    SwiftUI.Button(action: {
+                        print("Button")
+                    }, label: {
+                        Text("Button")
+                    })
+                    SwiftUI.Button(action: {
+                        print("Dragable Button")
+                    }, label: {
+                        Text("Dragable Button")
+                    })
+                    SwiftUI.Button(action: {
+                        print("Joystick")
+                    }, label: {
+                        Text("Joystick")
+                    })
+                    SwiftUI.Button(action: {
+                        print("Mouse")
+                    }, label: {
+                        Text("Mouse")
+                    })
+                }
+            ForEach(Keymapping.shared.keymapData.buttonModels, id: \.transform, content: { data in
+                ButtonView(xCoord: data.transform.xCoord * screen.width,
+                           yCoord: data.transform.yCoord * screen.height,
+                           size: data.transform.size * 10,
+                           key: data.keyCode.keyCodeString())
+            })
+            ForEach(Keymapping.shared.keymapData.draggableButtonModels, id: \.transform, content: { data in
+                ButtonView(xCoord: data.transform.xCoord * screen.width,
+                           yCoord: data.transform.yCoord * screen.height,
+                           size: data.transform.size * 10,
+                           key: data.keyCode.keyCodeString())
+            })
+            ForEach(Keymapping.shared.keymapData.joystickModel, id: \.transform, content: { data in
+                JoystickView(xCoord: data.transform.xCoord * screen.width,
+                             yCoord: data.transform.yCoord * screen.height,
+                             size: data.transform.size * 10,
+                             upKey: data.upKeyCode.keyCodeString(),
+                             rightKey: data.rightKeyCode.keyCodeString(),
+                             downKey: data.downKeyCode.keyCodeString(),
+                             leftKey: data.leftKeyCode.keyCodeString())
+            })
+            ForEach(Keymapping.shared.keymapData.mouseAreaModel, id: \.transform, content: { data in
+                MouseAreaView(xCoord: data.transform.xCoord * screen.width,
+                              yCoord: data.transform.yCoord * screen.height,
+                              size: data.transform.size * 10)
+            })
         }
         .ignoresSafeArea(.all)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.opacity(0.3))
-        .contextMenu {
-            SwiftUI.Button(action: {
-                print("Button")
-            }, label: {
-                Text("Button")
-            })
-            SwiftUI.Button(action: {
-                print("Dragable Button")
-            }, label: {
-                Text("Dragable Button")
-            })
-            SwiftUI.Button(action: {
-                print("Joystick")
-            }, label: {
-                Text("Joystick")
-            })
-            SwiftUI.Button(action: {
-                print("Mouse")
-            }, label: {
-                Text("Mouse")
-            })
-        }
     }
 }
 
