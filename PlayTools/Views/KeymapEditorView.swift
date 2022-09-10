@@ -75,20 +75,19 @@ struct ButtonView: View {
     @State var key: String
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(.thinMaterial)
-                .frame(width: size, height: size)
-            Text(key)
-        }
-        .position(x: xCoord, y: yCoord)
-        .gesture(
-            DragGesture()
-                .onChanged { gesture in
-                    xCoord = gesture.location.x
-                    yCoord = gesture.location.y
-                }
-        )
+        Text(key)
+            .frame(width: size, height: size)
+            .background(Circle()
+                .stroke(.white, lineWidth: 1)
+                .background(Circle().fill(.regularMaterial)))
+            .position(x: xCoord, y: yCoord)
+            .gesture(
+                DragGesture()
+                    .onChanged { gesture in
+                        xCoord = gesture.location.x
+                        yCoord = gesture.location.y
+                    }
+            )
     }
 }
 
@@ -148,19 +147,19 @@ struct MouseAreaView: View {
     @State var size: CGFloat
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(.thinMaterial)
-                .frame(width: size, height: size)
-        }
-        .position(x: xCoord, y: yCoord)
-        .gesture(
-            DragGesture()
-                .onChanged { gesture in
-                    xCoord = gesture.location.x
-                    yCoord = gesture.location.y
-                }
-        )
+        Text("")
+            .frame(width: size, height: size)
+            .background(Circle()
+                .stroke(.white, lineWidth: 1)
+                .background(Circle().fill(.regularMaterial)))
+            .position(x: xCoord, y: yCoord)
+            .gesture(
+                DragGesture()
+                    .onChanged { gesture in
+                        xCoord = gesture.location.x
+                        yCoord = gesture.location.y
+                    }
+            )
     }
 }
 
