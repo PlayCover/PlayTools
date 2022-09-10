@@ -110,27 +110,23 @@ struct JoystickView: View {
             VStack(alignment: .center, spacing: 15) {
                 HStack(alignment: .center, spacing: 15) {
                     Text(upKey)
-                        .frame(width: 50, height: 50)
+                        .frame(width: 60, height: 60)
                         .background(Circle().stroke(.white, lineWidth: 1))
                         .rotationEffect(Angle(degrees: -45))
-                        .shadow(radius: 4)
                     Text(rightKey)
-                        .frame(width: 50, height: 50)
+                        .frame(width: 60, height: 60)
                         .background(Circle().stroke(.white, lineWidth: 1))
                         .rotationEffect(Angle(degrees: -45))
-                        .shadow(radius: 4)
                 }
                 HStack(alignment: .center, spacing: 15) {
                     Text(leftKey)
-                        .frame(width: 50, height: 50)
+                        .frame(width: 60, height: 60)
                         .background(Circle().stroke(.white, lineWidth: 1))
                         .rotationEffect(Angle(degrees: -45))
-                        .shadow(radius: 4)
                     Text(downKey)
-                        .frame(width: 50, height: 50)
+                        .frame(width: 60, height: 60)
                         .background(Circle().stroke(.white, lineWidth: 1))
                         .rotationEffect(Angle(degrees: -45))
-                        .shadow(radius: 4)
                 }
             }
             .rotationEffect(Angle(degrees: 45))
