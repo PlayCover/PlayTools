@@ -41,7 +41,7 @@ struct KeymapEditorView: View {
         }
         .ignoresSafeArea(.all)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.ultraThinMaterial)
+        .background(Color.black.opacity(0.3).blur(radius: 10))
         .contextMenu {
             SwiftUI.Button(action: {
                 print("Button")
