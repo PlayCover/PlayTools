@@ -76,7 +76,7 @@ struct ButtonView: View {
 
     var body: some View {
         Text(key)
-            .frame(width: 60, height: 60)
+            .frame(width: 80, height: 80)
             .background(Circle()
                 .stroke(.white, lineWidth: 1)
                 .background(Circle().fill(.regularMaterial)))
@@ -104,8 +104,9 @@ struct JoystickView: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(.thinMaterial)
+                .stroke(.white, lineWidth: 1)
                 .frame(width: 200, height: 200)
+                .background(Circle().fill(.regularMaterial)))
             VStack(alignment: .center, spacing: 15) {
                 HStack(alignment: .center, spacing: 15) {
                     Text(upKey)
