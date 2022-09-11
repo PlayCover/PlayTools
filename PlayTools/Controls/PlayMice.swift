@@ -152,7 +152,7 @@ final class CameraControl {
     var idled = false
     // in how many tests has this been identified as stationary
     var stationaryCount = 0
-    let stationaryThreshold = 3
+    let stationaryThreshold = 2
 
     @objc func checkEnded() {
         // if been stationary for enough time
@@ -197,9 +197,10 @@ final class CameraControl {
         }
         // if not moving fast, regard the user fine-tuning the camera(e.g. aiming)
         // so hold the touch for longer to avoid cold startup
-        if deltaX.magnitude + deltaY.magnitude > 4 {
+        if deltaX.magnitude + deltaY.magnitude > 10 {
             // if we had mistaken this as player aiming
             if self.idled {
+//                Toast.showOver(msg: "idled")
                 // since not aiming, re-touch to re-gain control
                 self.doLiftOff()
                 return
@@ -220,8 +221,8 @@ final class CameraControl {
         self.isMoving = false
         // ending and beginning too frequently leads to the beginning event not recognized
         // so let the beginning event wait some time
-        // 0.016 here is safe as long as the 0.016 above works
-        delay(0.016) {
+        // pause for one frame or two
+        delay(0.02) {
             self.cooldown = false
         }
         cooldown = true
