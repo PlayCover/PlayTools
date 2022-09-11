@@ -8,13 +8,13 @@ import UIKit
 
 class Toucher {
 
-    static var keyWindow: UIWindow?
-    static var keyView: UIView?
+    static weak var keyWindow: UIWindow?
+    static weak var keyView: UIView?
     static var touchQueue = DispatchQueue.init(label: "playcover.toucher", qos: .userInteractive)
 
     static func touchcam(point: CGPoint, phase: UITouch.Phase, tid: Int) {
         touchQueue.async {
-            if keyWindow == nil {
+            if keyWindow == nil || keyView == nil {
                 keyWindow = screen.keyWindow
                 DispatchQueue.main.sync {
                     keyView = keyWindow?.hitTest(point, with: nil)

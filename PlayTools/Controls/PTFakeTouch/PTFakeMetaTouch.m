@@ -19,7 +19,6 @@ static NSMutableArray *livingTouchAry;
 static CFRunLoopSourceRef source;
 
 static UITouch* toRemove = NULL, *toStationarify = NULL;
-bool needsCopy = false;
 NSArray *safeTouchAry;
 
 void disableCursor(boolean_t disable){
@@ -69,25 +68,22 @@ void moveCursorTo(CGPoint point){
 void eventSendCallback(void* info) {
     UIEvent *event = [[UIApplication sharedApplication] _touchesEvent];
     // to retain objects from being released
-    if(needsCopy){
-        needsCopy = false;
-        [event _clearTouches];
-        NSArray *myAry = safeTouchAry;
-        for (UITouch *aTouch in myAry) {
-            switch (aTouch.phase) {
-                case UITouchPhaseEnded:
-                case UITouchPhaseCancelled:
-                    toRemove = aTouch;
-                    break;
-                case UITouchPhaseBegan:
-    //            case UITouchPhaseMoved:
-                    toStationarify = aTouch;
-                    break;
-                default:
-                    break;
-            }
-            [event _addTouch:aTouch forDelayedDelivery:NO];
+    [event _clearTouches];
+    NSArray *myAry = safeTouchAry;
+    for (UITouch *aTouch in myAry) {
+        switch (aTouch.phase) {
+            case UITouchPhaseEnded:
+            case UITouchPhaseCancelled:
+                toRemove = aTouch;
+                break;
+            case UITouchPhaseBegan:
+//            case UITouchPhaseMoved:
+                toStationarify = aTouch;
+                break;
+            default:
+                break;
         }
+        [event _addTouch:aTouch forDelayedDelivery:NO];
     }
     [[UIApplication sharedApplication] sendEvent:event];
 }
@@ -125,11 +121,13 @@ void eventSendCallback(void* info) {
 + (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase inWindow:(UIWindow*)window onView:(UIView*)view{
     bool deleted = false;
     UITouch* touch = NULL;
+    bool needsCopy = false;
     if(toRemove != NULL) {
         touch = toRemove;
         toRemove = NULL;
         [livingTouchAry removeObjectIdenticalTo:touch];
         deleted = true;
+        needsCopy = true;
     }
     if(toStationarify != NULL) {
         // in case this is changed during the operations
@@ -150,23 +148,22 @@ void eventSendCallback(void* info) {
         touch = [[UITouch alloc] initAtPoint:point inWindow:window onView:view];
         [livingTouchAry addObject:touch];
         [touchAry setObject:touch atIndexedSubscript:pointId ];
+        needsCopy = true;
     } else {
         if(touch.phase == UITouchPhaseBegan && phase == UITouchPhaseMoved) {
             return deleted;
         }
-        [touch setPhaseAndUpdateTimestamp:phase];
         [touch setLocationInWindow:point];
     }
-    if(phase != UITouchPhaseMoved) {
-        needsCopy = true;
-    }
+    [touch setPhaseAndUpdateTimestamp:phase];
 //    CFRunLoopSourceContext context;
 //    CFRunLoopSourceGetContext(source, &context);
-
-    CFTypeRef delayRelease = CFBridgingRetain(safeTouchAry);
-    safeTouchAry = [[NSArray alloc] initWithArray:livingTouchAry copyItems:NO];
+    if(needsCopy) {
+        CFTypeRef delayRelease = CFBridgingRetain(safeTouchAry);
+        safeTouchAry = [[NSArray alloc] initWithArray:livingTouchAry copyItems:NO];
+        CFBridgingRelease(delayRelease);
+    }
     CFRunLoopSourceSignal(source);
-    CFBridgingRelease(delayRelease);
 //    UIEvent *event = [self eventWithTouches:livingTouchAry];
     return deleted;
 }
