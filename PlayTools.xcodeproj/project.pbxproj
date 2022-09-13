@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6E76639B28D0FAE700DE4AF9 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76639A28D0FAE700DE4AF9 /* Plugin.swift */; };
+		6E76639C28D0FAE700DE4AF9 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76639A28D0FAE700DE4AF9 /* Plugin.swift */; };
+		6E7663A128D0FB5300DE4AF9 /* AKPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7663A028D0FB5300DE4AF9 /* AKPlugin.swift */; };
+		6E84A14528D0F94E00BF7495 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
+		6E84A15028D0F97500BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA71970B287A44D200623C15 /* PlayLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719702287A44D200623C15 /* PlayLoader.m */; };
 		AA71970C287A44D200623C15 /* PlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719703287A44D200623C15 /* PlayScreen.swift */; };
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
@@ -79,14 +84,31 @@
 		AA719871287A81A000623C15 /* FixCategoryBug.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719843287A81A000623C15 /* FixCategoryBug.h */; };
 		AA719872287A81A000623C15 /* UITouch+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719844287A81A000623C15 /* UITouch+Private.h */; };
 		AA818CB9287ABFB1000BEE9D /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CB8287ABFB1000BEE9D /* IOKit.framework */; };
-		AA818CBB287ABFD5000BEE9D /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
 		B127172228817AB90025112B /* SwordRPC in Frameworks */ = {isa = PBXBuildFile; productRef = B127172128817AB90025112B /* SwordRPC */; };
 		B127172528817C040025112B /* DiscordIPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B127172428817C040025112B /* DiscordIPC.swift */; };
 		B1271729288284BE0025112B /* DiscordActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1271728288284BE0025112B /* DiscordActivity.swift */; };
 		B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		6E84A14728D0F94E00BF7495 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6E84A15028D0F97500BF7495 /* AKInterface.bundle in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		6E76639628D0FA6200DE4AF9 /* AKInterface-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AKInterface-Bridging-Header.h"; sourceTree = "<group>"; };
+		6E76639A28D0FAE700DE4AF9 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
+		6E7663A028D0FB5300DE4AF9 /* AKPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AKPlugin.swift; sourceTree = "<group>"; };
+		6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AKInterface.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA3430B0287AB7F2004E208A /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		AA7196D8287A447700623C15 /* PlayTools.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PlayTools.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA719702287A44D200623C15 /* PlayLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlayLoader.m; sourceTree = "<group>"; };
@@ -170,23 +192,41 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		6E84A14928D0F96D00BF7495 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA7196D5287A447700623C15 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				B127172228817AB90025112B /* SwordRPC in Frameworks */,
+				6E84A14528D0F94E00BF7495 /* UIKit.framework in Frameworks */,
 				AA818CB9287ABFB1000BEE9D /* IOKit.framework in Frameworks */,
-				AA818CBB287ABFD5000BEE9D /* UIKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6E76639928D0FA6F00DE4AF9 /* AKInterface */ = {
+			isa = PBXGroup;
+			children = (
+				6E76639A28D0FAE700DE4AF9 /* Plugin.swift */,
+				6E7663A028D0FB5300DE4AF9 /* AKPlugin.swift */,
+				6E76639628D0FA6200DE4AF9 /* AKInterface-Bridging-Header.h */,
+			);
+			name = AKInterface;
+			sourceTree = "<group>";
+		};
 		AA7196CE287A447700623C15 = {
 			isa = PBXGroup;
 			children = (
 				AA7196DA287A447700623C15 /* PlayTools */,
+				6E76639928D0FA6F00DE4AF9 /* AKInterface */,
 				AA7196D9287A447700623C15 /* Products */,
 				AA818CB6287ABFA7000BEE9D /* Recovered References */,
 				AA818CB7287ABFB1000BEE9D /* Frameworks */,
@@ -197,6 +237,7 @@
 			isa = PBXGroup;
 			children = (
 				AA7196D8287A447700623C15 /* PlayTools.framework */,
+				6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -405,6 +446,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		6E84A14B28D0F96D00BF7495 /* AKInterface */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6E84A14D28D0F96D00BF7495 /* Build configuration list for PBXNativeTarget "AKInterface" */;
+			buildPhases = (
+				6E84A14828D0F96D00BF7495 /* Sources */,
+				6E84A14928D0F96D00BF7495 /* Frameworks */,
+				6E84A14A28D0F96D00BF7495 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AKInterface;
+			productName = AKInterface;
+			productReference = 6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
 		AA7196D7287A447700623C15 /* PlayTools */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA7196DF287A447700623C15 /* Build configuration list for PBXNativeTarget "PlayTools" */;
@@ -414,6 +472,7 @@
 				AA7196D5287A447700623C15 /* Frameworks */,
 				AA7196D6287A447700623C15 /* Resources */,
 				6ED6ACAB28AAB30F0040D234 /* SwiftLint */,
+				6E84A14728D0F94E00BF7495 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -436,6 +495,10 @@
 				BuildIndependentTargetsInParallel = NO;
 				LastUpgradeCheck = 1340;
 				TargetAttributes = {
+					6E84A14B28D0F96D00BF7495 = {
+						CreatedOnToolsVersion = 14.0;
+						LastSwiftMigration = 1400;
+					};
 					AA7196D7287A447700623C15 = {
 						CreatedOnToolsVersion = 13.4.1;
 						LastSwiftMigration = 1340;
@@ -459,11 +522,19 @@
 			projectRoot = "";
 			targets = (
 				AA7196D7287A447700623C15 /* PlayTools */,
+				6E84A14B28D0F96D00BF7495 /* AKInterface */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		6E84A14A28D0F96D00BF7495 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA7196D6287A447700623C15 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -495,6 +566,15 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		6E84A14828D0F96D00BF7495 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E7663A128D0FB5300DE4AF9 /* AKPlugin.swift in Sources */,
+				6E76639C28D0FAE700DE4AF9 /* Plugin.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA7196D4287A447700623C15 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -505,6 +585,7 @@
 				AA71975A287A480D00623C15 /* Toucher.swift in Sources */,
 				AA71984A287A81A000623C15 /* NSString+KIFAdditions.m in Sources */,
 				AA7197A1287A481500623C15 /* CircleMenuLoader.swift in Sources */,
+				6E76639B28D0FAE700DE4AF9 /* Plugin.swift in Sources */,
 				B1271729288284BE0025112B /* DiscordActivity.swift in Sources */,
 				AA71984E287A81A000623C15 /* UIScrollView-KIFAdditions.m in Sources */,
 				AA719849287A81A000623C15 /* NSException-KIFAdditions.m in Sources */,
@@ -552,6 +633,68 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		6E84A14E28D0F96D00BF7495 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = "$(PRODUCT_BUNDLE_NAME).AKPlugin";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.playcover.AKInterface;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "AKInterface-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		6E84A14F28D0F96D00BF7495 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = "$(PRODUCT_BUNDLE_NAME).AKPlugin";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.playcover.AKInterface;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "AKInterface-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
 		AA7196DD287A447700623C15 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -706,14 +849,15 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = YES;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SWIFT_MODULE_NAME)/$(SWIFT_MODULE_NAME).h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "$(SWIFT_MODULE_NAME)-Swift.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Debug;
 		};
@@ -750,19 +894,29 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = YES;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SWIFT_MODULE_NAME)/$(SWIFT_MODULE_NAME).h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "$(SWIFT_MODULE_NAME)-Swift.h";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		6E84A14D28D0F96D00BF7495 /* Build configuration list for PBXNativeTarget "AKInterface" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6E84A14E28D0F96D00BF7495 /* Debug */,
+				6E84A14F28D0F96D00BF7495 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		AA7196D2287A447700623C15 /* Build configuration list for PBXProject "PlayTools" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
