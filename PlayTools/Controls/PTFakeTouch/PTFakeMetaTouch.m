@@ -12,7 +12,7 @@
 #import "UIEvent+KIFAdditions.h"
 #import "CoreFoundation/CFRunLoop.h"
 #include <dlfcn.h>
-#include <stdlib.h>
+#include <string.h>
 
 static NSMutableArray *touchAry;
 static NSMutableArray *livingTouchAry;
