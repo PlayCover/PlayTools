@@ -130,12 +130,12 @@ final class PlayInput: NSObject {
     }
 
     private func eliminateRedundantKeyPressEvents() {
-        let mask = Dynamic.NSEventMask().NSEventMaskKeyDown
+        /*let mask = Dynamic.NSEventMask().NSEventMaskKeyDown
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(mask, handler: { event in
             if (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed() {
                 return event
             }
             return nil
-        } as ResponseBlock)
+        } as ResponseBlock)*/
     }
 }

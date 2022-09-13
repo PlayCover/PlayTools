@@ -13,7 +13,8 @@ let mode = ControlMode.mode
     @objc public var visible: Bool = PlaySettings.shared.mouseMapping
 
     @objc static public func isMouseClick(_ event: Any) -> Bool {
-        return [1, 2].contains(Dynamic(event).type.asInt)
+        //return [1, 2].contains(Dynamic(event).type.asInt)
+        return false
     }
 
     func show(_ show: Bool) {
@@ -24,16 +25,16 @@ let mode = ControlMode.mode
                         screen.switchDock(true)
                     }
                     if PlaySettings.shared.mouseMapping {
-                        Dynamic.NSCursor.unhide()
-						disableCursor(1)
+                        //Dynamic.NSCursor.unhide()
+						//disableCursor(1)
                     }
                     PlayInput.shared.invalidate()
                 }
             } else {
                 if visible {
                     if PlaySettings.shared.mouseMapping {
-                        Dynamic.NSCursor.hide()
-                        disableCursor(0)
+                        //Dynamic.NSCursor.hide()
+                        //disableCursor(0)
                     }
                     if screen.fullscreen {
                         screen.switchDock(false)

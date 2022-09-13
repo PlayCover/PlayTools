@@ -12,12 +12,13 @@ final class PlayUI {
 
     static let shared = PlayUI()
 
-    private init() {}
+    private init() {
+        loadPlugin()
+    }
 
     func showAlert(_ title: String, _ content: String) {
         let alertController = UIAlertController(title: title, message: content, preferredStyle: .alert)
         PlayInput.shared.root?.present(alertController, animated: true, completion: nil)
-        loadPlugin()
     }
 
     func showLauncherWarning() {
@@ -25,7 +26,7 @@ final class PlayUI {
                                                 message: "Please, install it from playcover.io site to use this app.",
                                                 preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            Dynamic.NSApplication.sharedApplication.terminate(self)
+            // Dynamic.NSApplication.sharedApplication.terminate(self)
         })
         PlayInput.shared.root?.present(alertController, animated: true, completion: nil)
     }

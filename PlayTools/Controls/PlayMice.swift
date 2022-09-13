@@ -35,12 +35,12 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
     public var cursorPos: CGPoint {
         var point = CGPoint(x: 0, y: 0)
         if #available(macOS 11, *) {
-            point = Dynamic(screen.nsWindow).mouseLocationOutsideOfEventStream.asCGPoint!
+            //point = Dynamic(screen.nsWindow).mouseLocationOutsideOfEventStream.asCGPoint!
         }
-        if let rect = (Dynamic(screen.nsWindow).frame.asCGRect) {
+        /*if let rect = (Dynamic(screen.nsWindow).frame.asCGRect) {
             point.x = (point.x / rect.width) * screen.screenRect.width
             point.y = screen.screenRect.height - ((point.y / rect.height) * screen.screenRect.height)
-        }
+        }*/
         return point
     }
 
@@ -87,7 +87,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
     var mouseActions: [Int: ButtonAction] = [:]
 
     private func setupMouseButton(_up: Int, _down: Int) {
-        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
+        /*Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
             if !mode.visible || self.acceptMouseEvents {
                 self.mouseActions[_up]?.update(pressed: true)
                 if self.acceptMouseEvents {
@@ -112,7 +112,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
                 return nil
             }
             return event
-        } as ResponseBlock)
+        } as ResponseBlock)*/
     }
 
     private func setMiceButton(_ keyId: Int, action: ButtonAction) {

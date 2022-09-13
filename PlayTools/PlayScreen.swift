@@ -47,20 +47,20 @@ extension CGRect {
 extension UIScreen {
 
     static var aspectRatio: CGFloat {
-        let count = Dynamic.NSScreen.screens.count.asInt ?? 0
+        let count = /*Dynamic.NSScreen.screens.count.asInt ?? */0
         if PlaySettings.shared.notch {
             if count == 1 {
                 return mainScreenWidth / mainScreenHeight // 1.6 or 1.77777778
             } else {
-                if Dynamic.NSScreen.mainScreen.asObject == Dynamic.NSScreen.screens.first {
+                /*if Dynamic.NSScreen.mainScreen.asObject == Dynamic.NSScreen.screens.first {
                     return mainScreenWidth / mainScreenHeight
-                }
+                }*/
             }
 
         }
-        if let frame = Dynamic(Dynamic.NSScreen.mainScreen.asObject).frame.asCGRect {
+        /*if let frame = Dynamic(Dynamic.NSScreen.mainScreen.asObject).frame.asCGRect {
             return frame.aspectRatio()
-        }
+        }*/
         return mainScreenWidth / mainScreenHeight
     }
 }
@@ -88,7 +88,7 @@ public final class PlayScreen: NSObject {
         return size.toAspectRatio()
     }
     var fullscreen: Bool {
-        return Dynamic(nsWindow).styleMask.contains(16384).asBool ?? false
+        return /*Dynamic(nsWindow).styleMask.contains(16384).asBool ??*/ false
     }
 
     @objc public var screenRect: CGRect {
@@ -132,11 +132,12 @@ public final class PlayScreen: NSObject {
     }
 
     var nsScreen: NSObject? {
-        Dynamic(nsWindow).nsScreen.asObject
+        // Dynamic(nsWindow).nsScreen.asObject
+        return nil
     }
 
     func switchDock(_ visible: Bool) {
-        Dynamic.NSMenu.setMenuBarVisible(visible)
+        // Dynamic.NSMenu.setMenuBarVisible(visible)
     }
 
 }

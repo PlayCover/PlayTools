@@ -8,8 +8,9 @@ import GameController
 
 class PlayInfo {
     static var isLauncherInstalled: Bool {
-        return Dynamic.NSWorkspace.sharedWorkspace
-            .URLForApplicationWithBundleIdentifier("io.playcover.PlayCover").asAnyObject != nil
+        return true
+        /*return Dynamic.NSWorkspace.sharedWorkspace
+            .URLForApplicationWithBundleIdentifier("io.playcover.PlayCover").asAnyObject != nil*/
     }
 }
 

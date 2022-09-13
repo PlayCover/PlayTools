@@ -30,7 +30,7 @@ final public class PlayCover: NSObject {
             queue: OperationQueue.main
         ) { noti in
             if PlayScreen.shared.nsWindow?.isEqual(noti.object) ?? false {
-                Dynamic.NSApplication.sharedApplication.terminate(self)
+                // Dynamic.NSApplication.sharedApplication.terminate(self)
             }
         }
     }
