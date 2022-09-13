@@ -9,9 +9,9 @@
 /* Begin PBXBuildFile section */
 		6E84A10528CFD00A00BF7495 /* KeymapEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E84A10428CFD00A00BF7495 /* KeymapEditorView.swift */; };
 		6E84A12028CFD4A900BF7495 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E84A11F28CFD4A900BF7495 /* Plugin.swift */; };
-		6E84A12E28D02C1300BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A12628CFD85300BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6E84A13428D02CF700BF7495 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E84A11F28CFD4A900BF7495 /* Plugin.swift */; };
 		6E84A13528D02CFD00BF7495 /* MacPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E84A12F28D02C6B00BF7495 /* MacPlugin.swift */; };
+		6E84A13828D0E2B800BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A12628CFD85300BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA71970B287A44D200623C15 /* PlayLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719702287A44D200623C15 /* PlayLoader.m */; };
 		AA71970C287A44D200623C15 /* PlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719703287A44D200623C15 /* PlayScreen.swift */; };
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
@@ -88,7 +88,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				6E84A12E28D02C1300BF7495 /* AKInterface.bundle in Embed Frameworks */,
+				6E84A13828D0E2B800BF7495 /* AKInterface.bundle in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;

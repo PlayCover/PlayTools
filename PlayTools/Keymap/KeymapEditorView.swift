@@ -9,6 +9,6 @@ import SwiftUI
 
 struct KeymapEditorView: View {
     var body: some View {
-        EmptyView()
+        Color.red
     }
 }
