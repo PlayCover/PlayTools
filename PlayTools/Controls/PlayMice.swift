@@ -8,18 +8,12 @@ import Foundation
 import GameController
 import CoreGraphics
 
-typealias ResponseBlock = @convention(block) (_ event: Any) -> Any?
+public class PlayMice: NSObject {
 
-typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
-
-@objc final public class PlayMice: NSObject {
-
-    @objc public static let shared = PlayMice()
-
-    private var camera: CameraControl?
-
+    public static let shared = PlayMice()
     private static var isInit = false
 
+    private var camera: CameraControl?
     private var acceptMouseEvents = !PlaySettings.shared.mouseMapping
 
     public override init() {
@@ -87,7 +81,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
     var mouseActions: [Int: ButtonAction] = [:]
 
     private func setupMouseButton(_up: Int, _down: Int) {
-        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
+        /*Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
             if !mode.visible || self.acceptMouseEvents {
                 self.mouseActions[_up]?.update(pressed: true)
                 if self.acceptMouseEvents {
@@ -112,7 +106,7 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
                 return nil
             }
             return event
-        } as ResponseBlock)
+        } as ResponseBlock)*/
     }
 
     private func setMiceButton(_ keyId: Int, action: ButtonAction) {

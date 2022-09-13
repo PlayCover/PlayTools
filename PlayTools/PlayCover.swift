@@ -33,7 +33,7 @@ final public class PlayCover: NSObject {
             queue: OperationQueue.main
         ) { noti in
             if PlayScreen.shared.nsWindow?.isEqual(noti.object) ?? false {
-                AKInterface.shared?.terminateApplication()
+                AKInterface.shared!.terminateApplication()
             }
         }
     }

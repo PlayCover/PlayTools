@@ -28,10 +28,6 @@
 		AA7197A1287A481500623C15 /* CircleMenuLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71978D287A481500623C15 /* CircleMenuLoader.swift */; };
 		AA7197A2287A481500623C15 /* CircleMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71978E287A481500623C15 /* CircleMenu.swift */; };
 		AA7197A3287A481500623C15 /* CircleMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71978F287A481500623C15 /* CircleMenuButton.swift */; };
-		AA7197A5287A481500623C15 /* Dynamic.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719793287A481500623C15 /* Dynamic.swift */; };
-		AA7197A6287A481500623C15 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719794287A481500623C15 /* Logger.swift */; };
-		AA7197A7287A481500623C15 /* Invocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719795287A481500623C15 /* Invocation.swift */; };
-		AA7197A8287A481500623C15 /* TypeMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719796287A481500623C15 /* TypeMapping.swift */; };
 		AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719797287A481500623C15 /* PlayInfo.swift */; };
 		AA7197AA287A481500623C15 /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719798287A481500623C15 /* Toast.swift */; };
 		AA7197AB287A481500623C15 /* ControlModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979A287A481500623C15 /* ControlModel.swift */; };
@@ -130,10 +126,6 @@
 		AA71978D287A481500623C15 /* CircleMenuLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleMenuLoader.swift; sourceTree = "<group>"; };
 		AA71978E287A481500623C15 /* CircleMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleMenu.swift; sourceTree = "<group>"; };
 		AA71978F287A481500623C15 /* CircleMenuButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleMenuButton.swift; sourceTree = "<group>"; };
-		AA719793287A481500623C15 /* Dynamic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Dynamic.swift; sourceTree = "<group>"; };
-		AA719794287A481500623C15 /* Logger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
-		AA719795287A481500623C15 /* Invocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Invocation.swift; sourceTree = "<group>"; };
-		AA719796287A481500623C15 /* TypeMapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeMapping.swift; sourceTree = "<group>"; };
 		AA719797287A481500623C15 /* PlayInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayInfo.swift; sourceTree = "<group>"; };
 		AA719798287A481500623C15 /* Toast.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
 		AA71979A287A481500623C15 /* ControlModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControlModel.swift; sourceTree = "<group>"; };
@@ -291,23 +283,11 @@
 		AA719791287A481500623C15 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				AA719792287A481500623C15 /* Dynamic */,
 				AA719797287A481500623C15 /* PlayInfo.swift */,
 				AA719798287A481500623C15 /* Toast.swift */,
 				6E7663A428D0FEBE00DE4AF9 /* AKPluginLoader.swift */,
 			);
 			path = Utils;
-			sourceTree = "<group>";
-		};
-		AA719792287A481500623C15 /* Dynamic */ = {
-			isa = PBXGroup;
-			children = (
-				AA719793287A481500623C15 /* Dynamic.swift */,
-				AA719794287A481500623C15 /* Logger.swift */,
-				AA719795287A481500623C15 /* Invocation.swift */,
-				AA719796287A481500623C15 /* TypeMapping.swift */,
-			);
-			path = Dynamic;
 			sourceTree = "<group>";
 		};
 		AA719799287A481500623C15 /* Keymap */ = {
@@ -593,9 +573,7 @@
 				AA71984E287A81A000623C15 /* UIScrollView-KIFAdditions.m in Sources */,
 				AA719849287A81A000623C15 /* NSException-KIFAdditions.m in Sources */,
 				AA7197AB287A481500623C15 /* ControlModel.swift in Sources */,
-				AA7197A8287A481500623C15 /* TypeMapping.swift in Sources */,
 				AA7197AE287A481500623C15 /* DragElementsView.swift in Sources */,
-				AA7197A7287A481500623C15 /* Invocation.swift in Sources */,
 				AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */,
 				AA71984F287A81A000623C15 /* UIView-Debugging.m in Sources */,
 				AA719759287A480D00623C15 /* PlayAction.swift in Sources */,
@@ -611,10 +589,8 @@
 				AA719789287A480D00623C15 /* PlayInput.swift in Sources */,
 				AA719865287A81A000623C15 /* UIEvent+KIFAdditions.m in Sources */,
 				AA71970B287A44D200623C15 /* PlayLoader.m in Sources */,
-				AA7197A5287A481500623C15 /* Dynamic.swift in Sources */,
 				AA719712287A44D200623C15 /* PlayUI.swift in Sources */,
 				AA719860287A81A000623C15 /* UIView-KIFAdditions.m in Sources */,
-				AA7197A6287A481500623C15 /* Logger.swift in Sources */,
 				AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */,
 				AA71978A287A480D00623C15 /* ControlMode.swift in Sources */,
 				AA719758287A480D00623C15 /* PlayMice.swift in Sources */,

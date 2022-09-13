@@ -1,6 +1,6 @@
 import GameController
 
-@objc class ControlData: NSObject {
+class ControlData {
     var keyCodes: [Int]
     var size: CGFloat
     var xCoord: CGFloat

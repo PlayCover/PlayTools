@@ -8,7 +8,7 @@ import GameController
 
 class PlayInfo {
     static var isLauncherInstalled: Bool {
-        return AKInterface.shared?
+        return AKInterface.shared!
             .urlForApplicationWithBundleIdentifier("io.playcover.PlayCover") != nil
     }
 }

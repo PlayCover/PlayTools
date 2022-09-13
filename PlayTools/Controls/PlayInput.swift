@@ -2,7 +2,7 @@ import Foundation
 import GameController
 import UIKit
 
-final class PlayInput: NSObject {
+class PlayInput {
     static let shared = PlayInput()
     var actions = [Action]()
     var timeoutForBind = true
@@ -68,8 +68,6 @@ final class PlayInput: NSObject {
     }
 
     static public func cmdPressed() -> Bool {
-        // return keyboard.button(forKeyCode: GCKeyCode(rawValue: 227))!.isPressed
-        // || keyboard.button(forKeyCode: GCKeyCode(rawValue: 231))!.isPressed
         return lCmdPressed || rCmdPressed
     }
 
@@ -85,8 +83,8 @@ final class PlayInput: NSObject {
        }
 
     private static let FORBIDDEN: [GCKeyCode] = [
-        GCKeyCode.init(rawValue: 227), // LCmd
-        GCKeyCode.init(rawValue: 231), // RCmd
+        .leftGUI,
+        .rightGUI,
         .leftAlt,
         .rightAlt,
         .printScreen
@@ -126,11 +124,7 @@ final class PlayInput: NSObject {
 
         setup()
         // fix beep sound
-        eliminateRedundantKeyPressEvents()
-    }
-
-    private func eliminateRedundantKeyPressEvents() {
-        AKInterface.shared?
+        AKInterface.shared!
             .eliminateRedundantKeyPressEvents(mode.visible,
                                               EditorController.shared.editorMode,
                                               PlayInput.cmdPressed())
