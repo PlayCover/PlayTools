@@ -47,18 +47,18 @@ extension CGRect {
 extension UIScreen {
 
     static var aspectRatio: CGFloat {
-        let count = Dynamic.NSScreen.screens.count.asInt ?? 0
+        let count = AKInterface.shared?.screenCount ?? 0
         if PlaySettings.shared.notch {
             if count == 1 {
                 return mainScreenWidth / mainScreenHeight // 1.6 or 1.77777778
             } else {
-                if Dynamic.NSScreen.mainScreen.asObject == Dynamic.NSScreen.screens.first {
+                if AKInterface.shared!.isMainScreenEqualToFirst {
                     return mainScreenWidth / mainScreenHeight
                 }
             }
 
         }
-        if let frame = Dynamic(Dynamic.NSScreen.mainScreen.asObject).frame.asCGRect {
+        if let frame = AKInterface.shared?.mainScreenFrame {
             return frame.aspectRatio()
         }
         return mainScreenWidth / mainScreenHeight
@@ -88,7 +88,7 @@ public final class PlayScreen: NSObject {
         return size.toAspectRatio()
     }
     var fullscreen: Bool {
-        return Dynamic(nsWindow).styleMask.contains(16384).asBool ?? false
+        return AKInterface.shared?.isFullscreen ?? false
     }
 
     @objc public var screenRect: CGRect {
@@ -131,12 +131,8 @@ public final class PlayScreen: NSObject {
         window?.nsWindow
     }
 
-    var nsScreen: NSObject? {
-        Dynamic(nsWindow).nsScreen.asObject
-    }
-
     func switchDock(_ visible: Bool) {
-        Dynamic.NSMenu.setMenuBarVisible(visible)
+        AKInterface.shared?.setMenuBarVisible(visible)
     }
 
 }

@@ -35,12 +35,12 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
     public var cursorPos: CGPoint {
         var point = CGPoint(x: 0, y: 0)
         if #available(macOS 11, *) {
-            point = Dynamic(screen.nsWindow).mouseLocationOutsideOfEventStream.asCGPoint!
+            point = AKInterface.shared!.mousePoint
         }
-        if let rect = (Dynamic(screen.nsWindow).frame.asCGRect) {
-            point.x = (point.x / rect.width) * screen.screenRect.width
-            point.y = screen.screenRect.height - ((point.y / rect.height) * screen.screenRect.height)
-        }
+
+        let rect = AKInterface.shared!.windowFrame
+        point.x = (point.x / rect.width) * screen.screenRect.width
+        point.y = screen.screenRect.height - ((point.y / rect.height) * screen.screenRect.height)
         return point
     }
 

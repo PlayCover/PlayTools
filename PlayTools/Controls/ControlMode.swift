@@ -24,7 +24,7 @@ let mode = ControlMode.mode
                         screen.switchDock(true)
                     }
                     if PlaySettings.shared.mouseMapping {
-                        Dynamic.NSCursor.unhide()
+                        AKInterface.shared?.unhideCursor()
 						disableCursor(1)
                     }
                     PlayInput.shared.invalidate()
@@ -32,7 +32,7 @@ let mode = ControlMode.mode
             } else {
                 if visible {
                     if PlaySettings.shared.mouseMapping {
-                        Dynamic.NSCursor.hide()
+                        AKInterface.shared?.hideCursor()
                         disableCursor(0)
                     }
                     if screen.fullscreen {

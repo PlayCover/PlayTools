@@ -130,13 +130,9 @@ final class PlayInput: NSObject {
     }
 
     private func eliminateRedundantKeyPressEvents() {
-        // TODO later: should not be hard-coded
-        let NSEventMaskKeyDown: UInt64 = 1024
-        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask( NSEventMaskKeyDown, handler: { event in
-            if (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed() {
-                return event
-            }
-            return nil
-        } as ResponseBlock)
+        AKInterface.shared?
+            .eliminateRedundantKeyPressEvents(mode.visible,
+                                              EditorController.shared.editorMode,
+                                              PlayInput.cmdPressed())
     }
 }

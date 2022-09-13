@@ -12,7 +12,6 @@ class AKInterface {
 
     public static func initialize() {
         shared = loadPlugin()
-        shared?.sayHello()
     }
 
     private static func loadPlugin() -> Plugin? {

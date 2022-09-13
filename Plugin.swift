@@ -11,5 +11,17 @@ import Foundation
 public protocol Plugin: NSObjectProtocol {
     init()
 
-    func sayHello()
+    var screenCount: Int { get }
+    var mousePoint: CGPoint { get }
+    var windowFrame: CGRect { get }
+    var mainScreenFrame: CGRect { get }
+    var isMainScreenEqualToFirst: Bool { get }
+    var isFullscreen: Bool { get }
+
+    func hideCursor()
+    func unhideCursor()
+    func terminateApplication()
+    func eliminateRedundantKeyPressEvents(_ isVisible: Bool, _ isEditorShowing: Bool, _ cmdPressed: Bool)
+    func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
+    func setMenuBarVisible(_ value: Bool)
 }

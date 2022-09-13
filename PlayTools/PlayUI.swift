@@ -24,7 +24,7 @@ final class PlayUI {
                                                 message: "Please, install it from playcover.io site to use this app.",
                                                 preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            Dynamic.NSApplication.sharedApplication.terminate(self)
+            AKInterface.shared?.terminateApplication()
         })
         PlayInput.shared.root?.present(alertController, animated: true, completion: nil)
     }
