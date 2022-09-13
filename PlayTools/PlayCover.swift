@@ -25,22 +25,13 @@ final public class PlayCover: NSObject {
     }
 
     private static func appKitPlugin() {
-        /// 1. Form the plugin's bundle URL
         let bundleFileName = "AKInterface.bundle"
-        guard let bundleURL = Bundle.main.builtInPlugInsURL?
-                                    .appendingPathComponent(bundleFileName) else { return }
 
-        /// 2. Create a bundle instance with the plugin URL
-        guard let bundle = Bundle(url: bundleURL) else { return }
-
-        /// 3. Load the bundle and our plugin class
+        let bundleURL = Bundle.main.builtInPlugInsURL!.appendingPathComponent(bundleFileName)
+        let bundle = Bundle(url: bundleURL)!
         let className = "AKInterface.MacPlugin"
-        guard let pluginClass = bundle.classNamed(className) as? Plugin.Type else { return }
+        let pluginClass = bundle.classNamed(className) as! Plugin.Type
 
-//        /// 3. Load the bundle and the principal class
-//        guard let pluginClass = bundle.principalClass as? Plugin.Type else { return }
-
-        /// 4. Create an instance of the plugin class
         let plugin = pluginClass.init()
         plugin.sayHello()
     }
