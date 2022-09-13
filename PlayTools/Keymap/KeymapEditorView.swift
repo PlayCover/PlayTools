@@ -5,4 +5,10 @@
 //  Created by Isaac Marovitz on 12/09/2022.
 //
 
-import Foundation
+import SwiftUI
+
+struct KeymapEditorView: View {
+    var body: some View {
+        EmptyView()
+    }
+}
