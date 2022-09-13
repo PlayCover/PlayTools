@@ -193,11 +193,11 @@ final class CameraControl {
             stationaryCount = 0
             Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: 1)
 
-            delay(0.5, closure: checkEnded)
+            delay(0.1, closure: checkEnded)
         }
         // if not moving fast, regard the user fine-tuning the camera(e.g. aiming)
         // so hold the touch for longer to avoid cold startup
-        if deltaX.magnitude + deltaY.magnitude > 10 {
+        if deltaX.magnitude + deltaY.magnitude > 12 {
             // if we had mistaken this as player aiming
             if self.idled {
 //                Toast.showOver(msg: "idled")
