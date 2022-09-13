@@ -8,7 +8,7 @@
 import Foundation
 
 @objc(Plugin)
-protocol Plugin: NSObjectProtocol {
+public protocol Plugin: NSObjectProtocol {
     init()
 
     func sayHello()

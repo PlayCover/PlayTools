@@ -14,8 +14,7 @@ class AKPlugin: NSObject, Plugin {
     func sayHello() {
         let alert = NSAlert()
         alert.alertStyle = .informational
-        alert.messageText = "Hello from AppKit!"
-        alert.informativeText = "It Works!"
+        alert.messageText = "AppKit Plugin Loaded!"
         alert.addButton(withTitle: "OK")
         alert.runModal()
     }
