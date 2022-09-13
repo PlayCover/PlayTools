@@ -49,13 +49,13 @@ final class PlayInput: NSObject {
                     && !PlayInput.cmdPressed()
                     && !PlayInput.FORBIDDEN.contains(keyCode)
                     && self.isSafeToBind(keyboard) {
-                    EditorController.shared.setKeyCode(keyCode.rawValue)
+                    // EditorController.shared.setKeyCode(keyCode.rawValue)
                 }
             }
-            keyboard.button(forKeyCode: GCKeyCode(rawValue: 227))?.pressedChangedHandler = { _, _, pressed in
+            keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.lCmdPressed = pressed
             }
-            keyboard.button(forKeyCode: GCKeyCode(rawValue: 231))?.pressedChangedHandler = { _, _, pressed in
+            keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.rCmdPressed = pressed
             }
             keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
@@ -85,8 +85,8 @@ final class PlayInput: NSObject {
        }
 
     private static let FORBIDDEN: [GCKeyCode] = [
-        GCKeyCode.init(rawValue: 227), // LCmd
-        GCKeyCode.init(rawValue: 231), // RCmd
+        .leftGUI,
+        .rightGUI,
         .leftAlt,
         .rightAlt,
         .printScreen
@@ -130,9 +130,8 @@ final class PlayInput: NSObject {
     }
 
     private func eliminateRedundantKeyPressEvents() {
-        // TODO later: should not be hard-coded
-        let NSEventMaskKeyDown: UInt64 = 1024
-        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask( NSEventMaskKeyDown, handler: { event in
+        let mask = Dynamic.NSEventMask().NSEventMaskKeyDown
+        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(mask, handler: { event in
             if (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed() {
                 return event
             }

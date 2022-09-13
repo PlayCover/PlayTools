@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6E84A10528CFD00A00BF7495 /* KeymapEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E84A10428CFD00A00BF7495 /* KeymapEditorView.swift */; };
+		6E84A12028CFD4A900BF7495 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E84A11F28CFD4A900BF7495 /* Plugin.swift */; };
+		6E84A12E28D02C1300BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A12628CFD85300BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6E84A13428D02CF700BF7495 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E84A11F28CFD4A900BF7495 /* Plugin.swift */; };
+		6E84A13528D02CFD00BF7495 /* MacPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E84A12F28D02C6B00BF7495 /* MacPlugin.swift */; };
 		AA71970B287A44D200623C15 /* PlayLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719702287A44D200623C15 /* PlayLoader.m */; };
 		AA71970C287A44D200623C15 /* PlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719703287A44D200623C15 /* PlayScreen.swift */; };
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
@@ -18,16 +23,9 @@
 		AA71975A287A480D00623C15 /* Toucher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719724287A480C00623C15 /* Toucher.swift */; };
 		AA719789287A480D00623C15 /* PlayInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719755287A480C00623C15 /* PlayInput.swift */; };
 		AA71978A287A480D00623C15 /* ControlMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719756287A480C00623C15 /* ControlMode.swift */; };
-		AA71978B287A480D00623C15 /* MenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719757287A480C00623C15 /* MenuController.swift */; };
-		AA7197A5287A481500623C15 /* Dynamic.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719793287A481500623C15 /* Dynamic.swift */; };
-		AA7197A6287A481500623C15 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719794287A481500623C15 /* Logger.swift */; };
-		AA7197A7287A481500623C15 /* Invocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719795287A481500623C15 /* Invocation.swift */; };
-		AA7197A8287A481500623C15 /* TypeMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719796287A481500623C15 /* TypeMapping.swift */; };
 		AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719797287A481500623C15 /* PlayInfo.swift */; };
 		AA7197AA287A481500623C15 /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719798287A481500623C15 /* Toast.swift */; };
-		AA7197AB287A481500623C15 /* ControlModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979A287A481500623C15 /* ControlModel.swift */; };
 		AA7197AD287A481500623C15 /* EditorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979C287A481500623C15 /* EditorController.swift */; };
-		AA7197AE287A481500623C15 /* DragElementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979D287A481500623C15 /* DragElementsView.swift */; };
 		AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979E287A481500623C15 /* KeyCodeNames.swift */; };
 		AA719845287A81A000623C15 /* NSBundle+Swizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719816287A819F00623C15 /* NSBundle+Swizzle.m */; };
 		AA719846287A81A000623C15 /* IOHIDEvent+KIF.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719818287A819F00623C15 /* IOHIDEvent+KIF.h */; };
@@ -83,7 +81,29 @@
 		B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		6E84A11E28CFD48500BF7495 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6E84A12E28D02C1300BF7495 /* AKInterface.bundle in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		6E84A10428CFD00A00BF7495 /* KeymapEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapEditorView.swift; sourceTree = "<group>"; };
+		6E84A11F28CFD4A900BF7495 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
+		6E84A12628CFD85300BF7495 /* AKInterface.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AKInterface.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		6E84A12B28D02B6A00BF7495 /* AppKitInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppKitInterface.h; sourceTree = "<group>"; };
+		6E84A12C28D02B6A00BF7495 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
+		6E84A12F28D02C6B00BF7495 /* MacPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPlugin.swift; sourceTree = "<group>"; };
+		6E84A13128D02CC100BF7495 /* AppKitInterface-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AppKitInterface-Bridging-Header.h"; sourceTree = "<group>"; };
+		6E84A13228D02CE500BF7495 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA3430B0287AB7F2004E208A /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		AA7196D8287A447700623C15 /* PlayTools.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PlayTools.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA719702287A44D200623C15 /* PlayLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlayLoader.m; sourceTree = "<group>"; };
@@ -99,16 +119,9 @@
 		AA719724287A480C00623C15 /* Toucher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toucher.swift; sourceTree = "<group>"; };
 		AA719755287A480C00623C15 /* PlayInput.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayInput.swift; sourceTree = "<group>"; };
 		AA719756287A480C00623C15 /* ControlMode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControlMode.swift; sourceTree = "<group>"; };
-		AA719757287A480C00623C15 /* MenuController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuController.swift; sourceTree = "<group>"; };
-		AA719793287A481500623C15 /* Dynamic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Dynamic.swift; sourceTree = "<group>"; };
-		AA719794287A481500623C15 /* Logger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
-		AA719795287A481500623C15 /* Invocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Invocation.swift; sourceTree = "<group>"; };
-		AA719796287A481500623C15 /* TypeMapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeMapping.swift; sourceTree = "<group>"; };
 		AA719797287A481500623C15 /* PlayInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayInfo.swift; sourceTree = "<group>"; };
 		AA719798287A481500623C15 /* Toast.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
-		AA71979A287A481500623C15 /* ControlModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControlModel.swift; sourceTree = "<group>"; };
 		AA71979C287A481500623C15 /* EditorController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorController.swift; sourceTree = "<group>"; };
-		AA71979D287A481500623C15 /* DragElementsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DragElementsView.swift; sourceTree = "<group>"; };
 		AA71979E287A481500623C15 /* KeyCodeNames.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyCodeNames.swift; sourceTree = "<group>"; };
 		AA719816287A819F00623C15 /* NSBundle+Swizzle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSBundle+Swizzle.m"; sourceTree = "<group>"; };
 		AA719818287A819F00623C15 /* IOHIDEvent+KIF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "IOHIDEvent+KIF.h"; sourceTree = "<group>"; };
@@ -164,6 +177,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		6E84A12328CFD85300BF7495 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA7196D5287A447700623C15 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -177,10 +197,31 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6E84A11428CFD47E00BF7495 /* AppKitInterface */ = {
+			isa = PBXGroup;
+			children = (
+				6E84A13228D02CE500BF7495 /* Info.plist */,
+				6E84A11F28CFD4A900BF7495 /* Plugin.swift */,
+				6E84A12F28D02C6B00BF7495 /* MacPlugin.swift */,
+				6E84A13128D02CC100BF7495 /* AppKitInterface-Bridging-Header.h */,
+			);
+			path = AppKitInterface;
+			sourceTree = "<group>";
+		};
+		6E84A12A28D02B6A00BF7495 /* AppKitInterface */ = {
+			isa = PBXGroup;
+			children = (
+				6E84A12B28D02B6A00BF7495 /* AppKitInterface.h */,
+				6E84A12C28D02B6A00BF7495 /* Plugin.swift */,
+			);
+			path = AppKitInterface;
+			sourceTree = "<group>";
+		};
 		AA7196CE287A447700623C15 = {
 			isa = PBXGroup;
 			children = (
 				AA7196DA287A447700623C15 /* PlayTools */,
+				6E84A11428CFD47E00BF7495 /* AppKitInterface */,
 				AA7196D9287A447700623C15 /* Products */,
 				AA818CB6287ABFA7000BEE9D /* Recovered References */,
 				AA818CB7287ABFB1000BEE9D /* Frameworks */,
@@ -191,6 +232,7 @@
 			isa = PBXGroup;
 			children = (
 				AA7196D8287A447700623C15 /* PlayTools.framework */,
+				6E84A12628CFD85300BF7495 /* AKInterface.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -223,7 +265,6 @@
 				AA719724287A480C00623C15 /* Toucher.swift */,
 				AA719755287A480C00623C15 /* PlayInput.swift */,
 				AA719756287A480C00623C15 /* ControlMode.swift */,
-				AA719757287A480C00623C15 /* MenuController.swift */,
 			);
 			path = Controls;
 			sourceTree = "<group>";
@@ -231,32 +272,19 @@
 		AA719791287A481500623C15 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				AA719792287A481500623C15 /* Dynamic */,
 				AA719797287A481500623C15 /* PlayInfo.swift */,
 				AA719798287A481500623C15 /* Toast.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
 		};
-		AA719792287A481500623C15 /* Dynamic */ = {
-			isa = PBXGroup;
-			children = (
-				AA719793287A481500623C15 /* Dynamic.swift */,
-				AA719794287A481500623C15 /* Logger.swift */,
-				AA719795287A481500623C15 /* Invocation.swift */,
-				AA719796287A481500623C15 /* TypeMapping.swift */,
-			);
-			path = Dynamic;
-			sourceTree = "<group>";
-		};
 		AA719799287A481500623C15 /* Keymap */ = {
 			isa = PBXGroup;
 			children = (
-				AA71979A287A481500623C15 /* ControlModel.swift */,
 				AA71979C287A481500623C15 /* EditorController.swift */,
-				AA71979D287A481500623C15 /* DragElementsView.swift */,
 				AA71979E287A481500623C15 /* KeyCodeNames.swift */,
 				B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */,
+				6E84A10428CFD00A00BF7495 /* KeymapEditorView.swift */,
 			);
 			path = Keymap;
 			sourceTree = "<group>";
@@ -333,6 +361,7 @@
 		AA818CB7287ABFB1000BEE9D /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6E84A12A28D02B6A00BF7495 /* AppKitInterface */,
 				AA818CBA287ABFD5000BEE9D /* UIKit.framework */,
 				AA818CB8287ABFB1000BEE9D /* IOKit.framework */,
 			);
@@ -388,6 +417,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		6E84A12528CFD85300BF7495 /* AKInterface */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6E84A12728CFD85300BF7495 /* Build configuration list for PBXNativeTarget "AKInterface" */;
+			buildPhases = (
+				6E84A12228CFD85300BF7495 /* Sources */,
+				6E84A12328CFD85300BF7495 /* Frameworks */,
+				6E84A12428CFD85300BF7495 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AKInterface;
+			productName = AKInterface;
+			productReference = 6E84A12628CFD85300BF7495 /* AKInterface.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
 		AA7196D7287A447700623C15 /* PlayTools */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA7196DF287A447700623C15 /* Build configuration list for PBXNativeTarget "PlayTools" */;
@@ -397,6 +443,7 @@
 				AA7196D5287A447700623C15 /* Frameworks */,
 				AA7196D6287A447700623C15 /* Resources */,
 				6ED6ACAB28AAB30F0040D234 /* SwiftLint */,
+				6E84A11E28CFD48500BF7495 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -419,6 +466,9 @@
 				BuildIndependentTargetsInParallel = NO;
 				LastUpgradeCheck = 1340;
 				TargetAttributes = {
+					6E84A12528CFD85300BF7495 = {
+						CreatedOnToolsVersion = 14.0;
+					};
 					AA7196D7287A447700623C15 = {
 						CreatedOnToolsVersion = 13.4.1;
 						LastSwiftMigration = 1340;
@@ -442,11 +492,19 @@
 			projectRoot = "";
 			targets = (
 				AA7196D7287A447700623C15 /* PlayTools */,
+				6E84A12528CFD85300BF7495 /* AKInterface */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		6E84A12428CFD85300BF7495 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA7196D6287A447700623C15 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -478,6 +536,15 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		6E84A12228CFD85300BF7495 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E84A13528D02CFD00BF7495 /* MacPlugin.swift in Sources */,
+				6E84A13428D02CF700BF7495 /* Plugin.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA7196D4287A447700623C15 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -490,10 +557,6 @@
 				B1271729288284BE0025112B /* DiscordActivity.swift in Sources */,
 				AA71984E287A81A000623C15 /* UIScrollView-KIFAdditions.m in Sources */,
 				AA719849287A81A000623C15 /* NSException-KIFAdditions.m in Sources */,
-				AA7197AB287A481500623C15 /* ControlModel.swift in Sources */,
-				AA7197A8287A481500623C15 /* TypeMapping.swift in Sources */,
-				AA7197AE287A481500623C15 /* DragElementsView.swift in Sources */,
-				AA7197A7287A481500623C15 /* Invocation.swift in Sources */,
 				AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */,
 				AA71984F287A81A000623C15 /* UIView-Debugging.m in Sources */,
 				AA719759287A480D00623C15 /* PlayAction.swift in Sources */,
@@ -501,18 +564,16 @@
 				AA71984D287A81A000623C15 /* UIWindow-KIFAdditions.m in Sources */,
 				AA719867287A81A000623C15 /* NSPredicate+KIFAdditions.m in Sources */,
 				AA719845287A81A000623C15 /* NSBundle+Swizzle.m in Sources */,
-				AA71978B287A480D00623C15 /* MenuController.swift in Sources */,
 				AA719863287A81A000623C15 /* UITableView-KIFAdditions.m in Sources */,
 				AA7197AA287A481500623C15 /* Toast.swift in Sources */,
 				AA719789287A480D00623C15 /* PlayInput.swift in Sources */,
 				AA719865287A81A000623C15 /* UIEvent+KIFAdditions.m in Sources */,
 				AA71970B287A44D200623C15 /* PlayLoader.m in Sources */,
-				AA7197A5287A481500623C15 /* Dynamic.swift in Sources */,
 				AA719712287A44D200623C15 /* PlayUI.swift in Sources */,
 				AA719860287A81A000623C15 /* UIView-KIFAdditions.m in Sources */,
-				AA7197A6287A481500623C15 /* Logger.swift in Sources */,
 				AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */,
 				AA71978A287A480D00623C15 /* ControlMode.swift in Sources */,
+				6E84A10528CFD00A00BF7495 /* KeymapEditorView.swift in Sources */,
 				AA719758287A480D00623C15 /* PlayMice.swift in Sources */,
 				AA7197AD287A481500623C15 /* EditorController.swift in Sources */,
 				AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */,
@@ -524,6 +585,7 @@
 				AA719850287A81A000623C15 /* UITouch-KIFAdditions.m in Sources */,
 				AA71985F287A81A000623C15 /* IOHIDEvent+KIF.m in Sources */,
 				AA719861287A81A000623C15 /* NSFileManager-KIFAdditions.m in Sources */,
+				6E84A12028CFD4A900BF7495 /* Plugin.swift in Sources */,
 				B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */,
 				AA71985A287A81A000623C15 /* UIApplication-KIFAdditions.m in Sources */,
 			);
@@ -532,6 +594,51 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		6E84A12828CFD85300BF7495 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.playcover.AKInterface;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		6E84A12928CFD85300BF7495 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.playcover.AKInterface;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
 		AA7196DD287A447700623C15 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -584,6 +691,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -641,6 +749,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -686,14 +795,15 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = YES;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SWIFT_MODULE_NAME)/$(SWIFT_MODULE_NAME).h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "$(SWIFT_MODULE_NAME)-Swift.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Debug;
 		};
@@ -730,19 +840,29 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = YES;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SWIFT_MODULE_NAME)/$(SWIFT_MODULE_NAME).h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "$(SWIFT_MODULE_NAME)-Swift.h";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		6E84A12728CFD85300BF7495 /* Build configuration list for PBXNativeTarget "AKInterface" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6E84A12828CFD85300BF7495 /* Debug */,
+				6E84A12928CFD85300BF7495 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		AA7196D2287A447700623C15 /* Build configuration list for PBXProject "PlayTools" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
