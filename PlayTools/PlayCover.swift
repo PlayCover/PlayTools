@@ -3,6 +3,8 @@
 //  PlayTools
 //
 
+// swiftlint:disable force_cast
+
 import Foundation
 import UIKit
 import Security
