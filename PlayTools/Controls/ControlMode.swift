@@ -15,7 +15,7 @@ public class ControlMode {
     static public func isMouseClick(_ event: Any) -> Bool {
         return false
         // TODO: Re-implement
-        //return [1, 2].contains(Dynamic(event).type.asInt)
+        // return [1, 2].contains(Dynamic(event).type.asInt)
     }
 
     func show(_ show: Bool) {

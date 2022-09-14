@@ -81,8 +81,7 @@ public class PlayMice: NSObject {
     var mouseActions: [Int: ButtonAction] = [:]
 
     private func setupMouseButton(_up: Int, _down: Int) {
-        // TODO: Re-implement
-        /*Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
+        /*AKInterface.shared?.addLocalMonitorForEventsMatchingMask(_up, { event in
             if !mode.visible || self.acceptMouseEvents {
                 self.mouseActions[_up]?.update(pressed: true)
                 if self.acceptMouseEvents {
@@ -97,8 +96,8 @@ public class PlayMice: NSObject {
                 }
             }
             return event
-        } as ResponseBlock)
-        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_down, handler: { event in
+        })
+        AKInterface.shared?.addLocalMonitorForEventsMatchingMask(_down, { event in
             if !mode.visible || self.acceptMouseEvents {
                 self.mouseActions[_up]?.update(pressed: false)
                 if self.acceptMouseEvents {
@@ -107,7 +106,7 @@ public class PlayMice: NSObject {
                 return nil
             }
             return event
-        } as ResponseBlock)*/
+        })*/
     }
 
     private func setMiceButton(_ keyId: Int, action: ButtonAction) {

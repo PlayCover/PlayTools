@@ -52,10 +52,10 @@ class PlayInput {
                     EditorController.shared.setKeyCode(keyCode.rawValue)
                 }
             }
-            keyboard.button(forKeyCode: GCKeyCode(rawValue: 227))?.pressedChangedHandler = { _, _, pressed in
+            keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.lCmdPressed = pressed
             }
-            keyboard.button(forKeyCode: GCKeyCode(rawValue: 231))?.pressedChangedHandler = { _, _, pressed in
+            keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.rCmdPressed = pressed
             }
             keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
@@ -123,10 +123,5 @@ class PlayInput {
         }
 
         setup()
-        // fix beep sound
-        AKInterface.shared!
-            .eliminateRedundantKeyPressEvents(mode.visible,
-                                              !EditorController.shared.editorMode,
-                                              PlayInput.cmdPressed())
     }
 }

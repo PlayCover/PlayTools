@@ -48,15 +48,6 @@ class AKPlugin: NSObject, Plugin {
         NSApplication.shared.terminate(self)
     }
 
-    func eliminateRedundantKeyPressEvents(_ isVisible: Bool, _ isEditorShowing: Bool, _ cmdPressed: Bool) {
-        NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
-            if (isVisible && !isEditorShowing) || cmdPressed {
-                return event
-            }
-            return nil
-        })
-    }
-
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: value)
     }
