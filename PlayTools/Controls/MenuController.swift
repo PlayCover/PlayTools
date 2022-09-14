@@ -56,6 +56,10 @@ extension UIViewController {
             self.dismiss(animated: true)
         })
     }
+    @objc
+    func checkFullscreenVar(_ sender: AnyObject) {
+        Toast.showOver(msg: AKInterface.shared!.isFullscreen ? "Fullscreen" : "Windowed")
+    }
 }
 
 struct CommandsList {
@@ -66,12 +70,14 @@ var keymapping = ["Open/Close Keymapping Editor",
                   "Delete selected element",
                   "Upsize selected element",
                   "Downsize selected element",
-                  "Rotate display area"]
+                  "Rotate display area",
+                  "Debug fullscreen menu"]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIViewController.rotateView(_:))]
+                           #selector(UIViewController.rotateView(_:)),
+                           #selector(UIViewController.checkFullscreenVar(_:))]
 
 class MenuController {
     init(with builder: UIMenuBuilder) {
@@ -82,7 +88,7 @@ class MenuController {
 
     @available(iOS 15.0, *)
     class func keymappingMenu() -> UIMenu {
-        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R" ]
+        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "D" ]
 
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
