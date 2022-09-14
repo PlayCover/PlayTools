@@ -3,14 +3,14 @@ import UIKit
 
 let settings = PlaySettings.shared
 
-public class PlaySettings {
-    public static let shared = PlaySettings()
+@objc public final class PlaySettings: NSObject {
+    @objc public static let shared = PlaySettings()
 
     let bundleIdentifier = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
     let settingsUrl: URL
     var settingsData: AppSettingsData
 
-    init() {
+    override init() {
         settingsUrl = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("App Settings")
             .appendingPathComponent("\(bundleIdentifier).plist")

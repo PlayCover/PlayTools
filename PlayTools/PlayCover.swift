@@ -6,12 +6,14 @@
 import Foundation
 import UIKit
 
-public class PlayCover {
+final public class PlayCover: NSObject {
 
-    static let shared = PlayCover()
+    @objc static let shared = PlayCover()
 
     var menuController: MenuController?
     var firstTime = true
+
+    private override init() {}
 
     @objc static public func launch() {
         quitWhenClose()

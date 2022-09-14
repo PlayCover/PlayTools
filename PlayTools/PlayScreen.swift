@@ -61,8 +61,8 @@ extension UIScreen {
     }
 }
 
-public class PlayScreen {
-    public static let shared = PlayScreen()
+public class PlayScreen: NSObject {
+    @objc public static let shared = PlayScreen()
 
     @objc public static func frame(_ rect: CGRect) -> CGRect {
         return rect.toAspectRatio()
