@@ -70,9 +70,10 @@ struct KeyModelTransform: Codable {
     var xCoord: CGFloat
     var yCoord: CGFloat
 }
-
+// controller buttons are indexed with names
 struct Button: Codable {
     var keyCode: Int
+    var keyName: String
     var transform: KeyModelTransform
 }
 
@@ -81,10 +82,15 @@ struct Joystick: Codable {
     var rightKeyCode: Int
     var downKeyCode: Int
     var leftKeyCode: Int
+    var upKeyName: String
+    var rightKeyName: String
+    var downKeyName: String
+    var leftKeyName: String
     var transform: KeyModelTransform
 }
 
 struct MouseArea: Codable {
+    var keyName: String
     var transform: KeyModelTransform
 }
 
