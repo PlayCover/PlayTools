@@ -7,13 +7,13 @@ import Foundation
 import GameController
 
 public class PlayMice {
-    
+
     public static let shared = PlayMice()
     private static var isInit = false
-    
+
     private var camera: CameraControl?
     private var acceptMouseEvents = !PlaySettings.shared.mouseMapping
-    
+
     public init() {
         if !PlayMice.isInit {
             setupMouseButton(_up: 2, _down: 4)
@@ -22,26 +22,26 @@ public class PlayMice {
             PlayMice.isInit = true
         }
     }
-    
+
     public var cursorPos: CGPoint {
         var point = CGPoint(x: 0, y: 0)
         if #available(macOS 11, *) {
             point = AKInterface.shared!.mousePoint
         }
-        
+
         let rect = AKInterface.shared!.windowFrame
         point.x = (point.x / rect.width) * screen.screenRect.width
         point.y = screen.screenRect.height - ((point.y / rect.height) * screen.screenRect.height)
         return point
     }
-    
+
     func setup(_ data: MouseArea) {
         camera = CameraControl(
             centerX: data.transform.xCoord.absoluteX,
             centerY: data.transform.yCoord.absoluteY)
         setupMouseMovedHandler()
     }
-    
+
     public func setupMouseMovedHandler() {
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
@@ -57,7 +57,7 @@ public class PlayMice {
             }
         }
     }
-    
+
     public func stop() {
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = nil
@@ -68,7 +68,7 @@ public class PlayMice {
             mouseActions[key] = []
         }
     }
-    
+
     func setMiceButtons(_ keyId: Int, action: ButtonAction) -> Bool {
         if (-3 ... -1).contains(keyId) {
             setMiceButton(keyId, action: action)
@@ -76,13 +76,13 @@ public class PlayMice {
         }
         return false
     }
-    
+
     var mouseActions: [Int: [ButtonAction]] = [2: [], 8: [], 33554432: []]
-    
+
     private func setupMouseButton(_up: Int, _down: Int) {
         AKInterface.shared!.setupMouseButton(_up, _down, dontIgnore(_:_:))
     }
-    
+
     private func dontIgnore(_ actionIndex: Int, _ state: Bool) -> Bool {
         if !mode.visible || self.acceptMouseEvents {
             self.mouseActions[actionIndex]!.forEach({ buttonAction in

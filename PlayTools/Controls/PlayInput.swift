@@ -128,7 +128,7 @@ class PlayInput {
         AKInterface.shared!
             .eliminateRedundantKeyPressEvents({ self.dontIgnore() })
     }
-    
+
     func dontIgnore() -> Bool {
         (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed()
     }
