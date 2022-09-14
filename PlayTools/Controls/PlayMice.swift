@@ -96,7 +96,9 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
 //        }
         camera?.stop()
         camera = nil
-        mouseActions = [:]
+        mouseActions.keys.forEach { key in
+            mouseActions[key] = []
+        }
     }
 
     func setMiceButtons(_ keyId: Int, action: ButtonAction) -> Bool {
@@ -107,11 +109,19 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         return false
     }
 
-    var mouseActions: [Int: ButtonAction] = [:]
+    var mouseActions: [Int: [ButtonAction]] = [2: [], 8: [], 33554432: []]
 
     private func setupMouseButton(_up: Int, _down: Int) {
         // no this is not up, this is down. And the later down is up.
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
+            if EditorController.shared.editorMode {
+                if _up == 8 {
+                    EditorController.shared.setKeyCode(-2)
+                } else if _up == 33554432 {
+                    EditorController.shared.setKeyCode(-3)
+                }
+                return event
+            }
             if self.acceptMouseEvents {
                 let window = Dynamic(event, memberName: "window").asObject
                 if !self.fakedMousePressed
@@ -126,28 +136,29 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
                 return event
             }
             if !mode.visible {
-                self.mouseActions[_up]?.update(pressed: true)
+                self.mouseActions[_up]!.forEach({ buttonAction in
+                    buttonAction.update(pressed: true)
+                })
                 return nil
-            } else if EditorController.shared.editorMode {
-                if _up == 8 {
-                    EditorController.shared.setKeyCode(-2)
-                } else if _up == 33554432 {
-                    EditorController.shared.setKeyCode(-3)
-                }
-                return event
             }
             return event
         } as ResponseBlock)
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_down, handler: { event in
+            if EditorController.shared.editorMode {
+                return event
+            }
             if self.acceptMouseEvents {
                 if self.fakedMousePressed {
                     self.fakedMousePressed = false
                     Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.ended, tid: 1)
                     return nil
                 }
+                return event
             }
             if !mode.visible {
-                self.mouseActions[_up]?.update(pressed: false)
+                self.mouseActions[_up]!.forEach({ buttonAction in
+                    buttonAction.update(pressed: false)
+                })
                 return nil
             }
             return event
@@ -156,11 +167,11 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
 
     private func setMiceButton(_ keyId: Int, action: ButtonAction) {
         switch keyId {
-        case -1: mouseActions[2] = action
-        case -2: mouseActions[8] = action
-        case -3: mouseActions[33554432] = action
+        case -1: mouseActions[2]!.append(action)
+        case -2: mouseActions[8]!.append(action)
+        case -3: mouseActions[33554432]!.append(action)
         default:
-            mouseActions[2] = action
+            mouseActions[2]!.append(action)
         }
     }
 }
