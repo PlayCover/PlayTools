@@ -12,6 +12,7 @@ class KeyCodeNames {
     -13: "L2",
     -14: "R1",
     -15: "R2",
+    -16: "Controller",
     -1: "LMB",
     -2: "RMB",
     -3: "MMB",

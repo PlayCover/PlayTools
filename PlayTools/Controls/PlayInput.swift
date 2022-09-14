@@ -65,6 +65,14 @@ final class PlayInput: NSObject {
                 self.swapMode(pressed)
             }
         }
+
+        if let controller = GCController.current?.extendedGamepad {
+            controller.valueChangedHandler = { gamepad, element in
+                // This is the index of controller buttons, which is String, not Int
+                let alias: String! = element.aliases.first
+                Toast.showOver(msg: alias)
+            }
+        }
     }
 
     static public func cmdPressed() -> Bool {
@@ -121,6 +129,10 @@ final class PlayInput: NSObject {
         }
 
         centre.addObserver(forName: NSNotification.Name.GCMouseDidConnect, object: nil, queue: main) { _ in
+            PlayInput.shared.setup()
+        }
+        
+        centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
             PlayInput.shared.setup()
         }
 
