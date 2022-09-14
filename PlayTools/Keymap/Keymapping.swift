@@ -75,6 +75,17 @@ struct Button: Codable {
     var keyCode: Int
     var keyName: String
     var transform: KeyModelTransform
+
+    init(keyCode: Int, transform: KeyModelTransform) {
+        self.keyCode = keyCode
+        self.transform = transform
+        self.keyName = KeyCodeNames.keyCodes[keyCode] ?? ""
+    }
+    init(keyName: String, transform: KeyModelTransform) {
+        self.keyCode = -16
+        self.transform = transform
+        self.keyName = keyName
+    }
 }
 
 struct Joystick: Codable {
@@ -82,16 +93,20 @@ struct Joystick: Codable {
     var rightKeyCode: Int
     var downKeyCode: Int
     var leftKeyCode: Int
-    var upKeyName: String
-    var rightKeyName: String
-    var downKeyName: String
-    var leftKeyName: String
     var transform: KeyModelTransform
 }
 
 struct MouseArea: Codable {
     var keyName: String
     var transform: KeyModelTransform
+    init(transform: KeyModelTransform) {
+        self.transform = transform
+        self.keyName = "Mouse"
+    }
+    init(keyName: String, transform: KeyModelTransform) {
+        self.transform = transform
+        self.keyName = keyName
+    }
 }
 
 struct KeymappingData: Codable {
