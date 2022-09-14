@@ -48,9 +48,9 @@ class AKPlugin: NSObject, Plugin {
         NSApplication.shared.terminate(self)
     }
 
-    func eliminateRedundantKeyPressEvents(_ isVisible: Bool, _ isEditorShowing: Bool, _ cmdPressed: Bool) {
+    func eliminateRedundantKeyPressEvents(_ isVisible: Bool, _ isEditorShowing: Bool, _ cmdPressed: @escaping() -> Bool) {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
-            if (isVisible && isEditorShowing) || cmdPressed {
+            if (isVisible && isEditorShowing) || cmdPressed() {
                 return event
             }
             return nil
