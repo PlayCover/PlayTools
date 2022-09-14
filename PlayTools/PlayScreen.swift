@@ -26,7 +26,6 @@ extension CGSize {
 }
 
 extension CGRect {
-
     func aspectRatio() -> CGFloat {
         if mainScreenWidth > mainScreenHeight {
             return mainScreenWidth / mainScreenHeight
@@ -45,7 +44,6 @@ extension CGRect {
 }
 
 extension UIScreen {
-
     static var aspectRatio: CGFloat {
         let count = AKInterface.shared!.screenCount
         if PlaySettings.shared.notch {
@@ -157,19 +155,7 @@ extension CGFloat {
     }
 }
 
-extension UIView {
-
-    class func allSubviews<T: UIView>(from parenView: UIView) -> [T] {
-        return parenView.subviews.flatMap { subView -> [T] in
-            var result = allSubviews(from: subView) as [T]
-            if let view = subView as? T { result.append(view) }
-            return result
-        }
-    }
-}
-
 extension UIWindow {
-
     var nsWindow: NSObject? {
         guard let nsWindows = NSClassFromString("NSApplication")?
             .value(forKeyPath: "sharedApplication.windows") as? [AnyObject] else { return nil }
@@ -180,24 +166,5 @@ extension UIWindow {
             }
         }
         return nil
-    }
-}
-
-extension NSObject {
-    func call(_ method: String, object: CGSize) -> Bool {
-        if self.responds(to: Selector(method)) {
-            self.perform(Selector(method), with: object)
-            return true
-        } else {
-            return false
-        }
-    }
-    func call(_ method: String) -> Bool {
-        if self.responds(to: Selector(method)) {
-            self.perform(Selector(method))
-            return true
-        } else {
-            return false
-        }
     }
 }
