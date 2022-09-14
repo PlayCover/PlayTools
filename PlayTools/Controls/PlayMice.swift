@@ -86,7 +86,7 @@ public class PlayMice: NSObject {
                                                                 visible: mode.visible,
                                                                 isEditorMode: EditorController.shared.editorMode,
                                                                 acceptMouseEvents: self.acceptMouseEvents)
-        
+
         if returnStatus == 0 {
             self.mouseActions[_up]?.update(pressed: true)
         } else if returnStatus == 1 {
