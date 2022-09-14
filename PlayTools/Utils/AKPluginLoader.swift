@@ -19,7 +19,7 @@ class AKInterface {
         guard let bundleURL = Bundle.main.builtInPlugInsURL?
                                     .appendingPathComponent("AKInterface")
                                     .appendingPathExtension("bundle") else { return nil }
-        print(bundleURL.path)
+
         // 2. Create a bundle instance with the plugin URL
         guard let bundle = Bundle(url: bundleURL) else { return nil }
 

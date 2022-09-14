@@ -246,12 +246,12 @@
 				AA719791287A481500623C15 /* Utils */,
 				AA71970A287A44D200623C15 /* Info.plist */,
 				AA719706287A44D200623C15 /* PlayCover.swift */,
-				AA719705287A44D200623C15 /* PlayLoader.h */,
-				AA719702287A44D200623C15 /* PlayLoader.m */,
 				AA719703287A44D200623C15 /* PlayScreen.swift */,
 				AA719704287A44D200623C15 /* PlaySettings.swift */,
-				AA719708287A44D200623C15 /* PlayTools.h */,
 				AA719709287A44D200623C15 /* PlayUI.swift */,
+				AA719705287A44D200623C15 /* PlayLoader.h */,
+				AA719702287A44D200623C15 /* PlayLoader.m */,
+				AA719708287A44D200623C15 /* PlayTools.h */,
 			);
 			path = PlayTools;
 			sourceTree = "<group>";

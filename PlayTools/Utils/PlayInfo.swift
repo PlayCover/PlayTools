@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import GameController
 
 class PlayInfo {
     static var isLauncherInstalled: Bool {

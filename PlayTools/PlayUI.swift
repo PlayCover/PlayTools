@@ -6,13 +6,8 @@
 import Foundation
 import UIKit
 
-let shared = PlayUI.shared
-
-final class PlayUI {
-
+class PlayUI {
     static let shared = PlayUI()
-
-    private init() {}
 
     func showAlert(_ title: String, _ content: String) {
         let alertController = UIAlertController(title: title, message: content, preferredStyle: .alert)

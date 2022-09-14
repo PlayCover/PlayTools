@@ -5,25 +5,19 @@
 
 import Foundation
 import UIKit
-import Security
-import MetalKit
-import WebKit
 
-final public class PlayCover: NSObject {
+public class PlayCover {
 
-    @objc static let shared = PlayCover()
+    static let shared = PlayCover()
 
     var menuController: MenuController?
-
     var firstTime = true
-
-    private override init() {}
 
     @objc static public func launch() {
         quitWhenClose()
         AKInterface.initialize()
         PlayInput.shared.initialize()
-        DiscordIPC.shared.initailize()
+        DiscordIPC.shared.initialize()
     }
 
     @objc static public func quitWhenClose() {

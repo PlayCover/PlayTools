@@ -2,10 +2,9 @@
 //  ScreenController.swift
 //  PlayTools
 //
+
 import Foundation
 import UIKit
-import SwiftUI
-import AVFoundation
 
 let screen = PlayScreen.shared
 let mainScreenWidth = PlaySettings.shared.windowSizeWidth
@@ -62,8 +61,8 @@ extension UIScreen {
     }
 }
 
-public final class PlayScreen: NSObject {
-    @objc public static let shared = PlayScreen()
+public class PlayScreen {
+    public static let shared = PlayScreen()
 
     @objc public static func frame(_ rect: CGRect) -> CGRect {
         return rect.toAspectRatio()

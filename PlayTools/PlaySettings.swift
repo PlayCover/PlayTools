@@ -1,17 +1,16 @@
 import Foundation
 import UIKit
-import os.log
 
 let settings = PlaySettings.shared
 
-@objc public final class PlaySettings: NSObject {
-    @objc public static let shared = PlaySettings()
+public class PlaySettings {
+    public static let shared = PlaySettings()
 
     let bundleIdentifier = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
     let settingsUrl: URL
     var settingsData: AppSettingsData
 
-    override init() {
+    init() {
         settingsUrl = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("App Settings")
             .appendingPathComponent("\(bundleIdentifier).plist")
@@ -20,7 +19,7 @@ let settings = PlaySettings.shared
             settingsData = try PropertyListDecoder().decode(AppSettingsData.self, from: data)
         } catch {
             settingsData = AppSettingsData()
-            os_log("[PlayTools] PlaySettings decode failed.\n%@", type: .error, error as CVarArg)
+            print("[PlayTools] PlaySettings decode failed.\n%@")
         }
     }
 

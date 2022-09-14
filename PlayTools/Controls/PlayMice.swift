@@ -4,11 +4,9 @@
 //
 
 import Foundation
-
 import GameController
-import CoreGraphics
 
-public class PlayMice: NSObject {
+public class PlayMice {
 
     public static let shared = PlayMice()
     private static var isInit = false
@@ -16,8 +14,7 @@ public class PlayMice: NSObject {
     private var camera: CameraControl?
     private var acceptMouseEvents = !PlaySettings.shared.mouseMapping
 
-    public override init() {
-        super.init()
+    public init() {
         if !PlayMice.isInit {
             setupMouseButton(_up: 2, _down: 4)
             setupMouseButton(_up: 8, _down: 16)
