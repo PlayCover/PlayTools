@@ -81,32 +81,21 @@ public class PlayMice: NSObject {
     var mouseActions: [Int: ButtonAction] = [:]
 
     private func setupMouseButton(_up: Int, _down: Int) {
-        /*AKInterface.shared?.addLocalMonitorForEventsMatchingMask(_up, { event in
-            if !mode.visible || self.acceptMouseEvents {
-                self.mouseActions[_up]?.update(pressed: true)
-                if self.acceptMouseEvents {
-                    return event
-                }
-                return nil
-            } else if EditorController.shared.editorMode {
-                if _up == 8 {
-                    EditorController.shared.setKeyCode(-2)
-                } else if _up == 33554432 {
-                    EditorController.shared.setKeyCode(-3)
-                }
-            }
-            return event
-        })
-        AKInterface.shared?.addLocalMonitorForEventsMatchingMask(_down, { event in
-            if !mode.visible || self.acceptMouseEvents {
-                self.mouseActions[_up]?.update(pressed: false)
-                if self.acceptMouseEvents {
-                    return event
-                }
-                return nil
-            }
-            return event
-        })*/
+        let returnStatus = AKInterface.shared!.setupMouseButton(_up: _up,
+                                                                _down: _down,
+                                                                visible: mode.visible,
+                                                                isEditorMode: EditorController.shared.editorMode,
+                                                                acceptMouseEvents: self.acceptMouseEvents)
+        
+        if returnStatus == 0 {
+            self.mouseActions[_up]?.update(pressed: true)
+        } else if returnStatus == 1 {
+            self.mouseActions[_up]?.update(pressed: false)
+        } else if returnStatus == 2 {
+            EditorController.shared.setKeyCode(-2)
+        } else if returnStatus == 3 {
+            EditorController.shared.setKeyCode(-3)
+        }
     }
 
     private func setMiceButton(_ keyId: Int, action: ButtonAction) {

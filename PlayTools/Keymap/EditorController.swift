@@ -7,11 +7,6 @@ class EditorViewController: UIViewController {
     override func loadView() {
         view = EditorView()
     }
-
-    // Fix beep
-    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {}
-    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {}
-    override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {}
 }
 
 class EditorController {

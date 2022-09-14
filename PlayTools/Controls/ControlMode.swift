@@ -12,12 +12,6 @@ public class ControlMode {
     static public let mode = ControlMode()
     public var visible: Bool = PlaySettings.shared.mouseMapping
 
-    static public func isMouseClick(_ event: Any) -> Bool {
-        return false
-        // TODO: Re-implement
-        // return [1, 2].contains(Dynamic(event).type.asInt)
-    }
-
     func show(_ show: Bool) {
         if !editor.editorMode {
             if show {

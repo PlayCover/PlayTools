@@ -21,6 +21,8 @@ public protocol Plugin: NSObjectProtocol {
     func hideCursor()
     func unhideCursor()
     func terminateApplication()
+    func eliminateRedundantKeyPressEvents(_ isVisible: Bool, _ isEditorShowing: Bool, _ cmdPressed: Bool)
+    func setupMouseButton(_up: Int, _down: Int, visible: Bool, isEditorMode: Bool, acceptMouseEvents: Bool) -> Int
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
     func setMenuBarVisible(_ value: Bool)
 }
