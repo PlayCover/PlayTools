@@ -57,17 +57,22 @@ class AKPlugin: NSObject, Plugin {
         })
     }
 
-    func setupMouseButton(_up: Int, _down: Int, visible: Bool, isEditorMode: Bool, acceptMouseEvents: Bool) -> Int {
+    func setupMouseButton(_up: Int,
+                          _down: Int,
+                          visible: @escaping () -> Bool,
+                          isEditorMode: @escaping () -> Bool,
+                          acceptMouseEvents: @escaping () -> Bool,
+                          evaluate: @escaping (Int, Int, Int) -> Void) {
         var returnStatus = -1
 
         NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_up)), handler: { event in
-            if !visible || acceptMouseEvents {
+            if !visible() || acceptMouseEvents() {
                 returnStatus = 0
-                if acceptMouseEvents {
+                if acceptMouseEvents() {
                     return event
                 }
                 return nil
-            } else if isEditorMode {
+            } else if isEditorMode() {
                 if _up == 8 {
                     returnStatus = 2
                 } else if _up == 33554432 {
@@ -77,9 +82,9 @@ class AKPlugin: NSObject, Plugin {
             return event
         })
         NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_down)), handler: { event in
-            if !visible || acceptMouseEvents {
+            if !visible() || acceptMouseEvents() {
                 returnStatus = 1
-                if acceptMouseEvents {
+                if acceptMouseEvents() {
                     return event
                 }
                 return nil
@@ -87,7 +92,7 @@ class AKPlugin: NSObject, Plugin {
             return event
         })
 
-        return returnStatus
+        evaluate(_up, _down, returnStatus)
     }
 
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {

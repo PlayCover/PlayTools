@@ -81,19 +81,22 @@ public class PlayMice: NSObject {
     var mouseActions: [Int: ButtonAction] = [:]
 
     private func setupMouseButton(_up: Int, _down: Int) {
-        let returnStatus = AKInterface.shared!.setupMouseButton(_up: _up,
-                                                                _down: _down,
-                                                                visible: mode.visible,
-                                                                isEditorMode: EditorController.shared.editorMode,
-                                                                acceptMouseEvents: self.acceptMouseEvents)
+        AKInterface.shared!.setupMouseButton(_up: _up,
+                                             _down: _down,
+                                             visible: { mode.visible },
+                                             isEditorMode: { EditorController.shared.editorMode },
+                                             acceptMouseEvents: { self.acceptMouseEvents },
+                                             evaluate: evaluateMouseButton(_:_:_:))
+    }
 
-        if returnStatus == 0 {
+    @objc public func evaluateMouseButton(_ _up: Int, _ _down: Int, _ value: Int) {
+        if value == 0 {
             self.mouseActions[_up]?.update(pressed: true)
-        } else if returnStatus == 1 {
+        } else if value == 1 {
             self.mouseActions[_up]?.update(pressed: false)
-        } else if returnStatus == 2 {
+        } else if value == 2 {
             EditorController.shared.setKeyCode(-2)
-        } else if returnStatus == 3 {
+        } else if value == 3 {
             EditorController.shared.setKeyCode(-3)
         }
     }

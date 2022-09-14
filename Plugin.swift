@@ -22,7 +22,7 @@ public protocol Plugin: NSObjectProtocol {
     func unhideCursor()
     func terminateApplication()
     func eliminateRedundantKeyPressEvents(_ isVisible: Bool, _ isEditorShowing: Bool, _ cmdPressed: @escaping() -> Bool)
-    func setupMouseButton(_up: Int, _down: Int, visible: Bool, isEditorMode: Bool, acceptMouseEvents: Bool) -> Int
+    func setupMouseButton(_up: Int, _down: Int, visible: @escaping () -> Bool, isEditorMode: @escaping () -> Bool, acceptMouseEvents: @escaping () -> Bool, evaluate: @escaping (Int, Int, Int) -> Void)
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
     func setMenuBarVisible(_ value: Bool)
 }
