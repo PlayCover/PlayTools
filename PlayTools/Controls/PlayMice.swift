@@ -101,10 +101,10 @@ public class PlayMice {
     var mouseActions: [Int: [ButtonAction]] = [2: [], 8: [], 33554432: []]
 
     private func setupMouseButton(_up: Int, _down: Int) {
-        AKInterface.shared!.setupMouseButton(_up, _down, dontIgnore(_:_:))
+        AKInterface.shared!.setupMouseButton(_up, _down, dontIgnore(_:_:_:))
     }
 
-    private func dontIgnore(_ actionIndex: Int, _ state: Bool) -> Bool {
+    private func dontIgnore(_ actionIndex: Int, _ state: Bool, _ isEventWindow: Bool) -> Bool {
         if EditorController.shared.editorMode {
             if state {
                 if actionIndex == 8 {
@@ -119,19 +119,18 @@ public class PlayMice {
         }
         if self.acceptMouseEvents {
             if state {
-                /*let window = Dynamic(event, memberName: "window").asObject
                 if !self.fakedMousePressed
                     // For traffic light buttons when not fullscreen
                     && self.cursorPos.y > 0
                     // For traffic light buttons when fullscreen
-                    && window == screen.nsWindow {
+                    && isEventWindow {
                     Toucher.touchcam(point: self.cursorPos,
                                      phase: UITouch.Phase.began,
                                      tid: 1)
                     self.fakedMousePressed = true
-                    return flase
+                    return false
                 }
-                return true*/
+                return true
             } else {
                 if self.fakedMousePressed {
                     self.fakedMousePressed = false
