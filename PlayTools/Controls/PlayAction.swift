@@ -19,6 +19,9 @@ extension GCKeyboard {
 class ButtonAction: Action {
     func invalidate() {
         Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: id)
+        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
+            keyboard.button(forKeyCode: key)?.pressedChangedHandler = nil
+        }
     }
 
     let key: GCKeyCode
@@ -33,9 +36,13 @@ class ButtonAction: Action {
         self.id = id
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             if !PlayMice.shared.setMiceButtons(keyid, action: self) {
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { _, _, pressed in
+                let handler = keyboard.button(forKeyCode: key)?.pressedChangedHandler
+                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { button, value, pressed in
                     if !mode.visible && !PlayInput.cmdPressed() {
                         self.update(pressed: pressed)
+                    }
+                    if let previous = handler {
+                        previous(button, value, pressed)
                     }
                 }
             }
@@ -112,8 +119,12 @@ class JoystickAction: Action {
         self.id = id
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             for key in keys {
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { _, _, _ in
+                let handler = keyboard.button(forKeyCode: key)?.pressedChangedHandler
+                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { button, value, pressed in
                     Toucher.touchQueue.async(execute: self.update)
+                    if let previous = handler {
+                        previous(button, value, pressed)
+                    }
                 }
             }
         }
@@ -137,6 +148,11 @@ class JoystickAction: Action {
     func invalidate() {
         Toucher.touchcam(point: center, phase: UITouch.Phase.ended, tid: id)
         self.moving = false
+        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
+            for key in keys {
+                keyboard.button(forKeyCode: key)?.pressedChangedHandler = nil
+            }
+        }
     }
 
     func update() {

@@ -73,7 +73,9 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         }
         camera?.stop()
         camera = nil
-        mouseActions = [:]
+        mouseActions.keys.forEach { key in
+            mouseActions[key] = []
+        }
     }
 
     func setMiceButtons(_ keyId: Int, action: ButtonAction) -> Bool {
@@ -84,12 +86,14 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         return false
     }
 
-    var mouseActions: [Int: ButtonAction] = [:]
+    var mouseActions: [Int: [ButtonAction]] = [2: [], 8: [], 33554432: []]
 
     private func setupMouseButton(_up: Int, _down: Int) {
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
             if !mode.visible || self.acceptMouseEvents {
-                self.mouseActions[_up]?.update(pressed: true)
+                self.mouseActions[_up]!.forEach({ buttonAction in
+                    buttonAction.update(pressed: true)
+                })
                 if self.acceptMouseEvents {
                     return event
                 }
@@ -105,7 +109,9 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         } as ResponseBlock)
         Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_down, handler: { event in
             if !mode.visible || self.acceptMouseEvents {
-                self.mouseActions[_up]?.update(pressed: false)
+                self.mouseActions[_up]!.forEach({ buttonAction in
+                    buttonAction.update(pressed: false)
+                })
                 if self.acceptMouseEvents {
                     return event
                 }
@@ -117,11 +123,11 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
 
     private func setMiceButton(_ keyId: Int, action: ButtonAction) {
         switch keyId {
-        case -1: mouseActions[2] = action
-        case -2: mouseActions[8] = action
-        case -3: mouseActions[33554432] = action
+        case -1: mouseActions[2]!.append(action)
+        case -2: mouseActions[8]!.append(action)
+        case -3: mouseActions[33554432]!.append(action)
         default:
-            mouseActions[2] = action
+            mouseActions[2]!.append(action)
         }
     }
 }
