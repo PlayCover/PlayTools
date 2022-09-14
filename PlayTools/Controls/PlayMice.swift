@@ -54,13 +54,11 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
     public func setupMouseMovedHandler() {
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
-                Toucher.touchQueue.async {
-                    if !mode.visible {
-                        if let draggableButton = DraggableButtonAction.activeButton {
-                            draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
-                        } else {
-                            self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
-                        }
+                if !mode.visible {
+                    if let draggableButton = DraggableButtonAction.activeButton {
+                        draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
+                    } else {
+                        self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
                     }
                 }
             }
@@ -152,20 +150,44 @@ final class CameraControl {
 
     // if max speed of this touch is high
     var movingFast = false
-    // seq number for each move event. Used in closure to determine if this move is the last
-    var sequence = 0
     // like sequence but resets when touch begins. Used to calc touch duration
     var counter = 0
     // if should wait before beginning next touch
     var cooldown = false
     // if the touch point had been prevented from lifting off because of moving slow
     var idled = false
+    // in how many tests has this been identified as stationary
+    var stationaryCount = 0
+    let stationaryThreshold = 2
+
+    @objc func checkEnded() {
+        // if been stationary for enough time
+        if self.stationaryCount < self.stationaryThreshold {
+            self.stationaryCount += 1
+            self.delay(0.1, closure: checkEnded)
+            return
+        }
+        // and slow touch lasts for sufficient time
+        if self.movingFast || self.counter > 64 {
+            self.doLiftOff()
+        } else {
+            self.idled = true
+            // idle for at most 4 seconds
+            self.delay(4) {
+                if self.stationaryCount < self.stationaryThreshold {
+                    self.stationaryCount += 1
+                    self.delay(0.1, closure: self.checkEnded)
+                    return
+                }
+                self.doLiftOff()
+            }
+        }
+     }
 
     @objc func updated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
         if mode.visible || cooldown {
             return
         }
-        sequence += 1
         // count touch duration
         counter += 1
         if !isMoving {
@@ -174,13 +196,17 @@ final class CameraControl {
             idled = false
             location = center
             counter = 0
+            stationaryCount = 0
             Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: 1)
+
+            delay(0.1, closure: checkEnded)
         }
         // if not moving fast, regard the user fine-tuning the camera(e.g. aiming)
         // so hold the touch for longer to avoid cold startup
-        if deltaX.magnitude + deltaY.magnitude > 4 {
+        if deltaX.magnitude + deltaY.magnitude > 12 {
             // if we had mistaken this as player aiming
             if self.idled {
+//                Toast.showOver(msg: "idled")
                 // since not aiming, re-touch to re-gain control
                 self.doLiftOff()
                 return
@@ -190,28 +216,7 @@ final class CameraControl {
         self.location.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
         self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
-        let previous = sequence
-
-        delay(0.016) {
-            // if no other touch events in the past 0.016 sec
-            if previous != self.sequence {
-                return
-            }
-            // and slow touch lasts for sufficient time
-            if self.movingFast || self.counter > 64 {
-                self.doLiftOff()
-            } else {
-                self.idled = true
-                // idle for at most 4 seconds
-                self.delay(4) {
-                    if previous != self.sequence {
-                        return
-                    }
-                    self.doLiftOff()
-                }
-            }
-         }
-
+        stationaryCount = 0
     }
 
     public func doLiftOff() {
@@ -222,15 +227,14 @@ final class CameraControl {
         self.isMoving = false
         // ending and beginning too frequently leads to the beginning event not recognized
         // so let the beginning event wait some time
-        // 0.016 here is safe as long as the 0.016 above works
-        delay(0.016) {
+        // pause for one frame or two
+        delay(0.02) {
             self.cooldown = false
         }
         cooldown = true
     }
 
     func stop() {
-        sequence = 0
         self.doLiftOff()
     }
 }
