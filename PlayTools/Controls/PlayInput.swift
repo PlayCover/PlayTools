@@ -123,9 +123,13 @@ class PlayInput {
         }
 
         setup()
+
         // Fix beep sound
         AKInterface.shared!
-            .eliminateRedundantKeyPressEvents(mode.visible,
-                                              EditorController.shared.editorMode, { PlayInput.cmdPressed() })
+            .eliminateRedundantKeyPressEvents({ self.dontIgnore() })
+    }
+    
+    func dontIgnore() -> Bool {
+        (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed()
     }
 }

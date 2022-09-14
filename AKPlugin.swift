@@ -48,51 +48,28 @@ class AKPlugin: NSObject, Plugin {
         NSApplication.shared.terminate(self)
     }
 
-    func eliminateRedundantKeyPressEvents(_ isVisible: Bool, _ isEditorShowing: Bool, _ cmdPressed: @escaping() -> Bool) {
+    func eliminateRedundantKeyPressEvents(_ dontIgnore: @escaping() -> Bool) {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
-            if (isVisible && isEditorShowing) || cmdPressed() {
+            if dontIgnore() {
                 return event
             }
             return nil
         })
     }
 
-    func setupMouseButton(_up: Int,
-                          _down: Int,
-                          visible: @escaping () -> Bool,
-                          isEditorMode: @escaping () -> Bool,
-                          acceptMouseEvents: @escaping () -> Bool,
-                          evaluate: @escaping (Int, Int, Int) -> Void) {
-        var returnStatus = -1
-
+    func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool) -> Bool) {
         NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_up)), handler: { event in
-            if !visible() || acceptMouseEvents() {
-                returnStatus = 0
-                if acceptMouseEvents() {
-                    return event
-                }
-                return nil
-            } else if isEditorMode() {
-                if _up == 8 {
-                    returnStatus = 2
-                } else if _up == 33554432 {
-                    returnStatus = 3
-                }
+            if dontIgnore(_up, true) {
+                return event
             }
-            return event
+            return nil
         })
         NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_down)), handler: { event in
-            if !visible() || acceptMouseEvents() {
-                returnStatus = 1
-                if acceptMouseEvents() {
-                    return event
-                }
-                return nil
+            if dontIgnore(_up, false) {
+                return event
             }
-            return event
+            return nil
         })
-
-        evaluate(_up, _down, returnStatus)
     }
 
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {

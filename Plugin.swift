@@ -21,8 +21,8 @@ public protocol Plugin: NSObjectProtocol {
     func hideCursor()
     func unhideCursor()
     func terminateApplication()
-    func eliminateRedundantKeyPressEvents(_ isVisible: Bool, _ isEditorShowing: Bool, _ cmdPressed: @escaping() -> Bool)
-    func setupMouseButton(_up: Int, _down: Int, visible: @escaping () -> Bool, isEditorMode: @escaping () -> Bool, acceptMouseEvents: @escaping () -> Bool, evaluate: @escaping (Int, Int, Int) -> Void)
+    func eliminateRedundantKeyPressEvents(_ dontIgnore: @escaping() -> Bool)
+    func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool) -> Bool)
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
     func setMenuBarVisible(_ value: Bool)
 }
