@@ -88,7 +88,7 @@ public final class PlayScreen: NSObject {
         return size.toAspectRatio()
     }
     var fullscreen: Bool {
-        return Dynamic(nsWindow).styleMask.contains(16384).asBool ?? false
+        return (Dynamic(nsWindow).styleMask.asInt ?? 0) & 16384 != 0
     }
 
     @objc public var screenRect: CGRect {
