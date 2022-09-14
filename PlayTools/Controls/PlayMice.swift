@@ -64,7 +64,9 @@ public class PlayMice {
         }
         camera?.stop()
         camera = nil
-        mouseActions = [:]
+        mouseActions.keys.forEach { key in
+            mouseActions[key] = []
+        }
     }
 
     func setMiceButtons(_ keyId: Int, action: ButtonAction) -> Bool {
@@ -75,7 +77,7 @@ public class PlayMice {
         return false
     }
 
-    var mouseActions: [Int: ButtonAction] = [:]
+    var mouseActions: [Int: [ButtonAction]] = [2: [], 8: [], 33554432: []]
 
     private func setupMouseButton(_up: Int, _down: Int) {
         AKInterface.shared!.setupMouseButton(_up: _up,
@@ -88,9 +90,13 @@ public class PlayMice {
 
     @objc public func evaluateMouseButton(_ _up: Int, _ _down: Int, _ value: Int) {
         if value == 0 {
-            self.mouseActions[_up]?.update(pressed: true)
+            self.mouseActions[_up]!.forEach({ buttonAction in
+                buttonAction.update(pressed: true)
+            })
         } else if value == 1 {
-            self.mouseActions[_up]?.update(pressed: false)
+            self.mouseActions[_up]!.forEach({ buttonAction in
+                buttonAction.update(pressed: false)
+            })
         } else if value == 2 {
             EditorController.shared.setKeyCode(-2)
         } else if value == 3 {
@@ -100,11 +106,11 @@ public class PlayMice {
 
     private func setMiceButton(_ keyId: Int, action: ButtonAction) {
         switch keyId {
-        case -1: mouseActions[2] = action
-        case -2: mouseActions[8] = action
-        case -3: mouseActions[33554432] = action
+        case -1: mouseActions[2]!.append(action)
+        case -2: mouseActions[8]!.append(action)
+        case -3: mouseActions[33554432]!.append(action)
         default:
-            mouseActions[2] = action
+            mouseActions[2]!.append(action)
         }
     }
 }
