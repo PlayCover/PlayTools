@@ -11,7 +11,7 @@ import SwordRPC
 class DiscordIPC {
     public static let shared = DiscordIPC()
 
-    func initailize() {
+    func initialize() {
         if PlaySettings.shared.discordActivity.enable {
             let ipc: SwordRPC
             let custom = PlaySettings.shared.discordActivity
