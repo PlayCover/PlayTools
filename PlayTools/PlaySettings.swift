@@ -1,6 +1,5 @@
 import Foundation
 import UIKit
-import os.log
 
 let settings = PlaySettings.shared
 
@@ -20,7 +19,7 @@ let settings = PlaySettings.shared
             settingsData = try PropertyListDecoder().decode(AppSettingsData.self, from: data)
         } catch {
             settingsData = AppSettingsData()
-            os_log("[PlayTools] PlaySettings decode failed.\n%@", type: .error, error as CVarArg)
+            print("[PlayTools] PlaySettings decode failed.\n%@")
         }
     }
 

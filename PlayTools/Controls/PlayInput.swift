@@ -2,7 +2,7 @@ import Foundation
 import GameController
 import UIKit
 
-final class PlayInput: NSObject {
+class PlayInput {
     static let shared = PlayInput()
     var actions = [Action]()
     var timeoutForBind = true
@@ -52,10 +52,10 @@ final class PlayInput: NSObject {
                     EditorController.shared.setKeyCode(keyCode.rawValue)
                 }
             }
-            keyboard.button(forKeyCode: GCKeyCode(rawValue: 227))?.pressedChangedHandler = { _, _, pressed in
+            keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.lCmdPressed = pressed
             }
-            keyboard.button(forKeyCode: GCKeyCode(rawValue: 231))?.pressedChangedHandler = { _, _, pressed in
+            keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.rCmdPressed = pressed
             }
             keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
@@ -68,8 +68,6 @@ final class PlayInput: NSObject {
     }
 
     static public func cmdPressed() -> Bool {
-        // return keyboard.button(forKeyCode: GCKeyCode(rawValue: 227))!.isPressed
-        // || keyboard.button(forKeyCode: GCKeyCode(rawValue: 231))!.isPressed
         return lCmdPressed || rCmdPressed
     }
 
@@ -85,8 +83,8 @@ final class PlayInput: NSObject {
        }
 
     private static let FORBIDDEN: [GCKeyCode] = [
-        GCKeyCode.init(rawValue: 227), // LCmd
-        GCKeyCode.init(rawValue: 231), // RCmd
+        .leftGUI,
+        .rightGUI,
         .leftAlt,
         .rightAlt,
         .printScreen
@@ -125,18 +123,13 @@ final class PlayInput: NSObject {
         }
 
         setup()
-        // fix beep sound
-        eliminateRedundantKeyPressEvents()
+
+        // Fix beep sound
+        AKInterface.shared!
+            .eliminateRedundantKeyPressEvents({ self.dontIgnore() })
     }
 
-    private func eliminateRedundantKeyPressEvents() {
-        // TODO later: should not be hard-coded
-        let NSEventMaskKeyDown: UInt64 = 1024
-        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask( NSEventMaskKeyDown, handler: { event in
-            if (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed() {
-                return event
-            }
-            return nil
-        } as ResponseBlock)
+    func dontIgnore() -> Bool {
+        (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed()
     }
 }

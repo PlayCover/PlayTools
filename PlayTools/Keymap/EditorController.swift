@@ -9,7 +9,7 @@ class EditorViewController: UIViewController {
     }
 }
 
-final class EditorController: NSObject {
+class EditorController {
 
     static let shared = EditorController()
 
@@ -145,7 +145,7 @@ final class EditorController: NSObject {
         view.subviews.forEach { $0.removeFromSuperview() }
     }
 
-    @objc public func addJoystick(_ center: CGPoint) {
+    public func addJoystick(_ center: CGPoint) {
         if editorMode {
             addControlToView(control: JoystickModel(data: ControlData(keyCodes: [GCKeyCode.keyW.rawValue,
                                                                                  GCKeyCode.keyS.rawValue,
@@ -157,7 +157,7 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addButton(_ toPoint: CGPoint) {
+    public func addButton(_ toPoint: CGPoint) {
         if editorMode {
             addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-1],
                                                                     size: 5,
@@ -167,7 +167,7 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addRMB(_ toPoint: CGPoint) {
+    public func addRMB(_ toPoint: CGPoint) {
         if editorMode {
             addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-2],
                                                                  size: 5,
@@ -177,7 +177,7 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addLMB(_ toPoint: CGPoint) {
+    public func addLMB(_ toPoint: CGPoint) {
         if editorMode {
             addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-1],
                                                                  size: 5,
@@ -187,7 +187,7 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addMMB(_ toPoint: CGPoint) {
+    public func addMMB(_ toPoint: CGPoint) {
         if editorMode {
             addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-3],
                                                                  size: 5,
@@ -197,7 +197,7 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addMouseArea(_ center: CGPoint) {
+    public func addMouseArea(_ center: CGPoint) {
         if editorMode {
             addControlToView(control: MouseAreaModel(data: ControlData(size: 25,
                                                                        xCoord: center.x.relativeX,
@@ -205,7 +205,7 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addDraggableButton(_ center: CGPoint, _ keyCode: Int) {
+    public func addDraggableButton(_ center: CGPoint, _ keyCode: Int) {
         if editorMode {
             addControlToView(control: DraggableButtonModel(data: ControlData(keyCodes: [keyCode],
                                                                        size: 15,
