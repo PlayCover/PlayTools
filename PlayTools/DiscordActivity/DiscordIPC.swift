@@ -38,7 +38,7 @@ class DiscordIPC {
             activity.details = custom.details
         }
 
-        let poweredStr = "Powered by PlayCover"
+        let poweredStr = "On Apple Silicon Mac"
         if custom.state.isEmpty {
             activity.state = poweredStr
         } else {
