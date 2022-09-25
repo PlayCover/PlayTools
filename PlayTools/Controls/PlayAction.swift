@@ -19,41 +19,64 @@ extension GCKeyboard {
 class ButtonAction: Action {
     func invalidate() {
         Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: id)
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            keyboard.button(forKeyCode: key)?.pressedChangedHandler = nil
+        if let gcKey = GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: keyCode) {
+            gcKey.pressedChangedHandler = nil
+
+        } else if let gcControllerElement = GCController.current?.extendedGamepad?.elements[keyName] {
+
+            if let gcControllerButton = gcControllerElement as? GCControllerButtonInput {
+                gcControllerButton.pressedChangedHandler = nil
+            }
+
         }
     }
 
-    let key: GCKeyCode
+    let keyCode: GCKeyCode
+    let keyName: String
     let keyid: Int
     let point: CGPoint
     var id: Int
 
-    init(id: Int, keyid: Int, key: GCKeyCode, point: CGPoint) {
-        self.keyid = keyid
-        self.key = key
-        self.point = point
-        self.id = id
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            if !PlayMice.shared.setMiceButtons(keyid, action: self) {
-                let handler = keyboard.button(forKeyCode: key)?.pressedChangedHandler
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { button, value, pressed in
-                    if !mode.visible && !PlayInput.cmdPressed() {
-                        self.update(pressed: pressed)
-                    }
-                    if let previous = handler {
-                        previous(button, value, pressed)
-                    }
-                }
+    private func getChangedHandler<T1>(handler: ((T1, Float, Bool) -> Void)?) -> (T1, Float, Bool) -> Void {
+        return { button, value, pressed in
+            if !mode.visible && !PlayInput.cmdPressed() {
+                self.update(pressed: pressed)
+            }
+            if let previous = handler {
+                previous(button, value, pressed)
             }
         }
     }
 
+    init(id: Int, keyid: Int, keyCode: GCKeyCode, keyName: String, point: CGPoint) {
+        self.keyid = keyid
+        self.keyCode = keyCode
+        self.keyName = keyName
+        self.point = point
+        self.id = id
+        if PlayMice.shared.setMiceButtons(keyid, action: self) {
+            // No more work to do for mouse buttons
+        } else if let gcKey = GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: keyCode) {
+            let handler = gcKey.pressedChangedHandler
+            gcKey.pressedChangedHandler = getChangedHandler(handler: handler)
+
+        } else if let gcControllerElement = GCController.current?.extendedGamepad?.elements[keyName] {
+
+            if let gcControllerButton = gcControllerElement as? GCControllerButtonInput {
+                let handler = gcControllerButton.pressedChangedHandler
+                gcControllerButton.pressedChangedHandler = getChangedHandler(handler: handler)
+            }
+
+        }
+    }
+
     convenience init(id: Int, data: Button) {
+        let keyCode = GCKeyCode(rawValue: CFIndex(data.keyCode))
         self.init(
             id: id,
             keyid: data.keyCode,
-            key: GCKeyCode(rawValue: CFIndex(data.keyCode)),
+            keyCode: keyCode,
+            keyName: data.keyName,
             point: CGPoint(
                 x: data.transform.xCoord.absoluteX,
                 y: data.transform.yCoord.absoluteY))
@@ -73,9 +96,9 @@ class DraggableButtonAction: ButtonAction {
 
     var releasePoint: CGPoint
 
-    override init(id: Int, keyid: Int, key: GCKeyCode, point: CGPoint) {
+    override init(id: Int, keyid: Int, keyCode: GCKeyCode, keyName: String, point: CGPoint) {
         self.releasePoint = point
-        super.init(id: id, keyid: keyid, key: key, point: point)
+        super.init(id: id, keyid: keyid, keyCode: keyCode, keyName: keyName, point: point)
         if settings.mouseMapping {
             PlayMice.shared.setupMouseMovedHandler()
         }
