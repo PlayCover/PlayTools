@@ -49,7 +49,7 @@ final class PlayInput: NSObject {
                     && !PlayInput.cmdPressed()
                     && !PlayInput.FORBIDDEN.contains(keyCode)
                     && self.isSafeToBind(keyboard) {
-                    EditorController.shared.setKeyCode(keyCode.rawValue)
+                    EditorController.shared.setKey(keyCode.rawValue)
                 }
             }
             keyboard.button(forKeyCode: GCKeyCode(rawValue: 227))?.pressedChangedHandler = { _, _, pressed in
@@ -71,6 +71,9 @@ final class PlayInput: NSObject {
                 // This is the index of controller buttons, which is String, not Int
                 let alias: String! = element.aliases.first
                 Toast.showOver(msg: alias)
+                if editor.editorMode {
+                    EditorController.shared.setKey(alias)
+                }
             }
         }
     }
@@ -131,7 +134,7 @@ final class PlayInput: NSObject {
         centre.addObserver(forName: NSNotification.Name.GCMouseDidConnect, object: nil, queue: main) { _ in
             PlayInput.shared.setup()
         }
-        
+
         centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
             PlayInput.shared.setup()
         }

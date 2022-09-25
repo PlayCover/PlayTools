@@ -75,9 +75,15 @@ final class EditorController: NSObject {
 
     var editorMode: Bool { !(editorWindow?.isHidden ?? true)}
 
-    public func setKeyCode(_ key: Int) {
+    public func setKey(_ code: Int) {
         if editorMode {
-            focusedControl?.setKeyCodes(keys: [key])
+            focusedControl?.setKey(codes: [code])
+        }
+    }
+
+    public func setKey(_ name: String) {
+        if editorMode {
+            focusedControl?.setKey(name: name)
         }
     }
 
