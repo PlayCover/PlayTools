@@ -8,25 +8,20 @@ import GameController
     var yCoord: CGFloat
     var parent: ControlModel?
 
-    init(keyCodes: [Int], size: CGFloat, xCoord: CGFloat, yCoord: CGFloat, parent: ControlModel?) {
+    init(keyCodes: [Int], keyName: String, size: CGFloat,
+         xCoord: CGFloat, yCoord: CGFloat, parent: ControlModel? = nil) {
         self.keyCodes = keyCodes
-        self.keyName = KeyCodeNames.keyCodes[keyCodes[0]] ?? "Btn"
+        self.keyName = keyName
         self.size = size
         self.xCoord = xCoord
         self.yCoord = yCoord
         self.parent = parent
     }
 
-    init(keyCodes: [Int], size: CGFloat, xCoord: CGFloat, yCoord: CGFloat, sensitivity: CGFloat) {
-        self.keyCodes = keyCodes
-        self.keyName = KeyCodeNames.keyCodes[keyCodes[0]] ?? "Btn"
-        self.size = size
-        self.xCoord = xCoord
-        self.yCoord = yCoord
-    }
-
     init(keyCodes: [Int], parent: ControlModel) {
         self.keyCodes = keyCodes
+        // For now, not support binding controller key
+        // Support for that is left for later to concern
         self.keyName = KeyCodeNames.keyCodes[keyCodes[0]] ?? "Btn"
         self.size = parent.data.size  / 3
         self.xCoord = 0
@@ -34,18 +29,9 @@ import GameController
         self.parent = parent
     }
 
-    init(size: CGFloat, xCoord: CGFloat, yCoord: CGFloat) {
+    init(keyName: String, size: CGFloat, xCoord: CGFloat, yCoord: CGFloat) {
         self.keyCodes = [0]
-        self.keyName = "Mouse"
-        self.size = size
-        self.xCoord = xCoord
-        self.yCoord = yCoord
-        self.parent = nil
-    }
-
-    init(keyCodes: [Int], size: CGFloat, xCoord: CGFloat, yCoord: CGFloat) {
-        self.keyCodes = keyCodes
-        self.keyName = KeyCodeNames.keyCodes[keyCodes[0]] ?? "Btn"
+        self.keyName = keyName
         self.size = size
         self.xCoord = xCoord
         self.yCoord = yCoord
@@ -161,6 +147,8 @@ class ButtonModel: ControlModel {
 class JoystickButtonModel: ControlModel {
     override init(data: ControlData) {
         super.init(data: data)
+        // joystick buttons cannot be mapped to controller keys.
+        // Instead, map a real joystick to the joystick as a whole.
         self.setKey(codes: data.keyCodes)
         data.parent?.button.addSubview(button)
     }
@@ -202,7 +190,7 @@ class DraggableButtonModel: MouseAreaModel {
     var childButton: JoystickButtonModel?
 
     func save() -> Button {
-        return Button(keyCode: childButton!.data.keyCodes[0], keyName: data.keyName,
+        return Button(keyCode: childButton!.data.keyCodes[0], keyName: childButton!.data.keyName,
                                transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
     }
 
@@ -219,7 +207,10 @@ class DraggableButtonModel: MouseAreaModel {
     override func update() {
         super.update()
         if childButton == nil {
-            childButton = JoystickButtonModel(data: ControlData(keyCodes: [data.keyCodes[0]], parent: self))
+            // temporarily, cannot map controller keys to draggable buttons
+            // `data.keyName` is the key for the move area, not that of the button key.
+            childButton = JoystickButtonModel(data: ControlData(
+                keyCodes: [data.keyCodes[0]], parent: self))
         }
         let btn = button.subviews[0]
         let buttonSize = data.size.absoluteSize / 3
@@ -257,7 +248,8 @@ class JoystickModel: ControlModel {
         self.setKey(name: data.keyName)
         if data.keyCodes.count == 4 && joystickButtons.count == 0 {
             for keyCode in data.keyCodes {
-                joystickButtons.append(JoystickButtonModel(data: ControlData(keyCodes: [keyCode], parent: self)))
+                joystickButtons.append(JoystickButtonModel(data: ControlData(
+                    keyCodes: [keyCode], parent: self)))
             }
         }
         changeButtonsSize()
