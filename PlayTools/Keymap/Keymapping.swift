@@ -75,12 +75,6 @@ struct Button: Codable {
     var keyCode: Int
     var keyName: String
     var transform: KeyModelTransform
-
-    init(keyCode: Int, keyName: String, transform: KeyModelTransform) {
-        self.keyCode = keyCode
-        self.transform = transform
-        self.keyName = keyName
-    }
 }
 
 struct Joystick: Codable {
