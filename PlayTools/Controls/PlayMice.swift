@@ -178,40 +178,22 @@ final class CameraControl {
         Toucher.touchQueue.asyncAfter(deadline: when, execute: closure)
     }
 
-    // if max speed of this touch is high
-    var movingFast = false
     // like sequence but resets when touch begins. Used to calc touch duration
     var counter = 0
     // if should wait before beginning next touch
     var cooldown = false
-    // if the touch point had been prevented from lifting off because of moving slow
-    var idled = false
     // in how many tests has this been identified as stationary
     var stationaryCount = 0
     let stationaryThreshold = 2
 
     @objc func checkEnded() {
         // if been stationary for enough time
-        if self.stationaryCount < self.stationaryThreshold {
+        if self.stationaryCount < self.stationaryThreshold || (self.stationaryCount < 20 - self.counter) {
             self.stationaryCount += 1
             self.delay(0.1, closure: checkEnded)
             return
         }
-        // and slow touch lasts for sufficient time
-        if self.movingFast || self.counter > 64 {
-            self.doLiftOff()
-        } else {
-            self.idled = true
-            // idle for at most 4 seconds
-            self.delay(4) {
-                if self.stationaryCount < self.stationaryThreshold {
-                    self.stationaryCount += 1
-                    self.delay(0.1, closure: self.checkEnded)
-                    return
-                }
-                self.doLiftOff()
-            }
-        }
+        self.doLiftOff()
      }
 
     @objc func updated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
@@ -222,8 +204,6 @@ final class CameraControl {
         counter += 1
         if !isMoving {
             isMoving = true
-            movingFast = false
-            idled = false
             location = center
             counter = 0
             stationaryCount = 0
@@ -231,21 +211,12 @@ final class CameraControl {
 
             delay(0.1, closure: checkEnded)
         }
-        // if not moving fast, regard the user fine-tuning the camera(e.g. aiming)
-        // so hold the touch for longer to avoid cold startup
-        if deltaX.magnitude + deltaY.magnitude > 12 {
-            // if we had mistaken this as player aiming
-            if self.idled {
-//                Toast.showOver(msg: "idled")
-                // since not aiming, re-touch to re-gain control
-                self.doLiftOff()
-                return
-            }
-            movingFast = true
-        }
         self.location.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
         self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
+        if stationaryCount >= self.stationaryThreshold {
+            self.counter = 0
+        }
         stationaryCount = 0
     }
 
@@ -254,6 +225,9 @@ final class CameraControl {
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: 1)
+//        DispatchQueue.main.async {
+//            Toast.showOver(msg: "mouse released")
+//        }
         self.isMoving = false
         // ending and beginning too frequently leads to the beginning event not recognized
         // so let the beginning event wait some time
