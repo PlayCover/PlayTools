@@ -33,7 +33,6 @@ class ButtonAction: Action {
 
     let keyCode: GCKeyCode
     let keyName: String
-    let keyid: Int
     let point: CGPoint
     var id: Int
 
@@ -48,13 +47,12 @@ class ButtonAction: Action {
         }
     }
 
-    init(id: Int, keyid: Int, keyCode: GCKeyCode, keyName: String, point: CGPoint) {
-        self.keyid = keyid
+    init(id: Int, keyCode: GCKeyCode, keyName: String, point: CGPoint) {
         self.keyCode = keyCode
         self.keyName = keyName
         self.point = point
         self.id = id
-        if PlayMice.shared.setMiceButtons(keyid, action: self) {
+        if PlayMice.shared.setMiceButtons(keyCode.rawValue, action: self) {
             // No more work to do for mouse buttons
         } else if let gcKey = GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: keyCode) {
             let handler = gcKey.pressedChangedHandler
@@ -71,10 +69,9 @@ class ButtonAction: Action {
     }
 
     convenience init(id: Int, data: Button) {
-        let keyCode = GCKeyCode(rawValue: CFIndex(data.keyCode))
+        let keyCode = GCKeyCode(rawValue: data.keyCode)
         self.init(
             id: id,
-            keyid: data.keyCode,
             keyCode: keyCode,
             keyName: data.keyName,
             point: CGPoint(
@@ -96,9 +93,9 @@ class DraggableButtonAction: ButtonAction {
 
     var releasePoint: CGPoint
 
-    override init(id: Int, keyid: Int, keyCode: GCKeyCode, keyName: String, point: CGPoint) {
+    override init(id: Int, keyCode: GCKeyCode, keyName: String, point: CGPoint) {
         self.releasePoint = point
-        super.init(id: id, keyid: keyid, keyCode: keyCode, keyName: keyName, point: point)
+        super.init(id: id, keyCode: keyCode, keyName: keyName, point: point)
         if settings.mouseMapping {
             PlayMice.shared.setupMouseMovedHandler()
         }

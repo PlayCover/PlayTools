@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import os.log
 
 let keymap = Keymapping.shared
 
@@ -31,7 +30,7 @@ class Keymapping {
                     withIntermediateDirectories: true,
                     attributes: [:])
             } catch {
-                os_log("[PlayTools] Failed to create Keymapping directory.\n%@", type: .error, error as CVarArg)
+                print("[PlayTools] Failed to create Keymapping directory.\n%@")
             }
         }
         keymapUrl.appendPathComponent("\(bundleIdentifier).plist")
@@ -48,7 +47,7 @@ class Keymapping {
             let data = try encoder.encode(keymapData)
             try data.write(to: keymapUrl)
         } catch {
-            os_log("[PlayTools] Keymapping encode failed.\n%@", type: .error, error as CVarArg)
+            print("[PlayTools] Keymapping encode failed.\n%@")
         }
     }
 
@@ -59,7 +58,7 @@ class Keymapping {
             return true
         } catch {
             keymapData = KeymappingData(bundleIdentifier: bundleIdentifier)
-            os_log("[PlayTools] Keymapping decode failed.\n%@", type: .error, error as CVarArg)
+            print("[PlayTools] Keymapping decode failed.\n%@")
             return false
         }
     }

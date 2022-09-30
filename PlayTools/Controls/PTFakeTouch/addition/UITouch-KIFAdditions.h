@@ -36,6 +36,7 @@ KW_FIX_CATEGORY_BUG_H(UITouch_KIFAdditions)
 - (id)initInView:(UIView *)view;
 - (id)initAtPoint:(CGPoint)point inView:(UIView *)view;
 - (id)initAtPoint:(CGPoint)point inWindow:(UIWindow *)window;
+- (id)initAtPoint:(CGPoint)point inWindow:(UIWindow *)window onView:(UIView*)view;
 - (id)initTouch;
 - (void)resetTouch;
 
