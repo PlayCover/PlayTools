@@ -1,6 +1,5 @@
 import Foundation
 import UIKit
-import os.log
 
 let settings = PlaySettings.shared
 
@@ -20,7 +19,7 @@ let settings = PlaySettings.shared
             settingsData = try PropertyListDecoder().decode(AppSettingsData.self, from: data)
         } catch {
             settingsData = AppSettingsData()
-            os_log("[PlayTools] PlaySettings decode failed.\n%@", type: .error, error as CVarArg)
+            print("[PlayTools] PlaySettings decode failed.\n%@")
         }
     }
 
@@ -50,6 +49,10 @@ let settings = PlaySettings.shared
             return "J320xAP"
         case "iPad13,8":
             return "J522AP"
+        case "iPhone15,3":
+            return "A2896"
+        case "iPhone14,3":
+            return "A2645"
         default:
             return "J320xAP"
         }

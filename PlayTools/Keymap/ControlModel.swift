@@ -1,6 +1,6 @@
 import GameController
 
-@objc class ControlData: NSObject {
+class ControlData {
     var keyCodes: [Int]
     var keyName: String
     var size: CGFloat
@@ -243,7 +243,7 @@ class JoystickModel: ControlModel {
         button.setHeight(height: data.size.absoluteSize)
         button.setX(xCoord: data.xCoord.absoluteX)
         button.setY(yCoord: data.yCoord.absoluteY)
-        button.layer.cornerRadius = 0.5 * button.bounds.size.width
+        button.layer.cornerRadius = 0.3 * button.bounds.size.width
         button.clipsToBounds = true
         self.setKey(name: data.keyName)
         if data.keyCodes.count == 4 && joystickButtons.count == 0 {

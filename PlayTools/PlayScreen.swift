@@ -2,10 +2,9 @@
 //  ScreenController.swift
 //  PlayTools
 //
+
 import Foundation
 import UIKit
-import SwiftUI
-import AVFoundation
 
 let screen = PlayScreen.shared
 let mainScreenWidth = PlaySettings.shared.windowSizeWidth
@@ -26,7 +25,6 @@ extension CGSize {
 }
 
 extension CGRect {
-
     func aspectRatio() -> CGFloat {
         if mainScreenWidth > mainScreenHeight {
             return mainScreenWidth / mainScreenHeight
@@ -45,27 +43,25 @@ extension CGRect {
 }
 
 extension UIScreen {
-
     static var aspectRatio: CGFloat {
-        let count = Dynamic.NSScreen.screens.count.asInt ?? 0
+        let count = AKInterface.shared!.screenCount
         if PlaySettings.shared.notch {
             if count == 1 {
                 return mainScreenWidth / mainScreenHeight // 1.6 or 1.77777778
             } else {
-                if Dynamic.NSScreen.mainScreen.asObject == Dynamic.NSScreen.screens.first {
+                if AKInterface.shared!.isMainScreenEqualToFirst {
                     return mainScreenWidth / mainScreenHeight
                 }
             }
 
         }
-        if let frame = Dynamic(Dynamic.NSScreen.mainScreen.asObject).frame.asCGRect {
-            return frame.aspectRatio()
-        }
-        return mainScreenWidth / mainScreenHeight
+
+        let frame = AKInterface.shared!.mainScreenFrame
+        return frame.aspectRatio()
     }
 }
 
-public final class PlayScreen: NSObject {
+public class PlayScreen: NSObject {
     @objc public static let shared = PlayScreen()
 
     @objc public static func frame(_ rect: CGRect) -> CGRect {
@@ -88,7 +84,7 @@ public final class PlayScreen: NSObject {
         return size.toAspectRatio()
     }
     var fullscreen: Bool {
-        return Dynamic(nsWindow).styleMask.contains(16384).asBool ?? false
+        return AKInterface.shared!.isFullscreen
     }
 
     @objc public var screenRect: CGRect {
@@ -131,12 +127,8 @@ public final class PlayScreen: NSObject {
         window?.nsWindow
     }
 
-    var nsScreen: NSObject? {
-        Dynamic(nsWindow).nsScreen.asObject
-    }
-
     func switchDock(_ visible: Bool) {
-        Dynamic.NSMenu.setMenuBarVisible(visible)
+        AKInterface.shared!.setMenuBarVisible(visible)
     }
 
 }
@@ -162,19 +154,7 @@ extension CGFloat {
     }
 }
 
-extension UIView {
-
-    class func allSubviews<T: UIView>(from parenView: UIView) -> [T] {
-        return parenView.subviews.flatMap { subView -> [T] in
-            var result = allSubviews(from: subView) as [T]
-            if let view = subView as? T { result.append(view) }
-            return result
-        }
-    }
-}
-
 extension UIWindow {
-
     var nsWindow: NSObject? {
         guard let nsWindows = NSClassFromString("NSApplication")?
             .value(forKeyPath: "sharedApplication.windows") as? [AnyObject] else { return nil }
@@ -185,24 +165,5 @@ extension UIWindow {
             }
         }
         return nil
-    }
-}
-
-extension NSObject {
-    func call(_ method: String, object: CGSize) -> Bool {
-        if self.responds(to: Selector(method)) {
-            self.perform(Selector(method), with: object)
-            return true
-        } else {
-            return false
-        }
-    }
-    func call(_ method: String) -> Bool {
-        if self.responds(to: Selector(method)) {
-            self.perform(Selector(method))
-            return true
-        } else {
-            return false
-        }
     }
 }
