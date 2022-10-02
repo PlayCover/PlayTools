@@ -83,7 +83,10 @@ class EditorController {
 
     public func setKey(_ name: String) {
         if editorMode {
-            focusedControl?.setKey(name: name)
+            if name != "Mouse" || focusedControl as? MouseAreaModel != nil
+                || focusedControl as? JoystickModel != nil {
+                focusedControl?.setKey(name: name)
+            }
         }
     }
 
@@ -207,7 +210,7 @@ class EditorController {
         if editorMode {
             addControlToView(control: DraggableButtonModel(data: ControlData(
                 keyCodes: [keyCode],
-                keyName: KeyCodeNames.keyCodes[keyCode] ?? "Btn",
+                keyName: "Mouse",
                 size: 15,
                 xCoord: center.x,
                 yCoord: center.y)))

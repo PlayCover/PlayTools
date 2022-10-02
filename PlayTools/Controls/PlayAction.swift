@@ -96,9 +96,7 @@ class DraggableButtonAction: ButtonAction {
     override init(id: Int, keyCode: GCKeyCode, keyName: String, point: CGPoint) {
         self.releasePoint = point
         super.init(id: id, keyCode: keyCode, keyName: keyName, point: point)
-        if settings.mouseMapping {
-            PlayMice.shared.setupMouseMovedHandler()
-        }
+        _ = PlayMice.shared.setupThumbstickChangedHandler(name: keyName)
     }
 
     override func update(pressed: Bool) {
