@@ -1,4 +1,6 @@
 class KeyCodeNames {
+    public static let defaultCode = -10
+
    public static let keyCodes = [
     -4: "cA",
     -5: "cX",

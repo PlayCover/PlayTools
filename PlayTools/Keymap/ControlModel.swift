@@ -18,11 +18,15 @@ class ControlData {
         self.parent = parent
     }
 
-    init(keyCodes: [Int], parent: ControlModel) {
+    convenience init(keyCodes: [Int], parent: ControlModel) {
+        self.init(keyCodes: keyCodes, keyName: KeyCodeNames.keyCodes[keyCodes[0]] ?? "Btn", parent: parent)
+    }
+
+    init(keyCodes: [Int], keyName: String, parent: ControlModel) {
         self.keyCodes = keyCodes
         // For now, not support binding controller key
         // Support for that is left for later to concern
-        self.keyName = KeyCodeNames.keyCodes[keyCodes[0]] ?? "Btn"
+        self.keyName = keyName
         self.size = parent.data.size  / 3
         self.xCoord = 0
         self.yCoord = 0
@@ -50,7 +54,16 @@ class ControlModel {
 
     func update() {}
 
-    func focus(_ focus: Bool) {}
+    func focus(_ focus: Bool) {
+        if focus {
+            button.layer.borderWidth = 3
+            button.layer.borderColor = UIColor.systemPink.cgColor
+            button.setNeedsDisplay()
+        } else {
+            button.layer.borderWidth = 0
+            button.setNeedsDisplay()
+        }
+    }
 
     func unfocusChildren() {}
 
@@ -82,7 +95,7 @@ class ControlModel {
     }
 
     func resize(down: Bool) {
-        let mod = down ? 0.9 : 1.1
+        let mod = down ? 0.9 : 1/0.9
         data.size = (button.frame.width * CGFloat(mod)).relativeSize
         update()
     }
@@ -94,7 +107,7 @@ class ControlModel {
     }
 
     func setKey(name: String) {
-        self.setKey(codes: [-10], name: name)
+        self.setKey(codes: [KeyCodeNames.defaultCode], name: name)
     }
 }
 
@@ -120,21 +133,10 @@ class ButtonModel: ControlModel {
         button.layer.cornerRadius = 0.5 * button.bounds.size.width
         button.clipsToBounds = true
         button.titleLabel?.minimumScaleFactor = 0.01
-        button.titleLabel?.numberOfLines = 1
+        button.titleLabel?.numberOfLines = 2
         button.titleLabel?.adjustsFontSizeToFitWidth = true
         button.titleLabel?.textAlignment = .center
         button.contentEdgeInsets = UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 2)
-    }
-
-    override func focus(_ focus: Bool) {
-        if focus {
-            button.layer.borderWidth = 3
-            button.layer.borderColor = UIColor.systemPink.cgColor
-            button.setNeedsDisplay()
-        } else {
-            button.layer.borderWidth = 0
-            button.setNeedsDisplay()
-        }
     }
 
     override func setKey(codes: [Int], name: String) {
@@ -147,8 +149,6 @@ class ButtonModel: ControlModel {
 class JoystickButtonModel: ControlModel {
     override init(data: ControlData) {
         super.init(data: data)
-        // joystick buttons cannot be mapped to controller keys.
-        // Instead, map a real joystick to the joystick as a whole.
         self.setKey(codes: data.keyCodes)
         data.parent?.button.addSubview(button)
     }
@@ -176,13 +176,8 @@ class JoystickButtonModel: ControlModel {
     override func focus(_ focus: Bool) {
         if focus {
             data.parent?.unfocusChildren()
-            button.layer.borderWidth = 3
-            button.layer.borderColor = UIColor.systemPink.cgColor
-            button.setNeedsDisplay()
-        } else {
-            button.layer.borderWidth = 0
-            button.setNeedsDisplay()
         }
+        super.focus(focus)
     }
 }
 
@@ -190,13 +185,18 @@ class DraggableButtonModel: MouseAreaModel {
     var childButton: JoystickButtonModel?
 
     func save() -> Button {
-        return Button(keyCode: childButton!.data.keyCodes[0], keyName: childButton!.data.keyName,
+        return Button(keyCode: childButton!.data.keyCodes[0], keyName: data.keyName,
                                transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
     }
 
     override func setKey(codes: [Int], name: String) {
-        childButton!.setKey(codes: codes)
-        self.data.keyName = name
+        let code = codes[0]
+        if code == KeyCodeNames.defaultCode {
+            self.data.keyName = name
+            button.setTitle(data.keyName, for: UIControl.State.normal)
+        } else {
+            childButton!.setKey(codes: codes)
+        }
     }
     override func focus(_ focus: Bool) {
         super.focus(focus)
@@ -206,13 +206,14 @@ class DraggableButtonModel: MouseAreaModel {
     }
     override func update() {
         super.update()
+        self.button.titleEdgeInsets = UIEdgeInsets(top: data.size.absoluteSize / 2, left: 0, bottom: 0, right: 0)
         if childButton == nil {
             // temporarily, cannot map controller keys to draggable buttons
             // `data.keyName` is the key for the move area, not that of the button key.
             childButton = JoystickButtonModel(data: ControlData(
                 keyCodes: [data.keyCodes[0]], parent: self))
         }
-        let btn = button.subviews[0]
+        let btn = childButton!.button
         let buttonSize = data.size.absoluteSize / 3
         let coord = (button.frame.width - buttonSize) / 2
         btn.frame = CGRect(x: coord, y: coord, width: buttonSize, height: buttonSize)
@@ -248,6 +249,8 @@ class JoystickModel: ControlModel {
         self.setKey(name: data.keyName)
         if data.keyCodes.count == 4 && joystickButtons.count == 0 {
             for keyCode in data.keyCodes {
+                // joystick buttons cannot be mapped to controller keys.
+                // Instead, map a real joystick to the joystick as a whole.
                 joystickButtons.append(JoystickButtonModel(data: ControlData(
                     keyCodes: [keyCode], parent: self)))
             }
@@ -256,13 +259,8 @@ class JoystickModel: ControlModel {
     }
 
     override func focus(_ focus: Bool) {
-        if focus {
-            button.layer.borderWidth = 3
-            button.layer.borderColor = UIColor.systemPink.cgColor
-            button.setNeedsDisplay()
-        } else {
-            button.layer.borderWidth = 0
-            button.setNeedsDisplay()
+        super.focus(focus)
+        if !focus {
             unfocusChildren()
         }
     }
@@ -275,6 +273,7 @@ class JoystickModel: ControlModel {
 
     override func setKey(codes: [Int], name: String) {
         self.data.keyName = name
+//        button.setTitle(data.keyName, for: UIControl.State.normal)
     }
 
     override func resize(down: Bool) {
@@ -305,18 +304,8 @@ class JoystickModel: ControlModel {
 
 class MouseAreaModel: ControlModel {
     func save() -> MouseArea {
-        MouseArea(transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
-    }
-
-    override func focus(_ focus: Bool) {
-        if focus {
-            button.layer.borderWidth = 3
-            button.layer.borderColor = UIColor.systemPink.cgColor
-            button.setNeedsDisplay()
-        } else {
-            button.layer.borderWidth = 0
-            button.setNeedsDisplay()
-        }
+        MouseArea(keyName: data.keyName,
+                  transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
     }
 
     override func update() {
@@ -326,11 +315,22 @@ class MouseAreaModel: ControlModel {
         button.setY(yCoord: data.yCoord.absoluteY)
         button.layer.cornerRadius = 0.5 * button.bounds.size.width
         button.clipsToBounds = true
+        setKey(name: data.keyName)
     }
 
-    override func setKey(codes: [Int]) {
+    private func setDraggableButton(code: Int) {
         EditorController.shared.removeControl()
-        EditorController.shared.addDraggableButton(CGPoint(x: data.xCoord, y: data.yCoord), codes[0])
+        EditorController.shared.addDraggableButton(CGPoint(x: data.xCoord, y: data.yCoord), code)
+    }
+
+    override func setKey(codes: [Int], name: String) {
+        let code = codes[0]
+        if code == KeyCodeNames.defaultCode {
+            self.data.keyName = name
+        } else {
+            self.setDraggableButton(code: code)
+        }
+        button.setTitle(data.keyName, for: UIControl.State.normal)
     }
 
     override init(data: ControlData) {

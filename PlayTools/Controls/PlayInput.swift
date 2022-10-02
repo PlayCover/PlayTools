@@ -17,7 +17,7 @@ class PlayInput {
         }
     }
 
-    func setup() {
+    func parseKeymap() {
         actions = []
         // ID 1 is left for mouse area
         var counter = 2
@@ -31,8 +31,8 @@ class PlayInput {
                 counter += 1
         }
 
-        if settings.mouseMapping {
-            for mouse in keymap.keymapData.mouseAreaModel {
+        for mouse in keymap.keymapData.mouseAreaModel {
+            if mouse.keyName.hasSuffix("stick") || settings.mouseMapping {
                 PlayMice.shared.setup(mouse)
                 counter += 1
             }
@@ -42,7 +42,10 @@ class PlayInput {
             actions.append(JoystickAction(id: counter, data: joystick))
             counter += 1
         }
+    }
 
+    func setup() {
+        parseKeymap()
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             keyboard.keyChangedHandler = { _, _, keyCode, _ in
                 if editor.editorMode
@@ -70,12 +73,22 @@ class PlayInput {
             controller.valueChangedHandler = { gamepad, element in
                 // This is the index of controller buttons, which is String, not Int
                 let alias: String! = element.aliases.first
-                Toast.showOver(msg: alias)
+//                Toast.showOver(msg: alias)
                 if editor.editorMode {
                     EditorController.shared.setKey(alias)
                 }
             }
         }
+        for mouse in GCMouse.mice() {
+            mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
+                if editor.editorMode {
+                    EditorController.shared.setKey("Mouse")
+                } else {
+                    PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
+                }
+            }
+        }
+
     }
 
     static public func cmdPressed() -> Bool {
