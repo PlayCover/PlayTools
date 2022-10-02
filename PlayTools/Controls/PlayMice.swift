@@ -190,7 +190,7 @@ final class CameraControl {
         // if been stationary for enough time
         if self.stationaryCount < self.stationaryThreshold || (self.stationaryCount < 20 - self.counter) {
             self.stationaryCount += 1
-            self.delay(0.1, closure: checkEnded)
+            self.delay(0.04, closure: checkEnded)
             return
         }
         self.doLiftOff()
@@ -209,12 +209,16 @@ final class CameraControl {
             stationaryCount = 0
             Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: 1)
 
-            delay(0.1, closure: checkEnded)
+            delay(0.01, closure: checkEnded)
+        }
+        if self.counter == 120 {
+            self.doLiftOff()
+            return
         }
         self.location.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
         self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
-        if stationaryCount >= self.stationaryThreshold {
+        if stationaryCount > self.stationaryThreshold {
             self.counter = 0
         }
         stationaryCount = 0
