@@ -246,7 +246,6 @@ class JoystickModel: ControlModel {
         button.setY(yCoord: data.yCoord.absoluteY)
         button.layer.cornerRadius = 0.3 * button.bounds.size.width
         button.clipsToBounds = true
-        self.setKey(name: data.keyName)
         if data.keyCodes.count == 4 && joystickButtons.count == 0 {
             for keyCode in data.keyCodes {
                 // joystick buttons cannot be mapped to controller keys.
@@ -255,6 +254,7 @@ class JoystickModel: ControlModel {
                     keyCodes: [keyCode], parent: self)))
             }
         }
+        self.setKey(name: data.keyName)
         changeButtonsSize()
     }
 
@@ -272,14 +272,19 @@ class JoystickModel: ControlModel {
     }
 
     override func setKey(codes: [Int], name: String) {
-        self.data.keyName = name
-//        button.setTitle(data.keyName, for: UIControl.State.normal)
-    }
-
-    override func resize(down: Bool) {
-        let mod = down ? 0.9 : 1.1
-        data.size = (button.frame.width * CGFloat(mod)).relativeSize
-        update()
+        if codes[0] == KeyCodeNames.defaultCode && name.contains(Character("s")) {
+            self.data.keyName = name
+            button.setTitle(data.keyName, for: UIControl.State.normal)
+            for btn in joystickButtons {
+                btn.button.isHidden = true
+            }
+        } else {
+            self.data.keyName = "Keyboard"
+            button.setTitle("", for: UIControl.State.normal)
+            for btn in joystickButtons {
+                btn.button.isHidden = false
+            }
+        }
     }
 
     func changeButtonsSize() {

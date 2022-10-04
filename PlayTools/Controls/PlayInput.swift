@@ -19,8 +19,8 @@ class PlayInput {
 
     func parseKeymap() {
         actions = []
-        // ID 1 is left for mouse area
-        var counter = 2
+        // ID starts from 1
+        var counter = 1
         for button in keymap.keymapData.buttonModels {
             actions.append(ButtonAction(id: counter, data: button))
             counter += 1
@@ -32,14 +32,18 @@ class PlayInput {
         }
 
         for mouse in keymap.keymapData.mouseAreaModel {
-            if mouse.keyName.hasSuffix("stick") || settings.mouseMapping {
-                PlayMice.shared.setup(mouse)
+            if mouse.keyName.hasSuffix("tick") || settings.mouseMapping {
+                actions.append(CameraAction(id: counter, data: mouse))
                 counter += 1
             }
         }
 
         for joystick in keymap.keymapData.joystickModel {
-            actions.append(JoystickAction(id: counter, data: joystick))
+            if joystick.keyName.contains(Character("u")) {
+                actions.append(ConcreteJoystickAction(id: counter, data: joystick))
+            } else {
+                actions.append(JoystickAction(id: counter, data: joystick))
+            }
             counter += 1
         }
     }
@@ -70,7 +74,7 @@ class PlayInput {
         }
 
         if let controller = GCController.current?.extendedGamepad {
-            controller.valueChangedHandler = { gamepad, element in
+            controller.valueChangedHandler = { _, element in
                 // This is the index of controller buttons, which is String, not Int
                 let alias: String! = element.aliases.first
 //                Toast.showOver(msg: alias)
@@ -97,11 +101,9 @@ class PlayInput {
 
     private func isSafeToBind(_ input: GCKeyboardInput) -> Bool {
            var result = true
-           for forbidden in PlayInput.FORBIDDEN {
-               if input.button(forKeyCode: forbidden)?.isPressed ?? false {
-                   result = false
-                   break
-               }
+           for forbidden in PlayInput.FORBIDDEN where input.button(forKeyCode: forbidden)?.isPressed ?? false {
+               result = false
+               break
            }
            return result
        }
