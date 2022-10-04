@@ -84,7 +84,8 @@ class EditorController {
     public func setKey(_ name: String) {
         if editorMode {
             if name != "Mouse" || focusedControl as? MouseAreaModel != nil
-                || focusedControl as? JoystickModel != nil {
+                || focusedControl as? JoystickModel != nil
+                || focusedControl as? DraggableButtonModel != nil {
                 focusedControl?.setKey(name: name)
             }
         }
@@ -96,15 +97,6 @@ class EditorController {
     }
 
     func showButtons() {
-        for button in keymap.keymapData.buttonModels {
-            let ctrl = ButtonModel(data: ControlData(
-                keyCodes: [button.keyCode],
-                keyName: button.keyName,
-                size: button.transform.size,
-                xCoord: button.transform.xCoord,
-                yCoord: button.transform.yCoord))
-            addControlToView(control: ctrl)
-        }
         for button in keymap.keymapData.draggableButtonModels {
             let ctrl = DraggableButtonModel(data: ControlData(
                 keyCodes: [button.keyCode],
@@ -112,6 +104,15 @@ class EditorController {
                 size: button.transform.size,
                 xCoord: button.transform.xCoord,
                 yCoord: button.transform.yCoord))
+            addControlToView(control: ctrl)
+        }
+        for joystick in keymap.keymapData.joystickModel {
+            let ctrl = JoystickModel(data: ControlData(
+                keyCodes: [joystick.upKeyCode, joystick.downKeyCode, joystick.leftKeyCode, joystick.rightKeyCode],
+                keyName: joystick.keyName,
+                size: joystick.transform.size,
+                xCoord: joystick.transform.xCoord,
+                yCoord: joystick.transform.yCoord))
             addControlToView(control: ctrl)
         }
         for mouse in keymap.keymapData.mouseAreaModel {
@@ -123,13 +124,13 @@ class EditorController {
                     yCoord: mouse.transform.yCoord))
             addControlToView(control: ctrl)
         }
-        for joystick in keymap.keymapData.joystickModel {
-            let ctrl = JoystickModel(data: ControlData(
-                keyCodes: [joystick.upKeyCode, joystick.downKeyCode, joystick.leftKeyCode, joystick.rightKeyCode],
-                keyName: joystick.keyName,
-                size: joystick.transform.size,
-                xCoord: joystick.transform.xCoord,
-                yCoord: joystick.transform.yCoord))
+        for button in keymap.keymapData.buttonModels {
+            let ctrl = ButtonModel(data: ControlData(
+                keyCodes: [button.keyCode],
+                keyName: button.keyName,
+                size: button.transform.size,
+                xCoord: button.transform.xCoord,
+                yCoord: button.transform.yCoord))
             addControlToView(control: ctrl)
         }
     }
