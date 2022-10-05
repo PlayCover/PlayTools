@@ -138,7 +138,7 @@ class ConcreteJoystickAction: Action {
             y: data.transform.yCoord.absoluteY)
         self.key = data.keyName
         position = center
-        self.sensitivity = data.transform.size.absoluteSize / 2
+        self.sensitivity = data.transform.size.absoluteSize / 4
         if PlayMice.shared.setupThumbstickChangedHandler(name: key) {
             PlayMice.shared.joystickHandler[key] = thumbstickUpdate
         } else {

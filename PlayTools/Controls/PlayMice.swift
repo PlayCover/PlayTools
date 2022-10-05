@@ -26,7 +26,7 @@ public class PlayMice {
     var fakedMousePressed = false
     private var thumbstickVelocity: CGVector = CGVector.zero
     public var draggableHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
-               cameraHandler:   [String: (CGFloat, CGFloat) -> Void] = [:],
+               cameraHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
                joystickHandler: [String: (CGFloat, CGFloat) -> Void] = [:]
 
     public var cursorPos: CGPoint {
@@ -59,7 +59,9 @@ public class PlayMice {
         if let thumbstick = GCController.current?.extendedGamepad?.elements[name] as? GCControllerDirectionPad {
             thumbstick.valueChangedHandler = { _, deltaX, deltaY in
                 if self.thumbstickVelocity.dx.isZero && self.thumbstickVelocity.dy.isZero {
-                    DispatchQueue.main.async(execute: self.thumbstickPoll(name))
+                    if let closure = self.thumbstickPoll(name) {
+                        DispatchQueue.main.async(execute: closure)
+                    }
                 }
                 self.thumbstickVelocity.dx = CGFloat(deltaX * 8)
                 self.thumbstickVelocity.dy = CGFloat(deltaY * 8)
@@ -73,10 +75,15 @@ public class PlayMice {
         return false
     }
 
-    private func thumbstickPoll(_ name: String) -> () -> Void {
+    private func thumbstickPoll(_ name: String) -> (() -> Void)? {
 //        DispatchQueue.main.async {
 //            Toast.showOver(msg: "polling")
 //        }
+        let draggableUpdate = self.draggableHandler[name]
+        let cameraUpdate = self.cameraHandler[name]
+        if  draggableUpdate == nil && cameraUpdate == nil {
+            return nil
+        }
         return {
             if !self.thumbstickVelocity.dx.isZero || !self.thumbstickVelocity.dy.isZero {
                 var captured = false
@@ -89,8 +96,10 @@ public class PlayMice {
                         cameraUpdate(self.thumbstickVelocity.dx, self.thumbstickVelocity.dy)
                     }
                 }
-                DispatchQueue.main.asyncAfter(
-                    deadline: DispatchTime.now() + 0.017, execute: self.thumbstickPoll(name))
+                if let closure = self.thumbstickPoll(name) {
+                    DispatchQueue.main.asyncAfter(
+                        deadline: DispatchTime.now() + 0.017, execute: closure)
+                }
             }
         }
     }
