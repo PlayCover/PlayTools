@@ -55,16 +55,20 @@ public class PlayMice {
         return point
     }
 
+    static private func isVectorSignificant(_ vector: CGVector) -> Bool {
+        return vector.dx.magnitude + vector.dy.magnitude > 0.2
+    }
+
     public func setupThumbstickChangedHandler(name: String) -> Bool {
         if let thumbstick = GCController.current?.extendedGamepad?.elements[name] as? GCControllerDirectionPad {
             thumbstick.valueChangedHandler = { _, deltaX, deltaY in
-                if self.thumbstickVelocity.dx.isZero && self.thumbstickVelocity.dy.isZero {
+                if !PlayMice.isVectorSignificant(self.thumbstickVelocity) {
                     if let closure = self.thumbstickPoll(name) {
                         DispatchQueue.main.async(execute: closure)
                     }
                 }
-                self.thumbstickVelocity.dx = CGFloat(deltaX * 8)
-                self.thumbstickVelocity.dy = CGFloat(deltaY * 8)
+                self.thumbstickVelocity.dx = CGFloat(deltaX * 6)
+                self.thumbstickVelocity.dy = CGFloat(deltaY * 6)
 //                Toast.showOver(msg: "thumbstick")
                 if let joystickUpdate = self.joystickHandler[name] {
                     joystickUpdate(self.thumbstickVelocity.dx, self.thumbstickVelocity.dy)
@@ -85,7 +89,7 @@ public class PlayMice {
             return nil
         }
         return {
-            if !self.thumbstickVelocity.dx.isZero || !self.thumbstickVelocity.dy.isZero {
+            if PlayMice.isVectorSignificant(self.thumbstickVelocity) {
                 var captured = false
                 if let draggableUpdate = self.draggableHandler[name] {
                     draggableUpdate(self.thumbstickVelocity.dx, self.thumbstickVelocity.dy)
