@@ -272,8 +272,12 @@ class JoystickModel: ControlModel {
     }
 
     override func setKey(codes: [Int], name: String) {
-        if codes[0] == KeyCodeNames.defaultCode && name.contains(Character("s")) {
-            self.data.keyName = name
+        if codes[0] < 0 && name != "Keyboard" {
+            if name.hasSuffix("tick") {
+                self.data.keyName = name
+            } else {
+                self.data.keyName = "Mouse"
+            }
             button.setTitle(data.keyName, for: UIControl.State.normal)
             for btn in joystickButtons {
                 btn.button.isHidden = true
@@ -330,8 +334,12 @@ class MouseAreaModel: ControlModel {
 
     override func setKey(codes: [Int], name: String) {
         let code = codes[0]
-        if code == KeyCodeNames.defaultCode {
-            self.data.keyName = name
+        if code < 0 {
+            if name.hasSuffix("tick") {
+                self.data.keyName = name
+            } else {
+                self.data.keyName = "Mouse"
+            }
         } else {
             self.setDraggableButton(code: code)
         }

@@ -39,9 +39,10 @@ class PlayInput {
         }
 
         for joystick in keymap.keymapData.joystickModel {
+            // Left Thumbstick, Right Thumbstick, Mouse
             if joystick.keyName.contains(Character("u")) {
                 actions.append(ConcreteJoystickAction(id: counter, data: joystick))
-            } else {
+            } else { // Keyboard
                 actions.append(JoystickAction(id: counter, data: joystick))
             }
             counter += 1
@@ -86,7 +87,7 @@ class PlayInput {
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
                 if editor.editorMode {
-                    EditorController.shared.setKey("Mouse")
+//                    EditorController.shared.setKey("Mouse")
                 } else {
                     PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
                 }
