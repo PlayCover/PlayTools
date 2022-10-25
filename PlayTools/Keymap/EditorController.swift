@@ -9,7 +9,7 @@ class EditorViewController: UIViewController {
     }
 }
 
-final class EditorController: NSObject {
+class EditorController {
 
     static let shared = EditorController()
 
@@ -17,15 +17,14 @@ final class EditorController: NSObject {
 
     var focusedControl: ControlModel?
 
-    lazy var editorWindow: UIWindow = initWindow()
-    var previousWindow: UIWindow?
+    var editorWindow: UIWindow?
+    weak var previousWindow: UIWindow?
     var controls: [ControlModel] = []
-    lazy var viewController = EditorViewController(nibName: nil, bundle: nil)
-    lazy var view: EditorView! = viewController.view as? EditorView
+    var view: EditorView! {editorWindow?.rootViewController?.view as? EditorView}
 
     private func initWindow() -> UIWindow {
         let window = UIWindow(windowScene: screen.windowScene!)
-        window.rootViewController = viewController
+        window.rootViewController = EditorViewController(nibName: nil, bundle: nil)
         return window
     }
 
@@ -50,12 +49,14 @@ final class EditorController: NSObject {
 
     public func switchMode() {
         lock.lock()
-
         if editorMode {
             KeymapHolder.shared.hide()
             saveButtons()
-            editorMode = false
-//            editorWindow.windowScene = nil
+            editorWindow?.isHidden = true
+            editorWindow?.windowScene = nil
+            editorWindow?.rootViewController = nil
+            // menu still holds this object until next responder hit test
+            editorWindow = nil
             previousWindow?.makeKeyAndVisible()
             mode.show(false)
             focusedControl = nil
@@ -63,19 +64,16 @@ final class EditorController: NSObject {
         } else {
             mode.show(true)
             previousWindow = screen.keyWindow
-//            editorWindow.windowScene = screen.windowScene
-            editorMode = true
-            editorWindow.makeKeyAndVisible()
+            editorWindow = initWindow()
+            editorWindow?.makeKeyAndVisible()
             showButtons()
             Toast.showOver(msg: "Click to start keymmaping edit")
         }
+//        Toast.showOver(msg: "\(UIApplication.shared.windows.count)")
         lock.unlock()
     }
 
-    var editorMode: Bool {
-        get { !editorWindow.isHidden }
-        set { editorWindow.isHidden = !newValue}
-    }
+    var editorMode: Bool { !(editorWindow?.isHidden ?? true)}
 
     public func setKeyCode(_ key: Int) {
         if editorMode {
@@ -89,24 +87,65 @@ final class EditorController: NSObject {
     }
 
     func showButtons() {
-        for btn in settings.layout {
-            if let ctrl = ControlModel.createControlFromData(data: btn) {
-                addControlToView(control: ctrl)
-            }
+        for button in keymap.keymapData.buttonModels {
+            let ctrl = ButtonModel(data: ControlData(
+                keyCodes: [button.keyCode],
+                size: button.transform.size,
+                xCoord: button.transform.xCoord,
+                yCoord: button.transform.yCoord,
+                parent: nil))
+            addControlToView(control: ctrl)
+        }
+        for button in keymap.keymapData.draggableButtonModels {
+            let ctrl = DraggableButtonModel(data: ControlData(
+                keyCodes: [button.keyCode],
+                size: button.transform.size,
+                xCoord: button.transform.xCoord,
+                yCoord: button.transform.yCoord,
+                parent: nil))
+            addControlToView(control: ctrl)
+        }
+        for mouse in keymap.keymapData.mouseAreaModel {
+            let ctrl =
+                MouseAreaModel(data: ControlData(
+                    size: mouse.transform.size,
+                    xCoord: mouse.transform.xCoord,
+                    yCoord: mouse.transform.yCoord))
+            addControlToView(control: ctrl)
+        }
+        for joystick in keymap.keymapData.joystickModel {
+            let ctrl = JoystickModel(data: ControlData(
+                keyCodes: [joystick.upKeyCode, joystick.downKeyCode, joystick.leftKeyCode, joystick.rightKeyCode],
+                size: joystick.transform.size,
+                xCoord: joystick.transform.xCoord,
+                yCoord: joystick.transform.yCoord))
+            addControlToView(control: ctrl)
         }
     }
 
     func saveButtons() {
-        var updatedLayout = [[CGFloat]]()
-        for model in controls {
-            updatedLayout.append(model.save())
+        var keymapData = KeymappingData(bundleIdentifier: keymap.bundleIdentifier)
+        controls.forEach {
+            switch $0 {
+            case let model as JoystickModel:
+                keymapData.joystickModel.append(model.save())
+            // subclasses must be checked first
+            case let model as DraggableButtonModel:
+                keymapData.draggableButtonModels.append(model.save())
+            case let model as MouseAreaModel:
+                keymapData.mouseAreaModel.append(model.save())
+            case let model as ButtonModel:
+                keymapData.buttonModels.append(model.save())
+            default:
+                break
+            }
         }
-        settings.layout = updatedLayout
+        keymap.keymapData = keymapData
         controls = []
         view.subviews.forEach { $0.removeFromSuperview() }
     }
 
-    @objc public func addJoystick(_ center: CGPoint) {
+    public func addJoystick(_ center: CGPoint) {
         if editorMode {
             addControlToView(control: JoystickModel(data: ControlData(keyCodes: [GCKeyCode.keyW.rawValue,
                                                                                  GCKeyCode.keyS.rawValue,
@@ -118,7 +157,7 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addButton(_ toPoint: CGPoint) {
+    public func addButton(_ toPoint: CGPoint) {
         if editorMode {
             addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-1],
                                                                     size: 5,
@@ -128,9 +167,9 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addRMB(_ toPoint: CGPoint) {
+    public func addRMB(_ toPoint: CGPoint) {
         if editorMode {
-            addControlToView(control: RMBModel(data: ControlData(keyCodes: [-2],
+            addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-2],
                                                                  size: 5,
                                                                  xCoord: toPoint.x.relativeX,
                                                                  yCoord: toPoint.y.relativeY,
@@ -138,9 +177,9 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addLMB(_ toPoint: CGPoint) {
+    public func addLMB(_ toPoint: CGPoint) {
         if editorMode {
-            addControlToView(control: LMBModel(data: ControlData(keyCodes: [-1],
+            addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-1],
                                                                  size: 5,
                                                                  xCoord: toPoint.x.relativeX,
                                                                  yCoord: toPoint.y.relativeY,
@@ -148,9 +187,9 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addMMB(_ toPoint: CGPoint) {
+    public func addMMB(_ toPoint: CGPoint) {
         if editorMode {
-            addControlToView(control: MMBModel(data: ControlData(keyCodes: [-3],
+            addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-3],
                                                                  size: 5,
                                                                  xCoord: toPoint.x.relativeX,
                                                                  yCoord: toPoint.y.relativeY,
@@ -158,7 +197,7 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addMouseArea(_ center: CGPoint) {
+    public func addMouseArea(_ center: CGPoint) {
         if editorMode {
             addControlToView(control: MouseAreaModel(data: ControlData(size: 25,
                                                                        xCoord: center.x.relativeX,
@@ -166,7 +205,7 @@ final class EditorController: NSObject {
         }
     }
 
-    @objc public func addDraggableButton(_ center: CGPoint, _ keyCode: Int) {
+    public func addDraggableButton(_ center: CGPoint, _ keyCode: Int) {
         if editorMode {
             addControlToView(control: DraggableButtonModel(data: ControlData(keyCodes: [keyCode],
                                                                        size: 15,
@@ -215,6 +254,7 @@ class EditorView: UIView {
         for cntrl in editor.controls {
             cntrl.focus(false)
         }
+        editor.focusedControl = nil
         KeymapHolder.shared.add(sender.location(in: self))
     }
 

@@ -5,25 +5,21 @@
 
 import Foundation
 import UIKit
-import Security
-import MetalKit
-import WebKit
 
 final public class PlayCover: NSObject {
 
     @objc static let shared = PlayCover()
 
     var menuController: MenuController?
-
     var firstTime = true
 
     private override init() {}
 
     @objc static public func launch() {
         quitWhenClose()
-        PlaySettings.shared.setupLayout()
+        AKInterface.initialize()
         PlayInput.shared.initialize()
-        PlaySettings.shared.clearLegacy()
+        DiscordIPC.shared.initialize()
     }
 
     @objc static public func quitWhenClose() {
@@ -33,7 +29,7 @@ final public class PlayCover: NSObject {
             queue: OperationQueue.main
         ) { noti in
             if PlayScreen.shared.nsWindow?.isEqual(noti.object) ?? false {
-                Dynamic.NSApplication.sharedApplication.terminate(self)
+                AKInterface.shared!.terminateApplication()
             }
         }
     }

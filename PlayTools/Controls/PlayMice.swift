@@ -4,74 +4,90 @@
 //
 
 import Foundation
-
 import GameController
-import CoreGraphics
 
-typealias ResponseBlock = @convention(block) (_ event: Any) -> Any?
+public class PlayMice {
 
-typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
-
-@objc final public class PlayMice: NSObject {
-
-    @objc public static let shared = PlayMice()
-
-    private var camera: CameraControl?
-
+    public static let shared = PlayMice()
     private static var isInit = false
 
-    private var acceptMouseEvents = !PlaySettings.shared.gamingMode
+    private var camera: CameraControl?
+    private var acceptMouseEvents = !PlaySettings.shared.mouseMapping
 
-    public override init() {
-        super.init()
+    public init() {
         if !PlayMice.isInit {
             setupMouseButton(_up: 2, _down: 4)
             setupMouseButton(_up: 8, _down: 16)
             setupMouseButton(_up: 33554432, _down: 67108864)
             PlayMice.isInit = true
+            if acceptMouseEvents {
+                setupMouseMovedHandler()
+            }
         }
     }
+
+    var fakedMousePressed = false
 
     public var cursorPos: CGPoint {
         var point = CGPoint(x: 0, y: 0)
         if #available(macOS 11, *) {
-            point = Dynamic(screen.nsWindow).mouseLocationOutsideOfEventStream.asCGPoint!
+            point = AKInterface.shared!.mousePoint
         }
-        if let rect = (Dynamic(screen.nsWindow).frame.asCGRect) {
-            point.x = (point.x / rect.width) * screen.screenRect.width
-            point.y = screen.screenRect.height - ((point.y / rect.height) * screen.screenRect.height)
+        let rect = AKInterface.shared!.windowFrame
+        let viewRect: CGRect = screen.screenRect
+        let widthRate = viewRect.width / rect.width
+        var rate = viewRect.height / rect.height
+        if widthRate > rate {
+            // Keep aspect ratio
+            rate = widthRate
         }
+        // Horizontally in center
+        point.x -= (rect.width - viewRect.width / rate)/2
+        point.x *= rate
+        if screen.fullscreen {
+            // Vertically in center
+            point.y -= (rect.height - viewRect.height / rate)/2
+        }
+        point.y *= rate
+        point.y = viewRect.height - point.y
+
         return point
     }
 
-    public func setup(_ key: [CGFloat]) {
-        camera = CameraControl(centerX: key[0].absoluteX, centerY: key[1].absoluteY)
+    func setup(_ data: MouseArea) {
+        camera = CameraControl(
+            centerX: data.transform.xCoord.absoluteX,
+            centerY: data.transform.yCoord.absoluteY)
         setupMouseMovedHandler()
     }
 
     public func setupMouseMovedHandler() {
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
-                Toucher.touchQueue.async {
-                    if !mode.visible {
-                        if let draggableButton = DraggableButtonAction.activeButton {
-                            draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
-                        } else {
-                            self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
-                        }
+                if !mode.visible {
+                    if let draggableButton = DraggableButtonAction.activeButton {
+                        draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
+                    } else {
+                        self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
+                    }
+                    if self.acceptMouseEvents && self.fakedMousePressed {
+                        Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.moved, tid: 1)
                     }
                 }
+//                Toast.showOver(msg: "\(self.cursorPos)")
             }
         }
     }
 
     public func stop() {
-        for mouse in GCMouse.mice() {
-            mouse.mouseInput?.mouseMovedHandler = nil
-        }
+//        for mouse in GCMouse.mice() {
+//            mouse.mouseInput?.mouseMovedHandler = nil
+//        }
         camera?.stop()
         camera = nil
-        mouseActions = [:]
+        mouseActions.keys.forEach { key in
+            mouseActions[key] = []
+        }
     }
 
     func setMiceButtons(_ keyId: Int, action: ButtonAction) -> Bool {
@@ -82,38 +98,64 @@ typealias ResponseBlockBool = @convention(block) (_ event: Any) -> Bool
         return false
     }
 
-    var mouseActions: [Int: ButtonAction] = [:]
+    var mouseActions: [Int: [ButtonAction]] = [2: [], 8: [], 33554432: []]
 
     private func setupMouseButton(_up: Int, _down: Int) {
-        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_up, handler: { event in
-            if !mode.visible || self.acceptMouseEvents {
-                self.mouseActions[_up]?.update(pressed: true)
-                if self.acceptMouseEvents {
-                    return event
+        AKInterface.shared!.setupMouseButton(_up, _down, dontIgnore(_:_:_:))
+    }
+
+    private func dontIgnore(_ actionIndex: Int, _ state: Bool, _ isEventWindow: Bool) -> Bool {
+        if EditorController.shared.editorMode {
+            if state {
+                if actionIndex == 8 {
+                    EditorController.shared.setKeyCode(-2)
+                } else if actionIndex == 33554432 {
+                    EditorController.shared.setKeyCode(-3)
                 }
-                return nil
+                return true
+            } else {
+                return true
             }
-            return event
-        } as ResponseBlock)
-        Dynamic.NSEvent.addLocalMonitorForEventsMatchingMask(_down, handler: { event in
-            if !mode.visible || self.acceptMouseEvents {
-                self.mouseActions[_up]?.update(pressed: false)
-                if self.acceptMouseEvents {
-                    return event
+        }
+        if self.acceptMouseEvents {
+            if state {
+                if !self.fakedMousePressed
+                    // For traffic light buttons when not fullscreen
+                    && self.cursorPos.y > 0
+                    // For traffic light buttons when fullscreen
+                    && isEventWindow {
+                    Toucher.touchcam(point: self.cursorPos,
+                                     phase: UITouch.Phase.began,
+                                     tid: 1)
+                    self.fakedMousePressed = true
+                    return false
                 }
-                return nil
+                return true
+            } else {
+                if self.fakedMousePressed {
+                    self.fakedMousePressed = false
+                    Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.ended, tid: 1)
+                    return false
+                }
+                return true
             }
-            return event
-        } as ResponseBlock)
+        }
+        if !mode.visible {
+            self.mouseActions[actionIndex]!.forEach({ buttonAction in
+                buttonAction.update(pressed: state)
+            })
+            return false
+        }
+        return true
     }
 
     private func setMiceButton(_ keyId: Int, action: ButtonAction) {
         switch keyId {
-        case -1: mouseActions[2] = action
-        case -2: mouseActions[8] = action
-        case -3: mouseActions[33554432] = action
+        case -1: mouseActions[2]!.append(action)
+        case -2: mouseActions[8]!.append(action)
+        case -3: mouseActions[33554432]!.append(action)
         default:
-            mouseActions[2] = action
+            mouseActions[2]!.append(action)
         }
     }
 }
@@ -136,68 +178,50 @@ final class CameraControl {
         Toucher.touchQueue.asyncAfter(deadline: when, execute: closure)
     }
 
-    // if max speed of this touch is high
-    var movingFast = false
-    // seq number for each move event. Used in closure to determine if this move is the last
-    var sequence = 0
     // like sequence but resets when touch begins. Used to calc touch duration
     var counter = 0
     // if should wait before beginning next touch
     var cooldown = false
-    // if the touch point had been prevented from lifting off because of moving slow
-    var idled = false
+    // in how many tests has this been identified as stationary
+    var stationaryCount = 0
+    let stationaryThreshold = 2
+
+    @objc func checkEnded() {
+        // if been stationary for enough time
+        if self.stationaryCount < self.stationaryThreshold || (self.stationaryCount < 20 - self.counter) {
+            self.stationaryCount += 1
+            self.delay(0.04, closure: checkEnded)
+            return
+        }
+        self.doLiftOff()
+     }
 
     @objc func updated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
         if mode.visible || cooldown {
             return
         }
-        sequence += 1
         // count touch duration
         counter += 1
         if !isMoving {
             isMoving = true
-            movingFast = false
-            idled = false
             location = center
             counter = 0
+            stationaryCount = 0
             Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: 1)
+
+            delay(0.01, closure: checkEnded)
         }
-        // if not moving fast, regard the user fine-tuning the camera(e.g. aiming)
-        // so hold the touch for longer to avoid cold startup
-        if deltaX.magnitude + deltaY.magnitude > 4 {
-            // if we had mistaken this as player aiming
-            if self.idled {
-                // since not aiming, re-touch to re-gain control
-                self.doLiftOff()
-                return
-            }
-            movingFast = true
+        if self.counter == 120 {
+            self.doLiftOff()
+            return
         }
-        self.location.x += deltaX * CGFloat(PlaySettings.shared.sensivity)
-        self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensivity)
+        self.location.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
+        self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
-        let previous = sequence
-
-        delay(0.016) {
-            // if no other touch events in the past 0.016 sec
-            if previous != self.sequence {
-                return
-            }
-            // and slow touch lasts for sufficient time
-            if self.movingFast || self.counter > 64 {
-                self.doLiftOff()
-            } else {
-                self.idled = true
-                // idle for at most 4 seconds
-                self.delay(4) {
-                    if previous != self.sequence {
-                        return
-                    }
-                    self.doLiftOff()
-                }
-            }
-         }
-
+        if stationaryCount > self.stationaryThreshold {
+            self.counter = 0
+        }
+        stationaryCount = 0
     }
 
     public func doLiftOff() {
@@ -205,18 +229,20 @@ final class CameraControl {
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: 1)
+//        DispatchQueue.main.async {
+//            Toast.showOver(msg: "mouse released")
+//        }
         self.isMoving = false
         // ending and beginning too frequently leads to the beginning event not recognized
         // so let the beginning event wait some time
-        // 0.016 here is safe as long as the 0.016 above works
-        delay(0.016) {
+        // pause for one frame or two
+        delay(0.02) {
             self.cooldown = false
         }
         cooldown = true
     }
 
     func stop() {
-        sequence = 0
         self.doLiftOff()
     }
 }
