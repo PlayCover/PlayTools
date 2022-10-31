@@ -6,162 +6,48 @@
 import Foundation
 import GameController
 
-public class PlayMice {
-
+public class PlayMice: Action {
     public static let shared = PlayMice()
-    private static var isInit = false
 
     private var camera: CameraControl?
     private var acceptMouseEvents = !PlaySettings.shared.mouseMapping
 
-    public init() {
-        if !PlayMice.isInit {
-            setupMouseButton(_up: 2, _down: 4)
-            setupMouseButton(_up: 8, _down: 16)
-            setupMouseButton(_up: 33554432, _down: 67108864)
-            PlayMice.isInit = true
-            if acceptMouseEvents {
-                setupMouseMovedHandler()
-            }
-        }
-    }
-
     var fakedMousePressed = false
-
-    public var cursorPos: CGPoint {
-        var point = CGPoint(x: 0, y: 0)
-        if #available(macOS 11, *) {
-            point = AKInterface.shared!.mousePoint
-        }
-        let rect = AKInterface.shared!.windowFrame
-        let viewRect: CGRect = screen.screenRect
-        let widthRate = viewRect.width / rect.width
-        var rate = viewRect.height / rect.height
-        if widthRate > rate {
-            // Keep aspect ratio
-            rate = widthRate
-        }
-        // Horizontally in center
-        point.x -= (rect.width - viewRect.width / rate)/2
-        point.x *= rate
-        if screen.fullscreen {
-            // Vertically in center
-            point.y -= (rect.height - viewRect.height / rate)/2
-        }
-        point.y *= rate
-        point.y = viewRect.height - point.y
-
-        return point
-    }
 
     func setup(_ data: MouseArea) {
         camera = CameraControl(
             centerX: data.transform.xCoord.absoluteX,
             centerY: data.transform.yCoord.absoluteY)
-        setupMouseMovedHandler()
     }
 
-    public func setupMouseMovedHandler() {
+    public func initGCHandlers() {
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
-                if !mode.visible {
-                    if let draggableButton = DraggableButtonAction.activeButton {
-                        draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
-                    } else {
-                        self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
-                    }
-                    if self.acceptMouseEvents && self.fakedMousePressed {
-                        Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.moved, tid: 1)
-                    }
-                }
-//                Toast.showOver(msg: "\(self.cursorPos)")
+                
+            }
+            mouse.mouseInput?.leftButton.pressedChangedHandler = { _, _, pressed in
+                
+            }
+            mouse.mouseInput?.middleButton?.pressedChangedHandler = { _, _, pressed in
+                
+            }
+            mouse.mouseInput?.rightButton?.pressedChangedHandler = { _, _, pressed in
+                
             }
         }
     }
 
-    public func stop() {
-//        for mouse in GCMouse.mice() {
-//            mouse.mouseInput?.mouseMovedHandler = nil
-//        }
-        camera?.stop()
-        camera = nil
-        mouseActions.keys.forEach { key in
-            mouseActions[key] = []
-        }
-    }
-
-    func setMiceButtons(_ keyId: Int, action: ButtonAction) -> Bool {
-        if (-3 ... -1).contains(keyId) {
-            setMiceButton(keyId, action: action)
-            return true
-        }
-        return false
-    }
-
-    var mouseActions: [Int: [ButtonAction]] = [2: [], 8: [], 33554432: []]
-
-    private func setupMouseButton(_up: Int, _down: Int) {
-        AKInterface.shared!.setupMouseButton(_up, _down, dontIgnore(_:_:_:))
-    }
-
-    private func dontIgnore(_ actionIndex: Int, _ state: Bool, _ isEventWindow: Bool) -> Bool {
-        if EditorController.shared.editorMode {
-            if state {
-                if actionIndex == 8 {
-                    EditorController.shared.setKeyCode(-2)
-                } else if actionIndex == 33554432 {
-                    EditorController.shared.setKeyCode(-3)
-                }
-                return true
-            } else {
-                return true
-            }
-        }
-        if self.acceptMouseEvents {
-            if state {
-                if !self.fakedMousePressed
-                    // For traffic light buttons when not fullscreen
-                    && self.cursorPos.y > 0
-                    // For traffic light buttons when fullscreen
-                    && isEventWindow {
-                    Toucher.touchcam(point: self.cursorPos,
-                                     phase: UITouch.Phase.began,
-                                     tid: 1)
-                    self.fakedMousePressed = true
-                    return false
-                }
-                return true
-            } else {
-                if self.fakedMousePressed {
-                    self.fakedMousePressed = false
-                    Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.ended, tid: 1)
-                    return false
-                }
-                return true
-            }
-        }
-        if !mode.visible {
-            self.mouseActions[actionIndex]!.forEach({ buttonAction in
-                buttonAction.update(pressed: state)
-            })
-            return false
-        }
-        return true
-    }
-
-    private func setMiceButton(_ keyId: Int, action: ButtonAction) {
-        switch keyId {
-        case -1: mouseActions[2]!.append(action)
-        case -2: mouseActions[8]!.append(action)
-        case -3: mouseActions[33554432]!.append(action)
-        default:
-            mouseActions[2]!.append(action)
+    func invalidate() {
+        for mouse in GCMouse.mice() {
+            mouse.mouseInput?.mouseMovedHandler = nil
+            mouse.mouseInput?.leftButton.pressedChangedHandler = nil
+            mouse.mouseInput?.middleButton?.pressedChangedHandler = nil
+            mouse.mouseInput?.rightButton?.pressedChangedHandler = nil
         }
     }
 }
 
 final class CameraControl {
-
     var center: CGPoint = CGPoint.zero
     var location: CGPoint = CGPoint.zero
 

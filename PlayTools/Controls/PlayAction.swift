@@ -7,16 +7,23 @@ import Foundation
 import GameController
 
 protocol Action {
+    func initGCHandlers()
     func invalidate()
 }
 
-extension GCKeyboard {
-    static func pressed(key: GCKeyCode) -> Bool {
-        return GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: key)?.isPressed ?? false
-    }
-}
-
 class ButtonAction: Action {
+    let key: GCKeyCode
+    let point: CGPoint
+    var id: Int
+
+    func initGCHandlers() {
+        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
+            keyboard.button(forKeyCode: key)?.pressedChangedHandler = { _, _, pressed in
+                self.update(pressed: pressed)
+            }
+        }
+    }
+
     func invalidate() {
         Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: id)
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
@@ -24,27 +31,10 @@ class ButtonAction: Action {
         }
     }
 
-    let key: GCKeyCode
-    let point: CGPoint
-    var id: Int
-
     init(id: Int, key: GCKeyCode, point: CGPoint) {
         self.key = key
         self.point = point
         self.id = id
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            if !PlayMice.shared.setMiceButtons(key.rawValue, action: self) {
-                let handler = keyboard.button(forKeyCode: key)?.pressedChangedHandler
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { button, value, pressed in
-                    if !mode.visible && !PlayInput.cmdPressed() {
-                        self.update(pressed: pressed)
-                    }
-                    if let previous = handler {
-                        previous(button, value, pressed)
-                    }
-                }
-            }
-        }
     }
 
     convenience init(id: Int, data: Button) {
@@ -65,54 +55,34 @@ class ButtonAction: Action {
     }
 }
 
-class DraggableButtonAction: ButtonAction {
-    static public var activeButton: DraggableButtonAction?
-
-    var releasePoint: CGPoint
-
-    override init(id: Int, key: GCKeyCode, point: CGPoint) {
-        self.releasePoint = point
-        super.init(id: id, key: key, point: point)
-        if settings.mouseMapping {
-            PlayMice.shared.setupMouseMovedHandler()
-        }
-    }
-
-    override func update(pressed: Bool) {
-        if pressed {
-            Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
-            self.releasePoint = point
-            DraggableButtonAction.activeButton = self
-        } else {
-            DraggableButtonAction.activeButton = nil
-            Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: id)
-        }
-    }
-
-    override func invalidate() {
-        DraggableButtonAction.activeButton = nil
-        PlayMice.shared.stop()
-        super.invalidate()
-    }
-
-    func onMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
-        self.releasePoint.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
-        self.releasePoint.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
-        Toucher.touchcam(point: self.releasePoint, phase: UITouch.Phase.moved, tid: id)
-    }
-}
-
 class JoystickAction: Action {
     let keys: [GCKeyCode]
     let center: CGPoint
-    let shift: CGFloat
+    let size: CGFloat
     var id: Int
-    var moving = false
 
-    init(id: Int, keys: [GCKeyCode], center: CGPoint, shift: CGFloat) {
+    func initGCHandlers() {
+        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
+            for key in keys {
+                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { button, _, pressed in
+                    Toucher.touchQueue.async(execute: self.update)
+                }
+            }
+        }
+    }
+
+    func invalidate() {
+        Toucher.touchcam(point: center, phase: UITouch.Phase.ended, tid: id)
+        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
+            for key in keys {
+                keyboard.button(forKeyCode: key)?.pressedChangedHandler = nil
+            }
+        }
+    }
+
+    init(id: Int, keys: [GCKeyCode], center: CGPoint) {
         self.keys = keys
         self.center = center
-        self.shift = shift / 2
         self.id = id
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             for key in keys {
@@ -139,17 +109,7 @@ class JoystickAction: Action {
             center: CGPoint(
                 x: data.transform.xCoord.absoluteX,
                 y: data.transform.yCoord.absoluteY),
-            shift: data.transform.size.absoluteSize)
-    }
-
-    func invalidate() {
-        Toucher.touchcam(point: center, phase: UITouch.Phase.ended, tid: id)
-        self.moving = false
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            for key in keys {
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = nil
-            }
-        }
+            size: data.transform.size.absoluteSize)
     }
 
     func update() {

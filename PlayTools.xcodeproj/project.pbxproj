@@ -23,7 +23,6 @@
 		AA719759287A480D00623C15 /* PlayAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719723287A480C00623C15 /* PlayAction.swift */; };
 		AA71975A287A480D00623C15 /* Toucher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719724287A480C00623C15 /* Toucher.swift */; };
 		AA719789287A480D00623C15 /* PlayInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719755287A480C00623C15 /* PlayInput.swift */; };
-		AA71978A287A480D00623C15 /* ControlMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719756287A480C00623C15 /* ControlMode.swift */; };
 		AA71978B287A480D00623C15 /* MenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719757287A480C00623C15 /* MenuController.swift */; };
 		AA7197A1287A481500623C15 /* CircleMenuLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71978D287A481500623C15 /* CircleMenuLoader.swift */; };
 		AA7197A2287A481500623C15 /* CircleMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71978E287A481500623C15 /* CircleMenu.swift */; };
@@ -121,7 +120,6 @@
 		AA719723287A480C00623C15 /* PlayAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayAction.swift; sourceTree = "<group>"; };
 		AA719724287A480C00623C15 /* Toucher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toucher.swift; sourceTree = "<group>"; };
 		AA719755287A480C00623C15 /* PlayInput.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayInput.swift; sourceTree = "<group>"; };
-		AA719756287A480C00623C15 /* ControlMode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControlMode.swift; sourceTree = "<group>"; };
 		AA719757287A480C00623C15 /* MenuController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuController.swift; sourceTree = "<group>"; };
 		AA71978D287A481500623C15 /* CircleMenuLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleMenuLoader.swift; sourceTree = "<group>"; };
 		AA71978E287A481500623C15 /* CircleMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleMenu.swift; sourceTree = "<group>"; };
@@ -260,11 +258,10 @@
 			isa = PBXGroup;
 			children = (
 				AA719813287A813A00623C15 /* PTFakeTouch */,
+				AA719755287A480C00623C15 /* PlayInput.swift */,
 				AA719722287A480C00623C15 /* PlayMice.swift */,
 				AA719723287A480C00623C15 /* PlayAction.swift */,
 				AA719724287A480C00623C15 /* Toucher.swift */,
-				AA719755287A480C00623C15 /* PlayInput.swift */,
-				AA719756287A480C00623C15 /* ControlMode.swift */,
 				AA719757287A480C00623C15 /* MenuController.swift */,
 			);
 			path = Controls;
@@ -592,7 +589,6 @@
 				AA719712287A44D200623C15 /* PlayUI.swift in Sources */,
 				AA719860287A81A000623C15 /* UIView-KIFAdditions.m in Sources */,
 				AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */,
-				AA71978A287A480D00623C15 /* ControlMode.swift in Sources */,
 				AA719758287A480D00623C15 /* PlayMice.swift in Sources */,
 				AA7197AD287A481500623C15 /* EditorController.swift in Sources */,
 				AA7197A3287A481500623C15 /* CircleMenuButton.swift in Sources */,
