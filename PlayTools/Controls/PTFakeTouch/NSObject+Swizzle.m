@@ -136,17 +136,4 @@
     return [PlayScreen sizeAspectRatio:[self hook_size]];
 }
 
-bool menuWasCreated = false;
-
--(id)init {
-    if (!menuWasCreated) {
-        if ([[self class] isEqual: NSClassFromString(@"_UIMenuBuilder")]) {
-            [PlayCover initMenuWithMenu: self];
-            menuWasCreated = TRUE;
-        }
-    }
-    
-    return self;
-}
-
 @end

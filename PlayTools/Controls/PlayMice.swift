@@ -83,9 +83,9 @@ final class CameraControl {
      }
 
     @objc func updated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
-        if mode.visible || cooldown {
+        /*if mode.visible || cooldown {
             return
-        }
+        }*/
         // count touch duration
         counter += 1
         if !isMoving {

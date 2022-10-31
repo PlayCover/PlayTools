@@ -19,7 +19,6 @@
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
 		AA71970E287A44D200623C15 /* PlayLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719705287A44D200623C15 /* PlayLoader.h */; };
 		AA71970F287A44D200623C15 /* PlayCover.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719706287A44D200623C15 /* PlayCover.swift */; };
-		AA719712287A44D200623C15 /* PlayUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719709287A44D200623C15 /* PlayUI.swift */; };
 		AA719758287A480D00623C15 /* PlayMice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719722287A480C00623C15 /* PlayMice.swift */; };
 		AA719759287A480D00623C15 /* PlayAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719723287A480C00623C15 /* PlayAction.swift */; };
 		AA71975A287A480D00623C15 /* Toucher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719724287A480C00623C15 /* Toucher.swift */; };
@@ -111,7 +110,6 @@
 		AA719705287A44D200623C15 /* PlayLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayLoader.h; sourceTree = "<group>"; };
 		AA719706287A44D200623C15 /* PlayCover.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayCover.swift; sourceTree = "<group>"; };
 		AA719708287A44D200623C15 /* PlayTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayTools.h; sourceTree = "<group>"; };
-		AA719709287A44D200623C15 /* PlayUI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayUI.swift; sourceTree = "<group>"; };
 		AA71970A287A44D200623C15 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA719722287A480C00623C15 /* PlayMice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayMice.swift; sourceTree = "<group>"; };
 		AA719723287A480C00623C15 /* PlayAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayAction.swift; sourceTree = "<group>"; };
@@ -237,7 +235,6 @@
 				AA719706287A44D200623C15 /* PlayCover.swift */,
 				AA719703287A44D200623C15 /* PlayScreen.swift */,
 				AA719704287A44D200623C15 /* PlaySettings.swift */,
-				AA719709287A44D200623C15 /* PlayUI.swift */,
 				AA719705287A44D200623C15 /* PlayLoader.h */,
 				AA719702287A44D200623C15 /* PlayLoader.m */,
 				AA719708287A44D200623C15 /* PlayTools.h */,
@@ -562,7 +559,6 @@
 				AA719789287A480D00623C15 /* PlayInput.swift in Sources */,
 				AA719865287A81A000623C15 /* UIEvent+KIFAdditions.m in Sources */,
 				AA71970B287A44D200623C15 /* PlayLoader.m in Sources */,
-				AA719712287A44D200623C15 /* PlayUI.swift in Sources */,
 				AA719860287A81A000623C15 /* UIView-KIFAdditions.m in Sources */,
 				AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */,
 				AA719758287A480D00623C15 /* PlayMice.swift in Sources */,
@@ -595,6 +591,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 92S3SG4PTH;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSPrincipalClass = "$(PRODUCT_BUNDLE_NAME).AKPlugin";
@@ -627,6 +624,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 92S3SG4PTH;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSPrincipalClass = "$(PRODUCT_BUNDLE_NAME).AKPlugin";
@@ -779,7 +777,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 792V9HMJW3;
+				DEVELOPMENT_TEAM = 92S3SG4PTH;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -824,7 +822,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 792V9HMJW3;
+				DEVELOPMENT_TEAM = 92S3SG4PTH;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
