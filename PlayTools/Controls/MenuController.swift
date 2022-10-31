@@ -15,16 +15,19 @@ extension UIApplication {
 
     @objc
     func removeElement(_ sender: AnyObject) {
+        print("Remove element")
         // EditorController.shared.removeControl()
     }
 
     @objc
     func upscaleElement(_ sender: AnyObject) {
+        print("Upscale element")
         // EditorController.shared.focusedControl?.resize(down: false)
     }
 
     @objc
     func downscaleElement(_ sender: AnyObject) {
+        print("Downscale element")
         // EditorController.shared.focusedControl?.resize(down: true)
     }
 }

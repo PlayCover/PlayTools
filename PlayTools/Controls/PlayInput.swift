@@ -7,7 +7,7 @@ class PlayInput {
     var actions: [Action] = []
     var editorEnabled = false
     var inputEnabled = false
-    
+
     static private var lCmdPressed = false
     static private var rCmdPressed = false
 
