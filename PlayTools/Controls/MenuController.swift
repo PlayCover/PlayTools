@@ -7,23 +7,6 @@
 
 import UIKit
 
-class RotateViewController: UIViewController {
-    static let orientationList: [UIInterfaceOrientation] = [
-        .landscapeLeft, .portrait, .landscapeRight, .portraitUpsideDown]
-    static var orientationTraverser = 0
-
-    static func rotate() {
-        orientationTraverser += 1
-    }
-
-    override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
-        RotateViewController.orientationList[
-            RotateViewController.orientationTraverser % RotateViewController.orientationList.count]
-    }
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask { .all }
-    override var modalPresentationStyle: UIModalPresentationStyle { get {.fullScreen} set {} }
-}
-
 extension UIApplication {
     @objc
     func switchEditorMode(_ sender: AnyObject) {
@@ -46,18 +29,6 @@ extension UIApplication {
     }
 }
 
-extension UIViewController {
-    @objc
-    func rotateView(_ sender: AnyObject) {
-        RotateViewController.rotate()
-        let viewController = RotateViewController(nibName: nil, bundle: nil)
-        self.present(viewController, animated: true)
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1, execute: {
-            self.dismiss(animated: true)
-        })
-    }
-}
-
 struct CommandsList {
     static let KeymappingToolbox = "keymapping"
 }
@@ -70,8 +41,7 @@ var keymapping = ["Open/Close Keymapping Editor",
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
-                           #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIViewController.rotateView(_:))]
+                           #selector(UIApplication.downscaleElement(_:))]
 
 class MenuController {
     init(with builder: UIMenuBuilder) {

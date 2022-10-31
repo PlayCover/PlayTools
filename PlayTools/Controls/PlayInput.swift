@@ -15,7 +15,7 @@ class PlayInput {
         return lCmdPressed || rCmdPressed
     }
 
-    func initalized() {
+    func initialize() {
         if !PlaySettings.shared.keymapping {
             return
         }
@@ -74,7 +74,7 @@ class PlayInput {
                 if editor.editorMode
                     && !PlayInput.cmdPressed()
                     && !PlayInput.forbiddenKeys.contains(keyCode) {
-                    EditorController.shared.setKeyCode(keyCode.rawValue)
+                    // EditorController.shared.setKeyCode(keyCode.rawValue)
                 }
             }
             keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in

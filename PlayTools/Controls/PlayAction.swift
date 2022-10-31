@@ -58,7 +58,6 @@ class ButtonAction: Action {
 class JoystickAction: Action {
     let keys: [GCKeyCode]
     let center: CGPoint
-    let size: CGFloat
     var id: Int
 
     func initGCHandlers() {
@@ -108,12 +107,12 @@ class JoystickAction: Action {
             ],
             center: CGPoint(
                 x: data.transform.xCoord.absoluteX,
-                y: data.transform.yCoord.absoluteY),
-            size: data.transform.size.absoluteSize)
+                y: data.transform.yCoord.absoluteY)/*,
+            size: data.transform.size.absoluteSize*/)
     }
 
     func update() {
-        if !mode.visible {
+        /*if !mode.visible {
             var touch = center
             var start = center
             if GCKeyboard.pressed(key: keys[0]) {
@@ -146,6 +145,6 @@ class JoystickAction: Action {
                     }
                 }
             }
-        }
+        }*/
     }
 }
