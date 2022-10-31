@@ -122,6 +122,10 @@ class PlayInput {
             PlayInput.shared.setup()
         }
 
+        centre.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: main) { _ in
+            PlayInput.shared.setup()
+        }
+
         setup()
 
         // Fix beep sound
