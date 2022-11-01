@@ -76,23 +76,23 @@ struct ButtonView: View {
                 .stroke(selected != transform ? .white : .accentColor,
                         lineWidth: selected != transform ? 0 : 5)
                 .background(Circle().fill(.regularMaterial)))
-            .scaleEffect(1 + transform.size / 10)
+            .scaleEffect(transform.size / 10)
             .position(x: transform.xCoord * screen.width,
                       y: transform.yCoord * screen.height)
             .onTapGesture {
                 selected = transform
             }
-            .gesture(
+            /*.gesture(
                 DragGesture()
                     .onChanged { gesture in
                         transform.xCoord = gesture.location.x
                         transform.yCoord = gesture.location.y
                     }
-            )
+            )*/
             .gesture(
                 MagnificationGesture()
                     .onChanged { value in
-                        transform.size = (value - 1) * 10
+                        transform.size = value * 10
                     }
             )
             .zIndex(selected != transform ? 0 : 10)
