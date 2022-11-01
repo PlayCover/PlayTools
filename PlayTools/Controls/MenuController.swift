@@ -39,8 +39,7 @@ struct CommandsList {
 var keymapping = ["Open/Close Keymapping Editor",
                   "Delete selected element",
                   "Upsize selected element",
-                  "Downsize selected element",
-                  "Rotate display area"]
+                  "Downsize selected element"]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
@@ -53,7 +52,6 @@ class MenuController {
         }
     }
 
-    @available(iOS 15.0, *)
     class func keymappingMenu() -> UIMenu {
         let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R" ]
 
