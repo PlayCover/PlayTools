@@ -73,7 +73,7 @@ struct ButtonView: View {
         Text(key)
             .frame(width: 80, height: 80)
             .background(Circle()
-                .stroke(.white, lineWidth: selected == transform ? 1 : 0)
+                .stroke(selected == transform ? .white : .accentColor, lineWidth: 1)
                 .background(Circle().fill(.regularMaterial)))
             .position(x: transform.xCoord * screen.width,
                       y: transform.yCoord * screen.height)
@@ -102,7 +102,7 @@ struct JoystickView: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(.white, lineWidth: selected == transform ? 1 : 0)
+                .stroke(.white, lineWidth: 1)
                 .frame(width: 200, height: 200)
                 .background(Circle().fill(.regularMaterial))
             VStack(alignment: .center, spacing: 15) {
@@ -152,7 +152,7 @@ struct MouseAreaView: View {
         Text("")
             .frame(width: 200, height: 200)
             .background(Circle()
-                .stroke(.white, lineWidth: selected == transform ? 1 : 0)
+                .stroke(.white, lineWidth: 1)
                 .background(Circle().fill(.regularMaterial)))
             .position(x: transform.xCoord * screen.width,
                       y: transform.yCoord * screen.height)
