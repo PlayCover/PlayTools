@@ -10,9 +10,22 @@ final public class PlayCover: NSObject {
 
     @objc static let shared = PlayCover()
 
+    var menuController: MenuController?
     var firstTime = true
 
     private override init() {}
+
+    @objc static public func initMenu(menu: NSObject) {
+        delay(0.005) {
+            guard let menuBuilder = menu as? UIMenuBuilder else { return }
+
+            shared.menuController = MenuController(with: menuBuilder)
+            delay(0.005) {
+                UIMenuSystem.main.setNeedsRebuild()
+                UIMenuSystem.main.setNeedsRevalidate()
+            }
+        }
+    }
 
     @objc static public func launch() {
         quitWhenClose()
