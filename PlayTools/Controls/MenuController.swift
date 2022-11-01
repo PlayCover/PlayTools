@@ -10,7 +10,7 @@ import UIKit
 extension UIApplication {
     @objc
     func switchEditorMode(_ sender: AnyObject) {
-        EditorController.shared.switchMode()
+        EditorController.shared.toggleEditor()
     }
 
     @objc

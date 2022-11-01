@@ -71,7 +71,7 @@ class PlayInput {
     func initGCHandlers() {
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             keyboard.keyChangedHandler = { _, _, keyCode, _ in
-                if editor.editorMode
+                if editor.editorEnabled
                     && !PlayInput.cmdPressed()
                     && !PlayInput.forbiddenKeys.contains(keyCode) {
                     // EditorController.shared.setKeyCode(keyCode.rawValue)
@@ -109,6 +109,6 @@ class PlayInput {
     ]
 
     func dontIgnore() -> Bool {
-        (inputEnabled && !EditorController.shared.editorMode) || PlayInput.cmdPressed()
+        (inputEnabled && !EditorController.shared.editorEnabled) || PlayInput.cmdPressed()
     }
 }

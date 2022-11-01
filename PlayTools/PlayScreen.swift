@@ -5,6 +5,7 @@
 
 import Foundation
 import UIKit
+import SwiftUI
 
 let screen = PlayScreen.shared
 let mainScreenWidth = PlaySettings.shared.windowSizeWidth

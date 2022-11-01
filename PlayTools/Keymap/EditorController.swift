@@ -8,7 +8,7 @@ class EditorController {
     static let shared = EditorController()
 
     let lock = NSLock()
-    var editorMode: Bool { !(editorWindow?.isHidden ?? true)}
+    var editorEnabled: Bool { !(editorWindow?.isHidden ?? true)}
 
     var editorWindow: UIWindow?
     weak var previousWindow: UIWindow?
@@ -21,17 +21,15 @@ class EditorController {
         return window
     }
 
-    public func switchMode() {
+    public func toggleEditor() {
         lock.lock()
-        if editorMode {
+        if editorEnabled {
             editorWindow?.isHidden = true
             editorWindow?.windowScene = nil
             editorWindow?.rootViewController = nil
             editorWindow = nil
             previousWindow?.makeKeyAndVisible()
-            //mode.show(false)
         } else {
-            //mode.show(true)
             previousWindow = screen.keyWindow
             editorWindow = initWindow()
             editorWindow?.makeKeyAndVisible()
