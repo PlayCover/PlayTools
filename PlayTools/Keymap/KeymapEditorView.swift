@@ -89,7 +89,7 @@ struct ButtonView: View {
                     }
             )
             .zIndex(selected != transform ? 0 : 10)
-            .scaleEffect(transform.size)
+            .scaleEffect(transform.size / 10)
     }
 }
 
@@ -146,7 +146,7 @@ struct JoystickView: View {
                 }
         )
         .zIndex(selected != transform ? 0 : 10)
-        .scaleEffect(transform.size)
+        .scaleEffect(transform.size / 10)
     }
 }
 
@@ -174,7 +174,7 @@ struct MouseAreaView: View {
                     }
             )
             .zIndex(selected != transform ? 0 : 10)
-            .scaleEffect(transform.size)
+            .scaleEffect(transform.size / 10)
     }
 }
 
