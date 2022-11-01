@@ -59,13 +59,28 @@ class JoystickAction: Action {
     let keys: [GCKeyCode]
     let center: CGPoint
     var id: Int
+    var size: CGFloat
+
+    var direction: CGPoint = .zero
+    var moving = false
 
     func initGCHandlers() {
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            for key in keys {
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { button, _, pressed in
-                    Toucher.touchQueue.async(execute: self.update)
-                }
+            keyboard.button(forKeyCode: keys[0])?.pressedChangedHandler = { _, _, pressed in
+                self.direction.y = pressed ? 1 : 0
+                self.update()
+            }
+            keyboard.button(forKeyCode: keys[1])?.pressedChangedHandler = { _, _, pressed in
+                self.direction.y = pressed ? -1 : 0
+                self.update()
+            }
+            keyboard.button(forKeyCode: keys[2])?.pressedChangedHandler = { _, _, pressed in
+                self.direction.x = pressed ? -1 : 0
+                self.update()
+            }
+            keyboard.button(forKeyCode: keys[3])?.pressedChangedHandler = { _, _, pressed in
+                self.direction.x = pressed ? 1 : 0
+                self.update()
             }
         }
     }
@@ -79,21 +94,11 @@ class JoystickAction: Action {
         }
     }
 
-    init(id: Int, keys: [GCKeyCode], center: CGPoint) {
+    init(id: Int, keys: [GCKeyCode], center: CGPoint, size: CGFloat) {
         self.keys = keys
         self.center = center
         self.id = id
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            for key in keys {
-                let handler = keyboard.button(forKeyCode: key)?.pressedChangedHandler
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { button, value, pressed in
-                    Toucher.touchQueue.async(execute: self.update)
-                    if let previous = handler {
-                        previous(button, value, pressed)
-                    }
-                }
-            }
-        }
+        self.size = size
     }
 
     convenience init(id: Int, data: Joystick) {
@@ -107,44 +112,36 @@ class JoystickAction: Action {
             ],
             center: CGPoint(
                 x: data.transform.xCoord.absoluteX,
-                y: data.transform.yCoord.absoluteY)/*,
-            size: data.transform.size.absoluteSize*/)
+                y: data.transform.yCoord.absoluteY),
+            size: data.transform.size)
     }
 
     func update() {
-        /*if !mode.visible {
-            var touch = center
-            var start = center
-            if GCKeyboard.pressed(key: keys[0]) {
-                touch.y -= shift / 3
-            } else if GCKeyboard.pressed(key: keys[1]) {
-                touch.y += shift / 3
-            }
-            if GCKeyboard.pressed(key: keys[2]) {
-                touch.x -= shift / 3
-            } else if GCKeyboard.pressed(key: keys[3]) {
-                touch.x += shift / 3
-            }
-            if moving {
-                if touch.equalTo(center) {
-                    moving = false
-                    Toucher.touchcam(point: touch, phase: UITouch.Phase.ended, tid: id)
-                } else {
-                    Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: id)
-                }
+        var touch = center
+        var start = center
+        let scaledDirection = CGPoint(x: direction.x * size, y: direction.y * size)
+        touch.x += scaledDirection.x
+        touch.y += scaledDirection.y
+
+        if moving {
+            if touch.equalTo(center) {
+                moving = false
+                Toucher.touchcam(point: touch, phase: UITouch.Phase.ended, tid: id)
             } else {
-                if !touch.equalTo(center) {
-                    start.x += (touch.x - start.x) / 8
-                    start.y += (touch.y - start.y) / 8
-                    moving = true
-                    Toucher.touchcam(point: start, phase: UITouch.Phase.began, tid: id)
-                    Toucher.touchQueue.asyncAfter(deadline: .now() + 0.04) {
-                        if self.moving {
-                            Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: self.id)
-                        }
+                Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: id)
+            }
+        } else {
+            if !touch.equalTo(center) {
+                start.x += (touch.x - start.x) / 8
+                start.y += (touch.y - start.y) / 8
+                moving = true
+                Toucher.touchcam(point: start, phase: UITouch.Phase.began, tid: id)
+                Toucher.touchQueue.asyncAfter(deadline: .now() + 0.04) {
+                    if self.moving {
+                        Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: self.id)
                     }
                 }
             }
-        }*/
+        }
     }
 }

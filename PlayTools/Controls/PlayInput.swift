@@ -5,7 +5,6 @@ import UIKit
 class PlayInput {
     static let shared = PlayInput()
     var actions: [Action] = []
-    var editorEnabled = false
     var inputEnabled = false
 
     static private var lCmdPressed = false
@@ -97,6 +96,24 @@ class PlayInput {
 
         for action in actions {
             action.initGCHandlers()
+        }
+    }
+
+    func toggleInput() {
+        if !EditorController.shared.editorEnabled {
+            if inputEnabled {
+                if PlaySettings.shared.mouseMapping {
+                    AKInterface.shared!.unhideCursor()
+                    disableCursor(1)
+                }
+                PlayInput.shared.invalidate()
+            } else {
+                if PlaySettings.shared.mouseMapping {
+                    AKInterface.shared!.hideCursor()
+                    disableCursor(0)
+                }
+                PlayInput.shared.initGCHandlers()
+            }
         }
     }
 

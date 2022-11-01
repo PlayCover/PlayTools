@@ -36,8 +36,10 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func removeTitlebar() {
-        NSApplication.shared.windows.first!.titleVisibility = .hidden
+        NSApplication.shared.windows.first!.titlebarSeparatorStyle = .none
+        NSApplication.shared.windows.first!.styleMask.insert(NSWindow.StyleMask.fullSizeContentView)
         NSApplication.shared.windows.first!.titlebarAppearsTransparent = true
+        NSApplication.shared.windows.first!.titleVisibility = .hidden
     }
 
     func terminateApplication() {

@@ -23,6 +23,7 @@ final public class PlayCover: NSObject {
             delay(0.005) {
                 UIMenuSystem.main.setNeedsRebuild()
                 UIMenuSystem.main.setNeedsRevalidate()
+                AKInterface.shared!.removeTitlebar()
             }
         }
     }
@@ -32,7 +33,6 @@ final public class PlayCover: NSObject {
         AKInterface.initialize()
         PlayInput.shared.initialize()
         DiscordIPC.shared.initialize()
-        AKInterface.shared!.removeTitlebar()
     }
 
     @objc static public func quitWhenClose() {
@@ -47,7 +47,7 @@ final public class PlayCover: NSObject {
         }
     }
 
-    static func delay(_ delay: Double, closure:@escaping () -> Void) {
+    static func delay(_ delay: Double, closure: @escaping () -> Void) {
         let when = DispatchTime.now() + delay
         DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
     }
