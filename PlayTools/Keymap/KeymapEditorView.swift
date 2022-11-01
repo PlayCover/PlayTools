@@ -88,6 +88,8 @@ struct ButtonView: View {
                         transform.yCoord = gesture.location.y
                     }
             )
+            .zIndex(selected != transform ? 0 : 10)
+            .scaleEffect(transform.size)
     }
 }
 
@@ -143,6 +145,8 @@ struct JoystickView: View {
                     transform.yCoord = gesture.location.y
                 }
         )
+        .zIndex(selected != transform ? 0 : 10)
+        .scaleEffect(transform.size)
     }
 }
 
@@ -169,6 +173,8 @@ struct MouseAreaView: View {
                         transform.yCoord = gesture.location.y
                     }
             )
+            .zIndex(selected != transform ? 0 : 10)
+            .scaleEffect(transform.size)
     }
 }
 
