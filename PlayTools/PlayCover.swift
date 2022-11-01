@@ -32,10 +32,7 @@ final public class PlayCover: NSObject {
         AKInterface.initialize()
         PlayInput.shared.initialize()
         DiscordIPC.shared.initialize()
-        if let titlebar = PlayScreen.shared.windowScene?.titlebar {
-            titlebar.titleVisibility = .hidden
-            titlebar.toolbar = nil
-        }
+        AKInterface.shared!.removeTitlebar()
     }
 
     @objc static public func quitWhenClose() {

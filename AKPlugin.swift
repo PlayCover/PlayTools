@@ -35,6 +35,11 @@ class AKPlugin: NSObject, Plugin {
         NSCursor.unhide()
     }
 
+    func removeTitlebar() {
+        NSApplication.shared.windows.first!.titleVisibility = .hidden
+        NSApplication.shared.windows.first!.titlebarAppearsTransparent = true
+    }
+
     func terminateApplication() {
         NSApplication.shared.terminate(self)
     }

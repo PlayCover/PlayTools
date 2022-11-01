@@ -18,6 +18,7 @@ public protocol Plugin: NSObjectProtocol {
 
     func hideCursor()
     func unhideCursor()
+    func removeTitlebar()
     func terminateApplication()
     func eliminateRedundantKeyPressEvents(_ dontIgnore: @escaping() -> Bool)
     func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool, Bool) -> Bool)
