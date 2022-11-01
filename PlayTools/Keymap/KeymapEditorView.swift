@@ -76,6 +76,7 @@ struct ButtonView: View {
                 .stroke(selected != transform ? .white : .accentColor,
                         lineWidth: selected != transform ? 0 : 5)
                 .background(Circle().fill(.regularMaterial)))
+            .scaleEffect(transform.size / 10)
             .position(x: transform.xCoord * screen.width,
                       y: transform.yCoord * screen.height)
             .onTapGesture {
@@ -89,7 +90,6 @@ struct ButtonView: View {
                     }
             )
             .zIndex(selected != transform ? 0 : 10)
-            .scaleEffect(transform.size / 10)
     }
 }
 
@@ -133,6 +133,7 @@ struct JoystickView: View {
             }
             .rotationEffect(Angle(degrees: 45))
         }
+        .scaleEffect(transform.size / 10)
         .position(x: transform.xCoord * screen.width,
                   y: transform.yCoord * screen.height)
         .onTapGesture {
@@ -146,7 +147,6 @@ struct JoystickView: View {
                 }
         )
         .zIndex(selected != transform ? 0 : 10)
-        .scaleEffect(transform.size / 10)
     }
 }
 
@@ -161,6 +161,7 @@ struct MouseAreaView: View {
                 .stroke(selected != transform ? .white : .accentColor,
                         lineWidth: selected != transform ? 0 : 5)
                 .background(Circle().fill(.regularMaterial)))
+            .scaleEffect(transform.size / 10)
             .position(x: transform.xCoord * screen.width,
                       y: transform.yCoord * screen.height)
             .onTapGesture {
@@ -174,7 +175,6 @@ struct MouseAreaView: View {
                     }
             )
             .zIndex(selected != transform ? 0 : 10)
-            .scaleEffect(transform.size / 10)
     }
 }
 
