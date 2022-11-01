@@ -35,21 +35,11 @@ struct KeymapEditorView: View {
                         Text("Mouse")
                     })
                 }
-            ForEach(Array(Keymapping.shared.keymapData.buttonModels.enumerated()), id: \.offset) { index, element in
-                ButtonView(xCoord: Binding(get: {
-                                                Keymapping.shared.keymapData.buttonModels[index].transform.xCoord * screen.width
-                                            }, set: {
-                                                Keymapping.shared.keymapData.buttonModels[index].transform.xCoord = $0 / screen.width
-                                                Keymapping.shared.encode()
-                                            }),
-                           yCoord: Binding(get: {
-                                                Keymapping.shared.keymapData.buttonModels[index].transform.yCoord * screen.height
-                                            }, set: {
-                                                Keymapping.shared.keymapData.buttonModels[index].transform.yCoord = $0 / screen.height
-                                                Keymapping.shared.encode()
-                                            }),
-                           size: element.transform.size * 10,
-                           key: element.keyCode.keyCodeString())
+            ForEach(Keymapping.shared.keymapData.buttonModels, id: \.transform) { data in
+                ButtonView(xCoord: data.transform.xCoord * screen.width,
+                           yCoord: data.transform.yCoord * screen.height,
+                           size: data.transform.size * 10,
+                           key: data.keyCode.keyCodeString())
             }
             /*ForEach(Keymapping.shared.keymapData.draggableButtonModels, id: \.transform, content: { data in
                 ButtonView(xCoord: data.transform.xCoord * screen.width,
@@ -78,8 +68,8 @@ struct KeymapEditorView: View {
 }
 
 struct ButtonView: View {
-    @Binding var xCoord: CGFloat
-    @Binding var yCoord: CGFloat
+    @State var xCoord: CGFloat
+    @State var yCoord: CGFloat
     @State var size: CGFloat
 
     @State var key: String
