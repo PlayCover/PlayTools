@@ -73,7 +73,8 @@ struct ButtonView: View {
         Text(key)
             .frame(width: 80, height: 80)
             .background(Circle()
-                .stroke(selected == transform ? .white : .accentColor, lineWidth: 1)
+                .stroke(selected != transform ? .white : .accentColor,
+                        lineWidth: selected != transform ? 0 : 1)
                 .background(Circle().fill(.regularMaterial)))
             .position(x: transform.xCoord * screen.width,
                       y: transform.yCoord * screen.height)
