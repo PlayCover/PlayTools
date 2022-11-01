@@ -65,9 +65,7 @@ class PlayInput {
             actions.append(JoystickAction(id: counter, data: joystick))
             counter += 1
         }
-    }
 
-    func initGCHandlers() {
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             keyboard.keyChangedHandler = { _, _, keyCode, _ in
                 if editor.editorEnabled
@@ -83,17 +81,22 @@ class PlayInput {
                 PlayInput.rCmdPressed = pressed
             }
             keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
+                print("Option pressed")
                 if pressed {
                     self.inputEnabled.toggle()
                 }
             }
             keyboard.button(forKeyCode: .rightAlt)?.pressedChangedHandler = { _, _, pressed in
+                print("Option pressed")
                 if pressed {
                     self.inputEnabled.toggle()
                 }
             }
         }
+    }
 
+    func initGCHandlers() {
+        print("Handlers init")
         for action in actions {
             action.initGCHandlers()
         }
