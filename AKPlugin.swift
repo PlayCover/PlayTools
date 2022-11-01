@@ -9,19 +9,10 @@ import AppKit
 import Foundation
 
 class AKPlugin: NSObject, Plugin {
-    required override init() {
-    }
+    required override init() {}
 
     var screenCount: Int {
         NSScreen.screens.count
-    }
-
-    var mousePoint: CGPoint {
-        NSApplication.shared.windows.first!.mouseLocationOutsideOfEventStream as CGPoint
-    }
-
-    var windowFrame: CGRect {
-        NSApplication.shared.windows.first!.frame as CGRect
     }
 
     var isMainScreenEqualToFirst: Bool {
@@ -75,9 +66,5 @@ class AKPlugin: NSObject, Plugin {
 
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: value)
-    }
-
-    func setMenuBarVisible(_ visible: Bool) {
-        NSMenu.setMenuBarVisible(visible)
     }
 }

@@ -8,82 +8,10 @@ import UIKit
 import SwiftUI
 
 let screen = PlayScreen.shared
-let mainScreenWidth = PlaySettings.shared.windowSizeWidth
-let mainScreenHeight = PlaySettings.shared.windowSizeHeight
-
-extension CGSize {
-    func aspectRatio() -> CGFloat {
-        if mainScreenWidth > mainScreenHeight {
-            return mainScreenWidth / mainScreenHeight
-        } else {
-            return mainScreenHeight / mainScreenWidth
-        }
-    }
-
-    func toAspectRatio() -> CGSize {
-        return CGSize(width: mainScreenHeight, height: mainScreenWidth)
-    }
-}
-
-extension CGRect {
-    func aspectRatio() -> CGFloat {
-        if mainScreenWidth > mainScreenHeight {
-            return mainScreenWidth / mainScreenHeight
-        } else {
-            return mainScreenHeight / mainScreenWidth
-        }
-    }
-
-    func toAspectRatio() -> CGRect {
-        return CGRect(x: minX, y: minY, width: mainScreenHeight, height: mainScreenWidth)
-    }
-
-    func toAspectRatioReversed() -> CGRect {
-        return CGRect(x: minX, y: minY, width: mainScreenWidth, height: mainScreenHeight)
-    }
-}
-
-extension UIScreen {
-    static var aspectRatio: CGFloat {
-        let count = AKInterface.shared!.screenCount
-        if PlaySettings.shared.notch {
-            if count == 1 {
-                return mainScreenWidth / mainScreenHeight // 1.6 or 1.77777778
-            } else {
-                if AKInterface.shared!.isMainScreenEqualToFirst {
-                    return mainScreenWidth / mainScreenHeight
-                }
-            }
-
-        }
-
-        let frame = AKInterface.shared!.mainScreenFrame
-        return frame.aspectRatio()
-    }
-}
 
 public class PlayScreen: NSObject {
     @objc public static let shared = PlayScreen()
 
-    @objc public static func frame(_ rect: CGRect) -> CGRect {
-        return rect.toAspectRatio()
-    }
-
-    @objc public static func bounds(_ rect: CGRect) -> CGRect {
-        return rect.toAspectRatioReversed()
-    }
-
-    @objc public static func width(_ size: Int) -> Int {
-        return size
-    }
-
-    @objc public static func height(_ size: Int) -> Int {
-        return Int(size / Int(UIScreen.aspectRatio))
-    }
-
-    @objc public static func sizeAspectRatio(_ size: CGSize) -> CGSize {
-        return size.toAspectRatio()
-    }
     var fullscreen: Bool {
         return AKInterface.shared!.isFullscreen
     }
@@ -117,21 +45,12 @@ public class PlayScreen: NSObject {
     }
 
     var windowScene: UIWindowScene? {
-        window?.windowScene
-    }
-
-    var window: UIWindow? {
-        return UIApplication.shared.windows.first
+        keyWindow?.windowScene
     }
 
     var nsWindow: NSObject? {
-        window?.nsWindow
+        keyWindow?.nsWindow
     }
-
-    func switchDock(_ visible: Bool) {
-        AKInterface.shared!.setMenuBarVisible(visible)
-    }
-
 }
 
 extension CGFloat {

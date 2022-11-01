@@ -124,18 +124,6 @@
     return true;
 }
 
-- (CGRect) hook_frame {
-    return [PlayScreen frame:[self hook_frame]];
-}
-
-- (CGRect) hook_bounds {
-    return [PlayScreen bounds:[self hook_bounds]];
-}
-
-- (CGSize) hook_size {
-    return [PlayScreen sizeAspectRatio:[self hook_size]];
-}
-
 bool menuWasCreated = false;
 
 -(id)init {
