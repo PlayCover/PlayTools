@@ -42,6 +42,9 @@ final public class PlayCover: NSObject {
             delay(0.005) {
                 UIMenuSystem.main.setNeedsRebuild()
                 UIMenuSystem.main.setNeedsRevalidate()
+                if (PlaySettings.shared.borderless) {
+                    AKInterface.shared!.borderless()
+                }
             }
         }
     }

@@ -29,6 +29,8 @@ let settings = PlaySettings.shared
 
     lazy var mouseMapping = settingsData.mouseMapping
 
+    lazy var borderless = settingsData.borderless
+
     lazy var notch = settingsData.notch
 
     lazy var sensitivity = settingsData.sensitivity / 100
@@ -65,6 +67,7 @@ struct AppSettingsData: Codable {
     var sensitivity: Float = 50
 
     var disableTimeout = false
+    var borderless = false
     var iosDeviceModel = "iPad13,8"
     var windowWidth = 1920
     var windowHeight = 1080

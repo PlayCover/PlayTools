@@ -44,6 +44,12 @@ class AKPlugin: NSObject, Plugin {
         NSCursor.unhide()
     }
 
+    func borderless() {
+        NSApplication.shared.windows.first!.styleMask.insert(NSWindow.StyleMask.fullSizeContentView)
+        NSApplication.shared.windows.first!.titlebarAppearsTransparent = true
+        NSApplication.shared.windows.first!.titleVisibility = .hidden
+    }
+
     func terminateApplication() {
         NSApplication.shared.terminate(self)
     }
