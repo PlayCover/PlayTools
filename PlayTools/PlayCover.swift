@@ -43,7 +43,7 @@ final public class PlayCover: NSObject {
                 UIMenuSystem.main.setNeedsRebuild()
                 UIMenuSystem.main.setNeedsRevalidate()
                 if (PlaySettings.shared.borderless) {
-                    AKInterface.shared!.borderless()
+                    AKInterface.shared!.makeWindowBorderless()
                 }
             }
         }
