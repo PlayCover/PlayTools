@@ -45,9 +45,14 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func makeWindowBorderless() {
-        NSApplication.shared.windows.first!.styleMask.insert(NSWindow.StyleMask.fullSizeContentView)
-        NSApplication.shared.windows.first!.titlebarAppearsTransparent = true
-        NSApplication.shared.windows.first!.titleVisibility = .hidden
+        if let window = NSApplication.shared.windows.first {
+            let titlebarHeight = window.frame.height - window.contentRect(forFrameRect: window.frame).height
+            var originalFrame = window.frame
+            window.styleMask.insert(NSWindow.StyleMask.fullSizeContentView)
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.setFrame(NSRect(origin: originalFrame.origin, size: CGSize(width: originalFrame.width, height: originalFrame.height + titlebarHeight)), display: true)
+        }
     }
 
     func terminateApplication() {
