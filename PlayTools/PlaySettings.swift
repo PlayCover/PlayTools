@@ -49,6 +49,8 @@ let settings = PlaySettings.shared
             return "J320xAP"
         case "iPad13,8":
             return "J522AP"
+        case "iPad14,5":
+            return "A2436"
         case "iPhone14,3":
             return "A2645"
         case "iPhone15,3":
