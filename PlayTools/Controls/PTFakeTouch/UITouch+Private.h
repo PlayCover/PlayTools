@@ -10,24 +10,16 @@
 
 @interface UITouch (Private)
 
-- (void)setPhase:(UITouchPhase)touchPhase;
-
-- (void)setTapCount:(NSUInteger)tapCount;
-
 - (void)setWindow:(UIWindow *)window;
-
 - (void)setView:(UIView *)view;
-
-- (void)_setLocationInWindow:(CGPoint)location resetPrevious:(BOOL)resetPrevious;
-
-- (void)_setIsFirstTouchForView:(BOOL)firstTouchForView;
-
 - (void)setIsTap:(BOOL)isTap;
-
 - (void)setTimestamp:(NSTimeInterval)timestamp;
+- (void)setPhase:(UITouchPhase)touchPhase;
+- (void)setGestureView:(UIView *)view;
+- (void)_setLocationInWindow:(CGPoint)location resetPrevious:(BOOL)resetPrevious;
+- (void)_setIsFirstTouchForView:(BOOL)firstTouchForView;
+- (void)_setIsTapToClick:(BOOL)isTapToClick;
 
 - (void)_setHidEvent:(IOHIDEventRef)event;
-
-- (void)setGestureView:(UIView *)view;
 
 @end

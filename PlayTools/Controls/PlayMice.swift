@@ -31,9 +31,7 @@ public class PlayMice {
 
     public var cursorPos: CGPoint {
         var point = CGPoint(x: 0, y: 0)
-        if #available(macOS 11, *) {
-            point = AKInterface.shared!.mousePoint
-        }
+        point = AKInterface.shared!.mousePoint
         let rect = AKInterface.shared!.windowFrame
         let viewRect: CGRect = screen.screenRect
         let widthRate = viewRect.width / rect.width
