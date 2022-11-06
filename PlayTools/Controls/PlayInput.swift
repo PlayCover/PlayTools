@@ -73,11 +73,9 @@ class PlayInput {
 
     private func isSafeToBind(_ input: GCKeyboardInput) -> Bool {
            var result = true
-           for forbidden in PlayInput.FORBIDDEN {
-               if input.button(forKeyCode: forbidden)?.isPressed ?? false {
-                   result = false
-                   break
-               }
+           for forbidden in PlayInput.FORBIDDEN where input.button(forKeyCode: forbidden)?.isPressed ?? false {
+               result = false
+               break
            }
            return result
        }

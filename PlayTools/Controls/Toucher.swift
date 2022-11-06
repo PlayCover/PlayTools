@@ -7,7 +7,6 @@ import Foundation
 import UIKit
 
 class Toucher {
-
     static weak var keyWindow: UIWindow?
     static weak var keyView: UIView?
     static var touchQueue = DispatchQueue.init(label: "playcover.toucher", qos: .userInteractive)
