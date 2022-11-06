@@ -14,6 +14,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "6E84A14B28D0F96D00BF7495"
+               BuildableName = "AKInterface.bundle"
+               BlueprintName = "AKInterface"
+               ReferencedContainer = "container:PlayTools.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "AA7196D7287A447700623C15"
                BuildableName = "PlayTools.framework"
                BlueprintName = "PlayTools"
