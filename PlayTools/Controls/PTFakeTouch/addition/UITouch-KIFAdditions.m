@@ -35,6 +35,12 @@ typedef struct {
 
 - (id)initAtPoint:(CGPoint)point inWindow:(UIWindow *)window;
 {
+    UIView *view = [window hitTest:point withEvent:nil];
+    return [self initAtPoint:point inWindow:window onView:view];
+}
+
+- (id)initAtPoint:(CGPoint)point inWindow:(UIWindow *)window onView:(UIView *)view;
+{
     self = [super init];
     if (self == nil) {
         return nil;
@@ -46,7 +52,7 @@ typedef struct {
     //[self setTapCount:1];
     [self _setLocationInWindow:point resetPrevious:YES];
     
-    UIView *hitTestView = [window hitTest:point withEvent:nil];
+    UIView *hitTestView = view;
     
     [self setView:hitTestView];
     [self setPhase:UITouchPhaseBegan];

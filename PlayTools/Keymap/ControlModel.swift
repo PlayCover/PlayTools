@@ -1,6 +1,6 @@
 import GameController
 
-@objc class ControlData: NSObject {
+class ControlData {
     var keyCodes: [Int]
     var size: CGFloat
     var xCoord: CGFloat
@@ -15,7 +15,7 @@ import GameController
         self.parent = parent
     }
 
-    init(keyCodes: [Int], size: CGFloat, xCoord: CGFloat, yCoord: CGFloat, sensivity: CGFloat) {
+    init(keyCodes: [Int], size: CGFloat, xCoord: CGFloat, yCoord: CGFloat, sensitivity: CGFloat) {
         self.keyCodes = keyCodes
         self.size = size
         self.xCoord = xCoord
@@ -52,37 +52,9 @@ class Element: UIButton {
 }
 
 class ControlModel {
-    static func createControlFromData(data: [CGFloat]) -> ControlModel? {
-        if data.count == 4 {
-            return ButtonModel(data: ControlData(keyCodes: [Int(data[0])],
-                                                 size: data[3],
-                                                 xCoord: data[1],
-                                                 yCoord: data[2],
-                                                 parent: nil))
-        } else if data.count == 5 {
-            return DraggableButtonModel(data: ControlData(keyCodes: [Int(data[0])],
-                                                          size: data[3],
-                                                          xCoord: data[1],
-                                                          yCoord: data[2]))
-        } else if data.count == 8 {
-            return JoystickModel(data: ControlData(keyCodes: [Int(data[0]),
-                                                              Int(data[1]), Int(data[2]),
-                                                              Int(data[3])],
-                                                   size: data[6],
-                                                   xCoord: data[4],
-                                                   yCoord: data[5]))
-        } else if data.count == 2 {
-            return MouseAreaModel(data: ControlData(size: 25, xCoord: data[0], yCoord: data[1]))
-        }
-        return nil
-    }
 
     var data: ControlData
     var button: Element
-
-    func save() -> [CGFloat] {
-        return []
-    }
 
     func update() {}
 
@@ -133,8 +105,10 @@ class ButtonModel: ControlModel {
         update()
     }
 
-    override func save() -> [CGFloat] {
-        return [CGFloat(data.keyCodes[0]), data.xCoord, data.yCoord, data.size]
+    func save() -> Button {
+        Button(
+            keyCode: data.keyCodes[0],
+            transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
     }
 
     override func update() {
@@ -170,27 +144,6 @@ class ButtonModel: ControlModel {
         } else {
             button.setTitle("Btn", for: UIControl.State.normal)
         }
-    }
-}
-
-class RMBModel: ButtonModel {
-    override func setKeyCodes(keys: [Int]) {
-        data.keyCodes = [-2]
-        button.setTitle("RMB", for: UIControl.State.normal)
-    }
-}
-
-class LMBModel: ButtonModel {
-    override func setKeyCodes(keys: [Int]) {
-        data.keyCodes = [-1]
-        button.setTitle("LMB", for: UIControl.State.normal)
-    }
-}
-
-class MMBModel: ButtonModel {
-    override func setKeyCodes(keys: [Int]) {
-        data.keyCodes = [-3]
-        button.setTitle("MMB", for: UIControl.State.normal)
     }
 }
 
@@ -240,9 +193,9 @@ class JoystickButtonModel: ControlModel {
 class DraggableButtonModel: MouseAreaModel {
     var childButton: JoystickButtonModel?
 
-    override func save() -> [CGFloat] {
-        return [CGFloat(childButton!.data.keyCodes[0]),
-                self.data.xCoord, self.data.yCoord, self.data.size, self.data.size]
+    func save() -> Button {
+        return Button(keyCode: childButton!.data.keyCodes[0],
+                               transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
     }
 
     override func setKeyCodes(keys: [Int]) {
@@ -270,13 +223,13 @@ class DraggableButtonModel: MouseAreaModel {
 class JoystickModel: ControlModel {
     var joystickButtons = [JoystickButtonModel]()
 
-    override func save() -> [CGFloat] {
-        var data = [CGFloat]()
-        for joystickButton in joystickButtons {
-            data.append(CGFloat(joystickButton.data.keyCodes[0]))
-        }
-        data.append(contentsOf: [self.data.xCoord, self.data.yCoord, self.data.size, self.data.size])
-        return data
+    func save() -> Joystick {
+        Joystick(
+            upKeyCode: joystickButtons[0].data.keyCodes[0],
+            rightKeyCode: joystickButtons[3].data.keyCodes[0],
+            downKeyCode: joystickButtons[1].data.keyCodes[0],
+            leftKeyCode: joystickButtons[2].data.keyCodes[0],
+            transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
     }
 
     override init(data: ControlData) {
@@ -349,8 +302,8 @@ class JoystickModel: ControlModel {
 }
 
 class MouseAreaModel: ControlModel {
-    override func save() -> [CGFloat] {
-        return [data.xCoord, data.yCoord]
+    func save() -> MouseArea {
+        MouseArea(transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
     }
 
     override func focus(_ focus: Bool) {

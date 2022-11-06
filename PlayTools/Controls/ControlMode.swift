@@ -7,14 +7,10 @@ import Foundation
 
 let mode = ControlMode.mode
 
-@objc final public class ControlMode: NSObject {
+public class ControlMode {
 
-    @objc static public let mode = ControlMode()
-    @objc public var visible: Bool = PlaySettings.shared.gamingMode
-
-    @objc static public func isMouseClick(_ event: Any) -> Bool {
-        return [1, 2].contains(Dynamic(event).type.asInt)
-    }
+    static public let mode = ControlMode()
+    public var visible: Bool = PlaySettings.shared.mouseMapping
 
     func show(_ show: Bool) {
         if !editor.editorMode {
@@ -23,15 +19,17 @@ let mode = ControlMode.mode
                     if screen.fullscreen {
                         screen.switchDock(true)
                     }
-                    if PlaySettings.shared.gamingMode {
-                        Dynamic.NSCursor.unhide()
+                    if PlaySettings.shared.mouseMapping {
+                        AKInterface.shared!.unhideCursor()
+						disableCursor(1)
                     }
                     PlayInput.shared.invalidate()
                 }
             } else {
                 if visible {
-                    if PlaySettings.shared.gamingMode {
-                        Dynamic.NSCursor.hide()
+                    if PlaySettings.shared.mouseMapping {
+                        AKInterface.shared!.hideCursor()
+                        disableCursor(0)
                     }
                     if screen.fullscreen {
                         screen.switchDock(false)

@@ -89,10 +89,6 @@
             [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
         }
 
-        if ([[PlaySettings shared] refreshRate] == 120){
-         [objc_getClass("UnityAppController") swizzleInstanceMethod:@selector(callbackFramerateChange:) withMethod:@selector(hook_callbackFramerateChange:)];
-        }
-
         [objc_getClass("NSMenuItem") swizzleClassMethod:@selector(enabled) withMethod:@selector(hook_enabled)];
         
         [objc_getClass("IOSViewController") swizzleInstanceMethod:@selector(prefersPointerLocked) withMethod:@selector(hook_prefersPointerLocked)];
@@ -109,11 +105,6 @@
 
 -(BOOL) hook_prefersPointerLocked {
     return false;
-}
-
-- (void) hook_callbackFramerateChange:(int)targetFPS {
-    printf("FPS %d", targetFPS);
-    [self hook_callbackFramerateChange:120];
 }
 
 - (MTLPixelFormat) hook_stencilAttachmentPixelFormat {

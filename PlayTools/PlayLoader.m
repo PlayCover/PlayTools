@@ -23,17 +23,17 @@
 #define CS_OPS_ENTITLEMENTS_BLOB 7 /* get entitlements blob */
 #define CS_OPS_IDENTITY 11         /* get codesign identity */
 
-int dyld_get_active_platform();
+int dyld_get_active_platform(void);
 
-int my_dyld_get_active_platform() { return 2; }
+int my_dyld_get_active_platform(void) { return 2; }
 
-extern void *dyld_get_base_platform(void *platform);
+extern uint64_t dyld_get_base_platform(void *platform);
 
-void *my_dyld_get_base_platform(void *platform) { return 2; }
+uint64_t my_dyld_get_base_platform(void *platform) { return 2; }
 
 // get device model from playcover .plist
-#define DEVICE_MODEL ([[[PlaySettings shared] GET_IPAD_MODEL] UTF8String])
-#define OEM_ID ([[[PlaySettings shared] GET_OEM_ID] UTF8String])
+#define DEVICE_MODEL ([[[PlaySettings shared] deviceModel] UTF8String])
+#define OEM_ID ([[[PlaySettings shared] oemID] UTF8String])
 
 static int my_uname(struct utsname *uts) {
   int result = 0;
@@ -81,9 +81,9 @@ static int my_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
       (strcmp(name, "hw.model") == 0)) {
     if (oldp != NULL) {
       int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-      const char *mechine = DEVICE_MODEL;
-      strncpy((char *)oldp, mechine, strlen(mechine));
-      *oldlenp = strlen(mechine);
+      const char *machine = DEVICE_MODEL;
+      strncpy((char *)oldp, machine, strlen(machine));
+      *oldlenp = strlen(machine);
       return ret;
     } else {
       int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
@@ -92,9 +92,9 @@ static int my_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
   } else if ((strcmp(name, "hw.target") == 0)) {
     if (oldp != NULL) {
       int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-      const char *mechine = OEM_ID;
-      strncpy((char *)oldp, mechine, strlen(mechine));
-      *oldlenp = strlen(mechine);
+      const char *machine = OEM_ID;
+      strncpy((char *)oldp, machine, strlen(machine));
+      *oldlenp = strlen(machine);
       return ret;
     } else {
       int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
@@ -107,7 +107,7 @@ static int my_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
 
 static bool isGenshin = false;
 
-extern int csops(pid_t pid, unsigned int ops, void *useraddr, size_t usersize);
+extern int csops(pid_t pid, unsigned int ops, user_addr_t useraddr, size_t usersize);
 
 int my_csops(pid_t pid, uint32_t ops, user_addr_t useraddr, user_size_t usersize) {
   if (isGenshin) {
