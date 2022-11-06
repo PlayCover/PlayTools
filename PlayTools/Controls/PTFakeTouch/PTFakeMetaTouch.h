@@ -9,9 +9,6 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-void disableCursor(boolean_t disable);
-void moveCursorTo(CGPoint point);
-
 typedef struct {
      unsigned char r, g, b;
 } RGB;
@@ -40,6 +37,4 @@ double ColourDistance(RGB e1, RGB e2);
  *
  *  @return pointId 返回序列号 returns sequence number
  */
-+ (NSInteger)getAvailablePointId;
-
 @end

@@ -25,7 +25,6 @@ let mode = ControlMode.mode
                     }
                     if PlaySettings.shared.gamingMode {
                         Dynamic.NSCursor.unhide()
-						disableCursor(1)
                     }
                     PlayInput.shared.invalidate()
                 }
@@ -33,7 +32,6 @@ let mode = ControlMode.mode
                 if visible {
                     if PlaySettings.shared.gamingMode {
                         Dynamic.NSCursor.hide()
-                        disableCursor(0)
                     }
                     if screen.fullscreen {
                         screen.switchDock(false)
