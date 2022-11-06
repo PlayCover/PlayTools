@@ -21,7 +21,6 @@ public class ControlMode {
                     }
                     if PlaySettings.shared.mouseMapping {
                         AKInterface.shared!.unhideCursor()
-						disableCursor(1)
                     }
                     PlayInput.shared.invalidate()
                 }
@@ -29,7 +28,6 @@ public class ControlMode {
                 if visible {
                     if PlaySettings.shared.mouseMapping {
                         AKInterface.shared!.hideCursor()
-                        disableCursor(0)
                     }
                     if screen.fullscreen {
                         screen.switchDock(false)
