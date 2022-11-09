@@ -60,22 +60,6 @@ class AKPlugin: NSObject, Plugin {
         })
     }
 
-    func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool, Bool) -> Bool) {
-        NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_up)), handler: { event in
-            let isEventWindow = event.window == NSApplication.shared.windows.first!
-            if dontIgnore(_up, true, isEventWindow) {
-                return event
-            }
-            return nil
-        })
-        NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_down)), handler: { event in
-            if dontIgnore(_up, false, true) {
-                return event
-            }
-            return nil
-        })
-    }
-
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: value)
     }

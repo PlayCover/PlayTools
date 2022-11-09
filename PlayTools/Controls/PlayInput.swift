@@ -4,52 +4,91 @@ import UIKit
 
 class PlayInput {
     static let shared = PlayInput()
-    var actions = [Action]()
-    var timeoutForBind = true
+
+    var leftMouseButtonActions: [MouseButtonAction] = []
+    var middleMouseButtonActions: [MouseButtonAction] = []
+    var rightMouseButtonActions: [MouseButtonAction] = []
+
+    var buttonActions: [ButtonAction] = []
+    var draggableButtonActions: [DraggableButtonAction] = []
+    var joystickButtonActions: [JoystickAction] = []
+
+    var inputEnabled: Bool = false
 
     static private var lCmdPressed = false
     static private var rCmdPressed = false
 
-    func invalidate() {
-        PlayMice.shared.stop()
-        for action in self.actions {
-            action.invalidate()
-        }
-    }
-
-    func setup() {
-        actions = []
-        // ID 1 is left for mouse area
-        var counter = 2
+    func setupActions() {
+        var counter = 0
         for button in keymap.keymapData.buttonModels {
-            actions.append(ButtonAction(id: counter, data: button))
+            if button.keyCode > 0 {
+                buttonActions.append(ButtonAction(id: counter, data: button))
+            } else {
+                switch button.keyCode {
+                case -1:
+                    leftMouseButtonActions.append(MouseButtonAction(id: counter, data: button))
+                case -2:
+                    rightMouseButtonActions.append(MouseButtonAction(id: counter, data: button))
+                case -3:
+                    middleMouseButtonActions.append(MouseButtonAction(id: counter, data: button))
+                default:
+                    buttonActions.append(ButtonAction(id: counter, data: button))
+                }
+            }
             counter += 1
         }
 
         for draggableButton in keymap.keymapData.draggableButtonModels {
-                actions.append(DraggableButtonAction(id: counter, data: draggableButton))
-                counter += 1
-        }
-
-        if settings.mouseMapping {
-            for mouse in keymap.keymapData.mouseAreaModel {
-                PlayMice.shared.setup(mouse)
-                counter += 1
-            }
-        }
-
-        for joystick in keymap.keymapData.joystickModel {
-            actions.append(JoystickAction(id: counter, data: joystick))
+            draggableButtonActions.append(DraggableButtonAction(id: counter, data: draggableButton))
             counter += 1
         }
 
+        for mouse in keymap.keymapData.mouseAreaModel {
+            PlayMice.shared.setup(mouse)
+            counter += 1
+        }
+
+        for joystick in keymap.keymapData.joystickModel {
+            joystickButtonActions.append(JoystickAction(id: counter, data: joystick))
+            counter += 1
+        }
+
+        setupKeyboardHandlers()
+        setupMouseHandlers()
+    }
+
+    func setupKeyboardHandlers() {
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            keyboard.keyChangedHandler = { _, _, keyCode, _ in
+            keyboard.keyChangedHandler = { _, _, keyCode, pressed in
                 if editor.editorMode
                     && !PlayInput.cmdPressed()
                     && !PlayInput.FORBIDDEN.contains(keyCode)
                     && self.isSafeToBind(keyboard) {
                     EditorController.shared.setKeyCode(keyCode.rawValue)
+                } else {
+                    if self.inputEnabled {
+                        for action in self.buttonActions where action.key == keyCode {
+                            action.update(pressed: pressed)
+                        }
+                        for action in self.draggableButtonActions where action.key == keyCode {
+                            action.update(pressed: pressed)
+                        }
+                        for action in self.joystickButtonActions {
+                            if action.keys[0] == keyCode {
+                                action.isPressed[0] = pressed
+                            }
+                            if action.keys[1] == keyCode {
+                                action.isPressed[1] = pressed
+                            }
+                            if action.keys[2] == keyCode {
+                                action.isPressed[2] = pressed
+                            }
+                            if action.keys[3] == keyCode {
+                                action.isPressed[3] = pressed
+                            }
+                            action.update()
+                        }
+                    }
                 }
             }
             keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
@@ -59,10 +98,58 @@ class PlayInput {
                 PlayInput.rCmdPressed = pressed
             }
             keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
-                self.swapMode(pressed)
+                if pressed {
+                    self.toggleInput(setTo: !self.inputEnabled)
+                }
             }
             keyboard.button(forKeyCode: .rightAlt)?.pressedChangedHandler = { _, _, pressed in
-                self.swapMode(pressed)
+                if pressed {
+                    self.toggleInput(setTo: !self.inputEnabled)
+                }
+            }
+        }
+    }
+
+    func setupMouseHandlers() {
+        for mouse in GCMouse.mice() {
+            if !PlaySettings.shared.mouseMapping {
+                mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
+                    if self.inputEnabled {
+                        if let draggableButton = DraggableButtonAction.activeButton {
+                            draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
+                        } else {
+                            PlayMice.shared.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
+                        }
+                        if !PlaySettings.shared.mouseMapping && PlayMice.shared.fakedMousePressed {
+                            Toucher.touchcam(point: PlayMice.shared.cursorPos, phase: UITouch.Phase.moved, tid: 1)
+                        }
+                    }
+                    // Toast.showOver(msg: "\(self.cursorPos)")
+                }
+            }
+
+            mouse.mouseInput?.leftButton.pressedChangedHandler = { _, _, pressed in
+                if self.inputEnabled {
+                    for action in self.leftMouseButtonActions {
+                        action.update(pressed: pressed)
+                    }
+                }
+            }
+
+            mouse.mouseInput?.middleButton?.pressedChangedHandler = { _, _, pressed in
+                if self.inputEnabled {
+                    for action in self.middleMouseButtonActions {
+                        action.update(pressed: pressed)
+                    }
+                }
+            }
+
+            mouse.mouseInput?.rightButton?.pressedChangedHandler = { _, _, pressed in
+                if self.inputEnabled {
+                    for action in self.rightMouseButtonActions {
+                        action.update(pressed: pressed)
+                    }
+                }
             }
         }
     }
@@ -88,15 +175,23 @@ class PlayInput {
         .printScreen
     ]
 
-    private func swapMode(_ pressed: Bool) {
-        if !settings.mouseMapping {
-            return
-        }
-        if pressed {
-            if !mode.visible {
-                self.invalidate()
+    func toggleInput(setTo: Bool) {
+        if !editor.editorMode {
+            inputEnabled = setTo
+
+            if PlaySettings.shared.mouseMapping {
+                if setTo {
+                    if screen.fullscreen {
+                        screen.switchDock(false)
+                    }
+                    AKInterface.shared!.hideCursor()
+                } else {
+                    if screen.fullscreen {
+                        screen.switchDock(true)
+                    }
+                    AKInterface.shared!.unhideCursor()
+                }
             }
-            mode.show(!mode.visible)
         }
     }
 
@@ -113,14 +208,22 @@ class PlayInput {
         let main = OperationQueue.main
 
         centre.addObserver(forName: NSNotification.Name.GCKeyboardDidConnect, object: nil, queue: main) { _ in
-            PlayInput.shared.setup()
+            PlayInput.shared.setupActions()
+        }
+
+        centre.addObserver(forName: NSNotification.Name.GCKeyboardDidDisconnect, object: nil, queue: main) { _ in
+            PlayInput.shared.setupActions()
         }
 
         centre.addObserver(forName: NSNotification.Name.GCMouseDidConnect, object: nil, queue: main) { _ in
-            PlayInput.shared.setup()
+            PlayInput.shared.setupActions()
         }
 
-        setup()
+        centre.addObserver(forName: NSNotification.Name.GCMouseDidDisconnect, object: nil, queue: main) { _ in
+            PlayInput.shared.setupActions()
+        }
+
+        setupActions()
 
         // Fix beep sound
         AKInterface.shared!
@@ -128,6 +231,6 @@ class PlayInput {
     }
 
     func dontIgnore() -> Bool {
-        (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed()
+        (!self.inputEnabled && !EditorController.shared.editorMode) || PlayInput.cmdPressed()
     }
 }

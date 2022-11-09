@@ -6,54 +6,49 @@
 import Foundation
 import GameController
 
-protocol Action {
-    func invalidate()
-}
-
-extension GCKeyboard {
-    static func pressed(key: GCKeyCode) -> Bool {
-        return GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: key)?.isPressed ?? false
-    }
-}
-
-class ButtonAction: Action {
-    func invalidate() {
-        Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: id)
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            keyboard.button(forKeyCode: key)?.pressedChangedHandler = nil
-        }
-    }
-
-    let key: GCKeyCode
-    let point: CGPoint
+class ActionBase {
+    var point: CGPoint
     var id: Int
 
-    init(id: Int, key: GCKeyCode, point: CGPoint) {
-        self.key = key
+    init(point: CGPoint, id: Int) {
         self.point = point
         self.id = id
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            if !PlayMice.shared.setMiceButtons(key.rawValue, action: self) {
-                let handler = keyboard.button(forKeyCode: key)?.pressedChangedHandler
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { button, value, pressed in
-                    if !mode.visible && !PlayInput.cmdPressed() {
-                        self.update(pressed: pressed)
-                    }
-                    if let previous = handler {
-                        previous(button, value, pressed)
-                    }
-                }
-            }
+    }
+}
+
+class MouseButtonAction: ActionBase {
+    convenience init(id: Int, data: Button) {
+        self.init(
+            point: CGPoint(
+                x: data.transform.xCoord.absoluteX,
+                y: data.transform.yCoord.absoluteY),
+            id: id)
+    }
+
+    func update(pressed: Bool) {
+        if pressed {
+            Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
+        } else {
+            Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: id)
         }
+    }
+}
+
+class ButtonAction: ActionBase {
+    var key: GCKeyCode
+
+    init(key: GCKeyCode, point: CGPoint, id: Int) {
+        self.key = key
+        super.init(point: point, id: id)
     }
 
     convenience init(id: Int, data: Button) {
         self.init(
-            id: id,
             key: GCKeyCode(rawValue: data.keyCode),
             point: CGPoint(
                 x: data.transform.xCoord.absoluteX,
-                y: data.transform.yCoord.absoluteY))
+                y: data.transform.yCoord.absoluteY),
+            id: id)
     }
 
     func update(pressed: Bool) {
@@ -70,12 +65,16 @@ class DraggableButtonAction: ButtonAction {
 
     var releasePoint: CGPoint
 
-    override init(id: Int, key: GCKeyCode, point: CGPoint) {
-        self.releasePoint = point
-        super.init(id: id, key: key, point: point)
-        if settings.mouseMapping {
-            PlayMice.shared.setupMouseMovedHandler()
-        }
+    init(id: Int, data: Button) {
+        self.releasePoint = CGPoint(
+            x: data.transform.xCoord.absoluteX,
+            y: data.transform.yCoord.absoluteY)
+        super.init(
+            key: GCKeyCode(rawValue: data.keyCode),
+            point: CGPoint(
+                x: data.transform.xCoord.absoluteX,
+                y: data.transform.yCoord.absoluteY),
+            id: id)
     }
 
     override func update(pressed: Bool) {
@@ -89,12 +88,6 @@ class DraggableButtonAction: ButtonAction {
         }
     }
 
-    override func invalidate() {
-        DraggableButtonAction.activeButton = nil
-        PlayMice.shared.stop()
-        super.invalidate()
-    }
-
     func onMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
         self.releasePoint.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
         self.releasePoint.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
@@ -102,29 +95,18 @@ class DraggableButtonAction: ButtonAction {
     }
 }
 
-class JoystickAction: Action {
+class JoystickAction: ActionBase {
     let keys: [GCKeyCode]
     let center: CGPoint
     let shift: CGFloat
-    var id: Int
     var moving = false
+    var isPressed: [Bool] = [false, false, false, false]
 
     init(id: Int, keys: [GCKeyCode], center: CGPoint, shift: CGFloat) {
         self.keys = keys
         self.center = center
         self.shift = shift / 2
-        self.id = id
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            for key in keys {
-                let handler = keyboard.button(forKeyCode: key)?.pressedChangedHandler
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { button, value, pressed in
-                    Toucher.touchQueue.async(execute: self.update)
-                    if let previous = handler {
-                        previous(button, value, pressed)
-                    }
-                }
-            }
-        }
+        super.init(point: center, id: id)
     }
 
     convenience init(id: Int, data: Joystick) {
@@ -142,47 +124,35 @@ class JoystickAction: Action {
             shift: data.transform.size.absoluteSize)
     }
 
-    func invalidate() {
-        Toucher.touchcam(point: center, phase: UITouch.Phase.ended, tid: id)
-        self.moving = false
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            for key in keys {
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = nil
-            }
-        }
-    }
-
     func update() {
-        if !mode.visible {
-            var touch = center
-            var start = center
-            if GCKeyboard.pressed(key: keys[0]) {
-                touch.y -= shift / 3
-            } else if GCKeyboard.pressed(key: keys[1]) {
-                touch.y += shift / 3
-            }
-            if GCKeyboard.pressed(key: keys[2]) {
-                touch.x -= shift / 3
-            } else if GCKeyboard.pressed(key: keys[3]) {
-                touch.x += shift / 3
-            }
-            if moving {
-                if touch.equalTo(center) {
-                    moving = false
-                    Toucher.touchcam(point: touch, phase: UITouch.Phase.ended, tid: id)
-                } else {
-                    Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: id)
-                }
+        var touch = center
+        var start = center
+        if isPressed[0] {
+            touch.y -= shift / 3
+        } else if isPressed[1] {
+            touch.y += shift / 3
+        }
+        if isPressed[2] {
+            touch.x -= shift / 3
+        } else if isPressed[3] {
+            touch.x += shift / 3
+        }
+        if moving {
+            if touch.equalTo(center) {
+                moving = false
+                Toucher.touchcam(point: touch, phase: UITouch.Phase.ended, tid: id)
             } else {
-                if !touch.equalTo(center) {
-                    start.x += (touch.x - start.x) / 8
-                    start.y += (touch.y - start.y) / 8
-                    moving = true
-                    Toucher.touchcam(point: start, phase: UITouch.Phase.began, tid: id)
-                    Toucher.touchQueue.asyncAfter(deadline: .now() + 0.04) {
-                        if self.moving {
-                            Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: self.id)
-                        }
+                Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: id)
+            }
+        } else {
+            if !touch.equalTo(center) {
+                start.x += (touch.x - start.x) / 8
+                start.y += (touch.y - start.y) / 8
+                moving = true
+                Toucher.touchcam(point: start, phase: UITouch.Phase.began, tid: id)
+                Toucher.touchQueue.asyncAfter(deadline: .now() + 0.04) {
+                    if self.moving {
+                        Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: self.id)
                     }
                 }
             }

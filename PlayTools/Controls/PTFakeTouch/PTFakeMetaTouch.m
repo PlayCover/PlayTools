@@ -88,7 +88,6 @@ void eventSendCallback(void* info) {
             [touch setPhaseAndUpdateTimestamp:UITouchPhaseStationary];
         }
     }
-    pointId -= 1;
     // ideally should be phase began when this hit
     // but if by any means other phases come... well lets be forgiving
     touch = touchAry[pointId];

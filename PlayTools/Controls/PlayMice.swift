@@ -7,25 +7,9 @@ import Foundation
 import GameController
 
 public class PlayMice {
-
     public static let shared = PlayMice()
-    private static var isInit = false
 
-    private var camera: CameraControl?
-    private var acceptMouseEvents = !PlaySettings.shared.mouseMapping
-
-    public init() {
-        if !PlayMice.isInit {
-            setupMouseButton(_up: 2, _down: 4)
-            setupMouseButton(_up: 8, _down: 16)
-            setupMouseButton(_up: 33554432, _down: 67108864)
-            PlayMice.isInit = true
-            if acceptMouseEvents {
-                setupMouseMovedHandler()
-            }
-        }
-    }
-
+    var camera: CameraControl?
     var fakedMousePressed = false
 
     public var cursorPos: CGPoint {
@@ -56,105 +40,11 @@ public class PlayMice {
         camera = CameraControl(
             centerX: data.transform.xCoord.absoluteX,
             centerY: data.transform.yCoord.absoluteY)
-        setupMouseMovedHandler()
-    }
-
-    public func setupMouseMovedHandler() {
-        for mouse in GCMouse.mice() {
-            mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
-                if !mode.visible {
-                    if let draggableButton = DraggableButtonAction.activeButton {
-                        draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
-                    } else {
-                        self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
-                    }
-                    if self.acceptMouseEvents && self.fakedMousePressed {
-                        Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.moved, tid: 1)
-                    }
-                }
-//                Toast.showOver(msg: "\(self.cursorPos)")
-            }
-        }
     }
 
     public func stop() {
-//        for mouse in GCMouse.mice() {
-//            mouse.mouseInput?.mouseMovedHandler = nil
-//        }
         camera?.stop()
         camera = nil
-        mouseActions.keys.forEach { key in
-            mouseActions[key] = []
-        }
-    }
-
-    func setMiceButtons(_ keyId: Int, action: ButtonAction) -> Bool {
-        if (-3 ... -1).contains(keyId) {
-            setMiceButton(keyId, action: action)
-            return true
-        }
-        return false
-    }
-
-    var mouseActions: [Int: [ButtonAction]] = [2: [], 8: [], 33554432: []]
-
-    private func setupMouseButton(_up: Int, _down: Int) {
-        AKInterface.shared!.setupMouseButton(_up, _down, dontIgnore(_:_:_:))
-    }
-
-    private func dontIgnore(_ actionIndex: Int, _ state: Bool, _ isEventWindow: Bool) -> Bool {
-        if EditorController.shared.editorMode {
-            if state {
-                if actionIndex == 8 {
-                    EditorController.shared.setKeyCode(-2)
-                } else if actionIndex == 33554432 {
-                    EditorController.shared.setKeyCode(-3)
-                }
-                return true
-            } else {
-                return true
-            }
-        }
-        if self.acceptMouseEvents {
-            if state {
-                if !self.fakedMousePressed
-                    // For traffic light buttons when not fullscreen
-                    && self.cursorPos.y > 0
-                    // For traffic light buttons when fullscreen
-                    && isEventWindow {
-                    Toucher.touchcam(point: self.cursorPos,
-                                     phase: UITouch.Phase.began,
-                                     tid: 1)
-                    self.fakedMousePressed = true
-                    return false
-                }
-                return true
-            } else {
-                if self.fakedMousePressed {
-                    self.fakedMousePressed = false
-                    Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.ended, tid: 1)
-                    return false
-                }
-                return true
-            }
-        }
-        if !mode.visible {
-            self.mouseActions[actionIndex]!.forEach({ buttonAction in
-                buttonAction.update(pressed: state)
-            })
-            return false
-        }
-        return true
-    }
-
-    private func setMiceButton(_ keyId: Int, action: ButtonAction) {
-        switch keyId {
-        case -1: mouseActions[2]!.append(action)
-        case -2: mouseActions[8]!.append(action)
-        case -3: mouseActions[33554432]!.append(action)
-        default:
-            mouseActions[2]!.append(action)
-        }
     }
 }
 
@@ -195,7 +85,7 @@ final class CameraControl {
      }
 
     @objc func updated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
-        if mode.visible || cooldown {
+        if !PlayInput.shared.inputEnabled || cooldown {
             return
         }
         // count touch duration

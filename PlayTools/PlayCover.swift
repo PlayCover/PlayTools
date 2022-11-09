@@ -10,6 +10,7 @@ public class PlayCover: NSObject {
 
     static let shared = PlayCover()
     var menuController: MenuController?
+    var menuInit = false
 
     @objc static public func launch() {
         quitWhenClose()
@@ -19,13 +20,16 @@ public class PlayCover: NSObject {
     }
 
     @objc static public func initMenu(menu: NSObject) {
-        delay(0.005) {
-            guard let menuBuilder = menu as? UIMenuBuilder else { return }
-
-            shared.menuController = MenuController(with: menuBuilder)
+        if !shared.menuInit {
+            shared.menuInit = true
             delay(0.005) {
-                UIMenuSystem.main.setNeedsRebuild()
-                UIMenuSystem.main.setNeedsRevalidate()
+                guard let menuBuilder = menu as? UIMenuBuilder else { return }
+
+                shared.menuController = MenuController(with: menuBuilder)
+                delay(0.005) {
+                    UIMenuSystem.main.setNeedsRebuild()
+                    UIMenuSystem.main.setNeedsRevalidate()
+                }
             }
         }
     }

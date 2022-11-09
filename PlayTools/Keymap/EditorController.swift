@@ -58,11 +58,10 @@ class EditorController {
             // menu still holds this object until next responder hit test
             editorWindow = nil
             previousWindow?.makeKeyAndVisible()
-            mode.show(false)
             focusedControl = nil
             Toast.showOver(msg: "Keymapping saved")
         } else {
-            mode.show(true)
+            PlayInput.shared.toggleInput(setTo: false)
             previousWindow = screen.keyWindow
             editorWindow = initWindow()
             editorWindow?.makeKeyAndVisible()
