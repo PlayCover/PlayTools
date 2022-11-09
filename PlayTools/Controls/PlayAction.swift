@@ -40,6 +40,10 @@ class ButtonAction: ActionBase {
     init(key: GCKeyCode, point: CGPoint, id: Int) {
         self.key = key
         super.init(point: point, id: id)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(update(_:)),
+                                               name: NSNotification.Name("playtools.\(key.rawValue)"),
+                                               object: nil)
     }
 
     convenience init(id: Int, data: Button) {
@@ -51,11 +55,13 @@ class ButtonAction: ActionBase {
             id: id)
     }
 
-    func update(pressed: Bool) {
-        if pressed {
-            Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
-        } else {
-            Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: id)
+    @objc func update(_ notification: NSNotification) {
+        if let pressed = notification.userInfo?["pressed"] as? Bool {
+            if pressed {
+                Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
+            } else {
+                Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: id)
+            }
         }
     }
 }
@@ -77,7 +83,7 @@ class DraggableButtonAction: ButtonAction {
             id: id)
     }
 
-    override func update(pressed: Bool) {
+    func update(pressed: Bool) {
         if pressed {
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
             self.releasePoint = point

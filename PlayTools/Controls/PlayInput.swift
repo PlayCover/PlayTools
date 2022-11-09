@@ -67,27 +67,9 @@ class PlayInput {
                     EditorController.shared.setKeyCode(keyCode.rawValue)
                 } else {
                     if self.inputEnabled {
-                        for action in self.buttonActions where action.key == keyCode {
-                            action.update(pressed: pressed)
-                        }
-                        for action in self.draggableButtonActions where action.key == keyCode {
-                            action.update(pressed: pressed)
-                        }
-                        for action in self.joystickButtonActions {
-                            if action.keys[0] == keyCode {
-                                action.isPressed[0] = pressed
-                            }
-                            if action.keys[1] == keyCode {
-                                action.isPressed[1] = pressed
-                            }
-                            if action.keys[2] == keyCode {
-                                action.isPressed[2] = pressed
-                            }
-                            if action.keys[3] == keyCode {
-                                action.isPressed[3] = pressed
-                            }
-                            action.update()
-                        }
+                        NotificationCenter.default.post(name: NSNotification.Name("playtools.\(keyCode.rawValue)"),
+                                                        object: nil,
+                                                        userInfo: ["pressed": pressed])
                     }
                 }
             }
