@@ -95,7 +95,7 @@ class PlayInput {
 
     func setupMouseHandlers() {
         for mouse in GCMouse.mice() {
-            if !PlaySettings.shared.mouseMapping {
+            if PlaySettings.shared.mouseMapping {
                 mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
                     if self.inputEnabled {
                         NotificationCenter.default.post(name: NSNotification.Name("playtools.mouseMoved"),
