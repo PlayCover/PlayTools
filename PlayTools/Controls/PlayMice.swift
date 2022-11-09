@@ -67,6 +67,7 @@ final class CameraControl {
      }
 
     @objc func updated(_ notification: NSNotification) {
+        Toast.showOver(msg: "Mouse Update Called")
         guard let deltaX = notification.userInfo?["dx"] as? CGFloat else { return }
         guard let deltaY = notification.userInfo?["dy"] as? CGFloat else { return }
 
