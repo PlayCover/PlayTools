@@ -69,7 +69,8 @@ class PlayInput {
                     if self.inputEnabled {
                         NotificationCenter.default.post(name: NSNotification.Name("playtools.\(keyCode.rawValue)"),
                                                         object: nil,
-                                                        userInfo: ["pressed": pressed])
+                                                        userInfo: ["pressed": pressed,
+                                                                   "keyCode": keyCode])
                     }
                 }
             }

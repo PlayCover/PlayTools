@@ -56,12 +56,11 @@ class ButtonAction: ActionBase {
     }
 
     @objc func update(_ notification: NSNotification) {
-        if let pressed = notification.userInfo?["pressed"] as? Bool {
-            if pressed {
-                Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
-            } else {
-                Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: id)
-            }
+        guard let pressed = notification.userInfo?["pressed"] as? Bool else { return }
+        if pressed {
+            Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
+        } else {
+            Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: id)
         }
     }
 }
@@ -81,9 +80,14 @@ class DraggableButtonAction: ButtonAction {
                 x: data.transform.xCoord.absoluteX,
                 y: data.transform.yCoord.absoluteY),
             id: id)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(update(_:)),
+                                               name: NSNotification.Name("playtools.\(key.rawValue)"),
+                                               object: nil)
     }
 
-    func update(pressed: Bool) {
+    @objc override func update(_ notification: NSNotification) {
+        guard let pressed = notification.userInfo?["pressed"] as? Bool else { return }
         if pressed {
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: id)
             self.releasePoint = point
@@ -113,6 +117,12 @@ class JoystickAction: ActionBase {
         self.center = center
         self.shift = shift / 2
         super.init(point: center, id: id)
+        for key in keys {
+            NotificationCenter.default.addObserver(self,
+                                                   selector: #selector(update(_:)),
+                                                   name: NSNotification.Name("playtools.\(key.rawValue)"),
+                                                   object: nil)
+        }
     }
 
     convenience init(id: Int, data: Joystick) {
@@ -129,8 +139,15 @@ class JoystickAction: ActionBase {
                 y: data.transform.yCoord.absoluteY),
             shift: data.transform.size.absoluteSize)
     }
+    
+    @objc func update(_ notification: NSNotification) {
+        guard let pressed = notification.userInfo?["pressed"] as? Bool else { return }
+        guard let keyCode = notification.userInfo?["keyCode"] as? GCKeyCode else { return }
+        isPressed[keys.firstIndex(of: keyCode)!] = pressed
+        updateStick()
+    }
 
-    func update() {
+    func updateStick() {
         var touch = center
         var start = center
         if isPressed[0] {
