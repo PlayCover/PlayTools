@@ -19,7 +19,7 @@ public class PlayMice {
 
     func initalise() {
         NotificationCenter.default.addObserver(self,
-                                               selector: #selector(CameraControl.updated(_:)),
+                                               selector: #selector(camera!.updated(_:)),
                                                name: NSNotification.Name("playtools.mouseMoved"),
                                                object: nil)
     }
