@@ -98,16 +98,11 @@ class PlayInput {
             if !PlaySettings.shared.mouseMapping {
                 mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
                     if self.inputEnabled {
-                        if let draggableButton = DraggableButtonAction.activeButton {
-                            draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
-                        } else {
-                            PlayMice.shared.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
-                        }
-                        if !PlaySettings.shared.mouseMapping && PlayMice.shared.fakedMousePressed {
-                            Toucher.touchcam(point: PlayMice.shared.cursorPos, phase: UITouch.Phase.moved, tid: 1)
-                        }
+                        NotificationCenter.default.post(name: NSNotification.Name("playtools.mouseMoved"),
+                                                        object: nil,
+                                                        userInfo: ["dx": CGFloat(deltaX),
+                                                                   "dy": CGFloat(deltaY)])
                     }
-                    // Toast.showOver(msg: "\(self.cursorPos)")
                 }
             }
 

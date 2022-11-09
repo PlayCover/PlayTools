@@ -10,36 +10,18 @@ public class PlayMice {
     public static let shared = PlayMice()
 
     var camera: CameraControl?
-    var fakedMousePressed = false
-
-    public var cursorPos: CGPoint {
-        var point = CGPoint(x: 0, y: 0)
-        point = AKInterface.shared!.mousePoint
-        let rect = AKInterface.shared!.windowFrame
-        let viewRect: CGRect = screen.screenRect
-        let widthRate = viewRect.width / rect.width
-        var rate = viewRect.height / rect.height
-        if widthRate > rate {
-            // Keep aspect ratio
-            rate = widthRate
-        }
-        // Horizontally in center
-        point.x -= (rect.width - viewRect.width / rate)/2
-        point.x *= rate
-        if screen.fullscreen {
-            // Vertically in center
-            point.y -= (rect.height - viewRect.height / rate)/2
-        }
-        point.y *= rate
-        point.y = viewRect.height - point.y
-
-        return point
-    }
 
     func setup(_ data: MouseArea) {
         camera = CameraControl(
             centerX: data.transform.xCoord.absoluteX,
             centerY: data.transform.yCoord.absoluteY)
+    }
+
+    func initalise() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(CameraControl.updated(_:)),
+                                               name: NSNotification.Name("playtools.mouseMoved"),
+                                               object: nil)
     }
 
     public func stop() {
@@ -84,7 +66,10 @@ final class CameraControl {
         self.doLiftOff()
      }
 
-    @objc func updated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
+    @objc func updated(_ notification: NSNotification) {
+        guard let deltaX = notification.userInfo?["dx"] as? CGFloat else { return }
+        guard let deltaY = notification.userInfo?["dy"] as? CGFloat else { return }
+
         if !PlayInput.shared.inputEnabled || cooldown {
             return
         }
