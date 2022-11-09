@@ -17,21 +17,13 @@ public class PlayMice {
             centerY: data.transform.yCoord.absoluteY)
     }
 
-    func initalise() {
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(camera!.updated(_:)),
-                                               name: NSNotification.Name("playtools.mouseMoved"),
-                                               object: nil)
-    }
-
     public func stop() {
         camera?.stop()
         camera = nil
     }
 }
 
-final class CameraControl {
-
+class CameraControl {
     var center: CGPoint = CGPoint.zero
     var location: CGPoint = CGPoint.zero
 
@@ -39,6 +31,10 @@ final class CameraControl {
         self.center = CGPoint(x: centerX, y: centerY)
         // in rare cases the cooldown reset task is lost by the dispatch queue
         self.cooldown = false
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(updated(_:)),
+                                               name: NSNotification.Name("playtools.mouseMoved"),
+                                               object: nil)
     }
 
     var isMoving = false
