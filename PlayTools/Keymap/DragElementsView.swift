@@ -20,7 +20,7 @@ class KeymapHolder: CircleMenuDelegate {
             frame: CGRect(x: 0, y: 0, width: 50, height: 50),
             normalIcon: "xmark.circle.fill",
             selectedIcon: "xmark.circle.fill",
-            buttonsCount: 6,
+            buttonsCount: 4,
             duration: 0.25,
             distance: 80)
         menu?.delegate = self
@@ -56,12 +56,8 @@ class KeymapHolder: CircleMenuDelegate {
             EditorController.shared.addJoystick(globalPoint!)
         case 2:
             EditorController.shared.addMouseArea(globalPoint!)
-        case 3:
-            EditorController.shared.addRMB(globalPoint!)
-        case 4:
-            EditorController.shared.addLMB(globalPoint!)
         default:
-            EditorController.shared.addMMB(globalPoint!)
+            EditorController.shared.addMouseJoystick(globalPoint!)
         }
         hideWithAnimation()
     }
@@ -78,8 +74,8 @@ class KeymapHolder: CircleMenuDelegate {
           "circle.circle",
           "dpad",
           "arrow.up.and.down.and.arrow.left.and.right",
-          "rb.rectangle.roundedbottom.fill",
-          "lb.rectangle.roundedbottom",
+//          "rb.rectangle.roundedbottom.fill",
+//          "lb.rectangle.roundedbottom",
           "computermouse"
       ]
 }

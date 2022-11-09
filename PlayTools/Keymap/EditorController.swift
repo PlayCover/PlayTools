@@ -185,16 +185,21 @@ class EditorController {
         self.addLMB(toPoint)
     }
 
-    public func addRMB(_ toPoint: CGPoint) {
-        self.addButton(keyCode: -2, point: toPoint)
-    }
-
     public func addLMB(_ toPoint: CGPoint) {
         self.addButton(keyCode: -1, point: toPoint)
     }
 
-    public func addMMB(_ toPoint: CGPoint) {
-        self.addButton(keyCode: -3, point: toPoint)
+    public func addMouseJoystick(_ center: CGPoint) {
+        if editorMode {
+            addControlToView(control: JoystickModel(data: ControlData(keyCodes: [GCKeyCode.keyW.rawValue,
+                                                                                 GCKeyCode.keyS.rawValue,
+                                                                                 GCKeyCode.keyA.rawValue,
+                                                                                 GCKeyCode.keyD.rawValue],
+                                                                      keyName: "Mouse",
+                                                                      size: 20,
+                                                                      xCoord: center.x.relativeX,
+                                                                      yCoord: center.y.relativeY)))
+        }
     }
 
     public func addMouseArea(_ center: CGPoint) {
