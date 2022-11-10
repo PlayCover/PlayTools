@@ -89,6 +89,7 @@ class CameraControl {
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
         var testPoint = CGPoint(x: (self.location.x / screen.width) * PlayScreen.shared.keyWindow!.frame.width,
                                 y: (self.location.y / screen.height) * PlayScreen.shared.keyWindow!.frame.height)
+        testPoint = CGPoint(x: testPoint.x + PlayScreen.shared.keyWindow!.center.x, y: testPoint.y + PlayScreen.shared.keyWindow!.center.y)
         Toast.showOver(msg: "(\(testPoint.x), \(testPoint.y)")
         AKInterface.shared?.moveCursor(testPoint)
         if stationaryCount > self.stationaryThreshold {
