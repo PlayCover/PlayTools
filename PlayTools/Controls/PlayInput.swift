@@ -14,6 +14,7 @@ class PlayInput {
     var joystickButtonActions: [JoystickAction] = []
 
     var inputEnabled: Bool = false
+    var creationCount = 0
 
     static private var lCmdPressed = false
     static private var rCmdPressed = false
@@ -186,26 +187,31 @@ class PlayInput {
         let main = OperationQueue.main
 
         centre.addObserver(forName: NSNotification.Name.GCKeyboardDidConnect, object: nil, queue: main) { _ in
-            Toast.showOver(msg: "Keyboard Connected. Recreating handlers...")
+            creationCount += 1
+            Toast.showOver(msg: "Keyboard Connected. Recreating handlers... \(creationCount)")
             PlayInput.shared.setupActions()
         }
 
         centre.addObserver(forName: NSNotification.Name.GCKeyboardDidDisconnect, object: nil, queue: main) { _ in
-            Toast.showOver(msg: "Keyboard Disconnected. Recreating handlers...")
+            creationCount += 1
+            Toast.showOver(msg: "Keyboard Disconnected. Recreating handlers... \(creationCount)")
             PlayInput.shared.setupActions()
         }
 
         centre.addObserver(forName: NSNotification.Name.GCMouseDidConnect, object: nil, queue: main) { _ in
-            Toast.showOver(msg: "Mouse Connected. Recreating handlers...")
+            creationCount += 1
+            Toast.showOver(msg: "Mouse Connected. Recreating handlers... \(creationCount)")
             PlayInput.shared.setupActions()
         }
 
         centre.addObserver(forName: NSNotification.Name.GCMouseDidDisconnect, object: nil, queue: main) { _ in
-            Toast.showOver(msg: "Keyboard Disconnected. Recreating handlers...")
+            creationCount += 1
+            Toast.showOver(msg: "Keyboard Disconnected. Recreating handlers... \(creationCount)")
             PlayInput.shared.setupActions()
         }
 
-        Toast.showOver(msg: "Setting up...")
+        creationCount += 1
+        Toast.showOver(msg: "Setting up... \(creationCount)")
         setupActions()
 
         // Fix beep sound
