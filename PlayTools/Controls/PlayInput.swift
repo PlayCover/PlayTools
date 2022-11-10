@@ -186,21 +186,26 @@ class PlayInput {
         let main = OperationQueue.main
 
         centre.addObserver(forName: NSNotification.Name.GCKeyboardDidConnect, object: nil, queue: main) { _ in
+            Toast.showOver(msg: "Keyboard Connected. Recreating handlers...")
             PlayInput.shared.setupActions()
         }
 
         centre.addObserver(forName: NSNotification.Name.GCKeyboardDidDisconnect, object: nil, queue: main) { _ in
+            Toast.showOver(msg: "Keyboard Disconnected. Recreating handlers...")
             PlayInput.shared.setupActions()
         }
 
         centre.addObserver(forName: NSNotification.Name.GCMouseDidConnect, object: nil, queue: main) { _ in
+            Toast.showOver(msg: "Mouse Connected. Recreating handlers...")
             PlayInput.shared.setupActions()
         }
 
         centre.addObserver(forName: NSNotification.Name.GCMouseDidDisconnect, object: nil, queue: main) { _ in
+            Toast.showOver(msg: "Keyboard Disconnected. Recreating handlers...")
             PlayInput.shared.setupActions()
         }
 
+        Toast.showOver(msg: "Setting up...")
         setupActions()
 
         // Fix beep sound
