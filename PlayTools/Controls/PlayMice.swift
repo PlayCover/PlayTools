@@ -87,9 +87,8 @@ class CameraControl {
         self.location.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
         self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
-        let akPoint = CGPointMake(self.location.x - (screen.width / 2),
-                                  self.location.y - (screen.height / 2))
-        AKInterface.shared?.moveCursor(akPoint)
+        Toast.showOver(msg: "(\(self.location.x), \(self.location.y)")
+        AKInterface.shared?.moveCursor(self.location)
         if stationaryCount > self.stationaryThreshold {
             self.counter = 0
         }
@@ -101,9 +100,7 @@ class CameraControl {
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: 1)
-        let akPoint = CGPointMake(self.location.x - (screen.width / 2),
-                                  self.location.y - (screen.height / 2))
-        AKInterface.shared?.moveCursor(akPoint)
+        AKInterface.shared?.moveCursor(self.location)
 //        DispatchQueue.main.async {
 //            Toast.showOver(msg: "mouse released")
 //        }
