@@ -48,7 +48,8 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func moveCursor(_ point: CGPoint) {
-        CGWarpMouseCursorPosition(point)
+        var screenPoint = NSApplication.shared.windows.first!.convertPoint(toScreen: NSPoint(x: point.x, y: point.y))
+        CGWarpMouseCursorPosition(screenPoint)
     }
 
     func terminateApplication() {
