@@ -90,7 +90,7 @@ class CameraControl {
         var testPoint = CGPoint(x: (self.location.x / screen.width) * PlayScreen.shared.keyWindow!.frame.size.width,
                                 y: (self.location.y / screen.height) * PlayScreen.shared.keyWindow!.frame.size.height)
         Toast.showOver(msg: "(\(testPoint.x), \(testPoint.y)")
-        AKInterface.shared?.moveCursor(testPoint)
+        // AKInterface.shared?.moveCursor(testPoint)
         if stationaryCount > self.stationaryThreshold {
             self.counter = 0
         }
@@ -102,7 +102,7 @@ class CameraControl {
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: 1)
-        AKInterface.shared?.moveCursor(self.location)
+        // AKInterface.shared?.moveCursor(self.location)
 //        DispatchQueue.main.async {
 //            Toast.showOver(msg: "mouse released")
 //        }
