@@ -38,13 +38,17 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func hideCursor() {
-        NSCursor.hide()
-        CGAssociateMouseAndMouseCursorPosition(0)
+        // NSCursor.hide()
+        // CGAssociateMouseAndMouseCursorPosition(0)
     }
 
     func unhideCursor() {
-        NSCursor.unhide()
-        CGAssociateMouseAndMouseCursorPosition(1)
+        // NSCursor.unhide()
+        // CGAssociateMouseAndMouseCursorPosition(1)
+    }
+
+    func moveCursor(_ point: CGPoint) {
+        CGWarpMouseCursorPosition(point)
     }
 
     func terminateApplication() {

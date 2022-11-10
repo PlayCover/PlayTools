@@ -20,6 +20,7 @@ public protocol Plugin: NSObjectProtocol {
 
     func hideCursor()
     func unhideCursor()
+    func moveCursor(_ point: CGPoint)
     func terminateApplication()
     func eliminateRedundantKeyPressEvents(_ dontIgnore: @escaping() -> Bool)
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
