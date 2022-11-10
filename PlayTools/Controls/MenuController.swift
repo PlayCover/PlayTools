@@ -44,6 +44,16 @@ extension UIApplication {
     func downscaleElement(_ sender: AnyObject) {
         EditorController.shared.focusedControl?.resize(down: true)
     }
+
+    @objc
+    func restartHandlers(_ sender: AnyObject) {
+        PlayInput.shared.initialize()
+    }
+
+    @objc
+    func getNumOfRestarts(_ sender: AnyObject) {
+        Toast.showOver(msg: "\(PlayInput.shared.creationCount)")
+    }
 }
 
 extension UIViewController {
@@ -66,12 +76,16 @@ var keymapping = ["Open/Close Keymapping Editor",
                   "Delete selected element",
                   "Upsize selected element",
                   "Downsize selected element",
-                  "Rotate display area"]
+                  "Rotate display area",
+                  "Restart handlers",
+                  "Get num of restarts"]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIViewController.rotateView(_:))]
+                           #selector(UIViewController.rotateView(_:)),
+                           #selector(UIApplication.restartHandlers(_:)),
+                           #selector(UIApplication.getNumOfRestarts(_:))]
 
 class MenuController {
     init(with builder: UIMenuBuilder) {
@@ -79,7 +93,7 @@ class MenuController {
     }
 
     class func keymappingMenu() -> UIMenu {
-        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R" ]
+        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "H", "J" ]
 
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
