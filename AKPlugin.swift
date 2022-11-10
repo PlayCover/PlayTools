@@ -49,7 +49,7 @@ class AKPlugin: NSObject, Plugin {
 
     func moveCursor(_ point: CGPoint) {
         var origin = NSApplication.shared.windows.first!.frame.origin
-        // origin = CGPoint(x: origin.x, y: NSScreen.main!.frame.height - origin.y)
+        origin = CGPoint(x: origin.x, y: (NSScreen.main!.frame.height / 2) - origin.y)
         CGWarpMouseCursorPosition(CGPoint(x: point.x + origin.x, y: point.y + origin.y))
     }
 
