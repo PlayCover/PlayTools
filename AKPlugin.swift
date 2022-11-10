@@ -49,10 +49,8 @@ class AKPlugin: NSObject, Plugin {
 
     func moveCursor(_ point: CGPoint) {
         var origin = NSApplication.shared.windows.first!.frame.origin
-        var windowFrame = NSApplication.shared.windows.first!.frame
-        let titlebarHeight = windowFrame.height - NSApplication.shared.windows.first!.contentRect(forFrameRect: windowFrame).height
         origin = CGPoint(x: origin.x, y: (NSScreen.main!.frame.height / 2) - origin.y)
-        CGWarpMouseCursorPosition(CGPoint(x: point.x + origin.x, y: point.y + origin.y - titlebarHeight))
+        CGWarpMouseCursorPosition(CGPoint(x: point.x + origin.x, y: point.y + origin.y))
     }
 
     func terminateApplication() {
