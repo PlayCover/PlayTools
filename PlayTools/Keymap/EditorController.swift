@@ -133,7 +133,9 @@ class EditorController {
                 keymapData.joystickModel.append(model.save())
             // subclasses must be checked first
             case let model as DraggableButtonModel:
-                keymapData.draggableButtonModels.append(model.save())
+                if let button = model.save() {
+                    keymapData.draggableButtonModels.append(button)
+                }
             case let model as MouseAreaModel:
                 keymapData.mouseAreaModel.append(model.save())
             case let model as ButtonModel:

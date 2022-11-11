@@ -98,7 +98,7 @@ class MenuController {
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
                          image: nil,
-                         action: keymappingSelectors[keymapping.firstIndex(of: btn)!],
+                         action: keymappingSelectors[keymapping.firstIndex(of: btn) ?? 0],
                          input: command,
                          modifierFlags: .command,
                          propertyList: [CommandsList.KeymappingToolbox: btn]

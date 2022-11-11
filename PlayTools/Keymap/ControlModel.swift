@@ -193,20 +193,27 @@ class JoystickButtonModel: ControlModel {
 class DraggableButtonModel: MouseAreaModel {
     var childButton: JoystickButtonModel?
 
-    func save() -> Button {
-        return Button(keyCode: childButton!.data.keyCodes[0],
-                               transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
+    func save() -> Button? {
+        if let childButton = childButton {
+            return Button(keyCode: childButton.data.keyCodes[0],
+                                   transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
+        }
+        return nil
     }
 
     override func setKeyCodes(keys: [Int]) {
-        childButton!.setKeyCodes(keys: keys)
+        if let childButton = childButton {
+            childButton.setKeyCodes(keys: keys)
+        }
     }
+
     override func focus(_ focus: Bool) {
         super.focus(focus)
         if !focus {
             childButton?.focus(false)
         }
     }
+
     override func update() {
         super.update()
         if childButton == nil {
