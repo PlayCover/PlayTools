@@ -5,13 +5,6 @@
 
 import Foundation
 
-class PlayInfo {
-    static var isLauncherInstalled: Bool {
-        return AKInterface.shared!
-            .urlForApplicationWithBundleIdentifier("io.playcover.PlayCover") != nil
-    }
-}
-
 extension ProcessInfo {
     @objc open var isMacCatalystApp: Bool {
         return false

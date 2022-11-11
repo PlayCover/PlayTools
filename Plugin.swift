@@ -23,6 +23,5 @@ public protocol Plugin: NSObjectProtocol {
     func moveCursor(_ point: CGPoint)
     func terminateApplication()
     func eliminateRedundantKeyPressEvents(_ dontIgnore: @escaping() -> Bool)
-    func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
     func setMenuBarVisible(_ value: Bool)
 }

@@ -18,11 +18,17 @@ class AKPlugin: NSObject, Plugin {
     }
 
     var mousePoint: CGPoint {
-        NSApplication.shared.windows.first!.mouseLocationOutsideOfEventStream as CGPoint
+        if let window = NSApplication.shared.windows.first {
+            return window.mouseLocationOutsideOfEventStream as CGPoint
+        }
+        return CGPoint.zero
     }
 
     var windowFrame: CGRect {
-        NSApplication.shared.windows.first!.frame as CGRect
+        if let window = NSApplication.shared.windows.first {
+            return window.frame as CGRect
+        }
+        return CGRect()
     }
 
     var isMainScreenEqualToFirst: Bool {
@@ -30,11 +36,17 @@ class AKPlugin: NSObject, Plugin {
     }
 
     var mainScreenFrame: CGRect {
-        return NSScreen.main!.frame as CGRect
+        if let screen = NSScreen.main {
+            return screen.frame as CGRect
+        }
+        return CGRect()
     }
 
     var isFullscreen: Bool {
-        NSApplication.shared.windows.first!.styleMask.contains(.fullScreen)
+        if let window = NSApplication.shared.windows.first {
+            return window.styleMask.contains(.fullScreen)
+        }
+        return false
     }
 
     func hideCursor() {
@@ -48,8 +60,11 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func moveCursor(_ point: CGPoint) {
-        var origin = NSApplication.shared.windows.first!.frame.origin
-        origin = CGPoint(x: origin.x, y: (NSScreen.main!.frame.height / 2) - origin.y)
+        guard let window = NSApplication.shared.windows.first else { return }
+        guard let screen = NSScreen.main else { return }
+
+        var origin = window.frame.origin
+        origin = CGPoint(x: origin.x, y: (screen.frame.height / 2) - origin.y)
         CGWarpMouseCursorPosition(CGPoint(x: point.x + origin.x, y: point.y + origin.y))
     }
 
@@ -64,10 +79,6 @@ class AKPlugin: NSObject, Plugin {
             }
             return nil
         })
-    }
-
-    func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {
-        NSWorkspace.shared.urlForApplication(withBundleIdentifier: value)
     }
 
     func setMenuBarVisible(_ visible: Bool) {

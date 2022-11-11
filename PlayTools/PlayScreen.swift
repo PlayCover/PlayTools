@@ -44,20 +44,25 @@ extension CGRect {
 
 extension UIScreen {
     static var aspectRatio: CGFloat {
-        let count = AKInterface.shared!.screenCount
-        if PlaySettings.shared.notch {
-            if count == 1 {
-                return mainScreenWidth / mainScreenHeight // 1.6 or 1.77777778
-            } else {
-                if AKInterface.shared!.isMainScreenEqualToFirst {
-                    return mainScreenWidth / mainScreenHeight
+        if let akInterface = AKInterface.shared {
+            let count = akInterface.screenCount
+            if PlaySettings.shared.notch {
+                if count == 1 {
+                    return mainScreenWidth / mainScreenHeight // 1.6 or 1.77777778
+                } else {
+                    if akInterface.isMainScreenEqualToFirst {
+                        return mainScreenWidth / mainScreenHeight
+                    }
                 }
+
             }
 
+            let frame = akInterface.mainScreenFrame
+            return frame.aspectRatio()
+        } else {
+            Toast.showOver(msg: "AKInterface not found!")
+            return CGFloat.zero
         }
-
-        let frame = AKInterface.shared!.mainScreenFrame
-        return frame.aspectRatio()
     }
 }
 
@@ -83,8 +88,14 @@ public class PlayScreen: NSObject {
     @objc public static func sizeAspectRatio(_ size: CGSize) -> CGSize {
         return size.toAspectRatio()
     }
+
     var fullscreen: Bool {
-        return AKInterface.shared!.isFullscreen
+        if let akInterface = AKInterface.shared {
+            return akInterface.isFullscreen
+        } else {
+            Toast.showOver(msg: "AKInterface not found!")
+            return false
+        }
     }
 
     @objc public var screenRect: CGRect {
@@ -132,7 +143,11 @@ public class PlayScreen: NSObject {
     }
 
     func switchDock(_ visible: Bool) {
-        AKInterface.shared!.setMenuBarVisible(visible)
+        if let akInterface = AKInterface.shared {
+            akInterface.setMenuBarVisible(visible)
+        } else {
+            Toast.showOver(msg: "AKInterface not found!")
+        }
     }
 
 }

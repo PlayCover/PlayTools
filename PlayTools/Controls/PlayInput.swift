@@ -163,12 +163,20 @@ class PlayInput {
                     if screen.fullscreen {
                         screen.switchDock(false)
                     }
-                    AKInterface.shared!.hideCursor()
+                    if let akInterface = AKInterface.shared {
+                        akInterface.hideCursor()
+                    } else {
+                        Toast.showOver(msg: "AKInterface not found!")
+                    }
                 } else {
                     if screen.fullscreen {
                         screen.switchDock(true)
                     }
-                    AKInterface.shared!.unhideCursor()
+                    if let akInterface = AKInterface.shared {
+                        akInterface.unhideCursor()
+                    } else {
+                        Toast.showOver(msg: "AKInterface not found!")
+                    }
                 }
             }
         }
@@ -215,8 +223,11 @@ class PlayInput {
         setupActions()
 
         // Fix beep sound
-        AKInterface.shared!
-            .eliminateRedundantKeyPressEvents({ self.dontIgnore() })
+        if let akInterface = AKInterface.shared {
+            akInterface.eliminateRedundantKeyPressEvents({ self.dontIgnore() })
+        } else {
+            Toast.showOver(msg: "AKInterface not found!")
+        }
     }
 
     func dontIgnore() -> Bool {

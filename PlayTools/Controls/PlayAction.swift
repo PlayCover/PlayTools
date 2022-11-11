@@ -139,11 +139,12 @@ class JoystickAction: ActionBase {
                 y: data.transform.yCoord.absoluteY),
             shift: data.transform.size.absoluteSize)
     }
-    
+
     @objc func update(_ notification: NSNotification) {
         guard let pressed = notification.userInfo?["pressed"] as? Bool else { return }
         guard let keyCode = notification.userInfo?["keyCode"] as? GCKeyCode else { return }
-        isPressed[keys.firstIndex(of: keyCode)!] = pressed
+        guard let index = keys.firstIndex(of: keyCode) else { return }
+        isPressed[index] = pressed
         updateStick()
     }
 

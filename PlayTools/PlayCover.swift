@@ -41,7 +41,11 @@ public class PlayCover: NSObject {
             queue: OperationQueue.main
         ) { notif in
             if PlayScreen.shared.nsWindow?.isEqual(notif.object) ?? false {
-                AKInterface.shared!.terminateApplication()
+                if let akInterface = AKInterface.shared {
+                    akInterface.terminateApplication()
+                } else {
+                    Toast.showOver(msg: "AKInterface not found!")
+                }
             }
         }
     }
