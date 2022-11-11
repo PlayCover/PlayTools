@@ -23,13 +23,16 @@ class KeymapHolder: CircleMenuDelegate {
             buttonsCount: 6,
             duration: 0.25,
             distance: 80)
-        menu?.delegate = self
-        menu?.center = location
-        menu?.backgroundColor = UIColor.gray
-        menu?.layer.cornerRadius = menu!.frame.size.width / 2
-        screen.keyWindow?.addSubview(menu!)
-        menu?.backgroundColor = UIColor.black
-        menu?.onTap()
+
+        if let menu = menu {
+            menu.delegate = self
+            menu.center = location
+            menu.backgroundColor = UIColor.gray
+            menu.layer.cornerRadius = menu.frame.size.width / 2
+            screen.keyWindow?.addSubview(menu)
+            menu.backgroundColor = UIColor.black
+            menu.onTap()
+        }
     }
 
     public func hide() {
@@ -48,22 +51,25 @@ class KeymapHolder: CircleMenuDelegate {
     }
 
     func circleMenu(_: CircleMenu, buttonWillSelected btn: UIButton, atIndex: Int) {
-        let globalPoint = menu!.superview?.convert(menu!.center, to: nil)
-        switch atIndex {
-        case 0:
-            EditorController.shared.addButton(globalPoint!)
-        case 1:
-            EditorController.shared.addJoystick(globalPoint!)
-        case 2:
-            EditorController.shared.addMouseArea(globalPoint!)
-        case 3:
-            EditorController.shared.addRMB(globalPoint!)
-        case 4:
-            EditorController.shared.addLMB(globalPoint!)
-        default:
-            EditorController.shared.addMMB(globalPoint!)
+        if let menu = menu {
+            if let globalPoint = menu.superview?.convert(menu.center, to: nil) {
+                switch atIndex {
+                case 0:
+                    EditorController.shared.addButton(globalPoint)
+                case 1:
+                    EditorController.shared.addJoystick(globalPoint)
+                case 2:
+                    EditorController.shared.addMouseArea(globalPoint)
+                case 3:
+                    EditorController.shared.addRMB(globalPoint)
+                case 4:
+                    EditorController.shared.addLMB(globalPoint)
+                default:
+                    EditorController.shared.addMMB(globalPoint)
+                }
+                hideWithAnimation()
+            }
         }
-        hideWithAnimation()
     }
 
     func circleMenu(_: CircleMenu, willDisplay button: UIButton, atIndex: Int) {

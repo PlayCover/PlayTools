@@ -22,10 +22,13 @@ class EditorController {
     var controls: [ControlModel] = []
     var view: EditorView! {editorWindow?.rootViewController?.view as? EditorView}
 
-    private func initWindow() -> UIWindow {
-        let window = UIWindow(windowScene: screen.windowScene!)
-        window.rootViewController = EditorViewController(nibName: nil, bundle: nil)
-        return window
+    private func initWindow() -> UIWindow? {
+        if let scene = screen.windowScene {
+            let window = UIWindow(windowScene: scene)
+            window.rootViewController = EditorViewController(nibName: nil, bundle: nil)
+            return window
+        }
+        return nil
     }
 
     private func addControlToView(control: ControlModel) {
