@@ -190,7 +190,6 @@ void my_SSL_CTX_set_custom_verify(void *ctx, int mode, int (callback)(void *ssl,
 
 DYLD_INTERPOSE(my_SSL_CTX_set_custom_verify, SSL_CTX_set_custom_verify)
 DYLD_INTERPOSE(my_SSL_get_psk_identity, SSL_get_psk_identity)
-
 DYLD_INTERPOSE(my_csops, csops)
 
 DYLD_INTERPOSE(my_dyld_get_active_platform, dyld_get_active_platform)
