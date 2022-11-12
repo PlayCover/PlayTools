@@ -163,6 +163,34 @@ int my_csops(pid_t pid, uint32_t ops, user_addr_t useraddr, user_size_t usersize
   return csops(pid, ops, useraddr, usersize);
 }
 
+enum ssl_verify_result_t {
+  ssl_verify_ok = 0,
+  ssl_verify_invalid,
+  ssl_verify_retry,
+};
+
+static void (*SSL_CTX_set_custom_verify)(void *ctx, int mode, int (*callback)(void *ssl, uint8_t *out_alert));
+static void (*SSL_get_psk_identity)(void *ssl);
+
+char *my_SSL_get_psk_identity(void *ssl) {
+    return "\x47\x44\x39\x39\x39\x39\x41\x0\x42\x12\x42\x42\x42\x42\x11\x42\x43\x43\x13\x42\x43\x43\x43\x77\x44\x44\x44\x31\x44\x59\x44\x44\x45\x45\x45\x45\x45\x88\x6c\x7c\x04\x01\x00";
+}
+
+static int custom_verify_callback(void *ssl, uint8_t *out_alert) {
+    return ssl_verify_ok;
+}
+
+void my_SSL_CTX_set_custom_verify(void *ctx, int mode, int (callback)(void *ssl, uint8_t *out_alert)) {
+    void (*ogFunction)(void *ctx, int mode, int (callback)(void *ssl, uint8_t *out_alert));
+    void* boringSSLHandle = dlopen("/usr/lib/libboringssl.dylin", RTLD_NOW);
+    *(void **) (&ogFunction) = dlsym(boringSSLHandle, "SSL_CTX_set_custom_verify");
+    (*ogFunction)(ctx, 0x00, custom_verify_callback);
+    return;
+}
+
+DYLD_INTERPOSE(my_SSL_CTX_set_custom_verify, SSL_CTX_set_custom_verify)
+DYLD_INTERPOSE(my_SSL_get_psk_identity, SSL_get_psk_identity)
+
 DYLD_INTERPOSE(my_csops, csops)
 
 DYLD_INTERPOSE(my_dyld_get_active_platform, dyld_get_active_platform)
