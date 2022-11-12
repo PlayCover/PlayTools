@@ -182,7 +182,7 @@ static int custom_verify_callback(void *ssl, uint8_t *out_alert) {
 
 void my_SSL_CTX_set_custom_verify(void *ctx, int mode, int (callback)(void *ssl, uint8_t *out_alert)) {
     void (*ogFunction)(void *ctx, int mode, int (callback)(void *ssl, uint8_t *out_alert));
-    void* boringSSLHandle = dlopen("/usr/lib/libboringssl.dylin", RTLD_NOW);
+    void* boringSSLHandle = dlopen("/usr/lib/libboringssl.dylib", RTLD_NOW);
     *(void **) (&ogFunction) = dlsym(boringSSLHandle, "SSL_CTX_set_custom_verify");
     (*ogFunction)(ctx, 0x00, custom_verify_callback);
     return;
