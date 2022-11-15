@@ -77,9 +77,19 @@ class EditorController {
 
     var editorMode: Bool { !(editorWindow?.isHidden ?? true)}
 
-    public func setKeyCode(_ key: Int) {
+    public func setKey(_ code: Int) {
         if editorMode {
-            focusedControl?.setKeyCodes(keys: [key])
+            focusedControl?.setKey(codes: [code])
+        }
+    }
+
+    public func setKey(_ name: String) {
+        if editorMode {
+            if name != "Mouse" || focusedControl as? MouseAreaModel != nil
+                || focusedControl as? JoystickModel != nil
+                || focusedControl as? DraggableButtonModel != nil {
+                focusedControl?.setKey(name: name)
+            }
         }
     }
 
@@ -89,38 +99,40 @@ class EditorController {
     }
 
     func showButtons() {
-        for button in keymap.keymapData.buttonModels {
-            let ctrl = ButtonModel(data: ControlData(
-                keyCodes: [button.keyCode],
-                size: button.transform.size,
-                xCoord: button.transform.xCoord,
-                yCoord: button.transform.yCoord,
-                parent: nil))
-            addControlToView(control: ctrl)
-        }
         for button in keymap.keymapData.draggableButtonModels {
             let ctrl = DraggableButtonModel(data: ControlData(
                 keyCodes: [button.keyCode],
+                keyName: button.keyName,
                 size: button.transform.size,
                 xCoord: button.transform.xCoord,
-                yCoord: button.transform.yCoord,
-                parent: nil))
-            addControlToView(control: ctrl)
-        }
-        for mouse in keymap.keymapData.mouseAreaModel {
-            let ctrl =
-                MouseAreaModel(data: ControlData(
-                    size: mouse.transform.size,
-                    xCoord: mouse.transform.xCoord,
-                    yCoord: mouse.transform.yCoord))
+                yCoord: button.transform.yCoord))
             addControlToView(control: ctrl)
         }
         for joystick in keymap.keymapData.joystickModel {
             let ctrl = JoystickModel(data: ControlData(
                 keyCodes: [joystick.upKeyCode, joystick.downKeyCode, joystick.leftKeyCode, joystick.rightKeyCode],
+                keyName: joystick.keyName,
                 size: joystick.transform.size,
                 xCoord: joystick.transform.xCoord,
                 yCoord: joystick.transform.yCoord))
+            addControlToView(control: ctrl)
+        }
+        for mouse in keymap.keymapData.mouseAreaModel {
+            let ctrl =
+                MouseAreaModel(data: ControlData(
+                    keyName: mouse.keyName,
+                    size: mouse.transform.size,
+                    xCoord: mouse.transform.xCoord,
+                    yCoord: mouse.transform.yCoord))
+            addControlToView(control: ctrl)
+        }
+        for button in keymap.keymapData.buttonModels {
+            let ctrl = ButtonModel(data: ControlData(
+                keyCodes: [button.keyCode],
+                keyName: button.keyName,
+                size: button.transform.size,
+                xCoord: button.transform.xCoord,
+                yCoord: button.transform.yCoord))
             addControlToView(control: ctrl)
         }
     }
@@ -155,66 +167,63 @@ class EditorController {
                                                                                  GCKeyCode.keyS.rawValue,
                                                                                  GCKeyCode.keyA.rawValue,
                                                                                  GCKeyCode.keyD.rawValue],
+                                                                      keyName: "Keyboard",
                                                                       size: 20,
                                                                       xCoord: center.x.relativeX,
                                                                       yCoord: center.y.relativeY)))
         }
     }
 
-    public func addButton(_ toPoint: CGPoint) {
-        if editorMode {
-            addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-1],
-                                                                    size: 5,
-                                                                    xCoord: toPoint.x.relativeX,
-                                                                    yCoord: toPoint.y.relativeY,
-                                                                    parent: nil)))
+    private func addButton(keyCode: Int, point: CGPoint) {
+            if editorMode {
+                addControlToView(control: ButtonModel(data: ControlData(
+                    keyCodes: [keyCode],
+                    keyName: KeyCodeNames.keyCodes[keyCode] ?? "Btn",
+                    size: 5,
+                    xCoord: point.x.relativeX,
+                    yCoord: point.y.relativeY)))
+            }
         }
-    }
 
-    public func addRMB(_ toPoint: CGPoint) {
-        if editorMode {
-            addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-2],
-                                                                 size: 5,
-                                                                 xCoord: toPoint.x.relativeX,
-                                                                 yCoord: toPoint.y.relativeY,
-                                                                 parent: nil)))
-        }
+    public func addButton(_ toPoint: CGPoint) {
+        self.addLMB(toPoint)
     }
 
     public func addLMB(_ toPoint: CGPoint) {
-        if editorMode {
-            addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-1],
-                                                                 size: 5,
-                                                                 xCoord: toPoint.x.relativeX,
-                                                                 yCoord: toPoint.y.relativeY,
-                                                                 parent: nil)))
-        }
+        self.addButton(keyCode: -1, point: toPoint)
     }
 
-    public func addMMB(_ toPoint: CGPoint) {
+    public func addMouseJoystick(_ center: CGPoint) {
         if editorMode {
-            addControlToView(control: ButtonModel(data: ControlData(keyCodes: [-3],
-                                                                 size: 5,
-                                                                 xCoord: toPoint.x.relativeX,
-                                                                 yCoord: toPoint.y.relativeY,
-                                                                 parent: nil)))
+            addControlToView(control: JoystickModel(data: ControlData(keyCodes: [GCKeyCode.keyW.rawValue,
+                                                                                 GCKeyCode.keyS.rawValue,
+                                                                                 GCKeyCode.keyA.rawValue,
+                                                                                 GCKeyCode.keyD.rawValue],
+                                                                      keyName: "Mouse",
+                                                                      size: 20,
+                                                                      xCoord: center.x.relativeX,
+                                                                      yCoord: center.y.relativeY)))
         }
     }
 
     public func addMouseArea(_ center: CGPoint) {
         if editorMode {
-            addControlToView(control: MouseAreaModel(data: ControlData(size: 25,
-                                                                       xCoord: center.x.relativeX,
-                                                                       yCoord: center.y.relativeY)))
+            addControlToView(control: MouseAreaModel(data: ControlData(
+                keyName: "Mouse",
+                size: 25,
+                xCoord: center.x.relativeX,
+                yCoord: center.y.relativeY)))
         }
     }
 
     public func addDraggableButton(_ center: CGPoint, _ keyCode: Int) {
         if editorMode {
-            addControlToView(control: DraggableButtonModel(data: ControlData(keyCodes: [keyCode],
-                                                                       size: 15,
-                                                                       xCoord: center.x,
-                                                                       yCoord: center.y)))
+            addControlToView(control: DraggableButtonModel(data: ControlData(
+                keyCodes: [keyCode],
+                keyName: "Mouse",
+                size: 15,
+                xCoord: center.x,
+                yCoord: center.y)))
         }
     }
 

@@ -65,7 +65,7 @@ class PlayInput {
                     && !PlayInput.cmdPressed()
                     && !PlayInput.FORBIDDEN.contains(keyCode)
                     && self.isSafeToBind(keyboard) {
-                    EditorController.shared.setKeyCode(keyCode.rawValue)
+                    // EditorController.shared.setKeyCode(keyCode.rawValue)
                 } else {
                     if self.inputEnabled {
                         NotificationCenter.default.post(name: NSNotification.Name("playtools.\(keyCode.rawValue)"),
