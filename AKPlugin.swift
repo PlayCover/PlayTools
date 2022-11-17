@@ -80,4 +80,8 @@ class AKPlugin: NSObject, Plugin {
     func setMenuBarVisible(_ visible: Bool) {
         NSMenu.setMenuBarVisible(visible)
     }
+
+    func activateApp() {
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
 }

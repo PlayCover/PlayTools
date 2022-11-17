@@ -67,14 +67,25 @@ final public class PlayCover: NSObject {
 
 @objc extension AVPictureInPictureController {
     static func swizzle() {
-        let originalMethod = class_getInstanceMethod(AVPictureInPictureController.self, #selector(AVPictureInPictureController.init(playerLayer:)))
-        let swizzledMethod = class_getInstanceMethod(AVPictureInPictureController.self, #selector(hook_init(playerLayer:)))
-        method_exchangeImplementations(originalMethod!, swizzledMethod!)
+        let originalInitMethod = class_getInstanceMethod(AVPictureInPictureController.self,
+                                                         #selector(AVPictureInPictureController.init(playerLayer:)))
+        let swizzledInitMethod = class_getInstanceMethod(AVPictureInPictureController.self,
+                                                         #selector(hook_init(playerLayer:)))
+        method_exchangeImplementations(originalInitMethod!, swizzledInitMethod!)
+
+        let originalCloseMethod = class_getInstanceMethod(AVPictureInPictureController.self,
+                                                          #selector(AVPictureInPictureController.stopPictureInPicture))
+        let swizzledCloseMethod = class_getInstanceMethod(AVPictureInPictureController.self,
+                                                          #selector(hook_close))
     }
 
     func hook_init(playerLayer: AVPlayerLayer) -> AVPictureInPictureController {
         PlayCover.pipController = hook_init(playerLayer: playerLayer)
         return PlayCover.pipController!
+    }
+
+    func hook_close() {
+        AKInterface.shared!.activateApp()
     }
 }
 

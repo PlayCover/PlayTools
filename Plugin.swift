@@ -25,4 +25,5 @@ public protocol Plugin: NSObjectProtocol {
     func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool, Bool) -> Bool)
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
     func setMenuBarVisible(_ value: Bool)
+    func activateApp()
 }
