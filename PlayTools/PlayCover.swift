@@ -5,10 +5,13 @@
 
 import Foundation
 import UIKit
+import AVKit
 
 final public class PlayCover: NSObject {
 
     @objc static let shared = PlayCover()
+
+    static var pipController: AVPictureInPictureController?
 
     var menuController: MenuController?
     var firstTime = true
@@ -20,6 +23,7 @@ final public class PlayCover: NSObject {
         AKInterface.initialize()
         PlayInput.shared.initialize()
         DiscordIPC.shared.initialize()
+        AVPictureInPictureController.swizzle()
     }
 
     @objc static public func quitWhenClose() {
@@ -58,6 +62,19 @@ final public class PlayCover: NSObject {
                 processSubviews(of: subview)
             }
         }
+    }
+}
+
+@objc extension AVPictureInPictureController {
+    static func swizzle() {
+        let originalMethod = class_getInstanceMethod(AVPictureInPictureController.self, #selector(AVPictureInPictureController.init(playerLayer:)))
+        let swizzledMethod = class_getInstanceMethod(AVPictureInPictureController.self, #selector(hook_init(playerLayer:)))
+        method_exchangeImplementations(originalMethod!, swizzledMethod!)
+    }
+
+    func hook_init(playerLayer: AVPlayerLayer) -> AVPictureInPictureController {
+        PlayCover.pipController = hook_init(playerLayer: playerLayer)
+        return PlayCover.pipController!
     }
 }
 

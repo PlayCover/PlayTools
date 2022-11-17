@@ -6,6 +6,7 @@
  */
 
 import UIKit
+import AVKit
 
 class RotateViewController: UIViewController {
     static let orientationList: [UIInterfaceOrientation] = [
@@ -44,6 +45,11 @@ extension UIApplication {
     func downscaleElement(_ sender: AnyObject) {
         EditorController.shared.focusedControl?.resize(down: true)
     }
+
+    @objc
+    func forcePIP(_ sender: AnyObject) {
+        PlayCover.pipController?.startPictureInPicture()
+    }
 }
 
 extension UIViewController {
@@ -66,12 +72,14 @@ var keymapping = ["Open/Close Keymapping Editor",
                   "Delete selected element",
                   "Upsize selected element",
                   "Downsize selected element",
-                  "Rotate display area"]
+                  "Rotate display area",
+                  "Force enable PiP"]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIViewController.rotateView(_:))]
+                           #selector(UIViewController.rotateView(_:)),
+                           #selector(UIApplication.forcePIP(_:))]
 
 class MenuController {
     init(with builder: UIMenuBuilder) {
@@ -82,7 +90,7 @@ class MenuController {
 
     @available(iOS 15.0, *)
     class func keymappingMenu() -> UIMenu {
-        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R" ]
+        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "P" ]
 
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
