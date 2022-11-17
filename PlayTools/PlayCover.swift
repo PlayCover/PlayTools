@@ -77,6 +77,7 @@ final public class PlayCover: NSObject {
                                                           #selector(AVPictureInPictureController.stopPictureInPicture))
         let swizzledCloseMethod = class_getInstanceMethod(AVPictureInPictureController.self,
                                                           #selector(hook_close))
+        method_exchangeImplementations(originalCloseMethod!, swizzledCloseMethod!)
     }
 
     func hook_init(playerLayer: AVPlayerLayer) -> AVPictureInPictureController {
