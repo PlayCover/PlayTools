@@ -38,19 +38,20 @@ class ButtonAction: ActionBase {
     let keyCode: GCKeyCode
     let keyName: String
 
-    init(key: GCKeyCode, keyName: String, point: CGPoint, id: Int) {
-        self.keyCode = key
+    init(keyCode: GCKeyCode, keyName: String, point: CGPoint, id: Int) {
+        self.keyCode = keyCode
         self.keyName = keyName
         super.init(point: point, id: id)
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(update(_:)),
-                                               name: NSNotification.Name("playtools.\(key.rawValue)"),
+                                               name: NSNotification.Name("playtools.\(keyCode.rawValue)"),
                                                object: nil)
     }
 
     convenience init(id: Int, data: Button) {
         self.init(
-            key: GCKeyCode(rawValue: data.keyCode),
+            keyCode: GCKeyCode(rawValue: data.keyCode),
+            keyName: data.keyName,
             point: CGPoint(
                 x: data.transform.xCoord.absoluteX,
                 y: data.transform.yCoord.absoluteY),
@@ -72,19 +73,12 @@ class DraggableButtonAction: ButtonAction {
 
     var releasePoint: CGPoint
 
-    init(id: Int, data: Button) {
-        self.releasePoint = CGPoint(
-            x: data.transform.xCoord.absoluteX,
-            y: data.transform.yCoord.absoluteY)
-        super.init(
-            key: GCKeyCode(rawValue: data.keyCode),
-            point: CGPoint(
-                x: data.transform.xCoord.absoluteX,
-                y: data.transform.yCoord.absoluteY),
-            id: id)
+    override init(keyCode: GCKeyCode, keyName: String, point: CGPoint, id: Int) {
+        self.releasePoint = point
+        super.init(keyCode: keyCode, keyName: keyName, point: point, id: id)
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(update(_:)),
-                                               name: NSNotification.Name("playtools.\(key.rawValue)"),
+                                               name: NSNotification.Name("playtools.\(keyCode.rawValue)"),
                                                object: nil)
     }
 
