@@ -10,8 +10,7 @@ import CoreGraphics
 import Foundation
 
 class AKPlugin: NSObject, Plugin {
-    required override init() {
-    }
+    required override init() {}
 
     var screenCount: Int {
         NSScreen.screens.count
@@ -70,15 +69,6 @@ class AKPlugin: NSObject, Plugin {
 
     func terminateApplication() {
         NSApplication.shared.terminate(self)
-    }
-
-    func eliminateRedundantKeyPressEvents(_ dontIgnore: @escaping() -> Bool) {
-        NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
-            if dontIgnore() {
-                return event
-            }
-            return nil
-        })
     }
 
     func setMenuBarVisible(_ visible: Bool) {

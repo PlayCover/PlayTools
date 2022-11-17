@@ -221,13 +221,6 @@ class PlayInput {
         creationCount += 1
         Toast.showOver(msg: "Setting up... \(creationCount)")
         setupActions()
-
-        // Fix beep sound
-        if let akInterface = AKInterface.shared {
-            akInterface.eliminateRedundantKeyPressEvents({ self.dontIgnore() })
-        } else {
-            Toast.showOver(msg: "AKInterface not found!")
-        }
     }
 
     func dontIgnore() -> Bool {

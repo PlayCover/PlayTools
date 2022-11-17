@@ -35,10 +35,12 @@ class MouseButtonAction: ActionBase {
 }
 
 class ButtonAction: ActionBase {
-    var key: GCKeyCode
+    let keyCode: GCKeyCode
+    let keyName: String
 
-    init(key: GCKeyCode, point: CGPoint, id: Int) {
-        self.key = key
+    init(key: GCKeyCode, keyName: String, point: CGPoint, id: Int) {
+        self.keyCode = key
+        self.keyName = keyName
         super.init(point: point, id: id)
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(update(_:)),
