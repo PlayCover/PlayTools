@@ -9,16 +9,8 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-void disableCursor(boolean_t disable);
-void moveCursorTo(CGPoint point);
-
-typedef struct {
-     unsigned char r, g, b;
-} RGB;
-
-double ColourDistance(RGB e1, RGB e2);
-
 @interface PTFakeMetaTouch : NSObject
+
 + (void)load;
 
 + (UITouch* ) touch: (NSInteger) pointId;
@@ -35,11 +27,5 @@ double ColourDistance(RGB e1, RGB e2);
  */
 
 + (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase inWindow:(UIWindow*)window onView:(UIView*)view;
-/**
- *  Get a not used pointId 获取一个没有使用过的触屏序列号 obtain a never used touch screen sequence number
- *
- *  @return pointId 返回序列号 returns sequence number
- */
-+ (NSInteger)getAvailablePointId;
 
 @end

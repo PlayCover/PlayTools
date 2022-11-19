@@ -24,12 +24,15 @@ void IOHIDEventAppendEvent(IOHIDEventRef event, IOHIDEventRef childEvent);
 void IOHIDEventSetIntegerValue(IOHIDEventRef event, IOHIDEventField field, int value);
 void IOHIDEventSetSenderID(IOHIDEventRef event, uint64_t sender);
 
+// Derived from https://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-606.1.7/IOHIDFamily/IOHIDEventTypes.h
+
 enum {
     kIOHIDDigitizerTransducerTypeStylus = 0,
     kIOHIDDigitizerTransducerTypePuck,
     kIOHIDDigitizerTransducerTypeFinger,
     kIOHIDDigitizerTransducerTypeHand
 };
+
 enum {
     kIOHIDEventTypeNULL,                    // 0
     kIOHIDEventTypeVendorDefined,
@@ -54,7 +57,7 @@ enum {
     kIOHIDEventTypeGyro,                    // 20
     kIOHIDEventTypeCompass,
     kIOHIDEventTypeZoomToggle,
-    kIOHIDEventTypeDockSwipe,               // just like kIOHIDEventTypeNavigationSwipe, but intended for consumption by Dock
+    kIOHIDEventTypeDockSwipe,               // Just like kIOHIDEventTypeNavigationSwipe, but intended for consumption by Dock
     kIOHIDEventTypeSymbolicHotKey,
     kIOHIDEventTypePower,                   // 25
     kIOHIDEventTypeLED,
@@ -65,27 +68,34 @@ enum {
     kIOHIDEventTypeAtmosphericPressure,
     kIOHIDEventTypeUndefined,
     kIOHIDEventTypeCount, // This should always be last
+
     // DEPRECATED:
     kIOHIDEventTypeSwipe = kIOHIDEventTypeNavigationSwipe,
     kIOHIDEventTypeMouse = kIOHIDEventTypePointer
 };
+
 enum {
-    kIOHIDDigitizerEventRange                               = 0x00000001,
-    kIOHIDDigitizerEventTouch                               = 0x00000002,
-    kIOHIDDigitizerEventPosition                            = 0x00000004,
-    kIOHIDDigitizerEventStop                                = 0x00000008,
-    kIOHIDDigitizerEventPeak                                = 0x00000010,
-    kIOHIDDigitizerEventIdentity                            = 0x00000020,
-    kIOHIDDigitizerEventAttribute                           = 0x00000040,
-    kIOHIDDigitizerEventCancel                              = 0x00000080,
-    kIOHIDDigitizerEventStart                               = 0x00000100,
-    kIOHIDDigitizerEventResting                             = 0x00000200,
-    kIOHIDDigitizerEventSwipeUp                             = 0x01000000,
-    kIOHIDDigitizerEventSwipeDown                           = 0x02000000,
-    kIOHIDDigitizerEventSwipeLeft                           = 0x04000000,
-    kIOHIDDigitizerEventSwipeRight                          = 0x08000000,
-    kIOHIDDigitizerEventSwipeMask                           = 0xFF000000,
+    kIOHIDDigitizerEventRange                               = 1<<0,
+    kIOHIDDigitizerEventTouch                               = 1<<1,
+    kIOHIDDigitizerEventPosition                            = 1<<2,
+    kIOHIDDigitizerEventStop                                = 1<<3,
+    kIOHIDDigitizerEventPeak                                = 1<<4,
+    kIOHIDDigitizerEventIdentity                            = 1<<5,
+    kIOHIDDigitizerEventAttribute                           = 1<<6,
+    kIOHIDDigitizerEventCancel                              = 1<<7,
+    kIOHIDDigitizerEventStart                               = 1<<8,
+    kIOHIDDigitizerEventResting                             = 1<<9,
+    kIOHIDDigitizerEventFromEdgeFlat                        = 1<<10,
+    kIOHIDDigitizerEventFromEdgeTip                         = 1<<11,
+    kIOHIDDigitizerEventFromCorner                          = 1<<12,
+    kIOHIDDigitizerEventSwipePending                        = 1<<13,
+    kIOHIDDigitizerEventSwipeUp                             = 1<<24,
+    kIOHIDDigitizerEventSwipeDown                           = 1<<25,
+    kIOHIDDigitizerEventSwipeLeft                           = 1<<26,
+    kIOHIDDigitizerEventSwipeRight                          = 1<<27,
+    kIOHIDDigitizerEventSwipeMask                           = 0xFF<<24,
 };
+
 enum {
     kIOHIDEventFieldDigitizerX = IOHIDEventFieldBase(kIOHIDEventTypeDigitizer),
     kIOHIDEventFieldDigitizerY,
@@ -98,7 +108,7 @@ enum {
     kIOHIDEventFieldDigitizerRange,
     kIOHIDEventFieldDigitizerTouch,
     kIOHIDEventFieldDigitizerPressure,
-    kIOHIDEventFieldDigitizerAuxiliaryPressure, //BarrelPressure
+    kIOHIDEventFieldDigitizerAuxiliaryPressure, // BarrelPressure
     kIOHIDEventFieldDigitizerTwist,
     kIOHIDEventFieldDigitizerTiltX,
     kIOHIDEventFieldDigitizerTiltY,
@@ -115,17 +125,17 @@ enum {
     kIOHIDEventFieldDigitizerIsDisplayIntegrated,
     kIOHIDEventFieldDigitizerQualityRadiiAccuracy,
 };
+
 IOHIDEventRef IOHIDEventCreateDigitizerEvent(CFAllocatorRef allocator, AbsoluteTime timeStamp, IOHIDDigitizerTransducerType type,
                                              uint32_t index, uint32_t identity, uint32_t eventMask, uint32_t buttonMask,
                                              IOHIDFloat x, IOHIDFloat y, IOHIDFloat z, IOHIDFloat tipPressure, IOHIDFloat barrelPressure,
                                              Boolean range, Boolean touch, IOOptionBits options);
+
 IOHIDEventRef IOHIDEventCreateDigitizerFingerEventWithQuality(CFAllocatorRef allocator, AbsoluteTime timeStamp,
                                                               uint32_t index, uint32_t identity, uint32_t eventMask,
                                                               IOHIDFloat x, IOHIDFloat y, IOHIDFloat z, IOHIDFloat tipPressure, IOHIDFloat twist,
                                                               IOHIDFloat minorRadius, IOHIDFloat majorRadius, IOHIDFloat quality, IOHIDFloat density, IOHIDFloat irregularity,
                                                               Boolean range, Boolean touch, IOOptionBits options);
-
-
 
 IOHIDEventRef kif_IOHIDEventWithTouches(NSArray *touches) {
     uint64_t abTime = mach_absolute_time();
@@ -148,8 +158,8 @@ IOHIDEventRef kif_IOHIDEventWithTouches(NSArray *touches) {
                                                              true, // touch
                                                              0); // options
     IOHIDEventSetIntegerValue(handEvent, kIOHIDEventFieldDigitizerIsDisplayIntegrated, true);
-    for (UITouch *touch in touches)
-    {
+
+    for (UITouch *touch in touches) {
         uint32_t eventMask = (touch.phase == UITouchPhaseMoved) ? kIOHIDDigitizerEventPosition : (kIOHIDDigitizerEventRange | kIOHIDDigitizerEventTouch);
         uint32_t isTouching = (touch.phase == UITouchPhaseEnded) ? 0 : 1;
         CGPoint touchLocation = [touch locationInView:touch.window];
@@ -177,11 +187,3 @@ IOHIDEventRef kif_IOHIDEventWithTouches(NSArray *touches) {
     }
     return handEvent;
 }
-
-
-
-
-
-
-
-

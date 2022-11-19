@@ -75,12 +75,9 @@ var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
 
 class MenuController {
     init(with builder: UIMenuBuilder) {
-        if #available(iOS 15.0, *) {
-            builder.insertSibling(MenuController.keymappingMenu(), afterMenu: .view)
-        }
+        builder.insertSibling(MenuController.keymappingMenu(), afterMenu: .view)
     }
 
-    @available(iOS 15.0, *)
     class func keymappingMenu() -> UIMenu {
         let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R" ]
 
