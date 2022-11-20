@@ -31,13 +31,6 @@ extern uint64_t dyld_get_base_platform(void *platform);
 
 uint64_t my_dyld_get_base_platform(void *platform) { return 2; }
 
-// #define DEVICE_MODEL ("iPad13,8")
-//#define DEVICE_MODEL ("iPad8,6")
-
-// find Mac by using sysctl of HW_TARGET
-// #define OEM_ID ("J522AP")
-// #define OEM_ID ("J320xAP")
-
 // get device model from playcover .plist
 #define DEVICE_MODEL ([[[PlaySettings shared] deviceModel] UTF8String])
 #define OEM_ID ([[[PlaySettings shared] oemID] UTF8String])
@@ -112,41 +105,6 @@ static int my_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
   }
 }
 
-// Useful for debugging:
-// static int my_open(const char *path, int flags, mode_t mode) {
-//   mode = 0644;
-//   int value = open(path, flags, mode);
-//   if (value == -1) {
-//     printf("[Lucas] open (%s): %s\n", strerror(errno), path);
-//   }
-
-//   return value;
-// }
-
-// static int my_create(const char *path, mode_t mode) {
-//   int value = creat(path, mode);
-//   if (value == -1) {
-//     printf("[Lucas] create (%s): %s\n", strerror(errno), path);
-//   }
-//   return value;
-// }
-
-// static int my_mkdir(const char *path, mode_t mode) {
-//   int value = mkdir(path, mode);
-//   if (value == -1) {
-//     printf("[Lucas] mkdir (%s): %s\n", strerror(errno), path);
-//   }
-//   return value;
-// }
-
-// static int my_lstat(const char *restrict path, void *restrict buf) {
-//   int value = lstat(path, buf);
-//   if (value == -1) {
-//     printf("[Lucas] lstat (%s): %s\n", strerror(errno), path);
-//   }
-//   return value;
-// }
-
 static bool isGenshin = false;
 
 extern int csops(pid_t pid, unsigned int ops, user_addr_t useraddr, size_t usersize);
@@ -164,16 +122,11 @@ int my_csops(pid_t pid, uint32_t ops, user_addr_t useraddr, user_size_t usersize
 }
 
 DYLD_INTERPOSE(my_csops, csops)
-
 DYLD_INTERPOSE(my_dyld_get_active_platform, dyld_get_active_platform)
 DYLD_INTERPOSE(my_dyld_get_base_platform, dyld_get_base_platform)
 DYLD_INTERPOSE(my_uname, uname)
 DYLD_INTERPOSE(my_sysctlbyname, sysctlbyname)
 DYLD_INTERPOSE(my_sysctl, sysctl)
-// DYLD_INTERPOSE(my_open, open)
-// DYLD_INTERPOSE(my_mkdir, mkdir)
-// DYLD_INTERPOSE(my_create, creat)
-// DYLD_INTERPOSE(my_lstat, lstat)
 
 @implementation PlayLoader
 
