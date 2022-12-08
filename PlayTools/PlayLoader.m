@@ -90,6 +90,139 @@ DYLD_INTERPOSE(pt_dyld_get_active_platform, dyld_get_active_platform)
 DYLD_INTERPOSE(pt_uname, uname)
 DYLD_INTERPOSE(pt_sysctlbyname, sysctlbyname)
 DYLD_INTERPOSE(pt_sysctl, sysctl)
+    
+    struct dyld_interpose_tuple {
+    const void* replacement;
+    const void* replacee;
+};
+
+extern const struct mach_header __dso_handle;
+extern void dyld_dynamic_interpose(const struct mach_header* mh, const struct dyld_interpose_tuple array[], size_t count);
+
+extern int csops(pid_t pid, unsigned int ops, void *useraddr, size_t usersize);
+
+extern Boolean SecKeyVerifySignature(SecKeyRef key, SecKeyAlgorithm algorithm, CFDataRef signedData, CFDataRef signature, CFErrorRef  _Nullable *error);
+
+extern OSStatus SecTrustEvaluate(SecTrustRef trust, SecTrustResultType *result);
+
+int my_csops(pid_t pid, uint32_t ops, user_addr_t useraddr, user_size_t usersize){
+    if (ops == CS_OPS_STATUS || ops == CS_OPS_IDENTITY) {
+            printf("Hooked CSOPS %d \n", ops);
+            return 0;
+    }
+    return csops(pid, ops, useraddr, usersize);
+}
+
+OSStatus my_SecTrustEvaluate(SecTrustRef trust, SecTrustResultType *result){
+    OSStatus ret = SecTrustEvaluate(trust, result);
+        // Actually, this certificate chain is trusted
+    *result = kSecTrustResultUnspecified;
+    return ret;
+}
+
+Boolean my_SecKeyVerifySignature(SecKeyRef key, SecKeyAlgorithm algorithm, CFDataRef signedData, CFDataRef signature, CFErrorRef  _Nullable *error){
+    return TRUE;
+}
+
+extern OSStatus SSLSetSessionOption (SSLContextRef context, SSLSessionOption option, Boolean value);
+
+OSStatus my_SSLSetSessionOption (SSLContextRef context, SSLSessionOption option, Boolean value) {
+    if (option == kSSLSessionOptionBreakOnServerAuth)
+           return noErr;
+       else
+           return SSLSetSessionOption(context, option, value);
+}
+
+extern SSLContextRef SSLCreateContext (CFAllocatorRef alloc, SSLProtocolSide protocolSide, SSLConnectionType connectionType);
+
+SSLContextRef my_SSLCreateContext (CFAllocatorRef alloc, SSLProtocolSide protocolSide, SSLConnectionType connectionType){
+    SSLContextRef sslContext = SSLCreateContext(alloc, protocolSide, connectionType);
+    SSLSetSessionOption(sslContext, kSSLSessionOptionBreakOnServerAuth, true);
+    return sslContext;
+}
+
+extern OSStatus SSLHandshake (SSLContextRef context);
+
+OSStatus my_SSLHandshake (SSLContextRef context) {
+    OSStatus result = SSLHandshake(context);
+
+        // Hijack the flow when breaking on server authentication
+        if (result == errSSLServerAuthCompleted)
+        {
+            // Do not check the cert and call SSLHandshake() again
+            return SSLHandshake(context);
+        }
+        else
+            return result;
+}
+
+extern bool SecTrustEvaluateWithError(SecTrustRef trust, CFErrorRef  _Nullable *error);
+
+bool my_SecTrustEvaluateWithError(SecTrustRef trust, CFErrorRef  _Nullable *error) {
+    return TRUE;
+}
+
+extern long SSL_get_verify_result (const void *ssl);
+
+long my_SSL_get_verify_result (const void *ssl) {
+    printf("Call");
+    return 0;
+}
+
+extern OSStatus tls_helper_create_peer_trust(void *hdsk, bool server, SecTrustRef *trustRef);
+
+static OSStatus my_tls_helper_create_peer_trust(void *hdsk, bool server, SecTrustRef *trustRef)
+{
+    // Do not actually set the trustRef
+    return errSecSuccess;
+}
+
+extern const char *SSL_get_psk_identity(const void *ssl);
+
+const char *my_SSL_get_psk_identity(const void *ssl) {
+    return "Apple";
+}
+
+enum ssl_verify_result_t {
+    ssl_verify_ok = 0,
+    ssl_verify_invalid,
+    ssl_verify_retry,
+};
+
+#define SSL_VERIFY_NONE 0
+
+static int custom_verify_callback_that_does_not_validate(void *ssl, uint8_t *out_alert)
+{
+    // Yes this certificate is 100% valid...
+    return ssl_verify_ok;
+}
+
+extern void SSL_set_custom_verify(void *ssl, int mode, int (*callback)(void *ssl, uint8_t *out_alert));
+
+void my_SSL_set_custom_verify(void *ssl, int mode, int (*callback)(void *ssl, uint8_t *out_alert)){
+    SSL_set_custom_verify(ssl, SSL_VERIFY_NONE, custom_verify_callback_that_does_not_validate);
+    return;
+}
+
+DYLD_INTERPOSE(my_SSL_set_custom_verify, SSL_set_custom_verify)
+
+DYLD_INTERPOSE(my_SSL_get_psk_identity, SSL_get_psk_identity)
+
+//DYLD_INTERPOSE(my_tls_helper_create_peer_trust, tls_helper_create_peer_trust)
+
+DYLD_INTERPOSE(my_csops, csops)
+
+DYLD_INTERPOSE(my_SSLSetSessionOption, SSLSetSessionOption)
+
+DYLD_INTERPOSE(my_SSLHandshake, SSLHandshake)
+
+DYLD_INTERPOSE(my_SecKeyVerifySignature, SecKeyVerifySignature)
+
+DYLD_INTERPOSE(my_SSLCreateContext, SSLCreateContext)
+
+DYLD_INTERPOSE(my_SecTrustEvaluate, SecTrustEvaluate)
+
+DYLD_INTERPOSE(my_SecTrustEvaluateWithError, SecTrustEvaluateWithError)
 
 @implementation PlayLoader
 
