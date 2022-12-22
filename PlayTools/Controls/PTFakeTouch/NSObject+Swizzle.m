@@ -54,21 +54,9 @@
         [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
         [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
     }
-    
-    [objc_getClass("_UIMenuBuilder") swizzleInstanceMethod:sel_getUid("initWithRootMenu:") withMethod:@selector(initWithRootMenuHook:)];
 
     [objc_getClass("IOSViewController") swizzleInstanceMethod:@selector(prefersPointerLocked) withMethod:@selector(hook_prefersPointerLocked)];
-}
-
-bool menuWasCreated = false;
-- (id) initWithRootMenuHook:(id)rootMenu {
-    self = [self initWithRootMenuHook:rootMenu];
-    if (!menuWasCreated) {
-        [PlayCover initMenuWithMenu: self];
-        menuWasCreated = TRUE;
-    }
-    
-    return self;
+    [self swizzleInstanceMethod:@selector(init) withMethod:@selector(hook_init)];
 }
 
 - (BOOL) hook_prefersPointerLocked {
@@ -87,4 +75,16 @@ bool menuWasCreated = false;
     return [PlayScreen sizeAspectRatio:[self hook_size]];
 }
 
+bool menuWasCreated = false;
+
+-(id) hook_init {
+    if (!menuWasCreated) {
+        if ([[self class] isEqual: NSClassFromString(@"_UIMenuBuilder")]) {
+            [PlayCover initMenuWithMenu: self];
+            menuWasCreated = TRUE;
+        }
+    }
+    
+    return self;
+}
 @end
