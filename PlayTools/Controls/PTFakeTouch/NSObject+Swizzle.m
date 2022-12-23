@@ -12,6 +12,10 @@
 #import <PlayTools/PlayTools-Swift.h>
 #import "PTFakeMetaTouch.h"
 
+__attribute__((visibility("hidden")))
+@interface PTSwizzleLoader : NSObject
+@end
+
 @implementation NSObject (Swizzle)
 
 - (void) swizzleInstanceMethod:(SEL)origSelector withMethod:(SEL)newSelector
@@ -45,20 +49,6 @@
     }
 }
 
-+ (void) load
-{
-    // TODO: UINSview
-
-    if ([[PlaySettings shared] adaptiveDisplay]) {
-        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
-        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
-        [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
-    }
-
-    [objc_getClass("IOSViewController") swizzleInstanceMethod:@selector(prefersPointerLocked) withMethod:@selector(hook_prefersPointerLocked)];
-    [self swizzleInstanceMethod:@selector(init) withMethod:@selector(hook_init)];
-}
-
 - (BOOL) hook_prefersPointerLocked {
     return false;
 }
@@ -76,15 +66,51 @@
 }
 
 bool menuWasCreated = false;
-
--(id) hook_init {
+- (id) initWithRootMenuHook:(id)rootMenu {
+    self = [self initWithRootMenuHook:rootMenu];
     if (!menuWasCreated) {
-        if ([[self class] isEqual: NSClassFromString(@"_UIMenuBuilder")]) {
-            [PlayCover initMenuWithMenu: self];
-            menuWasCreated = TRUE;
-        }
+        [PlayCover initMenuWithMenu: self];
+        menuWasCreated = TRUE;
     }
-    
     return self;
 }
+
+@end
+
+/*
+ This class only exists to apply swizzles from the +load of a class that won't have any categories/extensions. The reason
+ for not doing this in a C module initializer is that obj-c initialization happens before any __attribute__((constructor))
+ is called. This way we can guarantee the hooks will be applied before [PlayCover launch] is called (in PlayLoader.m).
+ 
+ Side note:
+ While adding method replacements to NSObject does work, I'm not certain this doesn't (or won't) have any side effects. The
+ way Apple does method swizzling internally is by creating a category of the swizzled class and adding the replacements there.
+ This keeps all those replacements "local" to that class. Example:
+ 
+ '''
+ @interface FBSSceneSettings (Swizzle)
+ -(CGRect) hook_frame {
+    ...
+ }
+ @end
+ 
+ Somewhere else:
+ swizzle(FBSSceneSettings.class, @selector(frame), @selector(hook_frame);
+ '''
+ 
+ However, doing this would require generating @interface declarations (either with class-dump or by hand) which would add a lot
+ of code and complexity. I'm not sure this trade-off is "worth it", at least at the time of writing.
+ */
+@implementation PTSwizzleLoader
++ (void)load {
+    if ([[PlaySettings shared] adaptiveDisplay]) {
+        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
+        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
+        [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
+    }
+
+    [objc_getClass("_UIMenuBuilder") swizzleInstanceMethod:sel_getUid("initWithRootMenu:") withMethod:@selector(initWithRootMenuHook:)];
+    [objc_getClass("IOSViewController") swizzleInstanceMethod:@selector(prefersPointerLocked) withMethod:@selector(hook_prefersPointerLocked)];
+}
+
 @end
