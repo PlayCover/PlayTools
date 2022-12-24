@@ -19,15 +19,8 @@ public class PlayCover: NSObject {
     }
 
     @objc static public func initMenu(menu: NSObject) {
-        delay(0.005) {
-            guard let menuBuilder = menu as? UIMenuBuilder else { return }
-
-            shared.menuController = MenuController(with: menuBuilder)
-            delay(0.005) {
-                UIMenuSystem.main.setNeedsRebuild()
-                UIMenuSystem.main.setNeedsRevalidate()
-            }
-        }
+        guard let menuBuilder = menu as? UIMenuBuilder else { return }
+        shared.menuController = MenuController(with: menuBuilder)
     }
 
     static public func quitWhenClose() {
