@@ -91,6 +91,71 @@ DYLD_INTERPOSE(pt_uname, uname)
 DYLD_INTERPOSE(pt_sysctlbyname, sysctlbyname)
 DYLD_INTERPOSE(pt_sysctl, sysctl)
 
+// Interpose Apple Keychain functions (SecItemCopyMatching, SecItemAdd, SecItemUpdate, SecItemDelete)
+// This allows us to intercept keychain requests and return our own data
+
+// Use the implementations from PlayKeychain
+static OSStatus pt_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result) {
+    NSLog(@"SecItemCopyMatching: %@", query);
+    OSStatus retval = [PlayKeychain copyMatching:(__bridge NSDictionary * _Nonnull)(query) result:result];
+    if (result != NULL) {
+        NSLog(@"SecItemCopyMatching result: %@", *result);
+    }
+    return retval;
+}
+
+static OSStatus pt_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
+    NSLog(@"SecItemAdd: %@", attributes);
+    return [PlayKeychain add:(__bridge NSDictionary * _Nonnull)(attributes) result:result];
+}
+
+static OSStatus pt_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) {
+    NSLog(@"SecItemUpdate: %@", query);
+    return [PlayKeychain update:(__bridge NSDictionary * _Nonnull)(query) attributesToUpdate:(__bridge NSDictionary * _Nonnull)(attributesToUpdate)];
+}
+
+static OSStatus pt_SecItemDelete(CFDictionaryRef query) {
+    NSLog(@"SecItemDelete: %@", query);
+    return [PlayKeychain delete:(__bridge NSDictionary * _Nonnull)(query)];
+}
+
+// Interpose functions to dump all keychain requests
+//static OSStatus pt_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result) {
+//    NSLog(@"SecItemCopyMatching: %@", query);
+//    OSStatus retval = SecItemCopyMatching(query, result);
+//    if (result != NULL) {
+//        NSLog(@"SecItemCopyMatching result: %@", *result);
+//    }
+//    return retval;
+//}
+//
+//static OSStatus pt_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
+//    NSLog(@"SecItemAdd: %@", attributes);
+//    SecItemAdd(attributes, result);
+//    if (result != NULL) {
+//        NSLog(@"SecItemAdd result: %@", *result);
+//    }
+//    return errSecSuccess;
+//}
+//
+//static OSStatus pt_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) {
+//    NSLog(@"SecItemUpdate: %@", query);
+//    SecItemUpdate(query, attributesToUpdate);
+//    return errSecSuccess;
+//}
+//
+//static OSStatus pt_SecItemDelete(CFDictionaryRef query) {
+//    NSLog(@"SecItemDelete: %@", query);
+//    SecItemDelete(query);
+//    return errSecSuccess;
+//}
+
+DYLD_INTERPOSE(pt_SecItemCopyMatching, SecItemCopyMatching)
+DYLD_INTERPOSE(pt_SecItemAdd, SecItemAdd)
+DYLD_INTERPOSE(pt_SecItemUpdate, SecItemUpdate)
+DYLD_INTERPOSE(pt_SecItemDelete, SecItemDelete)
+
+
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {

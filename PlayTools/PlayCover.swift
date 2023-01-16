@@ -11,6 +11,12 @@ public class PlayCover: NSObject {
     static let shared = PlayCover()
     var menuController: MenuController?
 
+    public static var keychainFolder: URL? {
+        let keychainFolder = FileManager.default.urls(for: .documentDirectory,
+                                                      in: .userDomainMask).first?.appendingPathComponent("Keychain")
+        return keychainFolder
+    }
+
     @objc static public func launch() {
         quitWhenClose()
         AKInterface.initialize()

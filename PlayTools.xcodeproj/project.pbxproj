@@ -45,6 +45,7 @@
 		AA719870287A81A000623C15 /* UIEvent+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719842287A81A000623C15 /* UIEvent+Private.h */; };
 		AA719872287A81A000623C15 /* UITouch+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719844287A81A000623C15 /* UITouch+Private.h */; };
 		AA818CB9287ABFB1000BEE9D /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CB8287ABFB1000BEE9D /* IOKit.framework */; };
+		ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCECEE529750BA600746595 /* PlayedApple.swift */; };
 		B127172228817AB90025112B /* SwordRPC in Frameworks */ = {isa = PBXBuildFile; productRef = B127172128817AB90025112B /* SwordRPC */; };
 		B127172528817C040025112B /* DiscordIPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B127172428817C040025112B /* DiscordIPC.swift */; };
 		B1271729288284BE0025112B /* DiscordActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1271728288284BE0025112B /* DiscordActivity.swift */; };
@@ -107,6 +108,7 @@
 		AA719844287A81A000623C15 /* UITouch+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UITouch+Private.h"; sourceTree = "<group>"; };
 		AA818CB8287ABFB1000BEE9D /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/IOKit.framework; sourceTree = DEVELOPER_DIR; };
 		AA818CBA287ABFD5000BEE9D /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/iOSSupport/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		ABCECEE529750BA600746595 /* PlayedApple.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayedApple.swift; sourceTree = "<group>"; };
 		B127172428817C040025112B /* DiscordIPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordIPC.swift; sourceTree = "<group>"; };
 		B1271728288284BE0025112B /* DiscordActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordActivity.swift; sourceTree = "<group>"; };
 		B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keymapping.swift; sourceTree = "<group>"; };
@@ -165,6 +167,7 @@
 		AA7196DA287A447700623C15 /* PlayTools */ = {
 			isa = PBXGroup;
 			children = (
+				ABCECEE729750BB100746595 /* AncientRunic */,
 				B127172328817AC70025112B /* DiscordActivity */,
 				AA719721287A480C00623C15 /* Controls */,
 				AA719799287A481500623C15 /* Keymap */,
@@ -260,6 +263,14 @@
 				AA818CB8287ABFB1000BEE9D /* IOKit.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		ABCECEE729750BB100746595 /* AncientRunic */ = {
+			isa = PBXGroup;
+			children = (
+				ABCECEE529750BA600746595 /* PlayedApple.swift */,
+			);
+			path = AncientRunic;
 			sourceTree = "<group>";
 		};
 		B127172328817AC70025112B /* DiscordActivity */ = {
@@ -447,6 +458,7 @@
 				AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */,
 				AA71986A287A81A000623C15 /* PTFakeMetaTouch.m in Sources */,
 				AA71970C287A44D200623C15 /* PlayScreen.swift in Sources */,
+				ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */,
 				AA71986C287A81A000623C15 /* NSObject+Swizzle.m in Sources */,
 				AA71970F287A44D200623C15 /* PlayCover.swift in Sources */,
 				B127172528817C040025112B /* DiscordIPC.swift in Sources */,
