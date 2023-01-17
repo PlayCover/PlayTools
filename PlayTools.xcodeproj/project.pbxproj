@@ -167,7 +167,7 @@
 		AA7196DA287A447700623C15 /* PlayTools */ = {
 			isa = PBXGroup;
 			children = (
-				ABCECEE729750BB100746595 /* AncientRunic */,
+				ABCECEE729750BB100746595 /* MysticRunes */,
 				B127172328817AC70025112B /* DiscordActivity */,
 				AA719721287A480C00623C15 /* Controls */,
 				AA719799287A481500623C15 /* Keymap */,
@@ -265,12 +265,12 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		ABCECEE729750BB100746595 /* AncientRunic */ = {
+		ABCECEE729750BB100746595 /* MysticRunes */ = {
 			isa = PBXGroup;
 			children = (
 				ABCECEE529750BA600746595 /* PlayedApple.swift */,
 			);
-			path = AncientRunic;
+			path = MysticRunes;
 			sourceTree = "<group>";
 		};
 		B127172328817AC70025112B /* DiscordActivity */ = {

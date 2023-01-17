@@ -96,59 +96,50 @@ DYLD_INTERPOSE(pt_sysctl, sysctl)
 
 // Use the implementations from PlayKeychain
 static OSStatus pt_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result) {
-    NSLog(@"SecItemCopyMatching: %@", query);
-    OSStatus retval = [PlayKeychain copyMatching:(__bridge NSDictionary * _Nonnull)(query) result:result];
-    if (result != NULL) {
-        NSLog(@"SecItemCopyMatching result: %@", *result);
+    if ([[PlaySettings shared] playChain]) {
+        NSLog(@"SecItemCopyMatching: %@", query);
+        OSStatus retval = [PlayKeychain copyMatching:(__bridge NSDictionary * _Nonnull)(query) result:result];
+        if (result != NULL && [[PlaySettings shared] playChainDebugging]) {
+            NSLog(@"SecItemCopyMatching result: %@", *result);
+        }
+        return retval;
+    } else {
+        return SecItemCopyMatching(query, result);
     }
-    return retval;
 }
 
 static OSStatus pt_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
-    NSLog(@"SecItemAdd: %@", attributes);
-    return [PlayKeychain add:(__bridge NSDictionary * _Nonnull)(attributes) result:result];
+    if ([[PlaySettings shared] playChain]) {
+        NSLog(@"SecItemAdd: %@", attributes);
+        OSStatus retval = [PlayKeychain add:(__bridge NSDictionary * _Nonnull)(attributes) result:result];
+        if (result != NULL && [[PlaySettings shared] playChainDebugging]) {
+            NSLog(@"SecItemAdd result: %@", *result);
+        }
+        return retval;
+    } else {
+        return SecItemAdd(attributes, result);
+    }
 }
 
 static OSStatus pt_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) {
-    NSLog(@"SecItemUpdate: %@", query);
-    return [PlayKeychain update:(__bridge NSDictionary * _Nonnull)(query) attributesToUpdate:(__bridge NSDictionary * _Nonnull)(attributesToUpdate)];
+    if ([[PlaySettings shared] playChain]) {
+        NSLog(@"SecItemUpdate: %@", query);
+        OSStatus retval = [PlayKeychain update:(__bridge NSDictionary * _Nonnull)(query) attributesToUpdate:(__bridge NSDictionary * _Nonnull)(attributesToUpdate)];
+        return retval;
+    } else {
+        return SecItemUpdate(query, attributesToUpdate);
+    }
 }
 
 static OSStatus pt_SecItemDelete(CFDictionaryRef query) {
-    NSLog(@"SecItemDelete: %@", query);
-    return [PlayKeychain delete:(__bridge NSDictionary * _Nonnull)(query)];
+    if ([[PlaySettings shared] playChain]) {
+        NSLog(@"SecItemDelete: %@", query);
+        OSStatus retval = [PlayKeychain delete:(__bridge NSDictionary * _Nonnull)(query)];
+        return retval;
+    } else {
+        return SecItemDelete(query);
+    }
 }
-
-// Interpose functions to dump all keychain requests
-//static OSStatus pt_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result) {
-//    NSLog(@"SecItemCopyMatching: %@", query);
-//    OSStatus retval = SecItemCopyMatching(query, result);
-//    if (result != NULL) {
-//        NSLog(@"SecItemCopyMatching result: %@", *result);
-//    }
-//    return retval;
-//}
-//
-//static OSStatus pt_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
-//    NSLog(@"SecItemAdd: %@", attributes);
-//    SecItemAdd(attributes, result);
-//    if (result != NULL) {
-//        NSLog(@"SecItemAdd result: %@", *result);
-//    }
-//    return errSecSuccess;
-//}
-//
-//static OSStatus pt_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) {
-//    NSLog(@"SecItemUpdate: %@", query);
-//    SecItemUpdate(query, attributesToUpdate);
-//    return errSecSuccess;
-//}
-//
-//static OSStatus pt_SecItemDelete(CFDictionaryRef query) {
-//    NSLog(@"SecItemDelete: %@", query);
-//    SecItemDelete(query);
-//    return errSecSuccess;
-//}
 
 DYLD_INTERPOSE(pt_SecItemCopyMatching, SecItemCopyMatching)
 DYLD_INTERPOSE(pt_SecItemAdd, SecItemAdd)
