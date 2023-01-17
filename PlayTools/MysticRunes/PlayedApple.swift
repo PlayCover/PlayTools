@@ -16,17 +16,26 @@ public class PlayKeychain: NSObject {
     static let shared = PlayKeychain()
 
     private static func getKeychainDirectory() -> URL? {
-        // Get the keychain folder
-        let keychainFolder = PlayCover.keychainFolder
-
+//        // Get the keychain folder
+//        let keychainFolder = FileManager.default.urls(for: .documentDirectory,
+//                                                          in: .userDomainMask)
+//            .first?.appendingPathComponent("Keychain")
+//
+        let bundleID = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
+        let keychainFolder = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
+            .appendingPathComponent("PlayChain")
+            .appendingPathComponent(bundleID)
+        
         // Create the keychain folder if it doesn't exist
-        if !FileManager.default.fileExists(atPath: keychainFolder!.path) {
+        if !FileManager.default.fileExists(atPath: keychainFolder.path) {
             do {
-                try FileManager.default.createDirectory(at: keychainFolder!,
+                try FileManager.default.createDirectory(at: keychainFolder,
                                                         withIntermediateDirectories: true,
                                                         attributes: nil)
             } catch {
-                NSLog("BUZZINC: Failed to create keychain folder")
+                if PlaySettings.shared.settingsData.playChainDebugging {
+                    NSLog("BUZZINC: Failed to create keychain folder")
+                    }
             }
         }
 
@@ -58,16 +67,22 @@ public class PlayKeychain: NSObject {
 
         // Check if the keychain file already exists
         if FileManager.default.fileExists(atPath: keychainPath.path) {
-            NSLog("BUZZINC: Keychain file already exists")
+            if PlaySettings.shared.settingsData.playChainDebugging {
+                NSLog("BUZZINC: Keychain file already exists")
+                }
             return errSecDuplicateItem
         }
 
         // Write the dictionary to the keychain file
         do {
             try attributes.write(to: keychainPath)
-            NSLog("BUZZINC: Wrote keychain file to \(keychainPath)")
+            if PlaySettings.shared.settingsData.playChainDebugging {
+                NSLog("BUZZINC: Wrote keychain file to \(keychainPath)")
+                }
         } catch {
-            NSLog("BUZZINC: Failed to write keychain file")
+            if PlaySettings.shared.settingsData.playChainDebugging {
+                NSLog("BUZZINC: Failed to write keychain file")
+                }
             return errSecIO
         }
         // Place v_data in the result
@@ -100,7 +115,9 @@ public class PlayKeychain: NSObject {
 
         // Read the dictionary from the keychain file
         let keychainDict = NSDictionary(contentsOf: keychainPath)
-        NSLog("BUZZINC: Read keychain file from \(keychainPath)")
+        if PlaySettings.shared.settingsData.playChainDebugging {
+            NSLog("BUZZINC: Read keychain file from \(keychainPath)")
+            }
 
         // Reconstruct the dictionary (subscripting won't work as assignment is not allowed)
         let newKeychainDict = NSMutableDictionary()
@@ -116,9 +133,13 @@ public class PlayKeychain: NSObject {
         // Write the dictionary to the keychain file
         do {
             try newKeychainDict.write(to: keychainPath)
-            NSLog("BUZZINC: Wrote keychain file to \(keychainPath)")
+            if PlaySettings.shared.settingsData.playChainDebugging {
+                NSLog("BUZZINC: Wrote keychain file to \(keychainPath)")
+                }
         } catch {
-            NSLog("BUZZINC: Failed to write keychain file")
+            if PlaySettings.shared.settingsData.playChainDebugging {
+                NSLog("BUZZINC: Failed to write keychain file")
+                }
             return errSecIO
         }
 
@@ -148,9 +169,13 @@ public class PlayKeychain: NSObject {
         // Delete the keychain file
         do {
             try FileManager.default.removeItem(at: keychainPath)
-            NSLog("BUZZINC: Deleted keychain file at \(keychainPath)")
+            if PlaySettings.shared.settingsData.playChainDebugging {
+                NSLog("BUZZINC: Deleted keychain file at \(keychainPath)")
+                }
         } catch {
-            NSLog("BUZZINC: Failed to delete keychain file")
+            if PlaySettings.shared.settingsData.playChainDebugging {
+                NSLog("BUZZINC: Failed to delete keychain file")
+                }
             return errSecIO
         }
         return errSecSuccess
@@ -188,13 +213,17 @@ public class PlayKeychain: NSObject {
 
         // If the keychain file doesn't exist, return errSecItemNotFound
         if keychainDict == nil {
-            NSLog("BUZZINC: Keychain file not found at \(keychainPath)")
+            if PlaySettings.shared.settingsData.playChainDebugging {
+                NSLog("BUZZINC: Keychain file not found at \(keychainPath)")
+                }
             return errSecItemNotFound
         }
 
         // Return v_Data if it exists
         if let vData = keychainDict!["v_Data"] {
-            NSLog("BUZZINC: Read keychain file from \(keychainPath)")
+            if PlaySettings.shared.settingsData.playChainDebugging {
+                NSLog("BUZZINC: Read keychain file from \(keychainPath)")
+                }
             // Check the class type, if it is a key we need to return the data
             // as SecKeyRef, otherwise we can return it as a CFTypeRef
             if classType == "keys" {
