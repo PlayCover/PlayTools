@@ -91,58 +91,66 @@ DYLD_INTERPOSE(pt_uname, uname)
 DYLD_INTERPOSE(pt_sysctlbyname, sysctlbyname)
 DYLD_INTERPOSE(pt_sysctl, sysctl)
 
+static void debugLogger(NSString *content) {
+    if ([[PlaySettings shared] playChainDebugging]) { NSLog (@"%@", content); }
+}
+
 // Interpose Apple Keychain functions (SecItemCopyMatching, SecItemAdd, SecItemUpdate, SecItemDelete)
 // This allows us to intercept keychain requests and return our own data
 
 // Use the implementations from PlayKeychain
 static OSStatus pt_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result) {
+    OSStatus retval;
     if ([[PlaySettings shared] playChain]) {
-        OSStatus retval = [PlayKeychain copyMatching:(__bridge NSDictionary * _Nonnull)(query) result:result];
-        if (result != NULL && [[PlaySettings shared] playChainDebugging]) {
-            NSLog(@"SecItemCopyMatching: %@", query);
-            NSLog(@"SecItemCopyMatching result: %@", *result);
-        }
-        return retval;
+        retval = [PlayKeychain copyMatching:(__bridge NSDictionary * _Nonnull)(query) result:result];
     } else {
-        return SecItemCopyMatching(query, result);
+        retval = SecItemCopyMatching(query, result);
     }
+    if (result != NULL) {
+        debugLogger([NSString stringWithFormat:@"SecItemCopyMatching: %@", query]);
+        debugLogger([NSString stringWithFormat:@"SecItemCopyMatching result: %@", *result]);
+        }
+    return retval;
 }
 
 static OSStatus pt_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
+    OSStatus retval;
     if ([[PlaySettings shared] playChain]) {
-        OSStatus retval = [PlayKeychain add:(__bridge NSDictionary * _Nonnull)(attributes) result:result];
-        if (result != NULL && [[PlaySettings shared] playChainDebugging]) {
-            NSLog(@"SecItemAdd: %@", attributes);
-            NSLog(@"SecItemAdd result: %@", *result);
-        }
-        return retval;
+        retval = [PlayKeychain add:(__bridge NSDictionary * _Nonnull)(attributes) result:result];
     } else {
-        return SecItemAdd(attributes, result);
+        retval = SecItemAdd(attributes, result);
     }
+    if (result != NULL) {
+        debugLogger([NSString stringWithFormat:@"SecItemAdd: %@", attributes]);
+        debugLogger([NSString stringWithFormat:@"SecItemAdd result: %@", *result]);
+    }
+    return retval;
 }
 
 static OSStatus pt_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) {
+    OSStatus retval;
     if ([[PlaySettings shared] playChain]) {
-        if ([[PlaySettings shared] playChainDebugging]) {
-            NSLog(@"SecItemUpdate: %@", query);
-        }
-        OSStatus retval = [PlayKeychain update:(__bridge NSDictionary * _Nonnull)(query) attributesToUpdate:(__bridge NSDictionary * _Nonnull)(attributesToUpdate)];
-        return retval;
+        retval = [PlayKeychain update:(__bridge NSDictionary * _Nonnull)(query) attributesToUpdate:(__bridge NSDictionary * _Nonnull)(attributesToUpdate)];
     } else {
-        return SecItemUpdate(query, attributesToUpdate);
+        retval = SecItemUpdate(query, attributesToUpdate);
     }
+    if (attributesToUpdate != NULL) {
+        debugLogger([NSString stringWithFormat:@"SecItemUpdate: %@", query]);
+        debugLogger([NSString stringWithFormat:@"SecItemUpdate attributesToUpdate: %@", attributesToUpdate]);
+    }
+    return retval;
+
 }
 
 static OSStatus pt_SecItemDelete(CFDictionaryRef query) {
+    OSStatus retval;
     if ([[PlaySettings shared] playChain]) {
-        if ([[PlaySettings shared] playChainDebugging]) {
-            NSLog(@"SecItemDelete: %@", query);
-        }
-        OSStatus retval = [PlayKeychain delete:(__bridge NSDictionary * _Nonnull)(query)];
-        return retval;
+        retval = [PlayKeychain delete:(__bridge NSDictionary * _Nonnull)(query)];
     } else {
-        return SecItemDelete(query);
+        retval = SecItemDelete(query);
     }
+    debugLogger([NSString stringWithFormat:@"SecItemDelete: %@", query]);
+    return retval;
 }
 
 DYLD_INTERPOSE(pt_SecItemCopyMatching, SecItemCopyMatching)

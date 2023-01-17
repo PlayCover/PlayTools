@@ -16,11 +16,6 @@ public class PlayKeychain: NSObject {
     static let shared = PlayKeychain()
 
     private static func getKeychainDirectory() -> URL? {
-//        // Get the keychain folder
-//        let keychainFolder = FileManager.default.urls(for: .documentDirectory,
-//                                                          in: .userDomainMask)
-//            .first?.appendingPathComponent("Keychain")
-//
         let bundleID = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
         let keychainFolder = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("PlayChain")
@@ -34,7 +29,7 @@ public class PlayKeychain: NSObject {
                                                         attributes: nil)
             } catch {
                 if PlaySettings.shared.settingsData.playChainDebugging {
-                    NSLog("BUZZINC: Failed to create keychain folder")
+                    NSLog("Failed to create keychain folder")
                     }
             }
         }
@@ -42,104 +37,68 @@ public class PlayKeychain: NSObject {
         return keychainFolder
     }
 
+    private static func keychainPath(_ attributes: NSDictionary) -> URL {
+        let keychainFolder = getKeychainDirectory()
+        // Generate a key path based on the key attributes
+        let accountName = attributes[kSecAttrAccount as String] as? String ?? ""
+        let serviceName = attributes[kSecAttrService as String] as? String ?? ""
+        let classType = attributes[kSecClass as String] as? String ?? ""
+        return keychainFolder!
+            .appendingPathComponent("\(serviceName)-\(accountName)-\(classType).plist")
+    }
+
+    private static func debugLogger(_ logContent: String) {
+        if PlaySettings.shared.settingsData.playChainDebugging {
+            NSLog("PC-DEBUG: \(logContent)")
+        }
+    }
     // Emulates SecItemAdd, SecItemUpdate, SecItemDelete and SecItemCopyMatching
     // Store the entire dictionary as a plist
-
     // SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
     @objc static public func add(_ attributes: NSDictionary, result: UnsafeMutablePointer<CFTypeRef?>?) -> OSStatus {
-        // Get the keychain folder
-        let keychainFolder = getKeychainDirectory()
-
-        // Get the account name (optional, may not exist, non-fatal)
-        // In cases where the account name doesn't exist, ignore it
-        let accountName = attributes[kSecAttrAccount as String] as? String ?? ""
-
-        // Get the service name (optional, may not exist, non-fatal)
-        // In cases where the service name doesn't exist, ignore it
-        let serviceName = attributes[kSecAttrService as String] as? String ?? ""
-
-        // Get the class
-        let classType = attributes[kSecClass as String] as? String ?? ""
-
-        // Get the path to the keychain file
-        let keychainPath = keychainFolder!
-            .appendingPathComponent("\(serviceName)-\(accountName)-\(classType).plist")
-
+        let keychainPath = keychainPath(attributes)
         // Check if the keychain file already exists
         if FileManager.default.fileExists(atPath: keychainPath.path) {
-            if PlaySettings.shared.settingsData.playChainDebugging {
-                NSLog("BUZZINC: Keychain file already exists")
-                }
+            debugLogger("Keychain file already exists")
             return errSecDuplicateItem
         }
-
         // Write the dictionary to the keychain file
         do {
             try attributes.write(to: keychainPath)
-            if PlaySettings.shared.settingsData.playChainDebugging {
-                NSLog("BUZZINC: Wrote keychain file to \(keychainPath)")
-                }
+            debugLogger("Wrote keychain file to \(keychainPath)")
         } catch {
-            if PlaySettings.shared.settingsData.playChainDebugging {
-                NSLog("BUZZINC: Failed to write keychain file")
-                }
+            debugLogger("Failed to write keychain file")
             return errSecIO
         }
         // Place v_data in the result
         if let v_data = attributes["v_data"] {
             result?.pointee = v_data as CFTypeRef
         }
-
         return errSecSuccess
     }
 
     // SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate)
     @objc static public func update(_ query: NSDictionary, attributesToUpdate: NSDictionary) -> OSStatus {
-        // Get the keychain folder
-        let keychainFolder = getKeychainDirectory()
-
-        // Get the account name (optional, may not exist, non-fatal)
-        // In cases where the account name doesn't exist, ignore it
-        let accountName = query[kSecAttrAccount as String] as? String ?? ""
-
-        // Get the service name (optional, may not exist, non-fatal)
-        // In cases where the service name doesn't exist, ignore it
-        let serviceName = query[kSecAttrService as String] as? String ?? ""
-
-        // Get the class
-        let classType = query[kSecClass as String] as? String ?? ""
-
         // Get the path to the keychain file
-        let keychainPath = keychainFolder!
-            .appendingPathComponent("\(serviceName)-\(accountName)-\(classType).plist")
-
+        let keychainPath = keychainPath(query)
         // Read the dictionary from the keychain file
         let keychainDict = NSDictionary(contentsOf: keychainPath)
-        if PlaySettings.shared.settingsData.playChainDebugging {
-            NSLog("BUZZINC: Read keychain file from \(keychainPath)")
-            }
-
+        debugLogger("Read keychain file from \(keychainPath)")
         // Reconstruct the dictionary (subscripting won't work as assignment is not allowed)
         let newKeychainDict = NSMutableDictionary()
         for (key, value) in keychainDict! {
             newKeychainDict.setValue(value, forKey: key as! String) // swiftlint:disable:this force_cast
         }
-
         // Update the dictionary
         for (key, value) in attributesToUpdate {
             newKeychainDict.setValue(value, forKey: key as! String) // swiftlint:disable:this force_cast
         }
-
         // Write the dictionary to the keychain file
         do {
             try newKeychainDict.write(to: keychainPath)
-            if PlaySettings.shared.settingsData.playChainDebugging {
-                NSLog("BUZZINC: Wrote keychain file to \(keychainPath)")
-                }
+            debugLogger("Wrote keychain file to \(keychainPath)")
         } catch {
-            if PlaySettings.shared.settingsData.playChainDebugging {
-                NSLog("BUZZINC: Failed to write keychain file")
-                }
+            debugLogger("Failed to write keychain file")
             return errSecIO
         }
 
@@ -148,34 +107,14 @@ public class PlayKeychain: NSObject {
 
     // SecItemDelete(CFDictionaryRef query)
     @objc static public func delete(_ query: NSDictionary) -> OSStatus {
-        // Get the keychain folder
-        let keychainFolder = getKeychainDirectory()
-
-        // Get the account name (optional, may not exist, non-fatal)
-        // In cases where the account name doesn't exist, ignore it
-        let accountName = query[kSecAttrAccount as String] as? String ?? ""
-
-        // Get the service name (optional, may not exist, non-fatal)
-        // In cases where the service name doesn't exist, ignore it
-        let serviceName = query[kSecAttrService as String] as? String ?? ""
-
-        // Get the class
-        let classType = query[kSecClass as String] as? String ?? ""
-
         // Get the path to the keychain file
-        let keychainPath = keychainFolder!
-            .appendingPathComponent("\(serviceName)-\(accountName)-\(classType).plist")
-
+        let keychainPath = keychainPath(query)
         // Delete the keychain file
         do {
             try FileManager.default.removeItem(at: keychainPath)
-            if PlaySettings.shared.settingsData.playChainDebugging {
-                NSLog("BUZZINC: Deleted keychain file at \(keychainPath)")
-                }
+            debugLogger("Deleted keychain file at \(keychainPath)")
         } catch {
-            if PlaySettings.shared.settingsData.playChainDebugging {
-                NSLog("BUZZINC: Failed to delete keychain file")
-                }
+            debugLogger("Failed to delete keychain file")
             return errSecIO
         }
         return errSecSuccess
@@ -184,46 +123,24 @@ public class PlayKeychain: NSObject {
     // SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
     @objc static public func copyMatching(_ query: NSDictionary, result: UnsafeMutablePointer<CFTypeRef?>?)
     -> OSStatus {
-        // Get the keychain folder
-        let keychainFolder = getKeychainDirectory()
-
-        // Get the account name (optional, may not exist, non-fatal)
-        // In cases where the account name doesn't exist, ignore it
-        let accountName = query[kSecAttrAccount as String] as? String ?? ""
-
-        // Get the service name (optional, may not exist, non-fatal)
-        // In cases where the service name doesn't exist, ignore it
-        let serviceName = query[kSecAttrService as String] as? String ?? ""
-
-        // Get the class
-        let classType = query[kSecClass as String] as? String ?? ""
-
         // Get the path to the keychain file
-        let keychainPath = keychainFolder!
-            .appendingPathComponent("\(serviceName)-\(accountName)-\(classType).plist")
-
+        let keychainPath = keychainPath(query)
         // Read the dictionary from the keychain file
         let keychainDict = NSDictionary(contentsOf: keychainPath)
-
         // Check the `r_Attributes` key. If it is set to 1 in the query
         // DROP, NOT IMPLEMENTED
+        let classType = query[kSecClass as String] as? String ?? ""
         if query["r_Attributes"] as? Int == 1 {
             return errSecItemNotFound
         }
-
         // If the keychain file doesn't exist, return errSecItemNotFound
         if keychainDict == nil {
-            if PlaySettings.shared.settingsData.playChainDebugging {
-                NSLog("BUZZINC: Keychain file not found at \(keychainPath)")
-                }
+            debugLogger("Keychain file not found at \(keychainPath)")
             return errSecItemNotFound
         }
-
         // Return v_Data if it exists
         if let vData = keychainDict!["v_Data"] {
-            if PlaySettings.shared.settingsData.playChainDebugging {
-                NSLog("BUZZINC: Read keychain file from \(keychainPath)")
-                }
+            debugLogger("Read keychain file from \(keychainPath)")
             // Check the class type, if it is a key we need to return the data
             // as SecKeyRef, otherwise we can return it as a CFTypeRef
             if classType == "keys" {
