@@ -97,9 +97,9 @@ DYLD_INTERPOSE(pt_sysctl, sysctl)
 // Use the implementations from PlayKeychain
 static OSStatus pt_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result) {
     if ([[PlaySettings shared] playChain]) {
-        NSLog(@"SecItemCopyMatching: %@", query);
         OSStatus retval = [PlayKeychain copyMatching:(__bridge NSDictionary * _Nonnull)(query) result:result];
         if (result != NULL && [[PlaySettings shared] playChainDebugging]) {
+            NSLog(@"SecItemCopyMatching: %@", query);
             NSLog(@"SecItemCopyMatching result: %@", *result);
         }
         return retval;
@@ -110,9 +110,9 @@ static OSStatus pt_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
 
 static OSStatus pt_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
     if ([[PlaySettings shared] playChain]) {
-        NSLog(@"SecItemAdd: %@", attributes);
         OSStatus retval = [PlayKeychain add:(__bridge NSDictionary * _Nonnull)(attributes) result:result];
         if (result != NULL && [[PlaySettings shared] playChainDebugging]) {
+            NSLog(@"SecItemAdd: %@", attributes);
             NSLog(@"SecItemAdd result: %@", *result);
         }
         return retval;
@@ -123,7 +123,9 @@ static OSStatus pt_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
 
 static OSStatus pt_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) {
     if ([[PlaySettings shared] playChain]) {
-        NSLog(@"SecItemUpdate: %@", query);
+        if ([[PlaySettings shared] playChainDebugging]) {
+            NSLog(@"SecItemUpdate: %@", query);
+        }
         OSStatus retval = [PlayKeychain update:(__bridge NSDictionary * _Nonnull)(query) attributesToUpdate:(__bridge NSDictionary * _Nonnull)(attributesToUpdate)];
         return retval;
     } else {
@@ -133,7 +135,9 @@ static OSStatus pt_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attribut
 
 static OSStatus pt_SecItemDelete(CFDictionaryRef query) {
     if ([[PlaySettings shared] playChain]) {
-        NSLog(@"SecItemDelete: %@", query);
+        if ([[PlaySettings shared] playChainDebugging]) {
+            NSLog(@"SecItemDelete: %@", query);
+        }
         OSStatus retval = [PlayKeychain delete:(__bridge NSDictionary * _Nonnull)(query)];
         return retval;
     } else {
