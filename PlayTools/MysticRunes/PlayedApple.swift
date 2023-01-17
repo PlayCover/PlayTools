@@ -25,7 +25,7 @@ public class PlayKeychain: NSObject {
         let keychainFolder = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("PlayChain")
             .appendingPathComponent(bundleID)
-        
+
         // Create the keychain folder if it doesn't exist
         if !FileManager.default.fileExists(atPath: keychainFolder.path) {
             do {
