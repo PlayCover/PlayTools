@@ -159,6 +159,6 @@ public class PlayKeychain: NSObject {
             return errSecSuccess
         }
 
-        return errSecSuccess
+        return errSecItemNotFound
     }
 }
