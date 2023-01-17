@@ -47,7 +47,7 @@ public class PlayKeychain: NSObject {
             .appendingPathComponent("\(serviceName)-\(accountName)-\(classType).plist")
     }
 
-    private static func debugLogger(_ logContent: String) {
+    @objc public static func debugLogger(_ logContent: String) {
         if PlaySettings.shared.settingsData.playChainDebugging {
             NSLog("PC-DEBUG: \(logContent)")
         }
