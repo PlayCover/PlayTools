@@ -15,11 +15,13 @@ import Security
 public class PlayKeychain: NSObject {
     static let shared = PlayKeychain()
 
-    private static func getKeychainDirectory() -> URL? {
+    private static func getKeychainDirectory() -> URL {
         let bundleID = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
-        let keychainFolder = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
+        let libraryRoute = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first
+        let keychainFolder = libraryRoute!.appendingPathComponent("Containers/io.playcover.PlayCover")
             .appendingPathComponent("PlayChain")
             .appendingPathComponent(bundleID)
+        
 
         // Create the keychain folder if it doesn't exist
         if !FileManager.default.fileExists(atPath: keychainFolder.path) {
@@ -43,7 +45,7 @@ public class PlayKeychain: NSObject {
         let accountName = attributes[kSecAttrAccount as String] as? String ?? ""
         let serviceName = attributes[kSecAttrService as String] as? String ?? ""
         let classType = attributes[kSecClass as String] as? String ?? ""
-        return keychainFolder!
+        return keychainFolder
             .appendingPathComponent("\(serviceName)-\(accountName)-\(classType).plist")
     }
 
