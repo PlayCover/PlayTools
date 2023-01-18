@@ -28,9 +28,7 @@ public class PlayKeychain: NSObject {
                                                         withIntermediateDirectories: true,
                                                         attributes: nil)
             } catch {
-                if PlaySettings.shared.settingsData.playChainDebugging {
-                    NSLog("Failed to create keychain folder")
-                    }
+                debugLogger("Failed to create keychain folder")
             }
         }
 
