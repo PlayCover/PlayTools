@@ -105,7 +105,7 @@ static OSStatus pt_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
     if (result != NULL) {
         [PlayKeychain debugLogger:[NSString stringWithFormat:@"SecItemCopyMatching: %@", query]];
         [PlayKeychain debugLogger:[NSString stringWithFormat:@"SecItemCopyMatching result: %@", *result]];
-        }
+    }
     return retval;
 }
 
