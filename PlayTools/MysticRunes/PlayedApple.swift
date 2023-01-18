@@ -82,6 +82,11 @@ public class PlayKeychain: NSObject {
         // Read the dictionary from the keychain file
         let keychainDict = NSDictionary(contentsOf: keychainPath)
         debugLogger("Read keychain file from \(keychainPath)")
+        // Check if the file exist
+        if keychainDict == nil {
+            debugLogger("Keychain file not found at \(keychainPath)")
+            return errSecItemNotFound
+        }
         // Reconstruct the dictionary (subscripting won't work as assignment is not allowed)
         let newKeychainDict = NSMutableDictionary()
         for (key, value) in keychainDict! {
