@@ -23,7 +23,8 @@ public class PlayMice {
         }
     }
 
-    var fakedMousePressed = false
+    var fakedMouseTouchPointId: Int?
+    var fakedMousePressed: Bool {fakedMouseTouchPointId != nil}
     private var thumbstickVelocity: CGVector = CGVector.zero
     public var draggableHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
                cameraHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
@@ -111,7 +112,7 @@ public class PlayMice {
     public func handleMouseMoved(deltaX: Float, deltaY: Float) {
         if self.acceptMouseEvents {
             if self.fakedMousePressed {
-                Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.moved, tid: 1)
+                Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.moved, tid: &fakedMouseTouchPointId)
             }
             return
         }
@@ -179,14 +180,12 @@ public class PlayMice {
                     && isEventWindow {
                     Toucher.touchcam(point: self.cursorPos,
                                      phase: UITouch.Phase.began,
-                                     tid: 1)
-                    self.fakedMousePressed = true
+                                     tid: &fakedMouseTouchPointId)
                     return false
                 }
             } else {
                 if self.fakedMousePressed {
-                    self.fakedMousePressed = false
-                    Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.ended, tid: 1)
+                    Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.ended, tid: &fakedMouseTouchPointId)
                     return false
                 }
             }
@@ -216,7 +215,7 @@ class CameraAction: Action {
     var center: CGPoint = CGPoint.zero
     var location: CGPoint = CGPoint.zero
     var key: String!
-    var id: Int!
+    private var id: Int?
     init(centerX: CGFloat = screen.width / 2, centerY: CGFloat = screen.height / 2) {
         self.center = CGPoint(x: centerX, y: centerY)
         // in rare cases the cooldown reset task is lost by the dispatch queue
@@ -227,7 +226,6 @@ class CameraAction: Action {
         self.init(
             centerX: data.transform.xCoord.absoluteX,
             centerY: data.transform.yCoord.absoluteY)
-        self.id = id
         self.key = data.keyName
         _ = PlayMice.shared.setupThumbstickChangedHandler(name: key)
         PlayMice.shared.cameraHandler[key] = self.updated
@@ -268,7 +266,7 @@ class CameraAction: Action {
             location = center
             counter = 0
             stationaryCount = 0
-            Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: id)
+            Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: &id)
 
             delay(0.01, closure: checkEnded)
         }
@@ -278,7 +276,7 @@ class CameraAction: Action {
         }
         self.location.x += deltaX
         self.location.y -= deltaY
-        Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: id)
+        Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: &id)
         stationaryCount = 0
     }
 
@@ -286,7 +284,7 @@ class CameraAction: Action {
         if !self.isMoving {
             return
         }
-        Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: id)
+        Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: &id)
         self.isMoving = false
         // ending and beginning too frequently leads to the beginning event not recognized
         // so let the beginning event wait some time
