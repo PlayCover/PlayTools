@@ -20,7 +20,7 @@ extension CGSize {
     }
 
     func toAspectRatio() -> CGSize {
-        if #available(macOS 13.2, *) {
+        if #available(macCatalyst 16.3, *) {
             return CGSize(width: mainScreenWidth, height: mainScreenHeight)
         } else {
             return CGSize(width: mainScreenHeight, height: mainScreenWidth)
