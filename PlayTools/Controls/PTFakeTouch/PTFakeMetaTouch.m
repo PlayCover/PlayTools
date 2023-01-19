@@ -14,11 +14,11 @@
 #include <dlfcn.h>
 #include <string.h>
 
-static NSMutableArray *touchAry;
 static NSMutableArray *livingTouchAry;
+uint64_t reusageMask = 0;
 static CFRunLoopSourceRef source;
 
-static UITouch* toRemove = NULL, *toStationarify = NULL;
+static UITouch *toStationarify = NULL;
 NSArray *safeTouchAry;
 
 void disableCursor(boolean_t disable){
@@ -70,11 +70,12 @@ void eventSendCallback(void* info) {
     // to retain objects from being released
     [event _clearTouches];
     NSArray *myAry = safeTouchAry;
-    for (UITouch *aTouch in myAry) {
+    [myAry enumerateObjectsUsingBlock:^(UITouch *aTouch, NSUInteger idx, BOOL *stop) {
         switch (aTouch.phase) {
             case UITouchPhaseEnded:
             case UITouchPhaseCancelled:
-                toRemove = aTouch;
+                // set this bit to 0
+                reusageMask |= 1ull<<idx;
                 break;
             case UITouchPhaseBegan:
 //            case UITouchPhaseMoved:
@@ -84,7 +85,7 @@ void eventSendCallback(void* info) {
                 break;
         }
         [event _addTouch:aTouch forDelayedDelivery:NO];
-    }
+    }];
     [[UIApplication sharedApplication] sendEvent:event];
 }
 
@@ -94,12 +95,6 @@ void eventSendCallback(void* info) {
     KW_ENABLE_CATEGORY(UITouch_KIFAdditions);
     KW_ENABLE_CATEGORY(UIEvent_KIFAdditions);
     livingTouchAry = [[NSMutableArray alloc] init];
-    touchAry = [[NSMutableArray alloc] init];
-    for (NSInteger i = 0; i< 100; i++) {
-        UITouch *touch = [[UITouch alloc] initTouch];
-        [touch setPhaseAndUpdateTimestamp:UITouchPhaseEnded];
-        [touchAry addObject:touch];
-    }
     CFRunLoopSourceContext context;
     memset(&context, 0, sizeof(CFRunLoopSourceContext));
     context.perform = eventSendCallback;
@@ -111,24 +106,9 @@ void eventSendCallback(void* info) {
 //    CFRunLoopAddSource(loop, source, GSEventReceiveRunLoopMode);
 }
 
-+ (UITouch* ) touch: (NSInteger) pointId {
-    if ([touchAry count] > pointId){
-        return [touchAry objectAtIndex:pointId];
-    }
-    return nil;
-}
-
 + (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase inWindow:(UIWindow*)window onView:(UIView*)view{
-    bool deleted = false;
     UITouch* touch = NULL;
     bool needsCopy = false;
-    if(toRemove != NULL) {
-        touch = toRemove;
-        toRemove = NULL;
-        [livingTouchAry removeObjectIdenticalTo:touch];
-        deleted = true;
-        needsCopy = true;
-    }
     if(toStationarify != NULL) {
         // in case this is changed during the operations
         touch = toStationarify;
@@ -137,23 +117,31 @@ void eventSendCallback(void* info) {
             [touch setPhaseAndUpdateTimestamp:UITouchPhaseStationary];
         }
     }
-    pointId -= 1;
-    // ideally should be phase began when this hit
-    // but if by any means other phases come... well lets be forgiving
-    touch = touchAry[pointId];
-    bool old = [livingTouchAry containsObject:touch];
-    bool new = !old;
-    if(new) {
-        if(phase == UITouchPhaseEnded) return deleted;
+    // respect the semantics of touch phase, allocate new touch on touch began.
+    if(phase == UITouchPhaseBegan) {
         touch = [[UITouch alloc] initAtPoint:point inWindow:window onView:view];
-        [livingTouchAry addObject:touch];
-        [touchAry setObject:touch atIndexedSubscript:pointId ];
+        if(reusageMask == 0){
+            pointId = [livingTouchAry count];
+        }else{
+            // reuse previous ID
+            pointId = 0;
+            while( !(reusageMask & (1ull<<pointId)) ){
+                pointId++;
+            }
+            reusageMask &= ~(1ull<<pointId);
+        }
+        [livingTouchAry setObject:touch atIndexedSubscript:pointId];
         needsCopy = true;
     } else {
+        touch = [livingTouchAry objectAtIndex:pointId];
         if(touch.phase == UITouchPhaseBegan && phase == UITouchPhaseMoved) {
-            return deleted;
+            // previous touch began event not yet captured by runloop. Ignore this move
+            return pointId;
         }
         [touch setLocationInWindow:point];
+    }
+    if(phase == UITouchPhaseEnded || phase == UITouchPhaseCancelled) {
+        pointId = -1;
     }
     [touch setPhaseAndUpdateTimestamp:phase];
 //    CFRunLoopSourceContext context;
@@ -165,7 +153,7 @@ void eventSendCallback(void* info) {
     }
     CFRunLoopSourceSignal(source);
 //    UIEvent *event = [self eventWithTouches:livingTouchAry];
-    return deleted;
+    return pointId;
 }
 
 
@@ -181,18 +169,5 @@ void eventSendCallback(void* info) {
     }
     
     return event;
-}
-
-+ (NSInteger)getAvailablePointId{
-    NSInteger availablePointId=0;
-    NSMutableArray *availableIds = [[NSMutableArray alloc]init];
-    for (NSInteger i=0; i<touchAry.count; i++) {
-        UITouch *touch = [touchAry objectAtIndex:i];
-        if (touch.phase==UITouchPhaseEnded||touch.phase==UITouchPhaseStationary) {
-            [availableIds addObject:@(i+1)];
-        }
-    }
-    availablePointId = availableIds.count==0 ? 0 : [[availableIds objectAtIndex:(arc4random() % availableIds.count)] integerValue];
-    return availablePointId;
 }
 @end

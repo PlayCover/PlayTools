@@ -21,8 +21,6 @@ double ColourDistance(RGB e1, RGB e2);
 @interface PTFakeMetaTouch : NSObject
 + (void)load;
 
-+ (UITouch* ) touch: (NSInteger) pointId;
-
 /**
  *  Fake a touch event 构造一个触屏基础操作 construct a touchscreen basic operation
  *
@@ -31,15 +29,8 @@ double ColourDistance(RGB e1, RGB e2);
  *  @param phase   操作的类别 type of the operation
  *  @param window  key window in which touch event is to happen
  *
- *  @return deleted whether the system had deleted a previous touch
+ *  @return pointId if this point exists after the operation, -1 if not
  */
 
 + (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase inWindow:(UIWindow*)window onView:(UIView*)view;
-/**
- *  Get a not used pointId 获取一个没有使用过的触屏序列号 obtain a never used touch screen sequence number
- *
- *  @return pointId 返回序列号 returns sequence number
- */
-+ (NSInteger)getAvailablePointId;
-
 @end
