@@ -19,33 +19,27 @@ class PlayInput {
 
     func parseKeymap() {
         actions = []
-        // ID starts from 1
-        var counter = 1
         for button in keymap.keymapData.buttonModels {
-            actions.append(ButtonAction(id: counter, data: button))
-            counter += 1
+            actions.append(ButtonAction(data: button))
         }
 
         for draggableButton in keymap.keymapData.draggableButtonModels {
-                actions.append(DraggableButtonAction(id: counter, data: draggableButton))
-                counter += 1
+                actions.append(DraggableButtonAction(data: draggableButton))
         }
 
         for mouse in keymap.keymapData.mouseAreaModel {
             if mouse.keyName.hasSuffix("tick") || settings.mouseMapping {
-                actions.append(CameraAction(id: counter, data: mouse))
-                counter += 1
+                actions.append(CameraAction(data: mouse))
             }
         }
 
         for joystick in keymap.keymapData.joystickModel {
             // Left Thumbstick, Right Thumbstick, Mouse
             if joystick.keyName.contains(Character("u")) {
-                actions.append(ConcreteJoystickAction(id: counter, data: joystick))
+                actions.append(ConcreteJoystickAction(data: joystick))
             } else { // Keyboard
-                actions.append(JoystickAction(id: counter, data: joystick))
+                actions.append(JoystickAction(data: joystick))
             }
-            counter += 1
         }
     }
 

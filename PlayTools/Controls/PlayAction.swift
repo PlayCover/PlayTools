@@ -47,7 +47,7 @@ class ButtonAction: Action {
         }
     }
 
-    init(id: Int, keyCode: GCKeyCode, keyName: String, point: CGPoint) {
+    init(keyCode: GCKeyCode, keyName: String, point: CGPoint) {
         self.keyCode = keyCode
         self.keyName = keyName
         self.point = point
@@ -69,10 +69,9 @@ class ButtonAction: Action {
         }
     }
 
-    convenience init(id: Int, data: Button) {
+    convenience init(data: Button) {
         let keyCode = GCKeyCode(rawValue: data.keyCode)
         self.init(
-            id: id,
             keyCode: keyCode,
             keyName: data.keyName,
             point: CGPoint(
@@ -92,9 +91,9 @@ class ButtonAction: Action {
 class DraggableButtonAction: ButtonAction {
     var releasePoint: CGPoint
 
-    override init(id: Int, keyCode: GCKeyCode, keyName: String, point: CGPoint) {
+    override init(keyCode: GCKeyCode, keyName: String, point: CGPoint) {
         self.releasePoint = point
-        super.init(id: id, keyCode: keyCode, keyName: keyName, point: point)
+        super.init(keyCode: keyCode, keyName: keyName, point: point)
         _ = PlayMice.shared.setupThumbstickChangedHandler(name: keyName)
     }
 
@@ -130,7 +129,7 @@ class ConcreteJoystickAction: Action {
     var sensitivity: CGFloat
     var begun = false
 
-    init(id: Int, data: Joystick) {
+    init(data: Joystick) {
         self.center = CGPoint(
             x: data.transform.xCoord.absoluteX,
             y: data.transform.yCoord.absoluteY)
@@ -183,7 +182,7 @@ class JoystickAction: Action {
     var id: Int?
     var moving = false
 
-    init(id: Int, keys: [GCKeyCode], center: CGPoint, shift: CGFloat) {
+    init(keys: [GCKeyCode], center: CGPoint, shift: CGFloat) {
         self.keys = keys
         self.center = center
         self.shift = shift / 2
@@ -200,9 +199,8 @@ class JoystickAction: Action {
         }
     }
 
-    convenience init(id: Int, data: Joystick) {
+    convenience init(data: Joystick) {
         self.init(
-            id: id,
             keys: [
                 GCKeyCode(rawValue: CFIndex(data.upKeyCode)),
                 GCKeyCode(rawValue: CFIndex(data.downKeyCode)),
