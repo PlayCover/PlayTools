@@ -220,7 +220,7 @@ class CameraAction: Action {
         self.cooldown = false
     }
 
-    convenience init(id: Int, data: MouseArea) {
+    convenience init(data: MouseArea) {
         self.init(
             centerX: data.transform.xCoord.absoluteX,
             centerY: data.transform.yCoord.absoluteY)
