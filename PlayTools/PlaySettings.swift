@@ -33,11 +33,9 @@ let settings = PlaySettings.shared
 
     lazy var sensitivity = settingsData.sensitivity / 100
 
-    @objc lazy var windowSizeHeight = CGFloat(settingsData.windowHeight)
+    lazy var windowSizeHeight = CGFloat(settingsData.windowHeight)
 
-    @objc lazy var windowSizeWidth = CGFloat(settingsData.windowWidth)
-
-    @objc lazy var inverseScreenValues = settingsData.inverseScreenValues
+    lazy var windowSizeWidth = CGFloat(settingsData.windowWidth)
 
     @objc lazy var adaptiveDisplay = settingsData.resolution == 0 ? false : true
 
@@ -61,6 +59,10 @@ let settings = PlaySettings.shared
             return "J320xAP"
         }
     }()
+
+    @objc lazy var playChain = settingsData.playChain
+
+    @objc lazy var playChainDebugging = settingsData.playChainDebugging
 }
 
 struct AppSettingsData: Codable {
@@ -78,5 +80,6 @@ struct AppSettingsData: Codable {
     var bypass = false
     var discordActivity = DiscordActivity()
     var version = "2.0.0"
-    var inverseScreenValues = false
+    var playChain = false
+    var playChainDebugging = false
 }
