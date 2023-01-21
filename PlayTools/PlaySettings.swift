@@ -61,6 +61,10 @@ let settings = PlaySettings.shared
             return "J320xAP"
         }
     }()
+
+    @objc lazy var playChain = settingsData.playChain
+
+    @objc lazy var playChainDebugging = settingsData.playChainDebugging
 }
 
 struct AppSettingsData: Codable {
@@ -79,4 +83,6 @@ struct AppSettingsData: Codable {
     var discordActivity = DiscordActivity()
     var version = "2.0.0"
     var inverseScreenValues = false
+    var playChain = false
+    var playChainDebugging = false
 }
