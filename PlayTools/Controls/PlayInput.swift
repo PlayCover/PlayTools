@@ -79,12 +79,10 @@ class PlayInput {
             }
         }
         for mouse in GCMouse.mice() {
-            mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
-                if editor.editorMode {
-//                    EditorController.shared.setKey("Mouse")
-                } else {
-                    PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
-                }
+            if settings.mouseMapping {
+                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleMouseMoved
+            } else {
+                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleFakeMouseMoved
             }
         }
 

@@ -76,6 +76,16 @@ class AKPlugin: NSObject, Plugin {
         })
     }
 
+    func setupScrollWheel(_ onMoved: @escaping(CGFloat, CGFloat) -> Bool) {
+        NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask.scrollWheel, handler: { event in
+            let consumed = onMoved(event.scrollingDeltaX, event.scrollingDeltaY)
+            if consumed {
+                return nil
+            }
+            return event
+        })
+    }
+
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: value)
     }
