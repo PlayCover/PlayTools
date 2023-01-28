@@ -63,14 +63,14 @@ public class PlayMice {
     }
 
     public func setupScrollWheelHandler() {
-//        AKInterface.shared!.setupScrollWheel({deltaX, deltaY in
-//            if let cameraScale = self.cameraScaleHandler[PlayMice.elementName] {
-//                cameraScale(deltaX, deltaY)
-//                let eventConsumed = !mode.visible
-//                return eventConsumed
-//            }
-//            return false
-//        })
+        AKInterface.shared!.setupScrollWheel({deltaX, deltaY in
+            if let cameraScale = self.cameraScaleHandler[PlayMice.elementName] {
+                cameraScale(deltaX, deltaY)
+                let eventConsumed = !mode.visible
+                return eventConsumed
+            }
+            return false
+        })
     }
 
     public func setupThumbstickChangedHandler(name: String) -> Bool {
@@ -223,6 +223,7 @@ class CameraAction: Action {
     var swipeMove, swipeScale1, swipeScale2: SwipeAction
     var key: String!
     var center: CGPoint
+    var distance1: CGFloat = 100, distance2: CGFloat = 100
     init(data: MouseArea) {
         self.key = data.keyName
         let centerX = data.transform.xCoord.absoluteX
@@ -240,18 +241,31 @@ class CameraAction: Action {
     }
 
     func scaleUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
-        swipeScale1.move(from: {return CGPoint(x: center.x, y: center.y + 200)}, deltaX: 0, deltaY: deltaY)
-        swipeScale2.move(from: {return CGPoint(x: center.x, y: center.y - 200)}, deltaX: 0, deltaY: -deltaY)
+        let distance = distance1 + distance2
+        let moveY = deltaY * (distance / 100.0)
+        distance1 += moveY
+        distance2 += moveY
+
+        swipeScale1.move(from: {
+            self.distance1 = 100
+            return CGPoint(x: center.x, y: center.y - 100)
+        }, deltaX: 0, deltaY: moveY)
+
+        swipeScale2.move(from: {
+            self.distance2 = 100
+            return CGPoint(x: center.x, y: center.y + 100)
+        }, deltaX: 0, deltaY: -moveY)
     }
     // Event handlers SHOULD be SMALL
     // DO NOT check things like mode.visible in an event handler
     // change the handler itself instead
     func dragUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
-        swipeMove.move(from: PlayMice.shared.cursorPos, deltaX: deltaX, deltaY: deltaY)
+        swipeMove.move(from: PlayMice.shared.cursorPos, deltaX: deltaX * 4, deltaY: -deltaY * 4)
     }
 
     func invalidate() {
         PlayMice.shared.cameraMoveHandler.removeValue(forKey: key)
+        PlayMice.shared.cameraScaleHandler[PlayMice.elementName] = self.dragUpdated
     }
 }
 
@@ -286,7 +300,7 @@ class SwipeAction: Action {
         self.doLiftOff()
      }
 
-    public func move(from: ()->CGPoint, deltaX: CGFloat, deltaY: CGFloat) {
+    public func move(from: () -> CGPoint, deltaX: CGFloat, deltaY: CGFloat) {
         // count touch duration
         counter += 1
         if id == nil {
