@@ -19,14 +19,13 @@ uint64_t reusageMask = 0;
 static CFRunLoopSourceRef source;
 
 static UITouch *toStationarify = NULL;
-NSArray *safeTouchAry;
+NSLock *lock;
 
 void eventSendCallback(void* info) {
     UIEvent *event = [[UIApplication sharedApplication] _touchesEvent];
-    // to retain objects from being released
     [event _clearTouches];
-    NSArray *myAry = safeTouchAry;
-    [myAry enumerateObjectsUsingBlock:^(UITouch *aTouch, NSUInteger idx, BOOL *stop) {
+    [lock lock];
+    [livingTouchAry enumerateObjectsUsingBlock:^(UITouch *aTouch, NSUInteger idx, BOOL *stop) {
         switch (aTouch.phase) {
             case UITouchPhaseEnded:
             case UITouchPhaseCancelled:
@@ -41,6 +40,7 @@ void eventSendCallback(void* info) {
         }
         [event _addTouch:aTouch forDelayedDelivery:NO];
     }];
+    [lock unlock];
     [[UIApplication sharedApplication] sendEvent:event];
 }
 
@@ -51,6 +51,7 @@ void eventSendCallback(void* info) {
     CFRunLoopSourceContext context;
     memset(&context, 0, sizeof(CFRunLoopSourceContext));
     context.perform = eventSendCallback;
+    lock = [[NSLock alloc] init];
     // content of context is copied
     source = CFRunLoopSourceCreate(NULL, -2, &context);
     CFRunLoopRef loop = CFRunLoopGetMain();
@@ -59,7 +60,6 @@ void eventSendCallback(void* info) {
 
 + (NSInteger)fakeTouchId: (NSInteger)pointId AtPoint: (CGPoint)point withTouchPhase: (UITouchPhase)phase inWindow: (UIWindow*)window onView:(UIView*)view {
     UITouch* touch = NULL;
-    bool needsCopy = false;
     if(toStationarify != NULL) {
         // in case this is changed during the operations
         touch = toStationarify;
@@ -81,8 +81,9 @@ void eventSendCallback(void* info) {
             }
             reusageMask &= ~(1ull<<pointId);
         }
+        [lock lock];
         [livingTouchAry setObject:touch atIndexedSubscript:pointId];
-        needsCopy = true;
+        [lock unlock];
     } else {
         touch = [livingTouchAry objectAtIndex:pointId];
         if(touch.phase == UITouchPhaseBegan && phase == UITouchPhaseMoved) {
@@ -90,17 +91,12 @@ void eventSendCallback(void* info) {
             return pointId;
         }
         [touch setLocationInWindow:point];
+        [touch setPhaseAndUpdateTimestamp:phase];
     }
+    CFRunLoopSourceSignal(source);
     if(phase == UITouchPhaseEnded || phase == UITouchPhaseCancelled) {
         pointId = -1;
     }
-    [touch setPhaseAndUpdateTimestamp:phase];
-    if(needsCopy) {
-        CFTypeRef delayRelease = CFBridgingRetain(safeTouchAry);
-        safeTouchAry = [[NSArray alloc] initWithArray:livingTouchAry copyItems:NO];
-        CFBridgingRelease(delayRelease);
-    }
-    CFRunLoopSourceSignal(source);
     return pointId;
 }
 @end
