@@ -53,20 +53,32 @@ __attribute__((visibility("hidden")))
     return false;
 }
 
+- (NSString*) hook_systemName {
+    return @"iPadOS";
+}
+
+- (long long) hook_orientation {
+    return 0;
+}
+
 - (CGRect) hook_frame {
-    return [PlayScreen frame:[self hook_frame]];
+    return CGRectMake(0, 0, 1920, 1080);
 }
 
 - (CGRect) hook_bounds {
-    return [PlayScreen bounds:[self hook_bounds]];
+    return CGRectMake(0, 0, 1920, 1080);
 }
 
-- (long long) hook_interfaceOrientation {
-    return UIInterfaceOrientationLandscapeRight;
+- (CGRect) hook_nativeBounds {
+    return CGRectMake(0, 0, 1920 * 2, 1080 * 2);
 }
 
-- (CGSize) hook_size {
-    return [PlayScreen sizeAspectRatio:[self hook_size]];
+- (double) hook_nativeScale {
+    return 2.0;
+}
+
+- (double) hook_scale {
+    return 2.0;
 }
 
 bool menuWasCreated = false;
@@ -108,10 +120,13 @@ bool menuWasCreated = false;
 @implementation PTSwizzleLoader
 + (void)load {
     if ([[PlaySettings shared] adaptiveDisplay]) {
-        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
-        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
-        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(interfaceOrientation) withMethod:@selector(hook_interfaceOrientation)];
-        [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
+        [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(systemName) withMethod:@selector(hook_systemName)];
+        [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBounds)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
     }
 
     [objc_getClass("_UIMenuBuilder") swizzleInstanceMethod:sel_getUid("initWithRootMenu:") withMethod:@selector(initWithRootMenuHook:)];
