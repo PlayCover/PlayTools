@@ -53,24 +53,20 @@ __attribute__((visibility("hidden")))
     return false;
 }
 
-- (NSString*) hook_systemName {
-    return @"iPadOS";
-}
-
 - (long long) hook_orientation {
     return 0;
 }
 
 - (CGRect) hook_frame {
-    return CGRectMake(0, 0, 1920, 1080);
+    return [PlayScreen frame:[self hook_frame]];
 }
 
 - (CGRect) hook_bounds {
-    return CGRectMake(0, 0, 1920, 1080);
+    return [PlayScreen frame:[self hook_bounds]];
 }
 
 - (CGRect) hook_nativeBounds {
-    return CGRectMake(0, 0, 1920 * 2, 1080 * 2);
+    return [PlayScreen nativeBounds:[self hook_nativeBounds]];
 }
 
 - (double) hook_nativeScale {
@@ -120,10 +116,9 @@ bool menuWasCreated = false;
 @implementation PTSwizzleLoader
 + (void)load {
     if ([[PlaySettings shared] adaptiveDisplay]) {
-        [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(systemName) withMethod:@selector(hook_systemName)];
         [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
         [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
-        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(applicationFrame) withMethod:@selector(hook_frame)];
         [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBounds)];
         [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
         [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
