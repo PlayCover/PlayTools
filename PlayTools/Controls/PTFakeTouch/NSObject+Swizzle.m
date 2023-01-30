@@ -61,6 +61,10 @@ __attribute__((visibility("hidden")))
     return [PlayScreen bounds:[self hook_bounds]];
 }
 
+- (long long) hook_interfaceOrientation {
+    return UIInterfaceOrientationLandscapeRight;
+}
+
 - (CGSize) hook_size {
     return [PlayScreen sizeAspectRatio:[self hook_size]];
 }
@@ -106,6 +110,7 @@ bool menuWasCreated = false;
     if ([[PlaySettings shared] adaptiveDisplay]) {
         [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
         [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
+        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(interfaceOrientation) withMethod:@selector(hook_interfaceOrientation)];
         [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
     }
 
