@@ -22,7 +22,7 @@ public class PlayCover: NSObject {
         guard let menuBuilder = menu as? UIMenuBuilder else { return }
         shared.menuController = MenuController(with: menuBuilder)
 
-        if (PlaySettings.shared.borderless) {
+        if PlaySettings.shared.borderless {
             AKInterface.shared!.makeWindowBorderless()
         }
     }
