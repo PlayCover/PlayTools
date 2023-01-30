@@ -56,16 +56,9 @@ __attribute__((visibility("hidden")))
 - (CGRect) hook_frame {
     return [PlayScreen frame:[self hook_frame]];
 }
-- (CGRect) hook_frameInternal {
-    return [PlayScreen frameInternal:[self hook_frameInternal]];
-}
 
 - (CGRect) hook_bounds {
     return [PlayScreen bounds:[self hook_bounds]];
-}
-
-- (CGRect) hook_boundsInternal {
-    return [PlayScreen frameInternal:[self hook_boundsInternal]];
 }
 
 - (CGRect) hook_nativeBounds {
@@ -136,8 +129,6 @@ bool menuWasCreated = false;
         
         // This actually fixes Apple mess at MacOS 13.2
         [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
-        // [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_boundsInternal)];
-        // [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(applicationFrame) withMethod:@selector(hook_frameInternal)];
         [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBounds)];
         [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
         [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
