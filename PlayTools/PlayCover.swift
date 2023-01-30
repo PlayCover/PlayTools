@@ -21,6 +21,10 @@ public class PlayCover: NSObject {
     @objc static public func initMenu(menu: NSObject) {
         guard let menuBuilder = menu as? UIMenuBuilder else { return }
         shared.menuController = MenuController(with: menuBuilder)
+
+        if (PlaySettings.shared.borderless) {
+            AKInterface.shared!.makeWindowBorderless()
+        }
     }
 
     static public func quitWhenClose() {
@@ -31,21 +35,6 @@ public class PlayCover: NSObject {
         ) { notif in
             if PlayScreen.shared.nsWindow?.isEqual(notif.object) ?? false {
                 AKInterface.shared!.terminateApplication()
-            }
-        }
-    }
-
-    @objc static public func initMenu(menu: NSObject) {
-        delay(0.005) {
-            guard let menuBuilder = menu as? UIMenuBuilder else { return }
-
-            shared.menuController = MenuController(with: menuBuilder)
-            delay(0.005) {
-                UIMenuSystem.main.setNeedsRebuild()
-                UIMenuSystem.main.setNeedsRevalidate()
-                if (PlaySettings.shared.borderless) {
-                    AKInterface.shared!.makeWindowBorderless()
-                }
             }
         }
     }
