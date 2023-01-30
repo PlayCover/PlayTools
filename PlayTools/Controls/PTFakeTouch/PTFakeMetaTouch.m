@@ -8,8 +8,8 @@
 
 #import "PTFakeMetaTouch.h"
 #import "UITouch-KIFAdditions.h"
-#import "UIApplication-KIFAdditions.h"
-#import "UIEvent+KIFAdditions.h"
+#import "UIApplication+Private.h"
+#import "UIEvent+Private.h"
 #import "CoreFoundation/CFRunLoop.h"
 #include <dlfcn.h>
 #include <string.h>
@@ -20,50 +20,6 @@ static CFRunLoopSourceRef source;
 
 static UITouch* toRemove = NULL, *toStationarify = NULL;
 NSArray *safeTouchAry;
-
-void disableCursor(boolean_t disable){
-       void *handle;
-       void (*test)(boolean_t);
-       char *error;
-
-       handle = dlopen("/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics", RTLD_LAZY);
-       if (!handle) {
-           fprintf(stderr, "%s\n", dlerror());
-       }
-
-       dlerror();
-
-       *(void **) (&test) = dlsym(handle, "CGAssociateMouseAndMouseCursorPosition");
-
-       if ((error = dlerror()) != NULL)  {
-          
-       } else{
-           (*test)(disable);
-           dlclose(handle);
-       }
-}
-
-void moveCursorTo(CGPoint point){
-       void *handle;
-       void (*test)(CGPoint);
-       char *error;
-
-       handle = dlopen("/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics", RTLD_LAZY);
-       if (!handle) {
-           fprintf(stderr, "%s\n", dlerror());
-       }
-
-       dlerror();
-
-       *(void **) (&test) = dlsym(handle, "CGWarpMouseCursorPosition");
-
-       if ((error = dlerror()) != NULL)  {
-          
-       } else{
-           (*test)(point);
-           dlclose(handle);
-       }
-}
 
 void eventSendCallback(void* info) {
     UIEvent *event = [[UIApplication sharedApplication] _touchesEvent];
@@ -77,7 +33,6 @@ void eventSendCallback(void* info) {
                 toRemove = aTouch;
                 break;
             case UITouchPhaseBegan:
-//            case UITouchPhaseMoved:
                 toStationarify = aTouch;
                 break;
             default:
@@ -90,9 +45,7 @@ void eventSendCallback(void* info) {
 
 @implementation PTFakeMetaTouch
 
-+ (void)load{
-    KW_ENABLE_CATEGORY(UITouch_KIFAdditions);
-    KW_ENABLE_CATEGORY(UIEvent_KIFAdditions);
++ (void)load {
     livingTouchAry = [[NSMutableArray alloc] init];
     touchAry = [[NSMutableArray alloc] init];
     for (NSInteger i = 0; i< 100; i++) {
@@ -107,18 +60,16 @@ void eventSendCallback(void* info) {
     source = CFRunLoopSourceCreate(NULL, -2, &context);
     CFRunLoopRef loop = CFRunLoopGetMain();
     CFRunLoopAddSource(loop, source, kCFRunLoopCommonModes);
-//    CFRunLoopMode mode = (CFRunLoopMode)UITrackingRunLoopMode;
-//    CFRunLoopAddSource(loop, source, GSEventReceiveRunLoopMode);
 }
 
-+ (UITouch* ) touch: (NSInteger) pointId {
++ (UITouch*)touch: (NSInteger) pointId {
     if ([touchAry count] > pointId){
         return [touchAry objectAtIndex:pointId];
     }
     return nil;
 }
 
-+ (NSInteger)fakeTouchId:(NSInteger)pointId AtPoint:(CGPoint)point withTouchPhase:(UITouchPhase)phase inWindow:(UIWindow*)window onView:(UIView*)view{
++ (NSInteger)fakeTouchId: (NSInteger)pointId AtPoint: (CGPoint)point withTouchPhase: (UITouchPhase)phase inWindow: (UIWindow*)window onView:(UIView*)view {
     bool deleted = false;
     UITouch* touch = NULL;
     bool needsCopy = false;
@@ -156,43 +107,12 @@ void eventSendCallback(void* info) {
         [touch setLocationInWindow:point];
     }
     [touch setPhaseAndUpdateTimestamp:phase];
-//    CFRunLoopSourceContext context;
-//    CFRunLoopSourceGetContext(source, &context);
     if(needsCopy) {
         CFTypeRef delayRelease = CFBridgingRetain(safeTouchAry);
         safeTouchAry = [[NSArray alloc] initWithArray:livingTouchAry copyItems:NO];
         CFBridgingRelease(delayRelease);
     }
     CFRunLoopSourceSignal(source);
-//    UIEvent *event = [self eventWithTouches:livingTouchAry];
     return deleted;
-}
-
-
-+ (UIEvent *)eventWithTouches:(NSArray *)touches
-{
-    // _touchesEvent is a private selector, interface is exposed in UIApplication(KIFAdditionsPrivate)
-    UIEvent *event = [[UIApplication sharedApplication] _touchesEvent];
-    [event _clearTouches];
-    [event kif_setEventWithTouches:touches];
-    
-    for (UITouch *aTouch in touches) {
-        [event _addTouch:aTouch forDelayedDelivery:NO];
-    }
-    
-    return event;
-}
-
-+ (NSInteger)getAvailablePointId{
-    NSInteger availablePointId=0;
-    NSMutableArray *availableIds = [[NSMutableArray alloc]init];
-    for (NSInteger i=0; i<touchAry.count; i++) {
-        UITouch *touch = [touchAry objectAtIndex:i];
-        if (touch.phase==UITouchPhaseEnded||touch.phase==UITouchPhaseStationary) {
-            [availableIds addObject:@(i+1)];
-        }
-    }
-    availablePointId = availableIds.count==0 ? 0 : [[availableIds objectAtIndex:(arc4random() % availableIds.count)] integerValue];
-    return availablePointId;
 }
 @end

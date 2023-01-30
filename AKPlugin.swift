@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import CoreGraphics
 import Foundation
 
 class AKPlugin: NSObject, Plugin {
@@ -38,10 +39,12 @@ class AKPlugin: NSObject, Plugin {
 
     func hideCursor() {
         NSCursor.hide()
+        CGAssociateMouseAndMouseCursorPosition(0)
     }
 
     func unhideCursor() {
         NSCursor.unhide()
+        CGAssociateMouseAndMouseCursorPosition(1)
     }
 
     func makeWindowBorderless() {

@@ -9,9 +9,9 @@ import GameController
 public class PlayMice {
 
     public static let shared = PlayMice()
+    public static let elementName = "Mouse"
     private static var isInit = false
 
-    private var camera: CameraControl?
     private var acceptMouseEvents = !PlaySettings.shared.mouseMapping
 
     public init() {
@@ -20,19 +20,18 @@ public class PlayMice {
             setupMouseButton(_up: 8, _down: 16)
             setupMouseButton(_up: 33554432, _down: 67108864)
             PlayMice.isInit = true
-            if acceptMouseEvents {
-                setupMouseMovedHandler()
-            }
         }
     }
 
     var fakedMousePressed = false
+    private var thumbstickVelocity: CGVector = CGVector.zero
+    public var draggableHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
+               cameraHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
+               joystickHandler: [String: (CGFloat, CGFloat) -> Void] = [:]
 
     public var cursorPos: CGPoint {
         var point = CGPoint(x: 0, y: 0)
-        if #available(macOS 11, *) {
-            point = AKInterface.shared!.mousePoint
-        }
+        point = AKInterface.shared!.mousePoint
         let rect = AKInterface.shared!.windowFrame
         let viewRect: CGRect = screen.screenRect
         let widthRate = viewRect.width / rect.width
@@ -54,37 +53,91 @@ public class PlayMice {
         return point
     }
 
-    func setup(_ data: MouseArea) {
-        camera = CameraControl(
-            centerX: data.transform.xCoord.absoluteX,
-            centerY: data.transform.yCoord.absoluteY)
-        setupMouseMovedHandler()
+    static private func isVectorSignificant(_ vector: CGVector) -> Bool {
+        return vector.dx.magnitude + vector.dy.magnitude > 0.2
     }
 
-    public func setupMouseMovedHandler() {
-        for mouse in GCMouse.mice() {
-            mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
-                if !mode.visible {
-                    if let draggableButton = DraggableButtonAction.activeButton {
-                        draggableButton.onMouseMoved(deltaX: CGFloat(deltaX), deltaY: CGFloat(deltaY))
-                    } else {
-                        self.camera?.updated(CGFloat(deltaX), CGFloat(deltaY))
-                    }
-                    if self.acceptMouseEvents && self.fakedMousePressed {
-                        Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.moved, tid: 1)
+    public func setupThumbstickChangedHandler(name: String) -> Bool {
+        if let thumbstick = GCController.current?.extendedGamepad?.elements[name] as? GCControllerDirectionPad {
+            thumbstick.valueChangedHandler = { _, deltaX, deltaY in
+                if !PlayMice.isVectorSignificant(self.thumbstickVelocity) {
+                    if let closure = self.thumbstickPoll(name) {
+                        DispatchQueue.main.async(execute: closure)
                     }
                 }
-//                Toast.showOver(msg: "\(self.cursorPos)")
+                self.thumbstickVelocity.dx = CGFloat(deltaX * 6)
+                self.thumbstickVelocity.dy = CGFloat(deltaY * 6)
+//                Toast.showOver(msg: "thumbstick")
+                if let joystickUpdate = self.joystickHandler[name] {
+                    joystickUpdate(self.thumbstickVelocity.dx, self.thumbstickVelocity.dy)
+                }
+            }
+            return true
+        }
+        return false
+    }
+
+    private func thumbstickPoll(_ name: String) -> (() -> Void)? {
+//        DispatchQueue.main.async {
+//            Toast.showOver(msg: "polling")
+//        }
+        let draggableUpdate = self.draggableHandler[name]
+        let cameraUpdate = self.cameraHandler[name]
+        if  draggableUpdate == nil && cameraUpdate == nil {
+            return nil
+        }
+        return {
+            if PlayMice.isVectorSignificant(self.thumbstickVelocity) {
+                var captured = false
+                if let draggableUpdate = self.draggableHandler[name] {
+                    draggableUpdate(self.thumbstickVelocity.dx, self.thumbstickVelocity.dy)
+                    captured = true
+                }
+                if !captured {
+                    if let cameraUpdate = self.cameraHandler[name] {
+                        cameraUpdate(self.thumbstickVelocity.dx, self.thumbstickVelocity.dy)
+                    }
+                }
+                if let closure = self.thumbstickPoll(name) {
+                    DispatchQueue.main.asyncAfter(
+                        deadline: DispatchTime.now() + 0.017, execute: closure)
+                }
+            }
+        }
+    }
+
+    public func handleMouseMoved(deltaX: Float, deltaY: Float) {
+        if self.acceptMouseEvents {
+            if self.fakedMousePressed {
+                Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.moved, tid: 1)
+            }
+            return
+        }
+        if mode.visible {
+            return
+        }
+        let cgDx = CGFloat(deltaX) * CGFloat(PlaySettings.shared.sensitivity),
+            cgDy = CGFloat(deltaY) * CGFloat(PlaySettings.shared.sensitivity)
+        for name in ["", PlayMice.elementName] {
+            if let draggableUpdate = self.draggableHandler[name] {
+                draggableUpdate(cgDx, cgDy)
+                return
+            }
+        }
+        for name in ["", PlayMice.elementName] {
+            if let cameraUpdate = self.cameraHandler[name] {
+                cameraUpdate(cgDx, cgDy)
+            }
+            if let joystickUpdate = self.joystickHandler[name] {
+                joystickUpdate(cgDx, cgDy)
             }
         }
     }
 
     public func stop() {
-//        for mouse in GCMouse.mice() {
-//            mouse.mouseInput?.mouseMovedHandler = nil
-//        }
-        camera?.stop()
-        camera = nil
+//        draggableJobs.removeAll()
+//        acceleratedJobs.removeAll()
+//        movedJobs.removeAll()
         mouseActions.keys.forEach { key in
             mouseActions[key] = []
         }
@@ -108,14 +161,12 @@ public class PlayMice {
         if EditorController.shared.editorMode {
             if state {
                 if actionIndex == 8 {
-                    EditorController.shared.setKeyCode(-2)
+                    EditorController.shared.setKey(-2)
                 } else if actionIndex == 33554432 {
-                    EditorController.shared.setKeyCode(-3)
+                    EditorController.shared.setKey(-3)
                 }
-                return true
-            } else {
-                return true
             }
+            return true
         }
         if self.acceptMouseEvents {
             if state {
@@ -130,15 +181,14 @@ public class PlayMice {
                     self.fakedMousePressed = true
                     return false
                 }
-                return true
             } else {
                 if self.fakedMousePressed {
                     self.fakedMousePressed = false
                     Toucher.touchcam(point: self.cursorPos, phase: UITouch.Phase.ended, tid: 1)
                     return false
                 }
-                return true
             }
+            return true
         }
         if !mode.visible {
             self.mouseActions[actionIndex]!.forEach({ buttonAction in
@@ -160,17 +210,26 @@ public class PlayMice {
     }
 }
 
-final class CameraControl {
-
+class CameraAction: Action {
     var center: CGPoint = CGPoint.zero
     var location: CGPoint = CGPoint.zero
-
+    var key: String!
+    var id: Int!
     init(centerX: CGFloat = screen.width / 2, centerY: CGFloat = screen.height / 2) {
         self.center = CGPoint(x: centerX, y: centerY)
         // in rare cases the cooldown reset task is lost by the dispatch queue
         self.cooldown = false
     }
 
+    convenience init(id: Int, data: MouseArea) {
+        self.init(
+            centerX: data.transform.xCoord.absoluteX,
+            centerY: data.transform.yCoord.absoluteY)
+        self.id = id
+        self.key = data.keyName
+        _ = PlayMice.shared.setupThumbstickChangedHandler(name: key)
+        PlayMice.shared.cameraHandler[key] = self.updated
+    }
     var isMoving = false
 
     func delay(_ delay: Double, closure: @escaping () -> Void) {
@@ -207,7 +266,7 @@ final class CameraControl {
             location = center
             counter = 0
             stationaryCount = 0
-            Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: 1)
+            Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: id)
 
             delay(0.01, closure: checkEnded)
         }
@@ -215,12 +274,9 @@ final class CameraControl {
             self.doLiftOff()
             return
         }
-        self.location.x += deltaX * CGFloat(PlaySettings.shared.sensitivity)
-        self.location.y -= deltaY * CGFloat(PlaySettings.shared.sensitivity)
-        Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: 1)
-        if stationaryCount > self.stationaryThreshold {
-            self.counter = 0
-        }
+        self.location.x += deltaX
+        self.location.y -= deltaY
+        Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: id)
         stationaryCount = 0
     }
 
@@ -228,10 +284,7 @@ final class CameraControl {
         if !self.isMoving {
             return
         }
-        Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: 1)
-//        DispatchQueue.main.async {
-//            Toast.showOver(msg: "mouse released")
-//        }
+        Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: id)
         self.isMoving = false
         // ending and beginning too frequently leads to the beginning event not recognized
         // so let the beginning event wait some time
@@ -242,7 +295,8 @@ final class CameraControl {
         cooldown = true
     }
 
-    func stop() {
+    func invalidate() {
+        PlayMice.shared.cameraHandler.removeValue(forKey: key)
         self.doLiftOff()
     }
 }

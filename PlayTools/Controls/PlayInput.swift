@@ -17,10 +17,10 @@ class PlayInput {
         }
     }
 
-    func setup() {
+    func parseKeymap() {
         actions = []
-        // ID 1 is left for mouse area
-        var counter = 2
+        // ID starts from 1
+        var counter = 1
         for button in keymap.keymapData.buttonModels {
             actions.append(ButtonAction(id: counter, data: button))
             counter += 1
@@ -31,25 +31,33 @@ class PlayInput {
                 counter += 1
         }
 
-        if settings.mouseMapping {
-            for mouse in keymap.keymapData.mouseAreaModel {
-                PlayMice.shared.setup(mouse)
+        for mouse in keymap.keymapData.mouseAreaModel {
+            if mouse.keyName.hasSuffix("tick") || settings.mouseMapping {
+                actions.append(CameraAction(id: counter, data: mouse))
                 counter += 1
             }
         }
 
         for joystick in keymap.keymapData.joystickModel {
-            actions.append(JoystickAction(id: counter, data: joystick))
+            // Left Thumbstick, Right Thumbstick, Mouse
+            if joystick.keyName.contains(Character("u")) {
+                actions.append(ConcreteJoystickAction(id: counter, data: joystick))
+            } else { // Keyboard
+                actions.append(JoystickAction(id: counter, data: joystick))
+            }
             counter += 1
         }
+    }
 
+    func setup() {
+        parseKeymap()
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             keyboard.keyChangedHandler = { _, _, keyCode, _ in
                 if editor.editorMode
                     && !PlayInput.cmdPressed()
                     && !PlayInput.FORBIDDEN.contains(keyCode)
                     && self.isSafeToBind(keyboard) {
-                    EditorController.shared.setKeyCode(keyCode.rawValue)
+                    EditorController.shared.setKey(keyCode.rawValue)
                 }
             }
             keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
@@ -65,6 +73,27 @@ class PlayInput {
                 self.swapMode(pressed)
             }
         }
+
+        if let controller = GCController.current?.extendedGamepad {
+            controller.valueChangedHandler = { _, element in
+                // This is the index of controller buttons, which is String, not Int
+                let alias: String! = element.aliases.first
+//                Toast.showOver(msg: alias)
+                if editor.editorMode {
+                    EditorController.shared.setKey(alias)
+                }
+            }
+        }
+        for mouse in GCMouse.mice() {
+            mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
+                if editor.editorMode {
+//                    EditorController.shared.setKey("Mouse")
+                } else {
+                    PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
+                }
+            }
+        }
+
     }
 
     static public func cmdPressed() -> Bool {
@@ -73,11 +102,9 @@ class PlayInput {
 
     private func isSafeToBind(_ input: GCKeyboardInput) -> Bool {
            var result = true
-           for forbidden in PlayInput.FORBIDDEN {
-               if input.button(forKeyCode: forbidden)?.isPressed ?? false {
-                   result = false
-                   break
-               }
+           for forbidden in PlayInput.FORBIDDEN where input.button(forKeyCode: forbidden)?.isPressed ?? false {
+               result = false
+               break
            }
            return result
        }
@@ -119,6 +146,10 @@ class PlayInput {
         }
 
         centre.addObserver(forName: NSNotification.Name.GCMouseDidConnect, object: nil, queue: main) { _ in
+            PlayInput.shared.setup()
+        }
+
+        centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
             PlayInput.shared.setup()
         }
 
