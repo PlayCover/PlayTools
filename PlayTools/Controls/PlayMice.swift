@@ -132,16 +132,13 @@ public class PlayMice {
         let sensy = CGFloat(PlaySettings.shared.sensitivity)
         let cgDx = CGFloat(deltaX) * sensy,
             cgDy = CGFloat(deltaY) * sensy
-        for name in ["", PlayMice.elementName] {
-            if let draggableUpdate = self.draggableHandler[name] {
-                draggableUpdate(cgDx, cgDy)
-                return
-            }
+        let name = PlayMice.elementName
+        if let draggableUpdate = self.draggableHandler[name] {
+            draggableUpdate(cgDx, cgDy)
+            return
         }
-        for name in ["", PlayMice.elementName] {
-            self.cameraMoveHandler[name]?(cgDx, cgDy)
-            self.joystickHandler[name]?(cgDx, cgDy)
-        }
+        self.cameraMoveHandler[name]?(cgDx, cgDy)
+        self.joystickHandler[name]?(cgDx, cgDy)
     }
 
     public func stop() {
