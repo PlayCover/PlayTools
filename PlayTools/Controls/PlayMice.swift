@@ -309,10 +309,6 @@ class SwipeAction: Action {
             Toucher.touchcam(point: location, phase: UITouch.Phase.began, tid: &id)
             delay(0.01, closure: checkEnded)
         }
-        if self.counter == 120 {
-            self.doLiftOff()
-            return
-        }
         self.location.x += deltaX
         self.location.y -= deltaY
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: &id)
