@@ -38,7 +38,7 @@ class ButtonAction: Action {
 
     private func getChangedHandler<T1>(handler: ((T1, Float, Bool) -> Void)?) -> (T1, Float, Bool) -> Void {
         return { button, value, pressed in
-            if !mode.visible && !PlayInput.cmdPressed() {
+            if !PlayInput.cmdPressed() {
                 self.update(pressed: pressed)
             }
             if let previous = handler {
@@ -53,7 +53,7 @@ class ButtonAction: Action {
         self.point = point
         if PlayMice.shared.setMiceButtons(keyCode.rawValue, action: self) {
             // No more work to do for mouse buttons
-        } else if let gcKey = GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: keyCode) {
+        } else if let gcKey = GCKeyboard.coalesced!.keyboardInput!.button(forKeyCode: keyCode) {
             let handler = gcKey.pressedChangedHandler
             gcKey.pressedChangedHandler = getChangedHandler(handler: handler)
 
@@ -121,7 +121,7 @@ class DraggableButtonAction: ButtonAction {
     }
 }
 
-class ConcreteJoystickAction: Action {
+class ContinuousJoystickAction: Action {
     var key: String
     var center: CGPoint
     var position: CGPoint!
