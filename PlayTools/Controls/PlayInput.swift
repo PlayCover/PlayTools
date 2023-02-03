@@ -19,78 +19,63 @@ class PlayInput {
 
     func parseKeymap() {
         actions = []
-        // ID starts from 1
-        var counter = 1
         for button in keymap.keymapData.buttonModels {
-            actions.append(ButtonAction(id: counter, data: button))
-            counter += 1
+            actions.append(ButtonAction(data: button))
         }
 
         for draggableButton in keymap.keymapData.draggableButtonModels {
-                actions.append(DraggableButtonAction(id: counter, data: draggableButton))
-                counter += 1
+            actions.append(DraggableButtonAction(data: draggableButton))
         }
 
         for mouse in keymap.keymapData.mouseAreaModel {
             if mouse.keyName.hasSuffix("tick") || settings.mouseMapping {
-                actions.append(CameraAction(id: counter, data: mouse))
-                counter += 1
+                actions.append(CameraAction(data: mouse))
             }
         }
 
         for joystick in keymap.keymapData.joystickModel {
             // Left Thumbstick, Right Thumbstick, Mouse
             if joystick.keyName.contains(Character("u")) {
-                actions.append(ConcreteJoystickAction(id: counter, data: joystick))
+                actions.append(ContinuousJoystickAction(data: joystick))
             } else { // Keyboard
-                actions.append(JoystickAction(id: counter, data: joystick))
+                actions.append(JoystickAction(data: joystick))
             }
-            counter += 1
+        }
+    }
+
+    public func toggleEditor(show: Bool) {
+        mode.show(show)
+        if show {
+            if let keyboard = GCKeyboard.coalesced!.keyboardInput {
+                keyboard.keyChangedHandler = { _, _, keyCode, _ in
+                    if !PlayInput.cmdPressed()
+                        && !PlayInput.FORBIDDEN.contains(keyCode)
+                        && self.isSafeToBind(keyboard) {
+                        EditorController.shared.setKey(keyCode.rawValue)
+                    }
+                }
+            }
+            if let controller = GCController.current?.extendedGamepad {
+                controller.valueChangedHandler = { _, element in
+                    // This is the index of controller buttons, which is String, not Int
+                    let alias: String! = element.aliases.first
+                    EditorController.shared.setKey(alias)
+                }
+            }
+        } else {
+            GCKeyboard.coalesced!.keyboardInput!.keyChangedHandler = nil
+            GCController.current?.extendedGamepad?.valueChangedHandler = nil
         }
     }
 
     func setup() {
         parseKeymap()
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            keyboard.keyChangedHandler = { _, _, keyCode, _ in
-                if editor.editorMode
-                    && !PlayInput.cmdPressed()
-                    && !PlayInput.FORBIDDEN.contains(keyCode)
-                    && self.isSafeToBind(keyboard) {
-                    EditorController.shared.setKey(keyCode.rawValue)
-                }
-            }
-            keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
-                PlayInput.lCmdPressed = pressed
-            }
-            keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
-                PlayInput.rCmdPressed = pressed
-            }
-            keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
-                self.swapMode(pressed)
-            }
-            keyboard.button(forKeyCode: .rightAlt)?.pressedChangedHandler = { _, _, pressed in
-                self.swapMode(pressed)
-            }
-        }
 
-        if let controller = GCController.current?.extendedGamepad {
-            controller.valueChangedHandler = { _, element in
-                // This is the index of controller buttons, which is String, not Int
-                let alias: String! = element.aliases.first
-//                Toast.showOver(msg: alias)
-                if editor.editorMode {
-                    EditorController.shared.setKey(alias)
-                }
-            }
-        }
         for mouse in GCMouse.mice() {
-            mouse.mouseInput?.mouseMovedHandler = { _, deltaX, deltaY in
-                if editor.editorMode {
-//                    EditorController.shared.setKey("Mouse")
-                } else {
-                    PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
-                }
+            if settings.mouseMapping {
+                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleMouseMoved
+            } else {
+                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleFakeMouseMoved
             }
         }
 
@@ -133,6 +118,23 @@ class PlayInput {
         return screen.window?.rootViewController
     }
 
+    func setupShortcuts() {
+        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
+            keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
+                PlayInput.lCmdPressed = pressed
+            }
+            keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
+                PlayInput.rCmdPressed = pressed
+            }
+            keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
+                self.swapMode(pressed)
+            }
+            keyboard.button(forKeyCode: .rightAlt)?.pressedChangedHandler = { _, _, pressed in
+                self.swapMode(pressed)
+            }
+        }
+    }
+
     func initialize() {
         if !PlaySettings.shared.keymapping {
             return
@@ -142,22 +144,29 @@ class PlayInput {
         let main = OperationQueue.main
 
         centre.addObserver(forName: NSNotification.Name.GCKeyboardDidConnect, object: nil, queue: main) { _ in
-            PlayInput.shared.setup()
+            self.setupShortcuts()
+            if !mode.visible {
+                self.setup()
+            }
         }
 
         centre.addObserver(forName: NSNotification.Name.GCMouseDidConnect, object: nil, queue: main) { _ in
-            PlayInput.shared.setup()
+            if !mode.visible {
+                self.setup()
+            }
         }
 
         centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
-            PlayInput.shared.setup()
+            if !mode.visible {
+                self.setup()
+            }
         }
 
-        setup()
+        setupShortcuts()
 
         // Fix beep sound
         AKInterface.shared!
-            .eliminateRedundantKeyPressEvents({ self.dontIgnore() })
+            .eliminateRedundantKeyPressEvents(self.dontIgnore)
     }
 
     func dontIgnore() -> Bool {
