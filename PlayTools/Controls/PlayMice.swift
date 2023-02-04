@@ -142,42 +142,28 @@ public class PlayMice {
     }
 
     public func stop() {
-        mouseActions.keys.forEach { key in
-            mouseActions[key] = []
-        }
         for mouse in GCMouse.mice() {
             mouse.mouseInput?.mouseMovedHandler = { _, _, _ in}
         }
     }
 
-    func setMiceButtons(_ keyId: Int, action: ButtonAction) -> Bool {
-        if (-3 ... -1).contains(keyId) {
-            setMiceButton(keyId, action: action)
-            return true
-        }
-        return false
-    }
-
-    var mouseActions: [Int: [ButtonAction]] = [2: [], 8: [], 33554432: []]
+    // TODO: get rid of this shit
+    var buttonIndex: [Int: Int] = [2: -1, 8: -2, 33554432: -3]
 
     private func setupMouseButton(_up: Int, _down: Int) {
         AKInterface.shared!.setupMouseButton(_up, _down, dontIgnore(_:_:_:))
     }
 
-    private func dontIgnore(_ actionIndex: Int, _ state: Bool, _ isEventWindow: Bool) -> Bool {
+    private func dontIgnore(_ actionIndex: Int, _ pressed: Bool, _ isEventWindow: Bool) -> Bool {
         if EditorController.shared.editorMode {
-            if state {
-                if actionIndex == 8 {
-                    EditorController.shared.setKey(-2)
-                } else if actionIndex == 33554432 {
-                    EditorController.shared.setKey(-3)
-                }
+            if pressed && actionIndex != 2 {
+                EditorController.shared.setKey(buttonIndex[actionIndex]!)
             }
             return true
         }
         if self.acceptMouseEvents {
             let curPos = self.cursorPos()
-            if state {
+            if pressed {
                 if !self.fakedMousePressed
                     // For traffic light buttons when not fullscreen
                     && curPos.y > 0
@@ -197,22 +183,14 @@ public class PlayMice {
             return true
         }
         if !mode.visible {
-            self.mouseActions[actionIndex]!.forEach({ buttonAction in
-                buttonAction.update(pressed: state)
-            })
+            if let handlers = PlayInput.buttonHandlers[KeyCodeNames.keyCodes[buttonIndex[actionIndex]!]!] {
+                for handler in handlers {
+                    handler(pressed)
+                }
+            }
             return false
         }
         return true
-    }
-
-    private func setMiceButton(_ keyId: Int, action: ButtonAction) {
-        switch keyId {
-        case -1: mouseActions[2]!.append(action)
-        case -2: mouseActions[8]!.append(action)
-        case -3: mouseActions[33554432]!.append(action)
-        default:
-            mouseActions[2]!.append(action)
-        }
     }
 }
 

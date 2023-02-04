@@ -19,16 +19,6 @@ extension GCKeyboard {
 class ButtonAction: Action {
     func invalidate() {
         Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: &id)
-        if let gcKey = GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: keyCode) {
-            gcKey.pressedChangedHandler = nil
-
-        } else if let gcControllerElement = GCController.current?.extendedGamepad?.elements[keyName] {
-
-            if let gcControllerButton = gcControllerElement as? GCControllerButtonInput {
-                gcControllerButton.pressedChangedHandler = nil
-            }
-
-        }
     }
 
     let keyCode: GCKeyCode
@@ -36,37 +26,12 @@ class ButtonAction: Action {
     let point: CGPoint
     var id: Int?
 
-    private func getChangedHandler<T1>(handler: ((T1, Float, Bool) -> Void)?) -> (T1, Float, Bool) -> Void {
-        return { button, value, pressed in
-            if !PlayInput.cmdPressed() {
-                self.update(pressed: pressed)
-            }
-            if let previous = handler {
-                previous(button, value, pressed)
-            }
-        }
-    }
-
     init(keyCode: GCKeyCode, keyName: String, point: CGPoint) {
         self.keyCode = keyCode
         self.keyName = keyName
         self.point = point
-        if PlayMice.shared.setMiceButtons(keyCode.rawValue, action: self) {
-            // No more work to do for mouse buttons
-        } else if let gcKey = GCKeyboard.coalesced!.keyboardInput!.button(forKeyCode: keyCode) {
-            let handler = gcKey.pressedChangedHandler
-            gcKey.pressedChangedHandler = getChangedHandler(handler: handler)
-
-        } else if let gcControllerElement = GCController.current?.extendedGamepad?.elements[keyName] {
-
-            if let gcControllerButton = gcControllerElement as? GCControllerButtonInput {
-                let handler = gcControllerButton.pressedChangedHandler
-                gcControllerButton.pressedChangedHandler = getChangedHandler(handler: handler)
-            }
-
-        } else {
-            Toast.showOver(msg: "failed to map button at point \(point)")
-        }
+        // TODO: set both key names in draggable button, so as to depracate key code
+        PlayInput.registerButton(key: KeyCodeNames.keyCodes[keyCode.rawValue]!, handler: self.update)
     }
 
     convenience init(data: Button) {
