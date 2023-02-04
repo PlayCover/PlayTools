@@ -10,10 +10,40 @@ class PlayInput {
     static private var lCmdPressed = false
     static private var rCmdPressed = false
 
+    static public var buttonHandlers: [String: [(Bool) -> Void]] = [:]
+
     func invalidate() {
         PlayMice.shared.stop()
         for action in self.actions {
             action.invalidate()
+        }
+        PlayInput.buttonHandlers.removeAll(keepingCapacity: true)
+        GCKeyboard.coalesced!.keyboardInput!.keyChangedHandler = nil
+        GCController.current?.extendedGamepad?.valueChangedHandler = nil
+    }
+
+    static public func registerButton(key: String, handler: @escaping (Bool) -> Void) {
+        if PlayInput.buttonHandlers[key] == nil {
+            PlayInput.buttonHandlers[key] = []
+        }
+        PlayInput.buttonHandlers[key]!.append(handler)
+    }
+
+    func keyboardHandler(_: GCKeyboardInput, _: GCControllerButtonInput, keyCode: GCKeyCode, pressed: Bool) {
+        if PlayInput.cmdPressed() { return }
+        guard let handlers = PlayInput.buttonHandlers[KeyCodeNames.keyCodes[keyCode.rawValue]!] else { return }
+        for handler in handlers {
+            handler(pressed)
+        }
+    }
+
+    func controllerButtonHandler(_: GCExtendedGamepad, element: GCControllerElement) {
+        guard let buttonElement = element as? GCControllerButtonInput else { return }
+        // TODO: handle analog input here too
+        let name: String = element.aliases.first!
+        guard let handlers = PlayInput.buttonHandlers[name] else { return }
+        for handler in handlers {
+            handler(buttonElement.isPressed)
         }
     }
 
@@ -56,21 +86,21 @@ class PlayInput {
                 }
             }
             if let controller = GCController.current?.extendedGamepad {
+                // TODO: direction pad is analog
                 controller.valueChangedHandler = { _, element in
                     // This is the index of controller buttons, which is String, not Int
                     let alias: String! = element.aliases.first
                     EditorController.shared.setKey(alias)
                 }
             }
-        } else {
-            GCKeyboard.coalesced!.keyboardInput!.keyChangedHandler = nil
-            GCController.current?.extendedGamepad?.valueChangedHandler = nil
         }
     }
 
     func setup() {
         parseKeymap()
 
+        GCKeyboard.coalesced!.keyboardInput!.keyChangedHandler = keyboardHandler
+        GCController.current?.extendedGamepad?.valueChangedHandler = controllerButtonHandler
         for mouse in GCMouse.mice() {
             if settings.mouseMapping {
                 mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleMouseMoved
@@ -118,7 +148,7 @@ class PlayInput {
         return screen.window?.rootViewController
     }
 
-    func setupShortcuts() {
+    func setupHotkeys() {
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.lCmdPressed = pressed
@@ -144,7 +174,7 @@ class PlayInput {
         let main = OperationQueue.main
 
         centre.addObserver(forName: NSNotification.Name.GCKeyboardDidConnect, object: nil, queue: main) { _ in
-            self.setupShortcuts()
+            self.setupHotkeys()
             if !mode.visible {
                 self.setup()
             }
@@ -162,7 +192,7 @@ class PlayInput {
             }
         }
 
-        setupShortcuts()
+        setupHotkeys()
 
         // Fix beep sound
         AKInterface.shared!
