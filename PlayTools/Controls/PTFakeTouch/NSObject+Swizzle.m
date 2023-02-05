@@ -53,6 +53,23 @@ __attribute__((visibility("hidden")))
     return false;
 }
 
+- (CGRect) hook_frameDefault {
+    return [PlayScreen frameDefault:[self hook_frameDefault]];
+}
+
+- (CGRect) hook_boundsDefault {
+    return [PlayScreen boundsDefault:[self hook_boundsDefault]];
+}
+
+- (CGRect) hook_nativeBoundsDefault {
+    return [PlayScreen nativeBoundsDefault:[self hook_nativeBoundsDefault]];
+}
+
+- (CGSize) hook_sizeDelfault {
+    return [PlayScreen sizeAspectRatioDefault:[self hook_sizeDelfault]];
+}
+
+
 - (CGRect) hook_frame {
     return [PlayScreen frame:[self hook_frame]];
 }
@@ -68,6 +85,7 @@ __attribute__((visibility("hidden")))
 - (CGSize) hook_size {
     return [PlayScreen sizeAspectRatio:[self hook_size]];
 }
+
 
 
 - (long long) hook_orientation {
@@ -90,8 +108,6 @@ __attribute__((visibility("hidden")))
     return [[UIScreen mainScreen] bounds].size.width;
     
 }
-
-
 
 bool menuWasCreated = false;
 - (id) initWithRootMenuHook:(id)rootMenu {
@@ -132,26 +148,35 @@ bool menuWasCreated = false;
 
 @implementation PTSwizzleLoader
 + (void)load {
-    if (![[PlaySettings shared] adaptiveDisplay]) {
-        // Fix for Default app frame size
+    if ([[PlaySettings shared] adaptiveDisplay]) {
+        // This lines set External Scene settings and other IOS10 Runtime services by swizzling
+        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
+        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
+        [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
+        
+        // Fixes Apple mess at MacOS 13.2
+        [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBounds)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
+    }
+    else{
         CGFloat newValueW = (CGFloat) [self get_default_width];
         [[PlaySettings shared] setValue:@(newValueW) forKey:@"windowSizeWidth"];
-        
+
         CGFloat newValueH = (CGFloat)[self get_default_height];
         [[PlaySettings shared] setValue:@(newValueH) forKey:@"windowSizeHeight"];
-    }
 
-    // This lines set external Scene (frame and those things) settings and other IOS10 Runtime services by swizzling
-    [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
-    [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
-    [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
+        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
+        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_boundsDefault)];
+        [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_sizeDelfault)];
         
-    // This actually fixes Apple mess at MacOS 13.2
-    [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
-    [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBounds)];
-    [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
-    [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
+        [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBoundsDefault)];
 
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
+        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
+    }
 
     [objc_getClass("_UIMenuBuilder") swizzleInstanceMethod:sel_getUid("initWithRootMenu:") withMethod:@selector(initWithRootMenuHook:)];
     [objc_getClass("IOSViewController") swizzleInstanceMethod:@selector(prefersPointerLocked) withMethod:@selector(hook_prefersPointerLocked)];

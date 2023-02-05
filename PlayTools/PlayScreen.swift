@@ -2,13 +2,14 @@
 //  ScreenController.swift
 //  PlayTools
 //
-
 import Foundation
 import UIKit
 
 let screen = PlayScreen.shared
 let mainScreenWidth = PlaySettings.shared.windowSizeWidth
 let mainScreenHeight = PlaySettings.shared.windowSizeHeight
+let mainScreenWidthDefault = PlaySettings.shared.windowSizeWidth
+let mainScreenHeightDefault = PlaySettings.shared.windowSizeHeight
 
 extension CGSize {
     func aspectRatio() -> CGFloat {
@@ -30,6 +31,14 @@ extension CGSize {
     func toAspectRatioInternal() -> CGSize {
         return CGSize(width: mainScreenHeight, height: mainScreenWidth)
     }
+    
+    func toAspectRatioDefault() -> CGSize {
+            return CGSize(width: mainScreenHeightDefault, height: mainScreenWidthDefault)
+    }
+
+    func toAspectRatioInternalDefault() -> CGSize {
+        return CGSize(width: mainScreenWidthDefault, height: mainScreenHeightDefault)
+    }
 }
 
 extension CGRect {
@@ -47,6 +56,13 @@ extension CGRect {
 
     func toAspectRatioReversed() -> CGRect {
         return CGRect(x: minX, y: minY, width: mainScreenHeight, height: mainScreenWidth)
+    }
+    func toAspectRatioDefault(_ multiplier: CGFloat = 1) -> CGRect {
+        return CGRect(x: minX, y: minY, width: mainScreenWidthDefault * multiplier, height: mainScreenHeightDefault * multiplier)
+    }
+
+    func toAspectRatioReversedDefault() -> CGRect {
+        return CGRect(x: minX, y: minY, width: mainScreenHeightDefault, height: mainScreenWidthDefault)
     }
 }
 
@@ -148,6 +164,28 @@ public class PlayScreen: NSObject {
         AKInterface.shared!.setMenuBarVisible(visible)
     }
 
+    // Default calculation
+    @objc public static func frameReversedDefault(_ rect: CGRect) -> CGRect {
+        return rect.toAspectRatioReversedDefault()
+    }
+    @objc public static func frameDefault(_ rect: CGRect) -> CGRect {
+        return rect.toAspectRatioDefault()
+    }
+    @objc public static func boundsDefault(_ rect: CGRect) -> CGRect {
+        return rect.toAspectRatioDefault()
+    }
+
+    @objc public static func nativeBoundsDefault(_ rect: CGRect) -> CGRect {
+            return rect.toAspectRatioDefault(2)
+    }
+
+    @objc public static func sizeAspectRatioDefault(_ size: CGSize) -> CGSize {
+        return size.toAspectRatioDefault()
+    }
+    @objc public static func frameInternalDefault(_ rect: CGRect) -> CGRect {
+            return rect.toAspectRatioDefault()
+    }
+    
 }
 
 extension CGFloat {
