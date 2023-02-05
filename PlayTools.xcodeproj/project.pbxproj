@@ -15,7 +15,6 @@
 		6E84A14528D0F94E00BF7495 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
 		6E84A15028D0F97500BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA71970B287A44D200623C15 /* PlayLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719702287A44D200623C15 /* PlayLoader.m */; };
-		AA71970C287A44D200623C15 /* PlayScreenDefault.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719703287A44D200623C15 /* PlayScreenDefault.swift */; };
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
 		AA71970E287A44D200623C15 /* PlayLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719705287A44D200623C15 /* PlayLoader.h */; };
 		AA71970F287A44D200623C15 /* PlayCover.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719706287A44D200623C15 /* PlayCover.swift */; };
@@ -76,7 +75,6 @@
 		6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AKInterface.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA7196D8287A447700623C15 /* PlayTools.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PlayTools.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA719702287A44D200623C15 /* PlayLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlayLoader.m; sourceTree = "<group>"; };
-		AA719703287A44D200623C15 /* PlayScreenDefault.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayScreenDefault.swift; sourceTree = "<group>"; };
 		AA719704287A44D200623C15 /* PlaySettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlaySettings.swift; sourceTree = "<group>"; };
 		AA719705287A44D200623C15 /* PlayLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayLoader.h; sourceTree = "<group>"; };
 		AA719706287A44D200623C15 /* PlayCover.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayCover.swift; sourceTree = "<group>"; };
@@ -177,7 +175,6 @@
 				AA719791287A481500623C15 /* Utils */,
 				AA71970A287A44D200623C15 /* Info.plist */,
 				AA719706287A44D200623C15 /* PlayCover.swift */,
-				AA719703287A44D200623C15 /* PlayScreenDefault.swift */,
 				AA719704287A44D200623C15 /* PlaySettings.swift */,
 				AA719705287A44D200623C15 /* PlayLoader.h */,
 				AA719702287A44D200623C15 /* PlayLoader.m */,
@@ -461,7 +458,6 @@
 				AA7197A3287A481500623C15 /* CircleMenuButton.swift in Sources */,
 				AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */,
 				AA71986A287A81A000623C15 /* PTFakeMetaTouch.m in Sources */,
-				AA71970C287A44D200623C15 /* PlayScreenDefault.swift in Sources */,
 				ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */,
 				AA71986C287A81A000623C15 /* NSObject+Swizzle.m in Sources */,
 				AA71970F287A44D200623C15 /* PlayCover.swift in Sources */,
