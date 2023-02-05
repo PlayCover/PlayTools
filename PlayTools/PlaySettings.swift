@@ -36,6 +36,8 @@ let settings = PlaySettings.shared
     @objc lazy var windowSizeHeight = CGFloat(settingsData.windowHeight)
 
     @objc lazy var windowSizeWidth = CGFloat(settingsData.windowWidth)
+    
+    @objc lazy var inverseScreenValues = settingsData.inverseScreenValues
 
     @objc lazy var adaptiveDisplay = settingsData.resolution == 0 ? false : true
 
@@ -82,4 +84,5 @@ struct AppSettingsData: Codable {
     var version = "2.0.0"
     var playChain = false
     var playChainDebugging = false
+    var inverseScreenValues = false
 }
