@@ -65,7 +65,7 @@ void eventSendCallback(void* info) {
         touch = toStationarify;
         toStationarify = NULL;
         if(touch.phase == UITouchPhaseBegan) {
-            [touch setPhaseAndUpdateTimestamp:UITouchPhaseStationary];
+            [touch setPhaseAndUpdateTimestamp:UITouchPhaseMoved];
         }
     }
     // respect the semantics of touch phase, allocate new touch on touch began.
