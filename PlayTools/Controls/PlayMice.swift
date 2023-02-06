@@ -28,7 +28,10 @@ public class PlayMice {
 
     var fakedMouseTouchPointId: Int?
     var fakedMousePressed: Bool {fakedMouseTouchPointId != nil}
-    private var thumbstickVelocity: CGVector = CGVector.zero
+    private var directionPadXValue: Float = 0,
+                directionPadYValue: Float = 0,
+                thumbstickCursorControl: [String: (((CGFloat, CGFloat) -> Void)?, CGFloat, CGFloat) -> Void]
+    = ["Left Thumbstick": ThumbstickCursorControl().update, "Right Thumbstick": ThumbstickCursorControl().update]
     public var draggableHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
                cameraMoveHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
                cameraScaleHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
@@ -58,10 +61,6 @@ public class PlayMice {
         return point
     }
 
-    static private func isVectorSignificant(_ vector: CGVector) -> Bool {
-        return vector.dx.magnitude + vector.dy.magnitude > 0.2
-    }
-
     public func setupScrollWheelHandler() {
         AKInterface.shared!.setupScrollWheel({deltaX, deltaY in
             if let cameraScale = self.cameraScaleHandler[PlayMice.elementName] {
@@ -73,53 +72,31 @@ public class PlayMice {
         })
     }
 
-    public func setupThumbstickChangedHandler(name: String) -> Bool {
-        if let thumbstick = GCController.current?.extendedGamepad?.elements[name] as? GCControllerDirectionPad {
-            thumbstick.valueChangedHandler = { _, deltaX, deltaY in
-                if !PlayMice.isVectorSignificant(self.thumbstickVelocity) {
-                    if let closure = self.thumbstickPoll(name) {
-                        DispatchQueue.main.async(execute: closure)
-                    }
-                }
-                self.thumbstickVelocity.dx = CGFloat(deltaX * 6)
-                self.thumbstickVelocity.dy = CGFloat(deltaY * 6)
-//                Toast.showOver(msg: "thumbstick")
-                if let joystickUpdate = self.joystickHandler[name] {
-                    joystickUpdate(self.thumbstickVelocity.dx, self.thumbstickVelocity.dy)
-                }
+    public func handleControllerDirectionPad(_ profile: GCExtendedGamepad, _ dpad: GCControllerDirectionPad) {
+        let name = dpad.aliases.first!
+        let xAxis = dpad.xAxis, yAxis = dpad.yAxis
+        if name == "Direction Pad" {
+            if (xAxis.value > 0) != (directionPadXValue > 0) {
+                PlayInput.shared.controllerButtonHandler(profile, dpad.right)
             }
-            return true
-        }
-        return false
-    }
-
-    private func thumbstickPoll(_ name: String) -> (() -> Void)? {
-//        DispatchQueue.main.async {
-//            Toast.showOver(msg: "polling")
-//        }
-        let draggableUpdate = self.draggableHandler[name]
-        let cameraUpdate = self.cameraMoveHandler[name]
-        if  draggableUpdate == nil && cameraUpdate == nil {
-            return nil
-        }
-        return {
-            if PlayMice.isVectorSignificant(self.thumbstickVelocity) {
-                var captured = false
-                if let draggableUpdate = self.draggableHandler[name] {
-                    draggableUpdate(self.thumbstickVelocity.dx, self.thumbstickVelocity.dy)
-                    captured = true
-                }
-                if !captured {
-                    if let cameraUpdate = self.cameraMoveHandler[name] {
-                        cameraUpdate(self.thumbstickVelocity.dx, self.thumbstickVelocity.dy)
-                    }
-                }
-                if let closure = self.thumbstickPoll(name) {
-                    DispatchQueue.main.asyncAfter(
-                        deadline: DispatchTime.now() + 0.017, execute: closure)
-                }
+            if (xAxis.value < 0) != (directionPadXValue < 0) {
+                PlayInput.shared.controllerButtonHandler(profile, dpad.left)
             }
+            if (yAxis.value > 0) != (directionPadYValue > 0) {
+                PlayInput.shared.controllerButtonHandler(profile, dpad.up)
+            }
+            if (yAxis.value < 0) != (directionPadYValue < 0) {
+                PlayInput.shared.controllerButtonHandler(profile, dpad.down)
+            }
+            directionPadXValue = xAxis.value
+            directionPadYValue = yAxis.value
+            return
         }
+        let deltaX = xAxis.value, deltaY = yAxis.value
+        let cgDx = CGFloat(deltaX)
+        let cgDy = CGFloat(deltaY)
+        thumbstickCursorControl[name]!(draggableHandler[name] ?? cameraMoveHandler[name], cgDx * 6, cgDy * 6)
+        joystickHandler[name]?(cgDx, cgDy)
     }
 
     public func handleFakeMouseMoved(_: GCMouseInput, deltaX: Float, deltaY: Float) {
@@ -148,7 +125,7 @@ public class PlayMice {
     }
 
     // TODO: get rid of this shit
-    var buttonIndex: [Int: Int] = [2: -1, 8: -2, 33554432: -3]
+    let buttonIndex: [Int: Int] = [2: -1, 8: -2, 33554432: -3]
 
     private func setupMouseButton(_up: Int, _down: Int) {
         AKInterface.shared!.setupMouseButton(_up, _down, dontIgnore(_:_:_:))
@@ -194,8 +171,46 @@ public class PlayMice {
     }
 }
 
+class ThumbstickCursorControl {
+    private var thumbstickVelocity: CGVector = CGVector.zero,
+                thumbstickPolling: Bool = false,
+                eventHandler: ((CGFloat, CGFloat) -> Void)!
+
+    static private func isVectorSignificant(_ vector: CGVector) -> Bool {
+        return vector.dx.magnitude + vector.dy.magnitude > 0.2
+    }
+
+    public func update(handler: ((CGFloat, CGFloat) -> Void)?, velocityX: CGFloat, velocityY: CGFloat) {
+        guard let hdlr = handler else {
+            if thumbstickPolling {
+                self.thumbstickVelocity.dx = 0
+                self.thumbstickVelocity.dy = 0
+            }
+            return
+        }
+        self.eventHandler = hdlr
+        self.thumbstickVelocity.dx = velocityX
+        self.thumbstickVelocity.dy = velocityY
+        if !thumbstickPolling {
+            DispatchQueue.main.async(execute: self.thumbstickPoll)
+            self.thumbstickPolling = true
+        }
+    }
+
+    private func thumbstickPoll() {
+        if !ThumbstickCursorControl.isVectorSignificant(self.thumbstickVelocity) {
+            self.thumbstickPolling = false
+            return
+        }
+        self.eventHandler(self.thumbstickVelocity.dx, self.thumbstickVelocity.dy)
+        DispatchQueue.main.asyncAfter(
+            deadline: DispatchTime.now() + 0.017, execute: self.thumbstickPoll)
+    }
+}
+
 class CameraAction: Action {
     var swipeMove, swipeScale1, swipeScale2: SwipeAction
+    static var swipeDrag = SwipeAction()
     var key: String!
     var center: CGPoint
     var distance1: CGFloat = 100, distance2: CGFloat = 100
@@ -207,7 +222,6 @@ class CameraAction: Action {
         swipeMove = SwipeAction()
         swipeScale1 = SwipeAction()
         swipeScale2 = SwipeAction()
-        _ = PlayMice.shared.setupThumbstickChangedHandler(name: key)
         PlayMice.shared.cameraMoveHandler[key] = self.moveUpdated
         PlayMice.shared.cameraScaleHandler[PlayMice.elementName] = self.scaleUpdated
     }
@@ -234,22 +248,32 @@ class CameraAction: Action {
     // Event handlers SHOULD be SMALL
     // DO NOT check things like mode.visible in an event handler
     // change the handler itself instead
-    func dragUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
-        swipeMove.move(from: PlayMice.shared.cursorPos, deltaX: deltaX * 4, deltaY: -deltaY * 4)
+    static func dragUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
+        swipeDrag.move(from: PlayMice.shared.cursorPos, deltaX: deltaX * 4, deltaY: -deltaY * 4)
     }
 
     func invalidate() {
         PlayMice.shared.cameraMoveHandler.removeValue(forKey: key)
-        PlayMice.shared.cameraScaleHandler[PlayMice.elementName] = self.dragUpdated
+        PlayMice.shared.cameraScaleHandler[PlayMice.elementName] = CameraAction.dragUpdated
+        swipeMove.invalidate()
+        swipeScale1.invalidate()
+        swipeScale2.invalidate()
     }
 }
 
 class SwipeAction: Action {
     var location: CGPoint = CGPoint.zero
     var id: Int?
+    let timer = DispatchSource.makeTimerSource(flags: [], queue: DispatchQueue.main)
     init() {
         // in rare cases the cooldown reset task is lost by the dispatch queue
         self.cooldown = false
+        // TODO: camera mode switch: Flexibility v.s. Precision
+        // TODO: find reasonable ways to promote fake touch priority
+        timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.3, leeway: DispatchTimeInterval.never)
+        timer.setEventHandler(qos: DispatchQoS.background, handler: self.checkEnded)
+        timer.activate()
+        timer.suspend()
     }
 
     func delay(_ delay: Double, closure: @escaping () -> Void) {
@@ -261,23 +285,21 @@ class SwipeAction: Action {
     var counter = 0
     // if should wait before beginning next touch
     var cooldown = false
-    // in how many tests has this been identified as stationary
-    var stationaryCount = 0
-    let stationaryThreshold = 2
+    var lastCounter = 0
 
     func checkEnded() {
-        // if been stationary for enough time
-        if self.stationaryCount < self.stationaryThreshold || (self.stationaryCount < 20 - self.counter) {
-            self.stationaryCount += 1
-            self.delay(0.04, closure: self.checkEnded)
-            return
+        if self.counter == self.lastCounter {
+            if self.counter < 24 {
+                counter += 24
+            } else {
+                timer.suspend()
+                self.doLiftOff()
+            }
         }
-        self.doLiftOff()
+        self.lastCounter = self.counter
      }
 
     public func move(from: () -> CGPoint, deltaX: CGFloat, deltaY: CGFloat) {
-        // count touch duration
-        counter += 1
         if id == nil {
             if cooldown {
                 return
@@ -285,12 +307,13 @@ class SwipeAction: Action {
             counter = 0
             location = from()
             Toucher.touchcam(point: location, phase: UITouch.Phase.began, tid: &id)
-            delay(0.01, closure: checkEnded)
+            timer.resume()
         }
+        // count touch duration
+        counter += 1
         self.location.x += deltaX
         self.location.y -= deltaY
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: &id)
-        stationaryCount = 0
     }
 
     public func doLiftOff() {
@@ -308,6 +331,7 @@ class SwipeAction: Action {
     }
 
     func invalidate() {
-        // pass
+        timer.cancel()
+        self.doLiftOff()
     }
 }
