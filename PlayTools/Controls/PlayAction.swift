@@ -30,8 +30,10 @@ class ButtonAction: Action {
         self.keyCode = keyCode
         self.keyName = keyName
         self.point = point
+        let code = keyCode.rawValue
         // TODO: set both key names in draggable button, so as to depracate key code
-        PlayInput.registerButton(key: KeyCodeNames.keyCodes[keyCode.rawValue]!, handler: self.update)
+        PlayInput.registerButton(key: code == KeyCodeNames.defaultCode ? keyName: KeyCodeNames.keyCodes[code]!,
+                                 handler: self.update)
     }
 
     convenience init(data: Button) {
@@ -59,7 +61,6 @@ class DraggableButtonAction: ButtonAction {
     override init(keyCode: GCKeyCode, keyName: String, point: CGPoint) {
         self.releasePoint = point
         super.init(keyCode: keyCode, keyName: keyName, point: point)
-        _ = PlayMice.shared.setupThumbstickChangedHandler(name: keyName)
     }
 
     override func update(pressed: Bool) {
@@ -101,10 +102,10 @@ class ContinuousJoystickAction: Action {
         self.key = data.keyName
         position = center
         self.sensitivity = data.transform.size.absoluteSize / 4
-        if PlayMice.shared.setupThumbstickChangedHandler(name: key) {
-            PlayMice.shared.joystickHandler[key] = thumbstickUpdate
+        if key == PlayMice.elementName {
+            PlayMice.shared.joystickHandler[key] = self.mouseUpdate
         } else {
-            PlayMice.shared.joystickHandler[key] = mouseUpdate
+            PlayMice.shared.joystickHandler[key] = self.thumbstickUpdate
         }
     }
 
@@ -151,16 +152,8 @@ class JoystickAction: Action {
         self.keys = keys
         self.center = center
         self.shift = shift / 2
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            for key in keys {
-                let handler = keyboard.button(forKeyCode: key)?.pressedChangedHandler
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = { button, value, pressed in
-                    Toucher.touchQueue.async(execute: self.update)
-                    if let previous = handler {
-                        previous(button, value, pressed)
-                    }
-                }
-            }
+        for key in keys {
+            PlayInput.registerButton(key: KeyCodeNames.keyCodes[key.rawValue]!, handler: self.update)
         }
     }
 
@@ -181,28 +174,19 @@ class JoystickAction: Action {
     func invalidate() {
         Toucher.touchcam(point: center, phase: UITouch.Phase.ended, tid: &id)
         self.moving = false
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            for key in keys {
-                keyboard.button(forKeyCode: key)?.pressedChangedHandler = nil
-            }
-        }
     }
 
-    func update() {
-        if mode.visible {
-            return
-        }
+    func update(_: Bool) {
         var touch = center
-        var start = center
         if GCKeyboard.pressed(key: keys[0]) {
-            touch.y -= shift / 3
+            touch.y -= shift / 2
         } else if GCKeyboard.pressed(key: keys[1]) {
-            touch.y += shift / 3
+            touch.y += shift / 2
         }
         if GCKeyboard.pressed(key: keys[2]) {
-            touch.x -= shift / 3
+            touch.x -= shift / 2
         } else if GCKeyboard.pressed(key: keys[3]) {
-            touch.x += shift / 3
+            touch.x += shift / 2
         }
         if moving {
             if touch.equalTo(center) {
@@ -213,15 +197,8 @@ class JoystickAction: Action {
             }
         } else {
             if !touch.equalTo(center) {
-                start.x += (touch.x - start.x) / 8
-                start.y += (touch.y - start.y) / 8
                 moving = true
-                Toucher.touchcam(point: start, phase: UITouch.Phase.began, tid: &id)
-                Toucher.touchQueue.asyncAfter(deadline: .now() + 0.04) {
-                    if self.moving {
-                        Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: &self.id)
-                    } // end if
-                } // end closure
+                Toucher.touchcam(point: touch, phase: UITouch.Phase.began, tid: &id)
             } // end if
         } // end else
     }
