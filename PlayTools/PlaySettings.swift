@@ -39,8 +39,6 @@ let settings = PlaySettings.shared
     
     @objc lazy var inverseScreenValues = settingsData.inverseScreenValues
 
-    @objc lazy var inverseScreenValues = settingsData.inverseScreenValues
-
     @objc lazy var adaptiveDisplay = settingsData.resolution == 0 ? false : true
 
     @objc lazy var deviceModel = settingsData.iosDeviceModel as NSString
