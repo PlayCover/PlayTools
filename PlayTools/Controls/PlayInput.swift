@@ -29,21 +29,30 @@ class PlayInput {
         PlayInput.buttonHandlers[key]!.append(handler)
     }
 
-    func keyboardHandler(_: GCKeyboardInput, _: GCControllerButtonInput, keyCode: GCKeyCode, pressed: Bool) {
+    func keyboardHandler(_: GCKeyboardInput, _: GCControllerButtonInput, _ keyCode: GCKeyCode, _ pressed: Bool) {
         if PlayInput.cmdPressed() { return }
-        guard let handlers = PlayInput.buttonHandlers[KeyCodeNames.keyCodes[keyCode.rawValue]!] else { return }
+        guard let handlers = PlayInput.buttonHandlers[KeyCodeNames.keyCodes[keyCode.rawValue]!] else {
+            // TODO: usage hint of disabling keymapping is planned to be added here
+            return
+        }
         for handler in handlers {
             handler(pressed)
         }
     }
 
-    func controllerButtonHandler(_: GCExtendedGamepad, element: GCControllerElement) {
-        guard let buttonElement = element as? GCControllerButtonInput else { return }
-        // TODO: handle analog input here too
+    func controllerButtonHandler(_ profile: GCExtendedGamepad, _ element: GCControllerElement) {
         let name: String = element.aliases.first!
-        guard let handlers = PlayInput.buttonHandlers[name] else { return }
-        for handler in handlers {
-            handler(buttonElement.isPressed)
+        if let buttonElement = element as? GCControllerButtonInput {
+//            Toast.showOver(msg: "recognised controller button: \(name)")
+            guard let handlers = PlayInput.buttonHandlers[name] else { return }
+            Toast.showOver(msg: name + ": \(buttonElement.isPressed)")
+            for handler in handlers {
+                handler(buttonElement.isPressed)
+            }
+        } else if let dpadElement = element as? GCControllerDirectionPad {
+            PlayMice.shared.handleControllerDirectionPad(profile, dpadElement)
+        } else {
+            Toast.showOver(msg: "unrecognised controller element input happens")
         }
     }
 
@@ -86,10 +95,25 @@ class PlayInput {
                 }
             }
             if let controller = GCController.current?.extendedGamepad {
-                // TODO: direction pad is analog
                 controller.valueChangedHandler = { _, element in
                     // This is the index of controller buttons, which is String, not Int
-                    let alias: String! = element.aliases.first
+                    var alias: String = element.aliases.first!
+                    if alias == "Direction Pad" {
+                        guard let dpadElement = element as? GCControllerDirectionPad else {
+                            Toast.showOver(msg: "cannot map direction pad: element type not recognizable")
+                            return
+                        }
+                        if dpadElement.xAxis.value > 0 {
+                            alias = dpadElement.right.aliases.first!
+                        } else if dpadElement.xAxis.value < 0 {
+                            alias = dpadElement.left.aliases.first!
+                        }
+                        if dpadElement.yAxis.value > 0 {
+                            alias = dpadElement.down.aliases.first!
+                        } else if dpadElement.yAxis.value < 0 {
+                            alias = dpadElement.up.aliases.first!
+                        }
+                    }
                     EditorController.shared.setKey(alias)
                 }
             }
@@ -162,6 +186,7 @@ class PlayInput {
             keyboard.button(forKeyCode: .rightAlt)?.pressedChangedHandler = { _, _, pressed in
                 self.swapMode(pressed)
             }
+            // TODO: set a timeout to display usage guide of Option and Keymapping menu in turn
         }
     }
 
@@ -189,6 +214,9 @@ class PlayInput {
         centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
             if !mode.visible {
                 self.setup()
+            }
+            if EditorController.shared.editorMode {
+                self.toggleEditor(show: true)
             }
         }
 

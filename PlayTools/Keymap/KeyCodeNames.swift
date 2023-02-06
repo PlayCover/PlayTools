@@ -1,3 +1,4 @@
+// Should match https://github.com/PlayCover/PlayCover/blob/develop/PlayCover/Model/KeyCodeNames.swift exactly
 class KeyCodeNames {
     public static let defaultCode = -10
 
