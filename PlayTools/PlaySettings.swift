@@ -39,9 +39,13 @@ let settings = PlaySettings.shared
     
     @objc lazy var inverseScreenValues = settingsData.inverseScreenValues
 
+    @objc lazy var inverseScreenValues = settingsData.inverseScreenValues
+
     @objc lazy var adaptiveDisplay = settingsData.resolution == 0 ? false : true
 
     @objc lazy var deviceModel = settingsData.iosDeviceModel as NSString
+
+    @objc lazy var macOSVersion = Double(settingsData.macOSVersion)
 
     @objc lazy var oemID: NSString = {
         switch settingsData.iosDeviceModel {
@@ -85,4 +89,5 @@ struct AppSettingsData: Codable {
     var playChain = false
     var playChainDebugging = false
     var inverseScreenValues = false
+    var macOSVersion: Double = 13.2
 }
