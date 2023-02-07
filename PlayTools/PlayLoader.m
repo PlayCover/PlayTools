@@ -104,8 +104,10 @@ static OSStatus pt_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
         retval = SecItemCopyMatching(query, result);
     }
     if (result != NULL) {
-        [PlayKeychain debugLogger:[NSString stringWithFormat:@"SecItemCopyMatching: %@", query]];
-        [PlayKeychain debugLogger:[NSString stringWithFormat:@"SecItemCopyMatching result: %@", *result]];
+        if ([[PlaySettings shared] playChainDebugging]) {
+            [PlayKeychain debugLogger:[NSString stringWithFormat:@"SecItemCopyMatching: %@", query]];
+            [PlayKeychain debugLogger:[NSString stringWithFormat:@"SecItemCopyMatching result: %@", *result]];
+        }
     }
     return retval;
 }
@@ -118,8 +120,10 @@ static OSStatus pt_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
         retval = SecItemAdd(attributes, result);
     }
     if (result != NULL) {
-        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemAdd: %@", attributes]];
-        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemAdd result: %@", *result]];
+        if ([[PlaySettings shared] playChainDebugging]) {
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemAdd: %@", attributes]];
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemAdd result: %@", *result]];
+        }
     }
     return retval;
 }
@@ -132,8 +136,10 @@ static OSStatus pt_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attribut
         retval = SecItemUpdate(query, attributesToUpdate);
     }
     if (attributesToUpdate != NULL) {
-        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemUpdate: %@", query]];
-        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemUpdate attributesToUpdate: %@", attributesToUpdate]];
+        if ([[PlaySettings shared] playChainDebugging]) {
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemUpdate: %@", query]];
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemUpdate attributesToUpdate: %@", attributesToUpdate]];
+        }
     }
     return retval;
 
@@ -146,7 +152,9 @@ static OSStatus pt_SecItemDelete(CFDictionaryRef query) {
     } else {
         retval = SecItemDelete(query);
     }
-    [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemDelete: %@", query]];
+    if ([[PlaySettings shared] playChainDebugging]) {
+        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemDelete: %@", query]];
+    }
     return retval;
 }
 
