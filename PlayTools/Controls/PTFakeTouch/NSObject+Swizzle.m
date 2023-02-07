@@ -11,6 +11,7 @@
 #import "UIKit/UIKit.h"
 #import <PlayTools/PlayTools-Swift.h>
 #import "PTFakeMetaTouch.h"
+#import <VideoSubscriberAccount/VideoSubscriberAccount.h>
 
 __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
@@ -110,6 +111,10 @@ __attribute__((visibility("hidden")))
 }
 
 
+- (void) hook_setCurrentSubscription:(VSSubscription *)currentSubscription {
+    // do nothing
+}
+
 
 bool menuWasCreated = false;
 - (id) initWithRootMenuHook:(id)rootMenu {
@@ -205,6 +210,8 @@ bool menuWasCreated = false;
     
     [objc_getClass("_UIMenuBuilder") swizzleInstanceMethod:sel_getUid("initWithRootMenu:") withMethod:@selector(initWithRootMenuHook:)];
     [objc_getClass("IOSViewController") swizzleInstanceMethod:@selector(prefersPointerLocked) withMethod:@selector(hook_prefersPointerLocked)];
+
+    [objc_getClass("VSSubscriptionRegistrationCenter") swizzleInstanceMethod:@selector(setCurrentSubscription:) withMethod:@selector(hook_setCurrentSubscription:)];
 }
 
 @end
