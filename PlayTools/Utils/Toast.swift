@@ -17,7 +17,7 @@ class Toast {
     private static let gap: CGFloat = 40
 
     public static func hideHint(hint: UIView) {
-        guard let id = hintView.firstIndex(of: hint) else {return}
+        let id = hintView.firstIndex(of: hint)!
         for index in 0..<hintView.count {
             if index < id {
                 UIView.animate(withDuration: 0.5, delay: 0.0, options: .curveEaseOut, animations: {
@@ -64,7 +64,7 @@ class Toast {
         return txt
     }
 
-    public static func showHint(title: String, text: [String] = [], timeout: Double = -3,
+    public static func showHint(title: String, text: [String] = [], timeout: Double = 3,
                                 notification: NSNotification.Name? = nil) {
         let parent = screen.keyWindow!
 
@@ -86,10 +86,6 @@ class Toast {
         hintView.append(messageLabel)
         parent.addSubview(messageLabel)
 
-        if hintView.count > 4 {
-            hideHint(hint: hintView.first!)
-        }
-        var life = timeout
         if let note = notification {
             let center = NotificationCenter.default
             var token: NSObjectProtocol?
@@ -97,11 +93,8 @@ class Toast {
                 center.removeObserver(token!)
                 hideHint(hint: messageLabel)
             }
-        } else if life < 0 {
-            life = 3
-        }
-        if life >= 0 {
-            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5 + life) {
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5 + timeout) {
                 hideHint(hint: messageLabel)
             }
         }
