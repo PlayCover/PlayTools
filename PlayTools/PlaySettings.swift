@@ -45,12 +45,8 @@ let settings = PlaySettings.shared
         switch settingsData.iosDeviceModel {
         case "iPad6,7":
             return "J98aAP"
-        case "iPad7,1":
-            return "J120AP"
         case "iPad8,6":
             return "J320xAP"
-        case "iPad8,11":
-            return "J420AP"
         case "iPad13,8":
             return "J522AP"
         case "iPad14,5":
