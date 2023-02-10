@@ -21,23 +21,26 @@ class ButtonAction: Action {
         Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: &id)
     }
 
-    let keyCode: GCKeyCode
+    let keyCode: Int
     let keyName: String
     let point: CGPoint
     var id: Int?
 
-    init(keyCode: GCKeyCode, keyName: String, point: CGPoint) {
+    init(keyCode: Int, keyName: String, point: CGPoint) {
         self.keyCode = keyCode
         self.keyName = keyName
         self.point = point
-        let code = keyCode.rawValue
+        let code = keyCode
+        guard let codeName = KeyCodeNames.keyCodes[code] else {
+            Toast.showOver(msg: keyName+"(\(keyCode)) cannot be mapped")
+            return
+        }
         // TODO: set both key names in draggable button, so as to depracate key code
-        PlayInput.registerButton(key: code == KeyCodeNames.defaultCode ? keyName: KeyCodeNames.keyCodes[code]!,
-                                 handler: self.update)
+        PlayInput.registerButton(key: code == KeyCodeNames.defaultCode ? keyName: codeName, handler: self.update)
     }
 
     convenience init(data: Button) {
-        let keyCode = GCKeyCode(rawValue: data.keyCode)
+        let keyCode = data.keyCode
         self.init(
             keyCode: keyCode,
             keyName: data.keyName,
@@ -58,7 +61,7 @@ class ButtonAction: Action {
 class DraggableButtonAction: ButtonAction {
     var releasePoint: CGPoint
 
-    override init(keyCode: GCKeyCode, keyName: String, point: CGPoint) {
+    override init(keyCode: Int, keyName: String, point: CGPoint) {
         self.releasePoint = point
         super.init(keyCode: keyCode, keyName: keyName, point: point)
     }
@@ -76,7 +79,6 @@ class DraggableButtonAction: ButtonAction {
 
     override func invalidate() {
         PlayMice.shared.draggableHandler.removeValue(forKey: keyName)
-        PlayMice.shared.stop()
         super.invalidate()
     }
 
@@ -142,28 +144,31 @@ class ContinuousJoystickAction: Action {
 }
 
 class JoystickAction: Action {
-    let keys: [GCKeyCode]
+    let keys: [Int]
     let center: CGPoint
     let shift: CGFloat
     var id: Int?
     var moving = false
+    private var keyPressed = [Bool](repeating: false, count: 4)
 
-    init(keys: [GCKeyCode], center: CGPoint, shift: CGFloat) {
+    init(keys: [Int], center: CGPoint, shift: CGFloat) {
         self.keys = keys
         self.center = center
         self.shift = shift / 2
-        for key in keys {
-            PlayInput.registerButton(key: KeyCodeNames.keyCodes[key.rawValue]!, handler: self.update)
+        for index in 0..<keys.count {
+            let key = keys[index]
+            PlayInput.registerButton(key: KeyCodeNames.keyCodes[key]!,
+                                     handler: self.getPressedHandler(index: index))
         }
     }
 
     convenience init(data: Joystick) {
         self.init(
             keys: [
-                GCKeyCode(rawValue: CFIndex(data.upKeyCode)),
-                GCKeyCode(rawValue: CFIndex(data.downKeyCode)),
-                GCKeyCode(rawValue: CFIndex(data.leftKeyCode)),
-                GCKeyCode(rawValue: CFIndex(data.rightKeyCode))
+                data.upKeyCode,
+                data.downKeyCode,
+                data.leftKeyCode,
+                data.rightKeyCode
             ],
             center: CGPoint(
                 x: data.transform.xCoord.absoluteX,
@@ -176,16 +181,23 @@ class JoystickAction: Action {
         self.moving = false
     }
 
-    func update(_: Bool) {
+    func getPressedHandler(index: Int) -> (Bool) -> Void {
+        return { pressed in
+            self.keyPressed[index] = pressed
+            self.update()
+        }
+    }
+
+    func update() {
         var touch = center
-        if GCKeyboard.pressed(key: keys[0]) {
+        if keyPressed[0] {
             touch.y -= shift / 2
-        } else if GCKeyboard.pressed(key: keys[1]) {
+        } else if keyPressed[1] {
             touch.y += shift / 2
         }
-        if GCKeyboard.pressed(key: keys[2]) {
+        if keyPressed[2] {
             touch.x -= shift / 2
-        } else if GCKeyboard.pressed(key: keys[3]) {
+        } else if keyPressed[3] {
             touch.x += shift / 2
         }
         if moving {
