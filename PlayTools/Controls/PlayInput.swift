@@ -6,19 +6,17 @@ class PlayInput {
     static let shared = PlayInput()
     var actions = [Action]()
     var timeoutForBind = true
-
+    static private var whichShift: UInt16 = 60
     static private var lCmdPressed = false
     static private var rCmdPressed = false
 
     static public var buttonHandlers: [String: [(Bool) -> Void]] = [:]
 
     func invalidate() {
-        PlayMice.shared.stop()
         for action in self.actions {
             action.invalidate()
         }
         PlayInput.buttonHandlers.removeAll(keepingCapacity: true)
-        GCKeyboard.coalesced!.keyboardInput!.keyChangedHandler = nil
         GCController.current?.extendedGamepad?.valueChangedHandler = nil
     }
 
@@ -29,10 +27,12 @@ class PlayInput {
         PlayInput.buttonHandlers[key]!.append(handler)
     }
 
-    func keyboardHandler(_: GCKeyboardInput, _: GCControllerButtonInput, _ keyCode: GCKeyCode, _ pressed: Bool) {
-        if PlayInput.cmdPressed() { return }
-        guard let handlers = PlayInput.buttonHandlers[KeyCodeNames.keyCodes[keyCode.rawValue]!] else {
-            // TODO: usage hint of disabling keymapping is planned to be added here
+    func keyboardHandler(_ keyCode: UInt16, _ pressed: Bool) {
+        guard let name = KeyCodeNames.virtualCodes[keyCode] else {
+            Toast.showOver(msg: "keycode \(keyCode) is not recognized")
+            return
+        }
+        guard let handlers = PlayInput.buttonHandlers[name] else {
             return
         }
         for handler in handlers {
@@ -90,6 +90,10 @@ class PlayInput {
                     if !PlayInput.cmdPressed()
                         && !PlayInput.FORBIDDEN.contains(keyCode)
                         && self.isSafeToBind(keyboard) {
+                        if KeyCodeNames.keyCodes[keyCode.rawValue] == nil {
+                            Toast.showOver(msg: "This key cannot be mapped")
+                            return
+                        }
                         EditorController.shared.setKey(keyCode.rawValue)
                     }
                 }
@@ -122,17 +126,7 @@ class PlayInput {
 
     func setup() {
         parseKeymap()
-
-        GCKeyboard.coalesced!.keyboardInput!.keyChangedHandler = keyboardHandler
         GCController.current?.extendedGamepad?.valueChangedHandler = controllerButtonHandler
-        for mouse in GCMouse.mice() {
-            if settings.mouseMapping {
-                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleMouseMoved
-            } else {
-                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleFakeMouseMoved
-            }
-        }
-
     }
 
     static public func cmdPressed() -> Bool {
@@ -222,12 +216,36 @@ class PlayInput {
 
         setupHotkeys()
 
-        // Fix beep sound
-        AKInterface.shared!
-            .eliminateRedundantKeyPressEvents(self.dontIgnore)
-    }
-
-    func dontIgnore() -> Bool {
-        (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed()
+        AKInterface.shared!.setupKeyboard {keycode, pressed in
+            let consumed = !mode.visible && !PlayInput.cmdPressed()
+            if !consumed {
+                return false
+            }
+            var code = keycode
+            if code == 56 {
+                if pressed {
+                    if GCKeyboard.pressed(key: GCKeyCode(rawValue: 229)) {
+                        // Actually right shift
+                        code = 60
+                    }
+                    PlayInput.whichShift = code
+                } else {
+                    code = PlayInput.whichShift
+                }
+            }
+            self.keyboardHandler(code, pressed)
+            return consumed
+        }
+        AKInterface.shared!.setupMouseMove {deltaX, deltaY in
+            if mode.visible {
+                return false
+            }
+            if settings.mouseMapping {
+                PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
+            } else {
+                PlayMice.shared.handleFakeMouseMoved(deltaX: deltaX, deltaY: deltaY)
+            }
+            return true
+        }
     }
 }
