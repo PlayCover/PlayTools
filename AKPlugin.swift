@@ -51,12 +51,40 @@ class AKPlugin: NSObject, Plugin {
         NSApplication.shared.terminate(self)
     }
 
-    func eliminateRedundantKeyPressEvents(_ dontIgnore: @escaping() -> Bool) {
+    private var modifierFlag: UInt = 0
+    private let flagMap: [UInt: UInt16] = [
+        NSEvent.ModifierFlags.capsLock.rawValue >> 16: 57,
+        NSEvent.ModifierFlags.shift.rawValue >> 16: 56
+    ]
+    func setupKeyboard(_ onChanged: @escaping(UInt16, Bool) -> Bool) {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
-            if dontIgnore() {
-                return event
+            if event.isARepeat {
+                return nil
             }
-            return nil
+            let consumed = onChanged(event.keyCode, true)
+            if consumed {
+                return nil
+            }
+            return event
+        })
+        NSEvent.addLocalMonitorForEvents(matching: .keyUp, handler: { event in
+            let consumed = onChanged(event.keyCode, false)
+            if consumed {
+                return nil
+            }
+            return event
+        })
+        NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { event in
+            let changed = (event.modifierFlags.rawValue ^ self.modifierFlag)
+            self.modifierFlag = event.modifierFlags.rawValue
+            // ignore lower 16 bit
+            guard let virtualCode = self.flagMap[changed >> 16] else {return event}
+            let pressed = (changed & event.modifierFlags.rawValue) > 0
+            let consumed = onChanged(virtualCode, pressed)
+            if consumed {
+                return nil
+            }
+            return event
         })
     }
 
@@ -78,7 +106,22 @@ class AKPlugin: NSObject, Plugin {
 
     func setupScrollWheel(_ onMoved: @escaping(CGFloat, CGFloat) -> Bool) {
         NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask.scrollWheel, handler: { event in
-            let consumed = onMoved(event.scrollingDeltaX, event.scrollingDeltaY)
+            var deltaX = event.scrollingDeltaX, deltaY = event.scrollingDeltaY
+            if !event.hasPreciseScrollingDeltas {
+                deltaX *= 16
+                deltaY *= 16
+            }
+            let consumed = onMoved(deltaX, deltaY)
+            if consumed {
+                return nil
+            }
+            return event
+        })
+    }
+
+    func setupMouseMove(_ onMoved: @escaping(CGFloat, CGFloat) -> Bool) {
+        NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask.mouseMoved, handler: { event in
+            let consumed = onMoved(event.deltaX, event.deltaY)
             if consumed {
                 return nil
             }
