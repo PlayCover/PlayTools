@@ -284,7 +284,7 @@ class SwipeAction: Action {
     func checkEnded() {
         if self.counter == self.lastCounter {
             if self.counter < 24 {
-                counter += 12
+                counter += 24
             } else {
                 timer.suspend()
                 self.doLiftOff()
