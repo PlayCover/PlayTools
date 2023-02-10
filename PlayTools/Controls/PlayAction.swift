@@ -4,16 +4,9 @@
 //
 
 import Foundation
-import GameController
 
 protocol Action {
     func invalidate()
-}
-
-extension GCKeyboard {
-    static func pressed(key: GCKeyCode) -> Bool {
-        return GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: key)?.isPressed ?? false
-    }
 }
 
 class ButtonAction: Action {

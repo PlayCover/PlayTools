@@ -6,7 +6,7 @@ class PlayInput {
     static let shared = PlayInput()
     var actions = [Action]()
     var timeoutForBind = true
-    static private var whichShift: UInt16 = 60
+
     static private var lCmdPressed = false
     static private var rCmdPressed = false
 
@@ -89,12 +89,11 @@ class PlayInput {
                 keyboard.keyChangedHandler = { _, _, keyCode, _ in
                     if !PlayInput.cmdPressed()
                         && !PlayInput.FORBIDDEN.contains(keyCode)
-                        && self.isSafeToBind(keyboard) {
-                        if KeyCodeNames.keyCodes[keyCode.rawValue] == nil {
-                            Toast.showOver(msg: "This key cannot be mapped")
-                            return
-                        }
+                        && self.isSafeToBind(keyboard)
+                        && KeyCodeNames.keyCodes[keyCode.rawValue] != nil {
                         EditorController.shared.setKey(keyCode.rawValue)
+                    } else {
+                        Toast.showOver(msg: "This key (\(keyCode.rawValue)) cannot be mapped")
                     }
                 }
             }
@@ -126,6 +125,7 @@ class PlayInput {
 
     func setup() {
         parseKeymap()
+        GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = nil
         GCController.current?.extendedGamepad?.valueChangedHandler = controllerButtonHandler
     }
 
@@ -221,19 +221,7 @@ class PlayInput {
             if !consumed {
                 return false
             }
-            var code = keycode
-            if code == 56 {
-                if pressed {
-                    if GCKeyboard.pressed(key: GCKeyCode(rawValue: 229)) {
-                        // Actually right shift
-                        code = 60
-                    }
-                    PlayInput.whichShift = code
-                } else {
-                    code = PlayInput.whichShift
-                }
-            }
-            self.keyboardHandler(code, pressed)
+            self.keyboardHandler(keycode, pressed)
             return consumed
         }
         AKInterface.shared!.setupMouseMove {deltaX, deltaY in

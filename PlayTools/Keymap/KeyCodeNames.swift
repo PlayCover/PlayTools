@@ -96,7 +96,7 @@ class KeyCodeNames {
     55: ".",
     56: "/"
     ]
-    public static let virtualCodes: [UInt16: String] = [
+public static let virtualCodes: [UInt16: String] = [
     0: "A",
     11: "B",
     8: "C",
@@ -172,7 +172,7 @@ class KeyCodeNames {
     55: "LCmd",
     60: "Rshft",
     61: "ROpt",
-    54: "RCmd",
+    54: "RCmd"
 ]
 private static let toVirtual = [
      41: 53, // Esc
@@ -250,6 +250,6 @@ private static let toVirtual = [
      16: 46, // "M",
      54: 43, // ",",
      55: 47, // ".",
-     56: 44, // "/"
+     56: 44 // "/"
      ]
 }
