@@ -40,6 +40,8 @@ class AKPlugin: NSObject, Plugin {
     func hideCursor() {
         NSCursor.hide()
         CGAssociateMouseAndMouseCursorPosition(0)
+        let frame = windowFrame
+        CGWarpMouseCursorPosition(CGPoint(x: frame.width / 2, y: frame.height / 2))
     }
 
     func unhideCursor() {
@@ -52,10 +54,6 @@ class AKPlugin: NSObject, Plugin {
     }
 
     private var modifierFlag: UInt = 0
-    private let flagMap: [UInt: UInt16] = [
-        NSEvent.ModifierFlags.capsLock.rawValue >> 16: 57,
-        NSEvent.ModifierFlags.shift.rawValue >> 16: 56
-    ]
     func setupKeyboard(_ onChanged: @escaping(UInt16, Bool) -> Bool) {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
             if event.isARepeat {
@@ -75,12 +73,9 @@ class AKPlugin: NSObject, Plugin {
             return event
         })
         NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { event in
-            let changed = (event.modifierFlags.rawValue ^ self.modifierFlag)
+            let pressed = self.modifierFlag < event.modifierFlags.rawValue
             self.modifierFlag = event.modifierFlags.rawValue
-            // ignore lower 16 bit
-            guard let virtualCode = self.flagMap[changed >> 16] else {return event}
-            let pressed = (changed & event.modifierFlags.rawValue) > 0
-            let consumed = onChanged(virtualCode, pressed)
+            let consumed = onChanged(event.keyCode, pressed)
             if consumed {
                 return nil
             }
@@ -120,7 +115,8 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func setupMouseMove(_ onMoved: @escaping(CGFloat, CGFloat) -> Bool) {
-        NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask.mouseMoved, handler: { event in
+        let mask: NSEvent.EventTypeMask = [.leftMouseDragged, .otherMouseDragged, .rightMouseDragged, .mouseMoved]
+        NSEvent.addLocalMonitorForEvents(matching: mask, handler: { event in
             let consumed = onMoved(event.deltaX, event.deltaY)
             if consumed {
                 return nil
