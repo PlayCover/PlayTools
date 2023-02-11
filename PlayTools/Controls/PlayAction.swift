@@ -24,10 +24,7 @@ class ButtonAction: Action {
         self.keyName = keyName
         self.point = point
         let code = keyCode
-        guard let codeName = KeyCodeNames.keyCodes[code] else {
-            Toast.showOver(msg: keyName+"(\(keyCode)) cannot be mapped")
-            return
-        }
+        let codeName = KeyCodeNames.keyCodes[code] ?? "Btn"
         // TODO: set both key names in draggable button, so as to depracate key code
         PlayInput.registerButton(key: code == KeyCodeNames.defaultCode ? keyName: codeName, handler: self.update)
     }
