@@ -17,7 +17,7 @@ class Toast {
     private static let gap: CGFloat = 40
 
     public static func hideHint(hint: UIView) {
-        let id = hintView.firstIndex(of: hint)!
+        guard let id = hintView.firstIndex(of: hint) else {return}
         for index in 0..<hintView.count {
             if index < id {
                 UIView.animate(withDuration: 0.5, delay: 0.0, options: .curveEaseOut, animations: {
@@ -86,6 +86,9 @@ class Toast {
         hintView.append(messageLabel)
         parent.addSubview(messageLabel)
 
+        if hintView.count > 4 {
+            hideHint(hint: hintView.first!)
+        }
         if let note = notification {
             let center = NotificationCenter.default
             var token: NSObjectProtocol?
