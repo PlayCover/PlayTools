@@ -26,6 +26,8 @@ class KeyCodeNames {
     43: "Tab",
     227: "LCmd",
     226: "LOpt",
+    224: "LCtrl",
+    228: "RCtrl",
     231: "RCmd",
     230: "ROpt",
     40: "Enter",
@@ -172,9 +174,12 @@ public static let virtualCodes: [UInt16: String] = [
     55: "LCmd",
     60: "Rshft",
     61: "ROpt",
-    54: "RCmd"
+    54: "RCmd",
+    59: "LCtrl",
+    62: "RCtrl"
 ]
-private static let toVirtual = [
+}
+let mapGCKeyCodeRawValuetoNSEventVirtualCode = [
      41: 53, // Esc
      44: 49,
      225: 0x38, // "Lshft",
@@ -250,6 +255,7 @@ private static let toVirtual = [
      16: 46, // "M",
      54: 43, // ",",
      55: 47, // ".",
-     56: 44 // "/"
+     56: 44, // "/"
+     224: 59, // "LCtrl",
+     228: 62 // "RCtrl",
      ]
-}

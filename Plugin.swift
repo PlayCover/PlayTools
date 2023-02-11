@@ -19,12 +19,12 @@ public protocol Plugin: NSObjectProtocol {
     var isFullscreen: Bool { get }
 
     func hideCursor()
+    func warpCursor()
     func unhideCursor()
     func terminateApplication()
-    func setupKeyboard(_ onChanged: @escaping(UInt16, Bool) -> Bool)
+    func initialize(keyboard: @escaping(UInt16, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool)
     func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool, Bool) -> Bool)
     func setupScrollWheel(_ onMoved: @escaping(CGFloat, CGFloat) -> Bool)
-    func setupMouseMove(_ onMoved: @escaping(CGFloat, CGFloat) -> Bool)
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
     func setMenuBarVisible(_ value: Bool)
 }
