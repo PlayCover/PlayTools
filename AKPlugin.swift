@@ -40,8 +40,12 @@ class AKPlugin: NSObject, Plugin {
     func hideCursor() {
         NSCursor.hide()
         CGAssociateMouseAndMouseCursorPosition(0)
+        warpCursor()
+    }
+
+    func warpCursor() {
         let frame = windowFrame
-        CGWarpMouseCursorPosition(CGPoint(x: frame.width / 2, y: frame.height / 2))
+        CGWarpMouseCursorPosition(CGPoint(x: frame.midX, y: frame.midY))
     }
 
     func unhideCursor() {
@@ -54,19 +58,19 @@ class AKPlugin: NSObject, Plugin {
     }
 
     private var modifierFlag: UInt = 0
-    func setupKeyboard(_ onChanged: @escaping(UInt16, Bool) -> Bool) {
+    func initialize(keyboard: @escaping(UInt16, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool) {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
             if event.isARepeat {
                 return nil
             }
-            let consumed = onChanged(event.keyCode, true)
+            let consumed = keyboard(event.keyCode, true)
             if consumed {
                 return nil
             }
             return event
         })
         NSEvent.addLocalMonitorForEvents(matching: .keyUp, handler: { event in
-            let consumed = onChanged(event.keyCode, false)
+            let consumed = keyboard(event.keyCode, false)
             if consumed {
                 return nil
             }
@@ -75,7 +79,15 @@ class AKPlugin: NSObject, Plugin {
         NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { event in
             let pressed = self.modifierFlag < event.modifierFlags.rawValue
             self.modifierFlag = event.modifierFlags.rawValue
-            let consumed = onChanged(event.keyCode, pressed)
+            let consumed = keyboard(event.keyCode, pressed)
+            if consumed {
+                return nil
+            }
+            return event
+        })
+        let mask: NSEvent.EventTypeMask = [.leftMouseDragged, .otherMouseDragged, .rightMouseDragged, .mouseMoved]
+        NSEvent.addLocalMonitorForEvents(matching: mask, handler: { event in
+            let consumed = mouseMoved(event.deltaX, event.deltaY)
             if consumed {
                 return nil
             }
@@ -107,17 +119,6 @@ class AKPlugin: NSObject, Plugin {
                 deltaY *= 16
             }
             let consumed = onMoved(deltaX, deltaY)
-            if consumed {
-                return nil
-            }
-            return event
-        })
-    }
-
-    func setupMouseMove(_ onMoved: @escaping(CGFloat, CGFloat) -> Bool) {
-        let mask: NSEvent.EventTypeMask = [.leftMouseDragged, .otherMouseDragged, .rightMouseDragged, .mouseMoved]
-        NSEvent.addLocalMonitorForEvents(matching: mask, handler: { event in
-            let consumed = onMoved(event.deltaX, event.deltaY)
             if consumed {
                 return nil
             }

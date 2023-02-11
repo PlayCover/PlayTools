@@ -28,10 +28,7 @@ class PlayInput {
     }
 
     func keyboardHandler(_ keyCode: UInt16, _ pressed: Bool) {
-        guard let name = KeyCodeNames.virtualCodes[keyCode] else {
-            Toast.showOver(msg: "keycode \(keyCode) is not recognized")
-            return
-        }
+        let name = KeyCodeNames.virtualCodes[keyCode] ?? "Btn"
         guard let handlers = PlayInput.buttonHandlers[name] else {
             return
         }
@@ -92,8 +89,6 @@ class PlayInput {
                         && self.isSafeToBind(keyboard)
                         && KeyCodeNames.keyCodes[keyCode.rawValue] != nil {
                         EditorController.shared.setKey(keyCode.rawValue)
-                    } else {
-                        Toast.showOver(msg: "This key (\(keyCode.rawValue)) cannot be mapped")
                     }
                 }
             }
@@ -214,17 +209,23 @@ class PlayInput {
             }
         }
 
+        centre.addObserver(forName: NSNotification.Name(rawValue: "NSWindowDidBecomeKeyNotification"), object: nil,
+            queue: OperationQueue.main
+        ) { _ in
+            if !mode.visible && settings.mouseMapping {
+                AKInterface.shared!.warpCursor()
+            }
+        }
         setupHotkeys()
 
-        AKInterface.shared!.setupKeyboard {keycode, pressed in
+        AKInterface.shared!.initialize(keyboard: {keycode, pressed in
             let consumed = !mode.visible && !PlayInput.cmdPressed()
             if !consumed {
                 return false
             }
             self.keyboardHandler(keycode, pressed)
             return consumed
-        }
-        AKInterface.shared!.setupMouseMove {deltaX, deltaY in
+        }, mouseMoved: {deltaX, deltaY in
             if mode.visible {
                 return false
             }
@@ -234,6 +235,6 @@ class PlayInput {
                 PlayMice.shared.handleFakeMouseMoved(deltaX: deltaX, deltaY: deltaY)
             }
             return true
-        }
+        })
     }
 }
