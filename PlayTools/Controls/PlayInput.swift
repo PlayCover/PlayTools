@@ -10,46 +10,10 @@ class PlayInput {
     static private var lCmdPressed = false
     static private var rCmdPressed = false
 
-    static public var buttonHandlers: [String: [(Bool) -> Void]] = [:]
-
     func invalidate() {
+        PlayMice.shared.stop()
         for action in self.actions {
             action.invalidate()
-        }
-        PlayInput.buttonHandlers.removeAll(keepingCapacity: true)
-        GCController.current?.extendedGamepad?.valueChangedHandler = nil
-    }
-
-    static public func registerButton(key: String, handler: @escaping (Bool) -> Void) {
-        if PlayInput.buttonHandlers[key] == nil {
-            PlayInput.buttonHandlers[key] = []
-        }
-        PlayInput.buttonHandlers[key]!.append(handler)
-    }
-
-    func keyboardHandler(_ keyCode: UInt16, _ pressed: Bool) {
-        let name = KeyCodeNames.virtualCodes[keyCode] ?? "Btn"
-        guard let handlers = PlayInput.buttonHandlers[name] else {
-            return
-        }
-        for handler in handlers {
-            handler(pressed)
-        }
-    }
-
-    func controllerButtonHandler(_ profile: GCExtendedGamepad, _ element: GCControllerElement) {
-        let name: String = element.aliases.first!
-        if let buttonElement = element as? GCControllerButtonInput {
-//            Toast.showOver(msg: "recognised controller button: \(name)")
-            guard let handlers = PlayInput.buttonHandlers[name] else { return }
-            Toast.showOver(msg: name + ": \(buttonElement.isPressed)")
-            for handler in handlers {
-                handler(buttonElement.isPressed)
-            }
-        } else if let dpadElement = element as? GCControllerDirectionPad {
-            PlayMice.shared.handleControllerDirectionPad(profile, dpadElement)
-        } else {
-            Toast.showOver(msg: "unrecognised controller element input happens")
         }
     }
 
@@ -86,8 +50,7 @@ class PlayInput {
                 keyboard.keyChangedHandler = { _, _, keyCode, _ in
                     if !PlayInput.cmdPressed()
                         && !PlayInput.FORBIDDEN.contains(keyCode)
-                        && self.isSafeToBind(keyboard)
-                        && KeyCodeNames.keyCodes[keyCode.rawValue] != nil {
+                        && self.isSafeToBind(keyboard) {
                         EditorController.shared.setKey(keyCode.rawValue)
                     }
                 }
@@ -95,33 +58,27 @@ class PlayInput {
             if let controller = GCController.current?.extendedGamepad {
                 controller.valueChangedHandler = { _, element in
                     // This is the index of controller buttons, which is String, not Int
-                    var alias: String = element.aliases.first!
-                    if alias == "Direction Pad" {
-                        guard let dpadElement = element as? GCControllerDirectionPad else {
-                            Toast.showOver(msg: "cannot map direction pad: element type not recognizable")
-                            return
-                        }
-                        if dpadElement.xAxis.value > 0 {
-                            alias = dpadElement.right.aliases.first!
-                        } else if dpadElement.xAxis.value < 0 {
-                            alias = dpadElement.left.aliases.first!
-                        }
-                        if dpadElement.yAxis.value > 0 {
-                            alias = dpadElement.down.aliases.first!
-                        } else if dpadElement.yAxis.value < 0 {
-                            alias = dpadElement.up.aliases.first!
-                        }
-                    }
+                    let alias: String! = element.aliases.first
                     EditorController.shared.setKey(alias)
                 }
             }
+        } else {
+            GCKeyboard.coalesced!.keyboardInput!.keyChangedHandler = nil
+            GCController.current?.extendedGamepad?.valueChangedHandler = nil
         }
     }
 
     func setup() {
         parseKeymap()
-        GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = nil
-        GCController.current?.extendedGamepad?.valueChangedHandler = controllerButtonHandler
+
+        for mouse in GCMouse.mice() {
+            if settings.mouseMapping {
+                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleMouseMoved
+            } else {
+                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleFakeMouseMoved
+            }
+        }
+
     }
 
     static public func cmdPressed() -> Bool {
@@ -145,21 +102,23 @@ class PlayInput {
         .printScreen
     ]
 
-    private func swapMode() {
+    private func swapMode(_ pressed: Bool) {
         if !settings.mouseMapping {
             return
         }
-        if !mode.visible {
-            self.invalidate()
+        if pressed {
+            if !mode.visible {
+                self.invalidate()
+            }
+            mode.show(!mode.visible)
         }
-        mode.show(!mode.visible)
     }
 
     var root: UIViewController? {
         return screen.window?.rootViewController
     }
 
-    func setupHotkeys() {
+    func setupShortcuts() {
         if let keyboard = GCKeyboard.coalesced?.keyboardInput {
             keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.lCmdPressed = pressed
@@ -167,7 +126,12 @@ class PlayInput {
             keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.rCmdPressed = pressed
             }
-            // TODO: set a timeout to display usage guide of Option and Keymapping menu in turn
+            keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
+                self.swapMode(pressed)
+            }
+            keyboard.button(forKeyCode: .rightAlt)?.pressedChangedHandler = { _, _, pressed in
+                self.swapMode(pressed)
+            }
         }
     }
 
@@ -180,7 +144,7 @@ class PlayInput {
         let main = OperationQueue.main
 
         centre.addObserver(forName: NSNotification.Name.GCKeyboardDidConnect, object: nil, queue: main) { _ in
-            self.setupHotkeys()
+            self.setupShortcuts()
             if !mode.visible {
                 self.setup()
             }
@@ -196,36 +160,31 @@ class PlayInput {
             if !mode.visible {
                 self.setup()
             }
-            if EditorController.shared.editorMode {
-                self.toggleEditor(show: true)
+        }
+
+        setupShortcuts()
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
+            if !settings.mouseMapping || !mode.visible {
+                return
+            }
+            Toast.showHint(title: "Keymapping Disabled", text: ["Press ", "option ⌥", " to enable keymapping"],
+                           notification: NSNotification.Name.playtoolsKeymappingWillEnable)
+            let center = NotificationCenter.default
+            var token: NSObjectProtocol?
+            token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
+                                       object: nil, queue: OperationQueue.main) { _ in
+                center.removeObserver(token!)
+                Toast.showHint(title: "Keymapping Enabled", text: ["Press ", "option ⌥", " to disable keymapping"],
+                                   notification: NSNotification.Name.playtoolsKeymappingWillDisable)
             }
         }
 
-        centre.addObserver(forName: NSNotification.Name(rawValue: "NSWindowDidBecomeKeyNotification"), object: nil,
-            queue: main) { _ in
-            if !mode.visible && settings.mouseMapping {
-                AKInterface.shared!.warpCursor()
-            }
-        }
-        setupHotkeys()
+        // Fix beep sound
+        AKInterface.shared!
+            .eliminateRedundantKeyPressEvents(self.dontIgnore)
+    }
 
-        AKInterface.shared!.initialize(keyboard: {keycode, pressed in
-            let consumed = !mode.visible && !PlayInput.cmdPressed()
-            if !consumed {
-                return false
-            }
-            self.keyboardHandler(keycode, pressed)
-            return consumed
-        }, mouseMoved: {deltaX, deltaY in
-            if mode.visible {
-                return false
-            }
-            if settings.mouseMapping {
-                PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
-            } else {
-                PlayMice.shared.handleFakeMouseMoved(deltaX: deltaX, deltaY: deltaY)
-            }
-            return true
-        }, swapMode: self.swapMode)
+    func dontIgnore() -> Bool {
+        (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed()
     }
 }
