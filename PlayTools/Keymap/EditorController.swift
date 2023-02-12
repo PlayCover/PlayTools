@@ -60,14 +60,17 @@ class EditorController {
             previousWindow?.makeKeyAndVisible()
             PlayInput.shared.toggleEditor(show: false)
             focusedControl = nil
-            Toast.showOver(msg: "Keymapping saved")
+            Toast.showHint(title: "Keymap Saved")
         } else {
             PlayInput.shared.toggleEditor(show: true)
             previousWindow = screen.keyWindow
             editorWindow = initWindow()
             editorWindow?.makeKeyAndVisible()
             showButtons()
-            Toast.showOver(msg: "Click to start keymmaping edit")
+            Toast.showHint(title: "Keymapping Editor",
+                           text: ["Click a button to edit its position or key bind\n" +
+                                  "Click an empty area to open input menu"],
+                           notification: NSNotification.Name.playtoolsKeymappingWillEnable)
         }
 //        Toast.showOver(msg: "\(UIApplication.shared.windows.count)")
         lock.unlock()
