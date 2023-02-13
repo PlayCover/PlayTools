@@ -186,7 +186,6 @@ class PlayInput {
             keyboard.button(forKeyCode: .rightAlt)?.pressedChangedHandler = { _, _, pressed in
                 self.swapMode(pressed)
             }
-            // TODO: set a timeout to display usage guide of Option and Keymapping menu in turn
         }
     }
 
@@ -221,6 +220,21 @@ class PlayInput {
         }
 
         setupHotkeys()
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
+            if !settings.mouseMapping || !mode.visible {
+                return
+            }
+            Toast.showHint(title: "Keymapping Disabled", text: ["Press ", "option ⌥", " to enable keymapping"],
+                           notification: NSNotification.Name.playtoolsKeymappingWillEnable)
+            let center = NotificationCenter.default
+            var token: NSObjectProtocol?
+            token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
+                                       object: nil, queue: OperationQueue.main) { _ in
+                center.removeObserver(token!)
+                Toast.showHint(title: "Keymapping Enabled", text: ["Press ", "option ⌥", " to disable keymapping"],
+                                   notification: NSNotification.Name.playtoolsKeymappingWillDisable)
+            }
+        }
 
         // Fix beep sound
         AKInterface.shared!
