@@ -58,7 +58,8 @@ class AKPlugin: NSObject, Plugin {
     }
 
     private var modifierFlag: UInt = 0
-    func initialize(keyboard: @escaping(UInt16, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool) {
+    func initialize(keyboard: @escaping(UInt16, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
+                    swapMode: @escaping() -> Void) {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
             if event.isARepeat {
                 return nil
@@ -78,7 +79,12 @@ class AKPlugin: NSObject, Plugin {
         })
         NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { event in
             let pressed = self.modifierFlag < event.modifierFlags.rawValue
+            let changed = self.modifierFlag ^ event.modifierFlags.rawValue
             self.modifierFlag = event.modifierFlags.rawValue
+            if pressed && NSEvent.ModifierFlags(rawValue: changed).contains(.option) {
+                swapMode()
+                return nil
+            }
             let consumed = keyboard(event.keyCode, pressed)
             if consumed {
                 return nil
