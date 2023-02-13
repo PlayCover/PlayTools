@@ -150,7 +150,8 @@ bool menuWasCreated = false;
 
 @implementation PTSwizzleLoader
 + (void)load {
-    if ([[PlaySettings shared] macOSVersion] >= 13.19000) {
+    // This might need refactor soon
+    if(@available(iOS 16.3, *)) {
         if ([[PlaySettings shared] adaptiveDisplay]) {
             // This is an experimental fix
             if ([[PlaySettings shared] inverseScreenValues]) {
@@ -173,8 +174,7 @@ bool menuWasCreated = false;
                 [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
                 [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBounds)];
                 [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
-                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
-                
+                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];   
             }
         }
         else {
@@ -194,7 +194,8 @@ bool menuWasCreated = false;
             [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
             [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
         }
-    } else {
+    } 
+    else {
         if ([[PlaySettings shared] adaptiveDisplay]) {
                 [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
                 [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
