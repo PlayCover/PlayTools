@@ -145,16 +145,14 @@ class PlayInput {
         .printScreen
     ]
 
-    private func swapMode(_ pressed: Bool) {
+    private func swapMode() {
         if !settings.mouseMapping {
             return
         }
-        if pressed {
-            if !mode.visible {
-                self.invalidate()
-            }
-            mode.show(!mode.visible)
+        if !mode.visible {
+            self.invalidate()
         }
+        mode.show(!mode.visible)
     }
 
     var root: UIViewController? {
@@ -168,12 +166,6 @@ class PlayInput {
             }
             keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.rCmdPressed = pressed
-            }
-            keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
-                self.swapMode(pressed)
-            }
-            keyboard.button(forKeyCode: .rightAlt)?.pressedChangedHandler = { _, _, pressed in
-                self.swapMode(pressed)
             }
             // TODO: set a timeout to display usage guide of Option and Keymapping menu in turn
         }
@@ -210,8 +202,7 @@ class PlayInput {
         }
 
         centre.addObserver(forName: NSNotification.Name(rawValue: "NSWindowDidBecomeKeyNotification"), object: nil,
-            queue: OperationQueue.main
-        ) { _ in
+            queue: main) { _ in
             if !mode.visible && settings.mouseMapping {
                 AKInterface.shared!.warpCursor()
             }
@@ -235,6 +226,6 @@ class PlayInput {
                 PlayMice.shared.handleFakeMouseMoved(deltaX: deltaX, deltaY: deltaY)
             }
             return true
-        })
+        }, swapMode: self.swapMode)
     }
 }
