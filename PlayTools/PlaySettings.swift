@@ -43,8 +43,6 @@ let settings = PlaySettings.shared
 
     @objc lazy var deviceModel = settingsData.iosDeviceModel as NSString
 
-    @objc lazy var macOSVersion = Double(settingsData.macOSVersion)
-
     @objc lazy var oemID: NSString = {
         switch settingsData.iosDeviceModel {
         case "iPad6,7":
@@ -87,5 +85,4 @@ struct AppSettingsData: Codable {
     var playChain = false
     var playChainDebugging = false
     var inverseScreenValues = false
-    var macOSVersion: Double = 13.2
 }

@@ -9,7 +9,6 @@ let screen = PlayScreen.shared
 let isInvertFixEnabled = PlaySettings.shared.inverseScreenValues && PlaySettings.shared.adaptiveDisplay
 let mainScreenWidth =  !isInvertFixEnabled ? PlaySettings.shared.windowSizeWidth : PlaySettings.shared.windowSizeHeight
 let mainScreenHeight = !isInvertFixEnabled ? PlaySettings.shared.windowSizeHeight : PlaySettings.shared.windowSizeWidth
-let macOSVersion = PlaySettings.shared.macOSVersion
 
 extension CGSize {
     func aspectRatio() -> CGFloat {
