@@ -48,7 +48,7 @@ public class ControlMode {
 extension NSNotification.Name {
     public static let playtoolsKeymappingWillEnable: NSNotification.Name
                     = NSNotification.Name("playtools.keymappingWillEnable")
-    
+
     public static let playtoolsKeymappingWillDisable: NSNotification.Name
                     = NSNotification.Name("playtools.keymappingWillDisable")
 }
