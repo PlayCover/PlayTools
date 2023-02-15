@@ -135,6 +135,40 @@ class PlayInput {
         }
     }
 
+    func initializeToasts() {
+        if !settings.mouseMapping || !mode.visible {
+            return
+        }
+        Toast.showHint(title: NSLocalizedString("hint.enableKeymapping.title",
+                                                tableName: "Playtools",
+                                                value: "Keymapping Disabled", comment: ""),
+                       text: [NSLocalizedString("hint.enableKeymapping.content.before",
+                                                tableName: "Playtools",
+                                                value: "Press", comment: ""),
+                              " option ⌥ ",
+                              NSLocalizedString("hint.enableKeymapping.content.after",
+                                                tableName: "Playtools",
+                                                value: "to enable keymapping", comment: "")],
+                       notification: NSNotification.Name.playtoolsKeymappingWillEnable)
+        let center = NotificationCenter.default
+        var token: NSObjectProtocol?
+        token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
+                                   object: nil, queue: OperationQueue.main) { _ in
+            center.removeObserver(token!)
+            Toast.showHint(title: NSLocalizedString("hint.disableKeymapping.title",
+                                                    tableName: "Playtools",
+                                                    value: "Keymapping Enabled", comment: ""),
+                           text: [NSLocalizedString("hint.disableKeymapping.content.before",
+                                                    tableName: "Playtools",
+                                                    value: "Press", comment: ""),
+                                  " option ⌥ ",
+                                  NSLocalizedString("hint.disableKeymapping.content.after",
+                                                    tableName: "Playtools",
+                                                    value: "to disable keymapping", comment: "")],
+                               notification: NSNotification.Name.playtoolsKeymappingWillDisable)
+        }
+    }
+
     func initialize() {
         if !PlaySettings.shared.keymapping {
             return
@@ -163,21 +197,7 @@ class PlayInput {
         }
 
         setupShortcuts()
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
-            if !settings.mouseMapping || !mode.visible {
-                return
-            }
-            Toast.showHint(title: "Keymapping Disabled", text: ["Press ", "option ⌥", " to enable keymapping"],
-                           notification: NSNotification.Name.playtoolsKeymappingWillEnable)
-            let center = NotificationCenter.default
-            var token: NSObjectProtocol?
-            token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
-                                       object: nil, queue: OperationQueue.main) { _ in
-                center.removeObserver(token!)
-                Toast.showHint(title: "Keymapping Enabled", text: ["Press ", "option ⌥", " to disable keymapping"],
-                                   notification: NSNotification.Name.playtoolsKeymappingWillDisable)
-            }
-        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, qos: .utility, execute: initializeToasts)
 
         // Fix beep sound
         AKInterface.shared!
