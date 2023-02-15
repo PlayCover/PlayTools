@@ -85,4 +85,5 @@ struct AppSettingsData: Codable {
     var inverseScreenValues = false
     var playChain = false
     var playChainDebugging = false
+    var inverseScreenValues = false
 }
