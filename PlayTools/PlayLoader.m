@@ -27,6 +27,7 @@ static int pt_uname(struct utsname *uts) {
     return 0;
 }
 
+
 // Update output of sysctl for key values hw.machine, hw.product and hw.target to match iOS output
 // This spoofs the device type to apps allowing us to report as any iOS device
 static int pt_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0, size_t arg1) {
