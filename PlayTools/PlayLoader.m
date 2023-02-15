@@ -27,6 +27,7 @@ static int pt_uname(struct utsname *uts) {
     return 0;
 }
 
+
 // Update output of sysctl for key values hw.machine, hw.product and hw.target to match iOS output
 // This spoofs the device type to apps allowing us to report as any iOS device
 static int pt_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0, size_t arg1) {
@@ -90,6 +91,79 @@ DYLD_INTERPOSE(pt_dyld_get_active_platform, dyld_get_active_platform)
 DYLD_INTERPOSE(pt_uname, uname)
 DYLD_INTERPOSE(pt_sysctlbyname, sysctlbyname)
 DYLD_INTERPOSE(pt_sysctl, sysctl)
+
+// Interpose Apple Keychain functions (SecItemCopyMatching, SecItemAdd, SecItemUpdate, SecItemDelete)
+// This allows us to intercept keychain requests and return our own data
+
+// Use the implementations from PlayKeychain
+static OSStatus pt_SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result) {
+    OSStatus retval;
+    if ([[PlaySettings shared] playChain]) {
+        retval = [PlayKeychain copyMatching:(__bridge NSDictionary * _Nonnull)(query) result:result];
+    } else {
+        retval = SecItemCopyMatching(query, result);
+    }
+    if (result != NULL) {
+        if ([[PlaySettings shared] playChainDebugging]) {
+            [PlayKeychain debugLogger:[NSString stringWithFormat:@"SecItemCopyMatching: %@", query]];
+            [PlayKeychain debugLogger:[NSString stringWithFormat:@"SecItemCopyMatching result: %@", *result]];
+        }
+    }
+    return retval;
+}
+
+static OSStatus pt_SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result) {
+    OSStatus retval;
+    if ([[PlaySettings shared] playChain]) {
+        retval = [PlayKeychain add:(__bridge NSDictionary * _Nonnull)(attributes) result:result];
+    } else {
+        retval = SecItemAdd(attributes, result);
+    }
+    if (result != NULL) {
+        if ([[PlaySettings shared] playChainDebugging]) {
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemAdd: %@", attributes]];
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemAdd result: %@", *result]];
+        }
+    }
+    return retval;
+}
+
+static OSStatus pt_SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate) {
+    OSStatus retval;
+    if ([[PlaySettings shared] playChain]) {
+        retval = [PlayKeychain update:(__bridge NSDictionary * _Nonnull)(query) attributesToUpdate:(__bridge NSDictionary * _Nonnull)(attributesToUpdate)];
+    } else {
+        retval = SecItemUpdate(query, attributesToUpdate);
+    }
+    if (attributesToUpdate != NULL) {
+        if ([[PlaySettings shared] playChainDebugging]) {
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemUpdate: %@", query]];
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemUpdate attributesToUpdate: %@", attributesToUpdate]];
+        }
+    }
+    return retval;
+
+}
+
+static OSStatus pt_SecItemDelete(CFDictionaryRef query) {
+    OSStatus retval;
+    if ([[PlaySettings shared] playChain]) {
+        retval = [PlayKeychain delete:(__bridge NSDictionary * _Nonnull)(query)];
+    } else {
+        retval = SecItemDelete(query);
+    }
+    if ([[PlaySettings shared] playChainDebugging]) {
+        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecItemDelete: %@", query]];
+    }
+    return retval;
+}
+
+DYLD_INTERPOSE(pt_SecItemCopyMatching, SecItemCopyMatching)
+DYLD_INTERPOSE(pt_SecItemAdd, SecItemAdd)
+DYLD_INTERPOSE(pt_SecItemUpdate, SecItemUpdate)
+DYLD_INTERPOSE(pt_SecItemDelete, SecItemDelete)
+
+
 
 @implementation PlayLoader
 
