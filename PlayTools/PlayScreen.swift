@@ -2,13 +2,13 @@
 //  ScreenController.swift
 //  PlayTools
 //
-
 import Foundation
 import UIKit
 
 let screen = PlayScreen.shared
-let mainScreenWidth = PlaySettings.shared.windowSizeWidth
-let mainScreenHeight = PlaySettings.shared.windowSizeHeight
+let isInvertFixEnabled = PlaySettings.shared.inverseScreenValues && PlaySettings.shared.adaptiveDisplay
+let mainScreenWidth =  !isInvertFixEnabled ? PlaySettings.shared.windowSizeWidth : PlaySettings.shared.windowSizeHeight
+let mainScreenHeight = !isInvertFixEnabled ? PlaySettings.shared.windowSizeHeight : PlaySettings.shared.windowSizeWidth
 
 extension CGSize {
     func aspectRatio() -> CGFloat {
@@ -30,6 +30,12 @@ extension CGSize {
     func toAspectRatioInternal() -> CGSize {
         return CGSize(width: mainScreenHeight, height: mainScreenWidth)
     }
+    func toAspectRatioDefault() -> CGSize {
+        return CGSize(width: mainScreenHeight, height: mainScreenWidth)
+    }
+    func toAspectRatioInternalDefault() -> CGSize {
+        return CGSize(width: mainScreenWidth, height: mainScreenHeight)
+    }
 }
 
 extension CGRect {
@@ -46,6 +52,12 @@ extension CGRect {
     }
 
     func toAspectRatioReversed() -> CGRect {
+        return CGRect(x: minX, y: minY, width: mainScreenHeight, height: mainScreenWidth)
+    }
+    func toAspectRatioDefault(_ multiplier: CGFloat = 1) -> CGRect {
+        return CGRect(x: minX, y: minY, width: mainScreenWidth * multiplier, height: mainScreenHeight * multiplier)
+    }
+    func toAspectRatioReversedDefault() -> CGRect {
         return CGRect(x: minX, y: minY, width: mainScreenHeight, height: mainScreenWidth)
     }
 }
@@ -146,6 +158,28 @@ public class PlayScreen: NSObject {
 
     func switchDock(_ visible: Bool) {
         AKInterface.shared!.setMenuBarVisible(visible)
+    }
+
+    // Default calculation
+    @objc public static func frameReversedDefault(_ rect: CGRect) -> CGRect {
+        return rect.toAspectRatioReversedDefault()
+    }
+    @objc public static func frameDefault(_ rect: CGRect) -> CGRect {
+        return rect.toAspectRatioDefault()
+    }
+    @objc public static func boundsDefault(_ rect: CGRect) -> CGRect {
+        return rect.toAspectRatioDefault()
+    }
+
+    @objc public static func nativeBoundsDefault(_ rect: CGRect) -> CGRect {
+            return rect.toAspectRatioDefault(2)
+    }
+
+    @objc public static func sizeAspectRatioDefault(_ size: CGSize) -> CGSize {
+        return size.toAspectRatioDefault()
+    }
+    @objc public static func frameInternalDefault(_ rect: CGRect) -> CGRect {
+            return rect.toAspectRatioDefault()
     }
 
 }
