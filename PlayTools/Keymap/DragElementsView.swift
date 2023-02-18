@@ -20,7 +20,7 @@ class KeymapHolder: CircleMenuDelegate {
             frame: CGRect(x: 0, y: 0, width: 50, height: 50),
             normalIcon: "xmark.circle.fill",
             selectedIcon: "xmark.circle.fill",
-            buttonsCount: 4,
+            buttonsCount: 3,
             duration: 0.25,
             distance: 80)
         menu?.delegate = self
@@ -57,7 +57,8 @@ class KeymapHolder: CircleMenuDelegate {
         case 2:
             EditorController.shared.addMouseArea(globalPoint!)
         default:
-            EditorController.shared.addMouseJoystick(globalPoint!)
+            Toast.showHint(title: "item \(atIndex) is not recognizable")
+//            EditorController.shared.addMouseJoystick(globalPoint!)
         }
         hideWithAnimation()
     }
@@ -73,7 +74,7 @@ class KeymapHolder: CircleMenuDelegate {
     private let items: [String] = [
           "circle.circle",
           "dpad",
-          "arrow.up.and.down.and.arrow.left.and.right",
+//          "arrow.up.and.down.and.arrow.left.and.right",
 //          "rb.rectangle.roundedbottom.fill",
 //          "lb.rectangle.roundedbottom",
           "computermouse"
