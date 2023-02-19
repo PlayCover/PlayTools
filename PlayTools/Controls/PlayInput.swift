@@ -164,18 +164,38 @@ class PlayInput {
 
         setupShortcuts()
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
-            if !settings.mouseMapping || !mode.visible {
+            self.parseKeymap()
+            if !settings.mouseMapping || !mode.visible || self.actions.count <= 0 {
+                return
+            }
+            let persistenceKeyname = "playtoolsKeymappingDisabledAt"
+            let lastUse = UserDefaults.standard.float(forKey: persistenceKeyname)
+            var thisUse = lastUse
+            if lastUse < 1 {
+                thisUse = 2
+            } else {
+                thisUse = Float(Date.timeIntervalSinceReferenceDate)
+            }
+            var token2: NSObjectProtocol?
+            let center = NotificationCenter.default
+            token2 = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillDisable,
+                                        object: nil, queue: OperationQueue.main) { _ in
+                center.removeObserver(token2!)
+                UserDefaults.standard.set(thisUse, forKey: persistenceKeyname)
+            }
+            if lastUse > Float(Date.now.addingTimeInterval(-86400*14).timeIntervalSinceReferenceDate) {
                 return
             }
             Toast.showHint(title: "Keymapping Disabled", text: ["Press ", "option ⌥", " to enable keymapping"],
+                           timeout: 10,
                            notification: NSNotification.Name.playtoolsKeymappingWillEnable)
-            let center = NotificationCenter.default
             var token: NSObjectProtocol?
             token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
                                        object: nil, queue: OperationQueue.main) { _ in
                 center.removeObserver(token!)
                 Toast.showHint(title: "Keymapping Enabled", text: ["Press ", "option ⌥", " to disable keymapping"],
-                                   notification: NSNotification.Name.playtoolsKeymappingWillDisable)
+                               timeout: 10,
+                               notification: NSNotification.Name.playtoolsKeymappingWillDisable)
             }
         }
 
