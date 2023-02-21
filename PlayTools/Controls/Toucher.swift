@@ -20,7 +20,8 @@ class Toucher {
         if phase == UITouch.Phase.began {
             tid = nextId
             nextId += 1
-//            Toast.showOver(msg: tid!.description)
+            keyWindow = screen.keyWindow
+            keyView = keyWindow!.hitTest(point, with: nil)
         }
         guard let bigId = tid else {
             // sending other phases with empty id is no-op
@@ -30,12 +31,6 @@ class Toucher {
             tid = nil
         }
         touchQueue.async {
-            if keyWindow == nil || keyView == nil {
-                keyWindow = screen.keyWindow
-                DispatchQueue.main.sync {
-                    keyView = keyWindow?.hitTest(point, with: nil)
-                }
-            }
             var pointId: Int = 0
             if phase != UITouch.Phase.began {
                 guard let id = idMap.firstIndex(of: bigId) else {
