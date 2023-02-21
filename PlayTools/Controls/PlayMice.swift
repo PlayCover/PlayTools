@@ -12,16 +12,12 @@ public class PlayMice {
     public static let elementName = "Mouse"
     private static var isInit = false
 
-    private var acceptMouseEvents = !PlaySettings.shared.mouseMapping
-
     public init() {
         if !PlayMice.isInit {
             setupMouseButton(_up: 2, _down: 4)
             setupMouseButton(_up: 8, _down: 16)
             setupMouseButton(_up: 33554432, _down: 67108864)
-            if !acceptMouseEvents {
-                setupScrollWheelHandler()
-            }
+            setupScrollWheelHandler()
             PlayMice.isInit = true
         }
     }
@@ -37,11 +33,14 @@ public class PlayMice {
                cameraScaleHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
                joystickHandler: [String: (CGFloat, CGFloat) -> Void] = [:]
 
-    public func cursorPos() -> CGPoint {
+    public func cursorPos() -> CGPoint? {
         var point = CGPoint(x: 0, y: 0)
         point = AKInterface.shared!.mousePoint
         let rect = AKInterface.shared!.windowFrame
         let viewRect: CGRect = screen.screenRect
+        if rect.width < 1 || rect.height < 1 {
+            return nil
+        }
         let widthRate = viewRect.width / rect.width
         var rate = viewRect.height / rect.height
         if widthRate > rate {
@@ -101,7 +100,9 @@ public class PlayMice {
 
     public func handleFakeMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
         if self.fakedMousePressed {
-            Toucher.touchcam(point: self.cursorPos(), phase: UITouch.Phase.moved, tid: &fakedMouseTouchPointId)
+            if let pos = self.cursorPos() {
+                Toucher.touchcam(point: pos, phase: UITouch.Phase.moved, tid: &fakedMouseTouchPointId)
+            }
         }
     }
 
@@ -126,15 +127,8 @@ public class PlayMice {
     }
 
     private func dontIgnore(_ actionIndex: Int, _ pressed: Bool, _ isEventWindow: Bool) -> Bool {
-        if EditorController.shared.editorMode {
-            if pressed && actionIndex != 2 {
-                EditorController.shared.setKey(buttonIndex[actionIndex]!)
-            }
-            return true
-        }
-        if self.acceptMouseEvents {
-            let curPos = self.cursorPos()
-            if pressed {
+        if mode.visible && pressed && PlayInput.keyboardMapped {
+            if let curPos = self.cursorPos() {
                 if !self.fakedMousePressed
                     // For traffic light buttons when not fullscreen
                     && curPos.y > 0
@@ -145,13 +139,12 @@ public class PlayMice {
                                      tid: &fakedMouseTouchPointId)
                     return false
                 }
-            } else {
-                if self.fakedMousePressed {
-                    Toucher.touchcam(point: curPos, phase: UITouch.Phase.ended, tid: &fakedMouseTouchPointId)
-                    return false
-                }
             }
-            return true
+        } else if self.fakedMousePressed {
+            if let curPos = self.cursorPos() {
+                Toucher.touchcam(point: curPos, phase: UITouch.Phase.ended, tid: &fakedMouseTouchPointId)
+                return false
+            }
         }
         if !mode.visible {
             if let handlers = PlayInput.buttonHandlers[KeyCodeNames.keyCodes[buttonIndex[actionIndex]!]!] {
@@ -160,6 +153,11 @@ public class PlayMice {
                 }
             }
             return false
+        }
+        if EditorController.shared.editorMode {
+            if pressed && actionIndex != 2 {
+                EditorController.shared.setKey(buttonIndex[actionIndex]!)
+            }
         }
         return true
     }
@@ -217,7 +215,13 @@ class CameraAction: Action {
         swipeScale1 = SwipeAction()
         swipeScale2 = SwipeAction()
         PlayMice.shared.cameraMoveHandler[key] = self.moveUpdated
-        PlayMice.shared.cameraScaleHandler[PlayMice.elementName] = self.scaleUpdated
+        PlayMice.shared.cameraScaleHandler[PlayMice.elementName] = {deltaX, deltaY in
+            if mode.visible {
+                CameraAction.dragUpdated(deltaX, deltaY)
+            } else {
+                self.scaleUpdated(deltaX, deltaY)
+            }
+        }
     }
     func moveUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
         swipeMove.move(from: {return center}, deltaX: deltaX, deltaY: deltaY)
@@ -239,16 +243,14 @@ class CameraAction: Action {
             return CGPoint(x: center.x, y: center.y + 100)
         }, deltaX: 0, deltaY: -moveY)
     }
-    // Event handlers SHOULD be SMALL
-    // DO NOT check things like mode.visible in an event handler
-    // change the handler itself instead
+
     static func dragUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
         swipeDrag.move(from: PlayMice.shared.cursorPos, deltaX: deltaX * 4, deltaY: -deltaY * 4)
     }
 
     func invalidate() {
         PlayMice.shared.cameraMoveHandler.removeValue(forKey: key)
-        PlayMice.shared.cameraScaleHandler[PlayMice.elementName] = CameraAction.dragUpdated
+        PlayMice.shared.cameraScaleHandler[PlayMice.elementName] = nil
         swipeMove.invalidate()
         swipeScale1.invalidate()
         swipeScale2.invalidate()
@@ -263,7 +265,6 @@ class SwipeAction: Action {
         // in rare cases the cooldown reset task is lost by the dispatch queue
         self.cooldown = false
         // TODO: camera mode switch: Flexibility v.s. Precision
-        // TODO: find reasonable ways to promote fake touch priority
         timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.1, leeway: DispatchTimeInterval.never)
         timer.setEventHandler(qos: DispatchQoS.background, handler: self.checkEnded)
         timer.activate()
@@ -293,13 +294,14 @@ class SwipeAction: Action {
         self.lastCounter = self.counter
      }
 
-    public func move(from: () -> CGPoint, deltaX: CGFloat, deltaY: CGFloat) {
+    public func move(from: () -> CGPoint?, deltaX: CGFloat, deltaY: CGFloat) {
         if id == nil {
             if cooldown {
                 return
             }
+            guard let start = from() else {return}
+            location = start
             counter = 0
-            location = from()
             Toucher.touchcam(point: location, phase: UITouch.Phase.began, tid: &id)
             timer.resume()
         }

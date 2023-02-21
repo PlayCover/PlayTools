@@ -10,7 +10,7 @@ let mode = ControlMode.mode
 public class ControlMode {
 
     static public let mode = ControlMode()
-    public var visible: Bool = PlaySettings.shared.mouseMapping
+    public var visible: Bool = true
 
     func show(_ show: Bool) {
         if !editor.editorMode {
@@ -19,16 +19,12 @@ public class ControlMode {
                     if screen.fullscreen {
                         screen.switchDock(true)
                     }
-                    if PlaySettings.shared.mouseMapping {
-                        AKInterface.shared!.unhideCursor()
-                    }
-                    PlayInput.shared.invalidate()
+                    AKInterface.shared!.unhideCursor()
+//                    PlayInput.shared.invalidate()
                 }
             } else {
                 if visible {
-                    if PlaySettings.shared.mouseMapping {
-                        AKInterface.shared!.hideCursor()
-                    }
+                    AKInterface.shared!.hideCursor()
                     if screen.fullscreen {
                         screen.switchDock(false)
                     }
