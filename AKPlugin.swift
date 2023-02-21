@@ -18,11 +18,11 @@ class AKPlugin: NSObject, Plugin {
     }
 
     var mousePoint: CGPoint {
-        NSApplication.shared.windows.first!.mouseLocationOutsideOfEventStream as CGPoint
+        NSApplication.shared.windows.first?.mouseLocationOutsideOfEventStream ?? CGPoint()
     }
 
     var windowFrame: CGRect {
-        NSApplication.shared.windows.first!.frame as CGRect
+        NSApplication.shared.windows.first?.frame ?? CGRect()
     }
 
     var isMainScreenEqualToFirst: Bool {
