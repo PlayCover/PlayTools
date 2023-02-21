@@ -27,8 +27,6 @@ let settings = PlaySettings.shared
 
     lazy var keymapping = settingsData.keymapping
 
-    lazy var mouseMapping = settingsData.mouseMapping
-
     lazy var notch = settingsData.notch
 
     lazy var sensitivity = settingsData.sensitivity / 100
@@ -63,7 +61,6 @@ let settings = PlaySettings.shared
 
 struct AppSettingsData: Codable {
     var keymapping = true
-    var mouseMapping = true
     var sensitivity: Float = 50
 
     var disableTimeout = false

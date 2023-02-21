@@ -5,7 +5,7 @@ import UIKit
 class PlayInput {
     static let shared = PlayInput()
     var actions = [Action]()
-    var timeoutForBind = true
+    static var keyboardMapped = true
 
     static private var lCmdPressed = false
     static private var rCmdPressed = false
@@ -16,8 +16,6 @@ class PlayInput {
         for action in self.actions {
             action.invalidate()
         }
-        PlayInput.buttonHandlers.removeAll(keepingCapacity: true)
-        GCController.current?.extendedGamepad?.valueChangedHandler = nil
     }
 
     static public func registerButton(key: String, handler: @escaping (Bool) -> Void) {
@@ -55,6 +53,7 @@ class PlayInput {
 
     func parseKeymap() {
         actions = []
+        PlayInput.buttonHandlers.removeAll(keepingCapacity: true)
         for button in keymap.keymapData.buttonModels {
             actions.append(ButtonAction(data: button))
         }
@@ -64,9 +63,7 @@ class PlayInput {
         }
 
         for mouse in keymap.keymapData.mouseAreaModel {
-            if mouse.keyName.hasSuffix("tick") || settings.mouseMapping {
-                actions.append(CameraAction(data: mouse))
-            }
+            actions.append(CameraAction(data: mouse))
         }
 
         for joystick in keymap.keymapData.joystickModel {
@@ -81,6 +78,7 @@ class PlayInput {
 
     public func toggleEditor(show: Bool) {
         mode.show(show)
+        PlayInput.keyboardMapped = !show
         if show {
             if let keyboard = GCKeyboard.coalesced!.keyboardInput {
                 keyboard.keyChangedHandler = { _, _, keyCode, _ in
@@ -115,11 +113,12 @@ class PlayInput {
                     EditorController.shared.setKey(alias)
                 }
             }
+        } else {
+            DispatchQueue.main.async(execute: parseKeymap)
         }
     }
 
     func setup() {
-        parseKeymap()
         GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = nil
         GCController.current?.extendedGamepad?.valueChangedHandler = controllerButtonHandler
     }
@@ -146,12 +145,12 @@ class PlayInput {
     ]
 
     private func swapMode() {
-        if !settings.mouseMapping {
-            return
-        }
-        if !mode.visible {
-            self.invalidate()
-        }
+//        if !settings.mouseMapping {
+//            return
+//        }
+//        if !mode.visible {
+//            self.invalidate()
+//        }
         mode.show(!mode.visible)
     }
 
@@ -200,30 +199,36 @@ class PlayInput {
                 self.toggleEditor(show: true)
             }
         }
-
+        parseKeymap()
+        centre.addObserver(forName: UIApplication.keyboardDidHideNotification, object: nil, queue: main) { _ in
+            PlayInput.keyboardMapped = true
+        }
+        centre.addObserver(forName: UIApplication.keyboardWillShowNotification, object: nil, queue: main) { _ in
+            PlayInput.keyboardMapped = false
+        }
         centre.addObserver(forName: NSNotification.Name(rawValue: "NSWindowDidBecomeKeyNotification"), object: nil,
             queue: main) { _ in
-            if !mode.visible && settings.mouseMapping {
+            if !mode.visible {
                 AKInterface.shared!.warpCursor()
             }
         }
         setupHotkeys()
 
         AKInterface.shared!.initialize(keyboard: {keycode, pressed in
-            let consumed = !mode.visible && !PlayInput.cmdPressed()
+            let consumed = PlayInput.keyboardMapped && !PlayInput.cmdPressed()
             if !consumed {
                 return false
             }
             self.keyboardHandler(keycode, pressed)
             return consumed
         }, mouseMoved: {deltaX, deltaY in
-            if mode.visible {
+            if !PlayInput.keyboardMapped {
                 return false
             }
-            if settings.mouseMapping {
-                PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
-            } else {
+            if mode.visible {
                 PlayMice.shared.handleFakeMouseMoved(deltaX: deltaX, deltaY: deltaY)
+            } else {
+                PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
             }
             return true
         }, swapMode: self.swapMode)
