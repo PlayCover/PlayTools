@@ -1,5 +1,7 @@
 import GameController
 
+// Data structure definition should match those in
+// https://github.com/PlayCover/PlayCover/blob/develop/PlayCover/Model/Keymapping.swift
 class ControlData {
     var keyCodes: [Int]
     var keyName: String
