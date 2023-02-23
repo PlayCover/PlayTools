@@ -99,16 +99,16 @@ public class PlayMice {
         joystickHandler[name]?(cgDx, cgDy)
     }
 
-    public func handleFakeMouseMoved(_: GCMouseInput, deltaX: Float, deltaY: Float) {
+    public func handleFakeMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
         if self.fakedMousePressed {
             Toucher.touchcam(point: self.cursorPos(), phase: UITouch.Phase.moved, tid: &fakedMouseTouchPointId)
         }
     }
 
-    public func handleMouseMoved(_: GCMouseInput, deltaX: Float, deltaY: Float) {
+    public func handleMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
         let sensy = CGFloat(PlaySettings.shared.sensitivity)
-        let cgDx = CGFloat(deltaX) * sensy,
-            cgDy = CGFloat(deltaY) * sensy
+        let cgDx = deltaX * sensy * 0.6,
+            cgDy = -deltaY * sensy * 0.6
         let name = PlayMice.elementName
         if let draggableUpdate = self.draggableHandler[name] {
             draggableUpdate(cgDx, cgDy)
@@ -116,12 +116,6 @@ public class PlayMice {
         }
         self.cameraMoveHandler[name]?(cgDx, cgDy)
         self.joystickHandler[name]?(cgDx, cgDy)
-    }
-
-    public func stop() {
-        for mouse in GCMouse.mice() {
-            mouse.mouseInput?.mouseMovedHandler = { _, _, _ in}
-        }
     }
 
     // TODO: get rid of this shit
@@ -270,7 +264,7 @@ class SwipeAction: Action {
         self.cooldown = false
         // TODO: camera mode switch: Flexibility v.s. Precision
         // TODO: find reasonable ways to promote fake touch priority
-        timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.3, leeway: DispatchTimeInterval.never)
+        timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.1, leeway: DispatchTimeInterval.never)
         timer.setEventHandler(qos: DispatchQoS.background, handler: self.checkEnded)
         timer.activate()
         timer.suspend()
@@ -289,8 +283,8 @@ class SwipeAction: Action {
 
     func checkEnded() {
         if self.counter == self.lastCounter {
-            if self.counter < 24 {
-                counter += 24
+            if self.counter < 12 {
+                counter += 12
             } else {
                 timer.suspend()
                 self.doLiftOff()
