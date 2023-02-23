@@ -8,6 +8,7 @@
 import AppKit
 import CoreGraphics
 import Foundation
+import GameController
 
 class AKPlugin: NSObject, Plugin {
     required override init() {
@@ -58,20 +59,17 @@ class AKPlugin: NSObject, Plugin {
     }
 
     private var modifierFlag: UInt = 0
-    func initialize(keyboard: @escaping(UInt16, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
+    func initialize(keyboard: @escaping(UInt16, Bool, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
                     swapMode: @escaping() -> Void) {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
-            if event.isARepeat {
-                return nil
-            }
-            let consumed = keyboard(event.keyCode, true)
+            let consumed = keyboard(event.keyCode, true, event.isARepeat)
             if consumed {
                 return nil
             }
             return event
         })
         NSEvent.addLocalMonitorForEvents(matching: .keyUp, handler: { event in
-            let consumed = keyboard(event.keyCode, false)
+            let consumed = keyboard(event.keyCode, false, false)
             if consumed {
                 return nil
             }
@@ -85,7 +83,7 @@ class AKPlugin: NSObject, Plugin {
                 swapMode()
                 return nil
             }
-            let consumed = keyboard(event.keyCode, pressed)
+            let consumed = keyboard(event.keyCode, pressed, false)
             if consumed {
                 return nil
             }
