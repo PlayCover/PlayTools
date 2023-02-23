@@ -13,12 +13,10 @@ class PlayInput {
     static public var buttonHandlers: [String: [(Bool) -> Void]] = [:]
 
     func invalidate() {
-        PlayMice.shared.stop()
         for action in self.actions {
             action.invalidate()
         }
         PlayInput.buttonHandlers.removeAll(keepingCapacity: true)
-        GCKeyboard.coalesced!.keyboardInput!.keyChangedHandler = nil
         GCController.current?.extendedGamepad?.valueChangedHandler = nil
     }
 
@@ -29,10 +27,9 @@ class PlayInput {
         PlayInput.buttonHandlers[key]!.append(handler)
     }
 
-    func keyboardHandler(_: GCKeyboardInput, _: GCControllerButtonInput, _ keyCode: GCKeyCode, _ pressed: Bool) {
-        if PlayInput.cmdPressed() { return }
-        guard let handlers = PlayInput.buttonHandlers[KeyCodeNames.keyCodes[keyCode.rawValue]!] else {
-            // TODO: usage hint of disabling keymapping is planned to be added here
+    func keyboardHandler(_ keyCode: UInt16, _ pressed: Bool) {
+        let name = KeyCodeNames.virtualCodes[keyCode] ?? "Btn"
+        guard let handlers = PlayInput.buttonHandlers[name] else {
             return
         }
         for handler in handlers {
@@ -89,7 +86,8 @@ class PlayInput {
                 keyboard.keyChangedHandler = { _, _, keyCode, _ in
                     if !PlayInput.cmdPressed()
                         && !PlayInput.FORBIDDEN.contains(keyCode)
-                        && self.isSafeToBind(keyboard) {
+                        && self.isSafeToBind(keyboard)
+                        && KeyCodeNames.keyCodes[keyCode.rawValue] != nil {
                         EditorController.shared.setKey(keyCode.rawValue)
                     }
                 }
@@ -122,17 +120,8 @@ class PlayInput {
 
     func setup() {
         parseKeymap()
-
-        GCKeyboard.coalesced!.keyboardInput!.keyChangedHandler = keyboardHandler
+        GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = nil
         GCController.current?.extendedGamepad?.valueChangedHandler = controllerButtonHandler
-        for mouse in GCMouse.mice() {
-            if settings.mouseMapping {
-                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleMouseMoved
-            } else {
-                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleFakeMouseMoved
-            }
-        }
-
     }
 
     static public func cmdPressed() -> Bool {
@@ -156,16 +145,14 @@ class PlayInput {
         .printScreen
     ]
 
-    private func swapMode(_ pressed: Bool) {
+    private func swapMode() {
         if !settings.mouseMapping {
             return
         }
-        if pressed {
-            if !mode.visible {
-                self.invalidate()
-            }
-            mode.show(!mode.visible)
+        if !mode.visible {
+            self.invalidate()
         }
+        mode.show(!mode.visible)
     }
 
     var root: UIViewController? {
@@ -179,12 +166,6 @@ class PlayInput {
             }
             keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.rCmdPressed = pressed
-            }
-            keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
-                self.swapMode(pressed)
-            }
-            keyboard.button(forKeyCode: .rightAlt)?.pressedChangedHandler = { _, _, pressed in
-                self.swapMode(pressed)
             }
         }
     }
@@ -219,9 +200,14 @@ class PlayInput {
             }
         }
 
+        centre.addObserver(forName: NSNotification.Name(rawValue: "NSWindowDidBecomeKeyNotification"), object: nil,
+            queue: main) { _ in
+            if !mode.visible && settings.mouseMapping {
+                AKInterface.shared!.warpCursor()
+            }
+        }
         setupHotkeys()
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
-            self.parseKeymap()
             if !settings.mouseMapping || !mode.visible || self.actions.count <= 0 {
                 return
             }
@@ -256,12 +242,25 @@ class PlayInput {
             }
         }
 
-        // Fix beep sound
-        AKInterface.shared!
-            .eliminateRedundantKeyPressEvents(self.dontIgnore)
-    }
-
-    func dontIgnore() -> Bool {
-        (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed()
+        AKInterface.shared!.initialize(keyboard: {keycode, pressed, isRepeat in
+            if mode.visible || PlayInput.cmdPressed() {
+                return false
+            }
+            if isRepeat {
+                return true
+            }
+            self.keyboardHandler(keycode, pressed)
+            return true
+        }, mouseMoved: {deltaX, deltaY in
+            if mode.visible {
+                return false
+            }
+            if settings.mouseMapping {
+                PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
+            } else {
+                PlayMice.shared.handleFakeMouseMoved(deltaX: deltaX, deltaY: deltaY)
+            }
+            return true
+        }, swapMode: self.swapMode)
     }
 }
