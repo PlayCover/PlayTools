@@ -107,8 +107,8 @@ public class PlayMice {
 
     public func handleMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
         let sensy = CGFloat(PlaySettings.shared.sensitivity)
-        let cgDx = deltaX * sensy * 0.5,
-            cgDy = -deltaY * sensy * 0.5
+        let cgDx = deltaX * sensy * 0.6,
+            cgDy = -deltaY * sensy * 0.6
         let name = PlayMice.elementName
         if let draggableUpdate = self.draggableHandler[name] {
             draggableUpdate(cgDx, cgDy)

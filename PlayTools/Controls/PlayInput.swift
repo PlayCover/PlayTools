@@ -167,7 +167,6 @@ class PlayInput {
             keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.rCmdPressed = pressed
             }
-            // TODO: set a timeout to display usage guide of Option and Keymapping menu in turn
         }
     }
 
@@ -208,14 +207,50 @@ class PlayInput {
             }
         }
         setupHotkeys()
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
+            if !settings.mouseMapping || !mode.visible || self.actions.count <= 0 {
+                return
+            }
+            let persistenceKeyname = "playtoolsKeymappingDisabledAt"
+            let lastUse = UserDefaults.standard.float(forKey: persistenceKeyname)
+            var thisUse = lastUse
+            if lastUse < 1 {
+                thisUse = 2
+            } else {
+                thisUse = Float(Date.timeIntervalSinceReferenceDate)
+            }
+            var token2: NSObjectProtocol?
+            let center = NotificationCenter.default
+            token2 = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillDisable,
+                                        object: nil, queue: OperationQueue.main) { _ in
+                center.removeObserver(token2!)
+                UserDefaults.standard.set(thisUse, forKey: persistenceKeyname)
+            }
+            if lastUse > Float(Date.now.addingTimeInterval(-86400*14).timeIntervalSinceReferenceDate) {
+                return
+            }
+            Toast.showHint(title: "Keymapping Disabled", text: ["Press ", "option ⌥", " to enable keymapping"],
+                           timeout: 10,
+                           notification: NSNotification.Name.playtoolsKeymappingWillEnable)
+            var token: NSObjectProtocol?
+            token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
+                                       object: nil, queue: OperationQueue.main) { _ in
+                center.removeObserver(token!)
+                Toast.showHint(title: "Keymapping Enabled", text: ["Press ", "option ⌥", " to disable keymapping"],
+                               timeout: 10,
+                               notification: NSNotification.Name.playtoolsKeymappingWillDisable)
+            }
+        }
 
-        AKInterface.shared!.initialize(keyboard: {keycode, pressed in
-            let consumed = !mode.visible && !PlayInput.cmdPressed()
-            if !consumed {
+        AKInterface.shared!.initialize(keyboard: {keycode, pressed, isRepeat in
+            if mode.visible || PlayInput.cmdPressed() {
                 return false
             }
+            if isRepeat {
+                return true
+            }
             self.keyboardHandler(keycode, pressed)
-            return consumed
+            return true
         }, mouseMoved: {deltaX, deltaY in
             if mode.visible {
                 return false
