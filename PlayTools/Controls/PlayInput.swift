@@ -169,17 +169,6 @@ class PlayInput {
         return screen.window?.rootViewController
     }
 
-    func setupHotkeys() {
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
-                PlayInput.lCmdPressed = pressed
-            }
-            keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
-                PlayInput.rCmdPressed = pressed
-            }
-        }
-    }
-
     func initialize() {
         if !PlaySettings.shared.keymapping {
             return
@@ -187,19 +176,6 @@ class PlayInput {
 
         let centre = NotificationCenter.default
         let main = OperationQueue.main
-
-        centre.addObserver(forName: NSNotification.Name.GCKeyboardDidConnect, object: nil, queue: main) { _ in
-            self.setupHotkeys()
-            if !mode.visible {
-                self.setup()
-            }
-        }
-
-        centre.addObserver(forName: NSNotification.Name.GCMouseDidConnect, object: nil, queue: main) { _ in
-            if !mode.visible {
-                self.setup()
-            }
-        }
 
         centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
             if !mode.visible {
@@ -222,7 +198,6 @@ class PlayInput {
                 AKInterface.shared!.warpCursor()
             }
         }
-        setupHotkeys()
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
             if !mode.visible || self.actions.count <= 0 || !PlayInput.shouldLockCursor {
                 return
@@ -259,6 +234,13 @@ class PlayInput {
         }
 
         AKInterface.shared!.initialize(keyboard: {keycode, pressed, isRepeat in
+            if keycode == 54 {
+                PlayInput.rCmdPressed = pressed
+                return false
+            } else if keycode == 55 {
+                PlayInput.lCmdPressed = pressed
+                return false
+            }
             if !PlayInput.keyboardMapped || PlayInput.cmdPressed() {
                 return false
             }
