@@ -6,7 +6,7 @@ class PlayInput {
     static let shared = PlayInput()
     var actions = [Action]()
     static var keyboardMapped = true
-
+    static var shouldLockCursor = true
     static private var lCmdPressed = false
     static private var rCmdPressed = false
 
@@ -19,20 +19,26 @@ class PlayInput {
     }
 
     static public func registerButton(key: String, handler: @escaping (Bool) -> Void) {
+        if ["LMB", "RMB", "MMB"].contains(key) {
+            PlayInput.shouldLockCursor = true
+        }
         if PlayInput.buttonHandlers[key] == nil {
             PlayInput.buttonHandlers[key] = []
         }
         PlayInput.buttonHandlers[key]!.append(handler)
     }
 
-    func keyboardHandler(_ keyCode: UInt16, _ pressed: Bool) {
+    func keyboardHandler(_ keyCode: UInt16, _ pressed: Bool) -> Bool {
         let name = KeyCodeNames.virtualCodes[keyCode] ?? "Btn"
         guard let handlers = PlayInput.buttonHandlers[name] else {
-            return
+            return false
         }
+        var mapped = false
         for handler in handlers {
             handler(pressed)
+            mapped = true
         }
+        return mapped
     }
 
     func controllerButtonHandler(_ profile: GCExtendedGamepad, _ element: GCControllerElement) {
@@ -53,6 +59,7 @@ class PlayInput {
 
     func parseKeymap() {
         actions = []
+        PlayInput.shouldLockCursor = false
         PlayInput.buttonHandlers.removeAll(keepingCapacity: true)
         for button in keymap.keymapData.buttonModels {
             actions.append(ButtonAction(data: button))
@@ -74,12 +81,16 @@ class PlayInput {
                 actions.append(JoystickAction(data: joystick))
             }
         }
+        if !PlayInput.shouldLockCursor {
+            PlayInput.shouldLockCursor = PlayMice.shared.mouseMovementMapped()
+        }
     }
 
     public func toggleEditor(show: Bool) {
-        mode.show(show)
         PlayInput.keyboardMapped = !show
         if show {
+            self.invalidate()
+            mode.show(show)
             if let keyboard = GCKeyboard.coalesced!.keyboardInput {
                 keyboard.keyChangedHandler = { _, _, keyCode, _ in
                     if !PlayInput.cmdPressed()
@@ -114,7 +125,9 @@ class PlayInput {
                 }
             }
         } else {
-            DispatchQueue.main.async(execute: parseKeymap)
+            setup()
+            parseKeymap()
+            self.swapMode()
         }
     }
 
@@ -145,12 +158,10 @@ class PlayInput {
     ]
 
     private func swapMode() {
-//        if !settings.mouseMapping {
-//            return
-//        }
-//        if !mode.visible {
-//            self.invalidate()
-//        }
+        if !PlayInput.shouldLockCursor {
+            mode.show(true)
+            return
+        }
         mode.show(!mode.visible)
     }
 
@@ -166,7 +177,6 @@ class PlayInput {
             keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
                 PlayInput.rCmdPressed = pressed
             }
-            // TODO: set a timeout to display usage guide of Option and Keymapping menu in turn
         }
     }
 
@@ -213,14 +223,50 @@ class PlayInput {
             }
         }
         setupHotkeys()
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
+            if !mode.visible || self.actions.count <= 0 || !PlayInput.shouldLockCursor {
+                return
+            }
+            let persistenceKeyname = "playtoolsKeymappingDisabledAt"
+            let lastUse = UserDefaults.standard.float(forKey: persistenceKeyname)
+            var thisUse = lastUse
+            if lastUse < 1 {
+                thisUse = 2
+            } else {
+                thisUse = Float(Date.timeIntervalSinceReferenceDate)
+            }
+            var token2: NSObjectProtocol?
+            let center = NotificationCenter.default
+            token2 = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillDisable,
+                                        object: nil, queue: OperationQueue.main) { _ in
+                center.removeObserver(token2!)
+                UserDefaults.standard.set(thisUse, forKey: persistenceKeyname)
+            }
+            if lastUse > Float(Date.now.addingTimeInterval(-86400*14).timeIntervalSinceReferenceDate) {
+                return
+            }
+            Toast.showHint(title: "Mouse Mapping Disabled", text: ["Press ", "option ⌥", " to enable mouse mapping"],
+                           timeout: 10,
+                           notification: NSNotification.Name.playtoolsKeymappingWillEnable)
+            var token: NSObjectProtocol?
+            token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
+                                       object: nil, queue: OperationQueue.main) { _ in
+                center.removeObserver(token!)
+                Toast.showHint(title: "Cursor Locked", text: ["Press ", "option ⌥", " to release cursor"],
+                               timeout: 10,
+                               notification: NSNotification.Name.playtoolsKeymappingWillDisable)
+            }
+        }
 
-        AKInterface.shared!.initialize(keyboard: {keycode, pressed in
-            let consumed = PlayInput.keyboardMapped && !PlayInput.cmdPressed()
-            if !consumed {
+        AKInterface.shared!.initialize(keyboard: {keycode, pressed, isRepeat in
+            if !PlayInput.keyboardMapped || PlayInput.cmdPressed() {
                 return false
             }
-            self.keyboardHandler(keycode, pressed)
-            return consumed
+            if isRepeat {
+                return true
+            }
+            let mapped = self.keyboardHandler(keycode, pressed)
+            return mapped
         }, mouseMoved: {deltaX, deltaY in
             if !PlayInput.keyboardMapped {
                 return false
@@ -232,5 +278,6 @@ class PlayInput {
             }
             return true
         }, swapMode: self.swapMode)
+        PlayMice.shared.initialize()
     }
 }

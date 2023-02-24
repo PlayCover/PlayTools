@@ -10,16 +10,12 @@ public class PlayMice {
 
     public static let shared = PlayMice()
     public static let elementName = "Mouse"
-    private static var isInit = false
 
-    public init() {
-        if !PlayMice.isInit {
-            setupMouseButton(_up: 2, _down: 4)
-            setupMouseButton(_up: 8, _down: 16)
-            setupMouseButton(_up: 33554432, _down: 67108864)
-            setupScrollWheelHandler()
-            PlayMice.isInit = true
-        }
+    public func initialize() {
+        setupMouseButton(_up: 2, _down: 4)
+        setupMouseButton(_up: 8, _down: 16)
+        setupMouseButton(_up: 33554432, _down: 67108864)
+        setupScrollWheelHandler()
     }
 
     var fakedMouseTouchPointId: Int?
@@ -33,6 +29,15 @@ public class PlayMice {
                cameraScaleHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
                joystickHandler: [String: (CGFloat, CGFloat) -> Void] = [:]
 
+    public func mouseMovementMapped() -> Bool {
+        for handler in [draggableHandler, cameraMoveHandler, joystickHandler] {
+            if handler[PlayMice.elementName] != nil {
+                return true
+            }
+        }
+        return false
+    }
+    
     public func cursorPos() -> CGPoint? {
         var point = CGPoint(x: 0, y: 0)
         point = AKInterface.shared!.mousePoint
@@ -108,8 +113,8 @@ public class PlayMice {
 
     public func handleMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
         let sensy = CGFloat(PlaySettings.shared.sensitivity)
-        let cgDx = deltaX * sensy * 0.5,
-            cgDy = -deltaY * sensy * 0.5
+        let cgDx = deltaX * sensy * 0.6,
+            cgDy = -deltaY * sensy * 0.6
         let name = PlayMice.elementName
         if let draggableUpdate = self.draggableHandler[name] {
             draggableUpdate(cgDx, cgDy)
@@ -146,7 +151,7 @@ public class PlayMice {
                 return false
             }
         }
-        if !mode.visible {
+        if !mode.visible || !pressed {
             if let handlers = PlayInput.buttonHandlers[KeyCodeNames.keyCodes[buttonIndex[actionIndex]!]!] {
                 for handler in handlers {
                     handler(pressed)
@@ -262,24 +267,14 @@ class SwipeAction: Action {
     var id: Int?
     let timer = DispatchSource.makeTimerSource(flags: [], queue: DispatchQueue.main)
     init() {
-        // in rare cases the cooldown reset task is lost by the dispatch queue
-        self.cooldown = false
-        // TODO: camera mode switch: Flexibility v.s. Precision
-        timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.1, leeway: DispatchTimeInterval.never)
+        timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.1, leeway: DispatchTimeInterval.milliseconds(50))
         timer.setEventHandler(qos: DispatchQoS.background, handler: self.checkEnded)
         timer.activate()
         timer.suspend()
     }
 
-    func delay(_ delay: Double, closure: @escaping () -> Void) {
-        let when = DispatchTime.now() + delay
-        Toucher.touchQueue.asyncAfter(deadline: when, execute: closure)
-    }
-
-    // like sequence but resets when touch begins. Used to calc touch duration
+    // Count swipe duration
     var counter = 0
-    // if should wait before beginning next touch
-    var cooldown = false
     var lastCounter = 0
 
     func checkEnded() {
@@ -287,6 +282,7 @@ class SwipeAction: Action {
             if self.counter < 12 {
                 counter += 12
             } else {
+                Toast.showHint(title: "\(id)")
                 timer.suspend()
                 self.doLiftOff()
             }
@@ -296,9 +292,6 @@ class SwipeAction: Action {
 
     public func move(from: () -> CGPoint?, deltaX: CGFloat, deltaY: CGFloat) {
         if id == nil {
-            if cooldown {
-                return
-            }
             guard let start = from() else {return}
             location = start
             counter = 0
@@ -317,13 +310,6 @@ class SwipeAction: Action {
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: &id)
-        // ending and beginning too frequently leads to the beginning event not recognized
-        // so let the beginning event wait some time
-        // pause for one frame or two
-        delay(0.02) {
-            self.cooldown = false
-        }
-        cooldown = true
     }
 
     func invalidate() {
