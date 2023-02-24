@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2847AE48298EFC0F00B0F983 /* PlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2847AE47298EFC0F00B0F983 /* PlayScreen.swift */; };
 		6E76639B28D0FAE700DE4AF9 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76639A28D0FAE700DE4AF9 /* Plugin.swift */; };
 		6E76639C28D0FAE700DE4AF9 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76639A28D0FAE700DE4AF9 /* Plugin.swift */; };
 		6E7663A128D0FB5300DE4AF9 /* AKPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7663A028D0FB5300DE4AF9 /* AKPlugin.swift */; };
@@ -14,7 +15,6 @@
 		6E84A14528D0F94E00BF7495 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
 		6E84A15028D0F97500BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA71970B287A44D200623C15 /* PlayLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719702287A44D200623C15 /* PlayLoader.m */; };
-		AA71970C287A44D200623C15 /* PlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719703287A44D200623C15 /* PlayScreen.swift */; };
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
 		AA71970E287A44D200623C15 /* PlayLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719705287A44D200623C15 /* PlayLoader.h */; };
 		AA71970F287A44D200623C15 /* PlayCover.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719706287A44D200623C15 /* PlayCover.swift */; };
@@ -45,6 +45,7 @@
 		AA719870287A81A000623C15 /* UIEvent+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719842287A81A000623C15 /* UIEvent+Private.h */; };
 		AA719872287A81A000623C15 /* UITouch+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719844287A81A000623C15 /* UITouch+Private.h */; };
 		AA818CB9287ABFB1000BEE9D /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CB8287ABFB1000BEE9D /* IOKit.framework */; };
+		ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCECEE529750BA600746595 /* PlayedApple.swift */; };
 		B127172228817AB90025112B /* SwordRPC in Frameworks */ = {isa = PBXBuildFile; productRef = B127172128817AB90025112B /* SwordRPC */; };
 		B127172528817C040025112B /* DiscordIPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B127172428817C040025112B /* DiscordIPC.swift */; };
 		B1271729288284BE0025112B /* DiscordActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1271728288284BE0025112B /* DiscordActivity.swift */; };
@@ -66,6 +67,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2847AE47298EFC0F00B0F983 /* PlayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayScreen.swift; sourceTree = "<group>"; };
 		6E76639628D0FA6200DE4AF9 /* AKInterface-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AKInterface-Bridging-Header.h"; sourceTree = "<group>"; };
 		6E76639A28D0FAE700DE4AF9 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
 		6E7663A028D0FB5300DE4AF9 /* AKPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AKPlugin.swift; sourceTree = "<group>"; };
@@ -73,7 +75,6 @@
 		6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AKInterface.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA7196D8287A447700623C15 /* PlayTools.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PlayTools.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA719702287A44D200623C15 /* PlayLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlayLoader.m; sourceTree = "<group>"; };
-		AA719703287A44D200623C15 /* PlayScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayScreen.swift; sourceTree = "<group>"; };
 		AA719704287A44D200623C15 /* PlaySettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlaySettings.swift; sourceTree = "<group>"; };
 		AA719705287A44D200623C15 /* PlayLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayLoader.h; sourceTree = "<group>"; };
 		AA719706287A44D200623C15 /* PlayCover.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayCover.swift; sourceTree = "<group>"; };
@@ -107,6 +108,7 @@
 		AA719844287A81A000623C15 /* UITouch+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UITouch+Private.h"; sourceTree = "<group>"; };
 		AA818CB8287ABFB1000BEE9D /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/IOKit.framework; sourceTree = DEVELOPER_DIR; };
 		AA818CBA287ABFD5000BEE9D /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/iOSSupport/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		ABCECEE529750BA600746595 /* PlayedApple.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayedApple.swift; sourceTree = "<group>"; };
 		B127172428817C040025112B /* DiscordIPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordIPC.swift; sourceTree = "<group>"; };
 		B1271728288284BE0025112B /* DiscordActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordActivity.swift; sourceTree = "<group>"; };
 		B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keymapping.swift; sourceTree = "<group>"; };
@@ -165,6 +167,7 @@
 		AA7196DA287A447700623C15 /* PlayTools */ = {
 			isa = PBXGroup;
 			children = (
+				ABCECEE729750BB100746595 /* MysticRunes */,
 				B127172328817AC70025112B /* DiscordActivity */,
 				AA719721287A480C00623C15 /* Controls */,
 				AA719799287A481500623C15 /* Keymap */,
@@ -172,11 +175,11 @@
 				AA719791287A481500623C15 /* Utils */,
 				AA71970A287A44D200623C15 /* Info.plist */,
 				AA719706287A44D200623C15 /* PlayCover.swift */,
-				AA719703287A44D200623C15 /* PlayScreen.swift */,
 				AA719704287A44D200623C15 /* PlaySettings.swift */,
 				AA719705287A44D200623C15 /* PlayLoader.h */,
 				AA719702287A44D200623C15 /* PlayLoader.m */,
 				AA719708287A44D200623C15 /* PlayTools.h */,
+				2847AE47298EFC0F00B0F983 /* PlayScreen.swift */,
 			);
 			path = PlayTools;
 			sourceTree = "<group>";
@@ -260,6 +263,14 @@
 				AA818CB8287ABFB1000BEE9D /* IOKit.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		ABCECEE729750BB100746595 /* MysticRunes */ = {
+			isa = PBXGroup;
+			children = (
+				ABCECEE529750BA600746595 /* PlayedApple.swift */,
+			);
+			path = MysticRunes;
 			sourceTree = "<group>";
 		};
 		B127172328817AC70025112B /* DiscordActivity */ = {
@@ -434,6 +445,7 @@
 				AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */,
 				AA719759287A480D00623C15 /* PlayAction.swift in Sources */,
 				6E7663A528D0FEBE00DE4AF9 /* AKPluginLoader.swift in Sources */,
+				2847AE48298EFC0F00B0F983 /* PlayScreen.swift in Sources */,
 				AA7197A2287A481500623C15 /* CircleMenu.swift in Sources */,
 				AA71978B287A480D00623C15 /* MenuController.swift in Sources */,
 				AA7197AA287A481500623C15 /* Toast.swift in Sources */,
@@ -446,7 +458,7 @@
 				AA7197A3287A481500623C15 /* CircleMenuButton.swift in Sources */,
 				AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */,
 				AA71986A287A81A000623C15 /* PTFakeMetaTouch.m in Sources */,
-				AA71970C287A44D200623C15 /* PlayScreen.swift in Sources */,
+				ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */,
 				AA71986C287A81A000623C15 /* NSObject+Swizzle.m in Sources */,
 				AA71970F287A44D200623C15 /* PlayCover.swift in Sources */,
 				B127172528817C040025112B /* DiscordIPC.swift in Sources */,
