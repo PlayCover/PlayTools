@@ -282,7 +282,6 @@ class SwipeAction: Action {
             if self.counter < 12 {
                 counter += 12
             } else {
-                Toast.showHint(title: "\(id)")
                 timer.suspend()
                 self.doLiftOff()
             }
