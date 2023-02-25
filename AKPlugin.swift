@@ -8,6 +8,7 @@
 import AppKit
 import CoreGraphics
 import Foundation
+import GameController
 
 class AKPlugin: NSObject, Plugin {
     required override init() {
@@ -37,6 +38,8 @@ class AKPlugin: NSObject, Plugin {
         NSApplication.shared.windows.first!.styleMask.contains(.fullScreen)
     }
 
+    var cmdPressed: Bool = false
+
     func hideCursor() {
         NSCursor.hide()
         CGAssociateMouseAndMouseCursorPosition(0)
@@ -58,26 +61,41 @@ class AKPlugin: NSObject, Plugin {
     }
 
     private var modifierFlag: UInt = 0
-    func initialize(keyboard: @escaping(UInt16, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
+    func initialize(keyboard: @escaping(UInt16, Bool, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
                     swapMode: @escaping() -> Void) {
-        NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
-            if event.isARepeat {
-                return nil
+        func checkCmd(modifier: NSEvent.ModifierFlags) -> Bool {
+            if modifier.contains(.command) {
+                self.cmdPressed = true
+                return true
+            } else if self.cmdPressed {
+                self.cmdPressed = false
             }
-            let consumed = keyboard(event.keyCode, true)
+            return false
+        }
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
+            if checkCmd(modifier: event.modifierFlags) {
+                return event
+            }
+            let consumed = keyboard(event.keyCode, true, event.isARepeat)
             if consumed {
                 return nil
             }
             return event
         })
         NSEvent.addLocalMonitorForEvents(matching: .keyUp, handler: { event in
-            let consumed = keyboard(event.keyCode, false)
+            if checkCmd(modifier: event.modifierFlags) {
+                return event
+            }
+            let consumed = keyboard(event.keyCode, false, false)
             if consumed {
                 return nil
             }
             return event
         })
         NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { event in
+            if checkCmd(modifier: event.modifierFlags) {
+                return event
+            }
             let pressed = self.modifierFlag < event.modifierFlags.rawValue
             let changed = self.modifierFlag ^ event.modifierFlags.rawValue
             self.modifierFlag = event.modifierFlags.rawValue
@@ -85,7 +103,7 @@ class AKPlugin: NSObject, Plugin {
                 swapMode()
                 return nil
             }
-            let consumed = keyboard(event.keyCode, pressed)
+            let consumed = keyboard(event.keyCode, pressed, false)
             if consumed {
                 return nil
             }
@@ -101,16 +119,19 @@ class AKPlugin: NSObject, Plugin {
         })
     }
 
-    func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool, Bool) -> Bool) {
+    func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool) -> Bool) {
         NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_up)), handler: { event in
-            let isEventWindow = event.window == NSApplication.shared.windows.first!
-            if dontIgnore(_up, true, isEventWindow) {
+            // For traffic light buttons when fullscreen
+            if event.window != NSApplication.shared.windows.first! {
+                return event
+            }
+            if dontIgnore(_up, true) {
                 return event
             }
             return nil
         })
         NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_down)), handler: { event in
-            if dontIgnore(_up, false, true) {
+            if dontIgnore(_up, false) {
                 return event
             }
             return nil
