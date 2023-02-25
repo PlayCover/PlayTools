@@ -30,38 +30,39 @@ public class PlayMice {
                joystickHandler: [String: (CGFloat, CGFloat) -> Void] = [:]
 
     public func mouseMovementMapped() -> Bool {
-        for handler in [draggableHandler, cameraMoveHandler, joystickHandler] {
-            if handler[PlayMice.elementName] != nil {
-                return true
-            }
+        for handler in [draggableHandler, cameraMoveHandler, joystickHandler]
+        where handler[PlayMice.elementName] != nil {
+            return true
         }
         return false
     }
-    
+
     public func cursorPos() -> CGPoint? {
-        var point = CGPoint(x: 0, y: 0)
-        point = AKInterface.shared!.mousePoint
+        var point = AKInterface.shared!.mousePoint
         let rect = AKInterface.shared!.windowFrame
-        let viewRect: CGRect = screen.screenRect
         if rect.width < 1 || rect.height < 1 {
             return nil
         }
+        let viewRect: CGRect = screen.screenRect
         let widthRate = viewRect.width / rect.width
         var rate = viewRect.height / rect.height
         if widthRate > rate {
             // Keep aspect ratio
             rate = widthRate
         }
-        // Horizontally in center
-        point.x -= (rect.width - viewRect.width / rate)/2
-        point.x *= rate
         if screen.fullscreen {
             // Vertically in center
             point.y -= (rect.height - viewRect.height / rate)/2
         }
         point.y *= rate
         point.y = viewRect.height - point.y
-
+        // For traffic light buttons when not fullscreen
+        if point.y < 0 {
+            return nil
+        }
+        // Horizontally in center
+        point.x -= (rect.width - viewRect.width / rate)/2
+        point.x *= rate
         return point
     }
 
@@ -112,9 +113,9 @@ public class PlayMice {
     }
 
     public func handleMouseMoved(deltaX: CGFloat, deltaY: CGFloat) {
-        let sensy = CGFloat(PlaySettings.shared.sensitivity)
-        let cgDx = deltaX * sensy * 0.6,
-            cgDy = -deltaY * sensy * 0.6
+        let sensy = CGFloat(PlaySettings.shared.sensitivity * 0.6)
+        let cgDx = deltaX * sensy,
+            cgDy = -deltaY * sensy
         let name = PlayMice.elementName
         if let draggableUpdate = self.draggableHandler[name] {
             draggableUpdate(cgDx, cgDy)
@@ -128,43 +129,38 @@ public class PlayMice {
     let buttonIndex: [Int: Int] = [2: -1, 8: -2, 33554432: -3]
 
     private func setupMouseButton(_up: Int, _down: Int) {
-        AKInterface.shared!.setupMouseButton(_up, _down, dontIgnore(_:_:_:))
+        AKInterface.shared!.setupMouseButton(_up, _down, dontIgnore)
     }
 
-    private func dontIgnore(_ actionIndex: Int, _ pressed: Bool, _ isEventWindow: Bool) -> Bool {
-        if mode.visible && pressed && PlayInput.keyboardMapped {
-            if let curPos = self.cursorPos() {
-                if !self.fakedMousePressed
-                    // For traffic light buttons when not fullscreen
-                    && curPos.y > 0
-                    // For traffic light buttons when fullscreen
-                    && isEventWindow {
-                    Toucher.touchcam(point: curPos,
-                                     phase: UITouch.Phase.began,
-                                     tid: &fakedMouseTouchPointId)
-                    return false
-                }
-            }
-        } else if self.fakedMousePressed {
-            if let curPos = self.cursorPos() {
-                Toucher.touchcam(point: curPos, phase: UITouch.Phase.ended, tid: &fakedMouseTouchPointId)
-                return false
-            }
-        }
-        if !mode.visible || !pressed {
-            if let handlers = PlayInput.buttonHandlers[KeyCodeNames.keyCodes[buttonIndex[actionIndex]!]!] {
-                for handler in handlers {
-                    handler(pressed)
-                }
-            }
-            return false
+    private func dontIgnore(_ actionIndex: Int, _ pressed: Bool) -> Bool {
+        if !PlayInput.shouldLockCursor {
+            return true
         }
         if EditorController.shared.editorMode {
             if pressed && actionIndex != 2 {
                 EditorController.shared.setKey(buttonIndex[actionIndex]!)
             }
+            return true
         }
-        return true
+        guard let curPos = self.cursorPos() else { return true }
+        PlayInput.touchQueue.async(qos: .userInteractive, execute: {
+            if self.fakedMousePressed {
+                Toucher.touchcam(point: curPos, phase: UITouch.Phase.ended, tid: &self.fakedMouseTouchPointId)
+                return
+            }
+            if mode.visible && pressed {
+                Toucher.touchcam(point: curPos,
+                                 phase: UITouch.Phase.began,
+                                 tid: &self.fakedMouseTouchPointId)
+            } else {
+                if let handlers = PlayInput.buttonHandlers[KeyCodeNames.keyCodes[self.buttonIndex[actionIndex]!]!] {
+                    for handler in handlers {
+                        handler(pressed)
+                    }
+                }
+            }
+        })
+        return false
     }
 }
 
@@ -221,11 +217,13 @@ class CameraAction: Action {
         swipeScale2 = SwipeAction()
         PlayMice.shared.cameraMoveHandler[key] = self.moveUpdated
         PlayMice.shared.cameraScaleHandler[PlayMice.elementName] = {deltaX, deltaY in
-            if mode.visible {
-                CameraAction.dragUpdated(deltaX, deltaY)
-            } else {
-                self.scaleUpdated(deltaX, deltaY)
-            }
+            PlayInput.touchQueue.async(qos: .userInteractive, execute: {
+                if mode.visible {
+                    CameraAction.dragUpdated(deltaX, deltaY)
+                } else {
+                    self.scaleUpdated(deltaX, deltaY)
+                }
+            })
         }
     }
     func moveUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
@@ -265,7 +263,7 @@ class CameraAction: Action {
 class SwipeAction: Action {
     var location: CGPoint = CGPoint.zero
     var id: Int?
-    let timer = DispatchSource.makeTimerSource(flags: [], queue: DispatchQueue.main)
+    let timer = DispatchSource.makeTimerSource(flags: [], queue: PlayInput.touchQueue)
     init() {
         timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.1, leeway: DispatchTimeInterval.milliseconds(50))
         timer.setEventHandler(qos: DispatchQoS.background, handler: self.checkEnded)

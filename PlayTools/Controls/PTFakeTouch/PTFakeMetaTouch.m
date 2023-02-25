@@ -16,16 +16,58 @@
 
 static NSMutableArray *livingTouchAry;
 uint64_t reusageMask = 0;
+static CFRunLoopSourceRef source;
+
+static UITouch *toStationarify = NULL;
+NSLock *lock;
+
+void eventSendCallback(void* info) {
+    UIEvent *event = [[UIApplication sharedApplication] _touchesEvent];
+    [event _clearTouches];
+    [lock lock];
+    [livingTouchAry enumerateObjectsUsingBlock:^(UITouch *aTouch, NSUInteger idx, BOOL *stop) {
+        switch (aTouch.phase) {
+            case UITouchPhaseEnded:
+            case UITouchPhaseCancelled:
+                // set this bit to 0
+                reusageMask |= 1ull<<idx;
+                break;
+            case UITouchPhaseBegan:
+                toStationarify = aTouch;
+                break;
+            default:
+                break;
+        }
+        [event _addTouch:aTouch forDelayedDelivery:NO];
+    }];
+    [lock unlock];
+    [[UIApplication sharedApplication] sendEvent:event];
+}
 
 @implementation PTFakeMetaTouch
 
 + (void)load {
     livingTouchAry = [[NSMutableArray alloc] init];
+    CFRunLoopSourceContext context;
+    memset(&context, 0, sizeof(CFRunLoopSourceContext));
+    context.perform = eventSendCallback;
+    lock = [[NSLock alloc] init];
+    // content of context is copied
+    source = CFRunLoopSourceCreate(NULL, -2, &context);
+    CFRunLoopRef loop = CFRunLoopGetMain();
+    CFRunLoopAddSource(loop, source, kCFRunLoopCommonModes);
 }
 
 + (NSInteger)fakeTouchId: (NSInteger)pointId AtPoint: (CGPoint)point withTouchPhase: (UITouchPhase)phase inWindow: (UIWindow*)window onView:(UIView*)view {
     UITouch* touch = NULL;
-    UIEvent *event = [[UIApplication sharedApplication] _touchesEvent];
+    if(toStationarify != NULL) {
+        // in case this is changed during the operations
+        touch = toStationarify;
+        toStationarify = NULL;
+        if(touch.phase == UITouchPhaseBegan) {
+            [touch setPhaseAndUpdateTimestamp:UITouchPhaseMoved];
+        }
+    }
     // respect the semantics of touch phase, allocate new touch on touch began.
     if(phase == UITouchPhaseBegan) {
         touch = [[UITouch alloc] initAtPoint:point inWindow:window onView:view];
@@ -39,23 +81,20 @@ uint64_t reusageMask = 0;
             }
             reusageMask &= ~(1ull<<pointId);
         }
+        [lock lock];
         [livingTouchAry setObject:touch atIndexedSubscript:pointId];
-        [event _clearTouches];
-        for(UITouch* aTouch in livingTouchAry) {
-            [event _addTouch:aTouch forDelayedDelivery:NO];
-        }
+        [lock unlock];
     } else {
         touch = [livingTouchAry objectAtIndex:pointId];
+        if(touch.phase == UITouchPhaseBegan && phase == UITouchPhaseMoved) {
+            // previous touch began event not yet captured by runloop. Ignore this move
+            return pointId;
+        }
         [touch setLocationInWindow:point];
         [touch setPhaseAndUpdateTimestamp:phase];
     }
-    [[UIApplication sharedApplication] sendEvent:event];
-
-    if(touch.phase == UITouchPhaseBegan) {
-        [touch setPhaseAndUpdateTimestamp:UITouchPhaseMoved];
-    } else if(phase == UITouchPhaseEnded || phase == UITouchPhaseCancelled) {
-        // set this bit to 0
-        reusageMask |= 1ull<<pointId;
+    CFRunLoopSourceSignal(source);
+    if(phase == UITouchPhaseEnded || phase == UITouchPhaseCancelled) {
         pointId = -1;
     }
     return pointId;
