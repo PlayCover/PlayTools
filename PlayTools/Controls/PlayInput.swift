@@ -7,9 +7,8 @@ class PlayInput {
     var actions = [Action]()
     static var keyboardMapped = true
     static var shouldLockCursor = true
-    static private var lCmdPressed = false
-    static private var rCmdPressed = false
 
+    static var touchQueue = DispatchQueue.init(label: "playcover.toucher", qos: .userInteractive)
     static public var buttonHandlers: [String: [(Bool) -> Void]] = [:]
 
     func invalidate() {
@@ -35,7 +34,9 @@ class PlayInput {
         }
         var mapped = false
         for handler in handlers {
-            handler(pressed)
+            PlayInput.touchQueue.async(qos: .userInteractive, execute: {
+                handler(pressed)
+            })
             mapped = true
         }
         return mapped
@@ -137,7 +138,7 @@ class PlayInput {
     }
 
     static public func cmdPressed() -> Bool {
-        return lCmdPressed || rCmdPressed
+        return AKInterface.shared!.cmdPressed
     }
 
     private func isSafeToBind(_ input: GCKeyboardInput) -> Bool {
@@ -234,14 +235,7 @@ class PlayInput {
         }
 
         AKInterface.shared!.initialize(keyboard: {keycode, pressed, isRepeat in
-            if keycode == 54 {
-                PlayInput.rCmdPressed = pressed
-                return false
-            } else if keycode == 55 {
-                PlayInput.lCmdPressed = pressed
-                return false
-            }
-            if !PlayInput.keyboardMapped || PlayInput.cmdPressed() {
+            if !PlayInput.keyboardMapped {
                 return false
             }
             if isRepeat {
@@ -253,11 +247,13 @@ class PlayInput {
             if !PlayInput.keyboardMapped {
                 return false
             }
-            if mode.visible {
-                PlayMice.shared.handleFakeMouseMoved(deltaX: deltaX, deltaY: deltaY)
-            } else {
-                PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
-            }
+            PlayInput.touchQueue.async(qos: .userInteractive, execute: {
+                if mode.visible {
+                    PlayMice.shared.handleFakeMouseMoved(deltaX: deltaX, deltaY: deltaY)
+                } else {
+                    PlayMice.shared.handleMouseMoved(deltaX: deltaX, deltaY: deltaY)
+                }
+            })
             return true
         }, swapMode: self.swapMode)
         PlayMice.shared.initialize()
