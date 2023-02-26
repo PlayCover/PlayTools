@@ -101,7 +101,7 @@ class Toast {
             life = 3
         }
         if life >= 0 {
-            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5 + life) {
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5 + life, qos: .background) {
                 hideHint(hint: messageLabel)
             }
         }

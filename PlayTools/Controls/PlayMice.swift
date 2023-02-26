@@ -271,14 +271,20 @@ class SwipeAction: Action {
         timer.suspend()
     }
 
+    func delay(_ delay: Double, closure: @escaping () -> Void) {
+        let when = DispatchTime.now() + delay
+        PlayInput.touchQueue.asyncAfter(deadline: when, execute: closure)
+    }
     // Count swipe duration
     var counter = 0
+    // if should wait before beginning next touch
+    var cooldown = false
     var lastCounter = 0
 
     func checkEnded() {
         if self.counter == self.lastCounter {
-            if self.counter < 12 {
-                counter += 12
+            if self.counter < 4 {
+                counter += 1
             } else {
                 timer.suspend()
                 self.doLiftOff()
@@ -289,6 +295,9 @@ class SwipeAction: Action {
 
     public func move(from: () -> CGPoint?, deltaX: CGFloat, deltaY: CGFloat) {
         if id == nil {
+            if cooldown {
+                return
+            }
             guard let start = from() else {return}
             location = start
             counter = 0
@@ -307,6 +316,10 @@ class SwipeAction: Action {
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: &id)
+        delay(0.02) {
+            self.cooldown = false
+        }
+        cooldown = true
     }
 
     func invalidate() {
