@@ -64,7 +64,7 @@ class Toast {
         return txt
     }
 
-    public static func showHint(title: String, text: [String] = [], timeout: Double = 3,
+    public static func showHint(title: String, text: [String] = [], timeout: Double = -3,
                                 notification: NSNotification.Name? = nil) {
         let parent = screen.keyWindow!
 
@@ -89,6 +89,7 @@ class Toast {
         if hintView.count > 4 {
             hideHint(hint: hintView.first!)
         }
+        var life = timeout
         if let note = notification {
             let center = NotificationCenter.default
             var token: NSObjectProtocol?
@@ -96,8 +97,11 @@ class Toast {
                 center.removeObserver(token!)
                 hideHint(hint: messageLabel)
             }
-        } else {
-            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5 + timeout) {
+        } else if life < 0 {
+            life = 3
+        }
+        if life >= 0 {
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5 + life, qos: .background) {
                 hideHint(hint: messageLabel)
             }
         }
