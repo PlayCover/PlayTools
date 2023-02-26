@@ -188,7 +188,9 @@ class PlayInput {
         }
         parseKeymap()
         centre.addObserver(forName: UIApplication.keyboardDidHideNotification, object: nil, queue: main) { _ in
-            PlayInput.keyboardMapped = true
+            DispatchQueue.main.async(qos: .userInteractive, execute: {
+                PlayInput.keyboardMapped = true
+            })
         }
         centre.addObserver(forName: UIApplication.keyboardWillShowNotification, object: nil, queue: main) { _ in
             PlayInput.keyboardMapped = false
