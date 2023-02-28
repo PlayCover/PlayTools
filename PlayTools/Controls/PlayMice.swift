@@ -133,11 +133,8 @@ public class PlayMice {
     }
 
     private func dontIgnore(_ actionIndex: Int, _ pressed: Bool) -> Bool {
-        if !PlayInput.shouldLockCursor {
-            return true
-        }
-        if EditorController.shared.editorMode {
-            if pressed && actionIndex != 2 {
+        if !PlayInput.keyboardMapped {
+            if EditorController.shared.editorMode && actionIndex != 2 && pressed {
                 EditorController.shared.setKey(buttonIndex[actionIndex]!)
             }
             return true
@@ -258,15 +255,24 @@ class CameraAction: Action {
         swipeScale1.invalidate()
         swipeScale2.invalidate()
     }
+
+    func debug() {
+        var count = 0
+        for swipe in [swipeScale1, swipeScale2, swipeMove, CameraAction.swipeDrag] {
+            count += 1
+            guard let id = swipe.getTouchId() else {continue}
+            Toast.showHint(title: "type:\(count), id:\(id)")
+        }
+    }
 }
 
 class SwipeAction: Action {
     var location: CGPoint = CGPoint.zero
-    var id: Int?
+    private var id: Int?
     let timer = DispatchSource.makeTimerSource(flags: [], queue: PlayInput.touchQueue)
     init() {
         timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.1, leeway: DispatchTimeInterval.milliseconds(50))
-        timer.setEventHandler(qos: DispatchQoS.background, handler: self.checkEnded)
+        timer.setEventHandler(qos: .userInteractive, handler: self.checkEnded)
         timer.activate()
         timer.suspend()
     }
@@ -325,5 +331,9 @@ class SwipeAction: Action {
     func invalidate() {
         timer.cancel()
         self.doLiftOff()
+    }
+
+    public func getTouchId() -> Int? {
+        return id
     }
 }
