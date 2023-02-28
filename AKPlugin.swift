@@ -47,8 +47,10 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func warpCursor() {
+        guard let firstScreen = NSScreen.screens.first else {return}
         let frame = windowFrame
-        CGWarpMouseCursorPosition(CGPoint(x: frame.midX, y: frame.midY))
+        // Convert from NS coordinates to CG coordinates
+        CGWarpMouseCursorPosition(CGPoint(x: frame.midX, y: firstScreen.frame.height - frame.midY))
     }
 
     func unhideCursor() {

@@ -5,7 +5,8 @@ import UIKit
 class PlayInput {
     static let shared = PlayInput()
     var actions = [Action]()
-    static var keyboardMapped = true
+    static var keyboardMapped = false
+    private static var keyboardWillMap = true
     static var shouldLockCursor = true
 
     static var touchQueue = DispatchQueue.init(label: "playcover.toucher", qos: .userInteractive)
@@ -188,12 +189,10 @@ class PlayInput {
         }
         parseKeymap()
         centre.addObserver(forName: UIApplication.keyboardDidHideNotification, object: nil, queue: main) { _ in
-            DispatchQueue.main.async(qos: .userInteractive, execute: {
-                PlayInput.keyboardMapped = true
-            })
+            PlayInput.keyboardWillMap = true
         }
         centre.addObserver(forName: UIApplication.keyboardWillShowNotification, object: nil, queue: main) { _ in
-            PlayInput.keyboardMapped = false
+            PlayInput.keyboardWillMap = false
         }
         centre.addObserver(forName: NSNotification.Name(rawValue: "NSWindowDidBecomeKeyNotification"), object: nil,
             queue: main) { _ in
@@ -237,6 +236,9 @@ class PlayInput {
         }
 
         AKInterface.shared!.initialize(keyboard: {keycode, pressed, isRepeat in
+            if PlayInput.keyboardWillMap != PlayInput.keyboardMapped && pressed {
+                PlayInput.keyboardMapped = PlayInput.keyboardWillMap
+            }
             if !PlayInput.keyboardMapped {
                 return false
             }
