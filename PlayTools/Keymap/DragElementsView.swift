@@ -57,7 +57,7 @@ class KeymapHolder: CircleMenuDelegate {
         case 2:
             EditorController.shared.addMouseArea(globalPoint!)
         default:
-            Toast.showHint(title: "item \(atIndex) is not recognizable")
+            Toast.showOver(msg: "item \(atIndex) is not recognised")
 //            EditorController.shared.addMouseJoystick(globalPoint!)
         }
         hideWithAnimation()
