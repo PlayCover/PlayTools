@@ -11,6 +11,7 @@
 #import "UIKit/UIKit.h"
 #import <PlayTools/PlayTools-Swift.h>
 #import "PTFakeMetaTouch.h"
+#import <VideoSubscriberAccount/VideoSubscriberAccount.h>
 
 __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
@@ -53,6 +54,23 @@ __attribute__((visibility("hidden")))
     return false;
 }
 
+- (CGRect) hook_frameDefault {
+    return [PlayScreen frameDefault:[self hook_frameDefault]];
+}
+
+- (CGRect) hook_boundsDefault {
+    return [PlayScreen boundsDefault:[self hook_boundsDefault]];
+}
+
+- (CGRect) hook_nativeBoundsDefault {
+    return [PlayScreen nativeBoundsDefault:[self hook_nativeBoundsDefault]];
+}
+
+- (CGSize) hook_sizeDelfault {
+    return [PlayScreen sizeAspectRatioDefault:[self hook_sizeDelfault]];
+}
+
+
 - (CGRect) hook_frame {
     return [PlayScreen frame:[self hook_frame]];
 }
@@ -70,6 +88,7 @@ __attribute__((visibility("hidden")))
 }
 
 
+
 - (long long) hook_orientation {
     return 0;
 }
@@ -80,6 +99,20 @@ __attribute__((visibility("hidden")))
 
 - (double) hook_scale {
     return 2.0;
+}
+
+- (double) get_default_height {
+    return [[UIScreen mainScreen] bounds].size.height;
+    
+}
+- (double) get_default_width {
+    return [[UIScreen mainScreen] bounds].size.width;
+    
+}
+
+
+- (void) hook_setCurrentSubscription:(VSSubscription *)currentSubscription {
+    // do nothing
 }
 
 
@@ -119,23 +152,66 @@ bool menuWasCreated = false;
  However, doing this would require generating @interface declarations (either with class-dump or by hand) which would add a lot
  of code and complexity. I'm not sure this trade-off is "worth it", at least at the time of writing.
  */
+
 @implementation PTSwizzleLoader
 + (void)load {
-    if ([[PlaySettings shared] adaptiveDisplay]) {
-        // This lines set external Scene (frame and those things) settings and other IOS10 Runtime services by swizzling
-        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
-        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
-        [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
-        
-        // This actually fixes Apple mess at MacOS 13.2
-        [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
-        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBounds)];
-        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
-        [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
+    // This might need refactor soon
+    if(@available(iOS 16.3, *)) {
+        if ([[PlaySettings shared] adaptiveDisplay]) {
+            // This is an experimental fix
+            if ([[PlaySettings shared] inverseScreenValues]) {
+                // This lines set External Scene settings and other IOS10 Runtime services by swizzling
+                [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
+                [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_boundsDefault)];
+                [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_sizeDelfault)];
+                
+                // Fixes Apple mess at MacOS 13.2
+                [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
+                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBoundsDefault)];
+                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
+                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
+            } else {
+                // This acutally runs when adaptiveDisplay is normally triggered
+                [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
+                [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
+                [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
+                
+                [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
+                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBounds)];
+                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
+                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];   
+            }
+        }
+        else {
+            CGFloat newValueW = (CGFloat) [self get_default_width];
+            [[PlaySettings shared] setValue:@(newValueW) forKey:@"windowSizeWidth"];
+            
+            CGFloat newValueH = (CGFloat)[self get_default_height];
+            [[PlaySettings shared] setValue:@(newValueH) forKey:@"windowSizeHeight"];
+            if (![[PlaySettings shared] inverseScreenValues]) {
+                 [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
+                 [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_boundsDefault)];
+                 [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_sizeDelfault)];
+            }
+            [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
+            [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBoundsDefault)];
+            
+            [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
+            [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
+        }
+    } 
+    else {
+        if ([[PlaySettings shared] adaptiveDisplay]) {
+                [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
+                [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
+                [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
+            }
     }
-
+    
     [objc_getClass("_UIMenuBuilder") swizzleInstanceMethod:sel_getUid("initWithRootMenu:") withMethod:@selector(initWithRootMenuHook:)];
     [objc_getClass("IOSViewController") swizzleInstanceMethod:@selector(prefersPointerLocked) withMethod:@selector(hook_prefersPointerLocked)];
+
+    [objc_getClass("VSSubscriptionRegistrationCenter") swizzleInstanceMethod:@selector(setCurrentSubscription:) withMethod:@selector(hook_setCurrentSubscription:)];
 }
 
 @end

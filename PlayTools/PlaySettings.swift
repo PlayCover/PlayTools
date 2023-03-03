@@ -33,9 +33,11 @@ let settings = PlaySettings.shared
 
     lazy var sensitivity = settingsData.sensitivity / 100
 
-    lazy var windowSizeHeight = CGFloat(settingsData.windowHeight)
+    @objc lazy var windowSizeHeight = CGFloat(settingsData.windowHeight)
 
-    lazy var windowSizeWidth = CGFloat(settingsData.windowWidth)
+    @objc lazy var windowSizeWidth = CGFloat(settingsData.windowWidth)
+
+    @objc lazy var inverseScreenValues = settingsData.inverseScreenValues
 
     @objc lazy var adaptiveDisplay = settingsData.resolution == 0 ? false : true
 
@@ -76,4 +78,5 @@ struct AppSettingsData: Codable {
     var bypass = false
     var discordActivity = DiscordActivity()
     var version = "2.0.0"
+    var inverseScreenValues = false
 }
