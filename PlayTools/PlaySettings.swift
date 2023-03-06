@@ -65,6 +65,9 @@ let settings = PlaySettings.shared
     @objc lazy var playChain = settingsData.playChain
 
     @objc lazy var playChainDebugging = settingsData.playChainDebugging
+
+    @objc lazy var windowFixMethod = settingsData.windowFixMethod
+
 }
 
 struct AppSettingsData: Codable {
@@ -86,4 +89,5 @@ struct AppSettingsData: Codable {
     var playChain = false
     var playChainDebugging = false
     var inverseScreenValues = false
+    var windowFixMethod = 0
 }
