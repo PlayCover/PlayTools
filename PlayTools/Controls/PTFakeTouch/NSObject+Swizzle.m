@@ -114,7 +114,6 @@ __attribute__((visibility("hidden")))
     // do nothing
 }
 
-
 bool menuWasCreated = false;
 - (id) initWithRootMenuHook:(id)rootMenu {
     self = [self initWithRootMenuHook:rootMenu];
