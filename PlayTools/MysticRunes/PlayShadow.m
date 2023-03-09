@@ -51,32 +51,32 @@ __attribute__((visibility("hidden")))
 }
 
 - (BOOL) pm_return_false {
-    NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return false;
 }
 
 - (BOOL) pm_return_true {
-    NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return true;
 }
 
 - (BOOL) pm_return_yes {
-    NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return YES;
 }
 
 - (BOOL) pm_return_no {
-    NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return NO;
 }
 
 - (int) pm_return_0 {
-    NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return 0;
 }
 
 - (int) pm_return_1 {
-    NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return 1;
 }
 @end
@@ -86,7 +86,7 @@ __attribute__((visibility("hidden")))
 + (void) load {
     // Swizzle NSProcessInfo to troll every app that tries to detect macCatalyst
     // [objc_getClass("NSProcessInfo") swizzleInstanceMethod:@selector(isMacCatalystApp) withMethod:@selector(pm_return_false)];
-    [objc_getClass("NSProcessInfo") swizzleInstanceMethod:@selector(isiOSAppOnMac) withMethod:@selector(pm_return_true)];
+    // [objc_getClass("NSProcessInfo") swizzleInstanceMethod:@selector(isiOSAppOnMac) withMethod:@selector(pm_return_true)];
 
     [objc_getClass("RNDeviceInfo") swizzleInstanceMethod:@selector(getDeviceType) withMethod:@selector(hook_deviceType)];
     
