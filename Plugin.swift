@@ -23,8 +23,8 @@ public protocol Plugin: NSObjectProtocol {
     func warpCursor()
     func unhideCursor()
     func terminateApplication()
-    func initialize(keyboard: @escaping(UInt16, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
-                    swapMode: @escaping() -> Void)
+    func initialize(keyboard: @escaping(UInt16, Bool, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
+                    swapMode: @escaping() -> Bool)
     func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool) -> Bool)
     func setupScrollWheel(_ onMoved: @escaping(CGFloat, CGFloat) -> Bool)
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?

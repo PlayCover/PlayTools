@@ -64,7 +64,7 @@ class AKPlugin: NSObject, Plugin {
 
     private var modifierFlag: UInt = 0
     func initialize(keyboard: @escaping(UInt16, Bool, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
-                    swapMode: @escaping() -> Void) {
+                    swapMode: @escaping() -> Bool) {
         func checkCmd(modifier: NSEvent.ModifierFlags) -> Bool {
             if modifier.contains(.command) {
                 self.cmdPressed = true
@@ -102,8 +102,10 @@ class AKPlugin: NSObject, Plugin {
             let changed = self.modifierFlag ^ event.modifierFlags.rawValue
             self.modifierFlag = event.modifierFlags.rawValue
             if pressed && NSEvent.ModifierFlags(rawValue: changed).contains(.option) {
-                swapMode()
-                return nil
+                if swapMode() {
+                    return nil
+                }
+                return event
             }
             let consumed = keyboard(event.keyCode, pressed, false)
             if consumed {
