@@ -46,9 +46,8 @@ class PlayInput {
     func controllerButtonHandler(_ profile: GCExtendedGamepad, _ element: GCControllerElement) {
         let name: String = element.aliases.first!
         if let buttonElement = element as? GCControllerButtonInput {
-//            Toast.showOver(msg: "recognised controller button: \(name)")
             guard let handlers = PlayInput.buttonHandlers[name] else { return }
-            Toast.showOver(msg: name + ": \(buttonElement.isPressed)")
+//            Toast.showOver(msg: name + ": \(buttonElement.isPressed)")
             for handler in handlers {
                 handler(buttonElement.isPressed)
             }
@@ -129,7 +128,7 @@ class PlayInput {
         } else {
             setup()
             parseKeymap()
-            self.swapMode()
+            _ = self.swapMode()
         }
     }
 
@@ -159,12 +158,13 @@ class PlayInput {
         .printScreen
     ]
 
-    private func swapMode() {
-        if !PlayInput.shouldLockCursor {
-            mode.show(true)
-            return
+    private func swapMode() -> Bool {
+        if PlayInput.shouldLockCursor {
+            mode.show(!mode.visible)
+            return true
         }
-        mode.show(!mode.visible)
+        mode.show(true)
+        return false
     }
 
     var root: UIViewController? {
