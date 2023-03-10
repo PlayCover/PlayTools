@@ -79,6 +79,12 @@ __attribute__((visibility("hidden")))
     // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return 1;
 }
+
+- (NSString *) pm_return_empty {
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    return @"";
+}
+
 @end
 
 @implementation PlayShadowLoader
