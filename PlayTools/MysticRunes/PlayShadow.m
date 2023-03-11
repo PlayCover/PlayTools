@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 #import "NSObject+Swizzle.h"
 #import <objc/runtime.h>
+#import <PlayTools/PlayTools-Swift.h>
 
 __attribute__((visibility("hidden")))
 @interface PlayShadowLoader : NSObject
@@ -90,10 +91,18 @@ __attribute__((visibility("hidden")))
 @implementation PlayShadowLoader
 
 + (void) load {
+    // NSLog(@"PC-DEBUG: [PlayMask] Loaded");
+    if ([[PlaySettings shared] bypass]) [self loadJailbreakBypass];
+}
+
++ (void) loadJailbreakBypass {
     // Swizzle NSProcessInfo to troll every app that tries to detect macCatalyst
     // [objc_getClass("NSProcessInfo") swizzleInstanceMethod:@selector(isMacCatalystApp) withMethod:@selector(pm_return_false)];
     // [objc_getClass("NSProcessInfo") swizzleInstanceMethod:@selector(isiOSAppOnMac) withMethod:@selector(pm_return_true)];
 
+    // Some device info class
+    [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(platform) withMethod:@selector(pm_return_empty)];
+    [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(hwModel) withMethod:@selector(pm_return_empty)];
     [objc_getClass("RNDeviceInfo") swizzleInstanceMethod:@selector(getDeviceType) withMethod:@selector(hook_deviceType)];
     
     // Class: UIDevice
