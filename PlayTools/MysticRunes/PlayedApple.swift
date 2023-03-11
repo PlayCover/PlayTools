@@ -45,6 +45,87 @@ public class PlayKeychain: NSObject {
             .appendingPathComponent("\(serviceName)-\(accountName)-\(classType).plist")
     }
 
+    private static func createGenpAttr(_ query: NSDictionary, _ keychainPath: URL) -> NSDictionary? {
+        let currentTime = Date()
+        let keychainDict = NSDictionary(contentsOf: keychainPath)
+
+        let attributes = NSMutableDictionary()
+        attributes[kSecAttrAccessControl as String] =
+        SecAccessControlCreateWithFlags(kCFAllocatorDefault,
+                                         kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+                                         .or,
+                                         nil)
+        attributes[kSecAttrAccount as String] = query["acct"] ?? keychainDict?["acct"] ?? ""
+        attributes[kSecAttrAccessGroup as String] = "*"
+        attributes[kSecAttrCreationDate as String] = String(describing: currentTime)
+            .replacingOccurrences(of: "UTC", with: "+0000")
+        attributes[kSecAttrModificationDate as String] = String(describing: currentTime)
+            .replacingOccurrences(of: "UTC", with: "+0000")
+        attributes["musr"] = Data()
+        attributes[kSecAttrPath as String] = keychainDict?["pdmn"] ?? "ak"
+        attributes["sha1"] = Data()
+        attributes[kSecAttrService as String] = query["svce"] ?? keychainDict?["svce"] ?? ""
+        attributes[kSecAttrSynchronizable as String] = query["sync"] ?? keychainDict?["sync"] ?? 0
+        attributes["tomb"] = query["tomb"] ?? keychainDict?["tomb"] ?? 0
+        return attributes
+    }
+
+    private static func createKeysAttr(_ query: NSDictionary, _ keychainPath: URL) -> NSDictionary? {
+        let currentTime = Date()
+        let jan1st2001 = Date(timeIntervalSince1970: 978307200)
+        let keychainDict = NSDictionary(contentsOf: keychainPath)
+
+        let attributes = NSMutableDictionary()
+        attributes["UUID"] = UUID().uuidString
+        attributes[kSecAttrAccessControl as String] =
+        SecAccessControlCreateWithFlags(kCFAllocatorDefault,
+                                        kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+                                        .or,
+                                        nil)
+        attributes[kSecAttrAccessGroup as String] = "*"
+        attributes["asen"] = query["asen"] ?? keychainDict?["asen"] ?? 0
+        attributes[kSecAttrApplicationTag as String] =
+        query["atag"] as? Data? ?? keychainDict?["atag"] as? Data? ?? Data()
+        attributes[kSecAttrKeySizeInBits as String] = query["bsiz"] ?? keychainDict?["bsiz"] ?? 0
+        attributes[kSecAttrCreationDate as String] =
+        String(describing: currentTime).replacingOccurrences(of: "UTC", with: "+0000")
+        attributes[kSecAttrCreator as String] = query["crtr"] ?? keychainDict?["crtr"] ?? 0
+        attributes["decr"] = query["decr"] ?? keychainDict?["decr"] ?? 0
+        attributes["drve"] = query["drve"] ?? keychainDict?["drve"] ?? 0
+        attributes["edat"] = query["edat"] ?? keychainDict?["edat"] ??
+        String(describing: jan1st2001).replacingOccurrences(of: "UTC", with: "+0000")
+        attributes["encr"] = query["encr"] ?? keychainDict?["encr"] ?? 0
+        attributes["esiz"] = query["esiz"] ?? keychainDict?["esiz"] ?? 0
+        attributes["extr"] = query["extr"] ?? keychainDict?["extr"] ?? 0
+        attributes["kcls"] = query["kcls"] ?? keychainDict?["kcls"] ?? 0
+        attributes[kSecAttrLabel as String] = query["labl"] ?? keychainDict?["labl"] ?? ""
+        attributes[kSecAttrModificationDate as String] =
+        String(describing: currentTime).replacingOccurrences(of: "UTC", with: "+0000")
+        attributes["modi"] = query["modi"] ?? keychainDict?["modi"] ?? 1
+        attributes["musr"] = Data()
+        attributes["next"] = query["next"] ?? keychainDict?["next"] ?? 0
+        attributes[kSecAttrPath as String] = keychainDict?["pdmn"] ?? "dku"
+        attributes["perm"] = query["perm"] ?? keychainDict?["perm"] ?? 1
+        attributes["priv"] = query["priv"] ?? keychainDict?["priv"] ?? 1
+        attributes["sdat"] = query["sdat"] ?? keychainDict?["sdat"] ?? String(describing: jan1st2001)
+            .replacingOccurrences(of: "UTC", with: "+0000")
+        attributes["sens"] = query["sens"] ?? keychainDict?["sens"] ?? 0
+        attributes["sha1"] = query["sha1"] as? Data ?? keychainDict?["sha1"] as? Data? ?? Data()
+        return attributes
+    }
+
+    static private func getAttributes(_ query: NSDictionary, _ keychainPath: URL) -> NSDictionary? {
+        // First, check if the kind of key is genp or keys
+        let classType = query[kSecClass as String] as? String ?? ""
+        if classType == "genp" {
+            return createGenpAttr(query, keychainPath)
+        } else if classType == "keys" {
+            return createKeysAttr(query, keychainPath)
+        } else {
+            return nil
+        }
+    }
+
     @objc public static func debugLogger(_ logContent: String) {
         if PlaySettings.shared.settingsData.playChainDebugging {
             NSLog("PC-DEBUG: \(logContent)")
@@ -69,7 +150,7 @@ public class PlayKeychain: NSObject {
             return errSecIO
         }
         // Place v_data in the result
-        if let v_data = attributes["v_data"] {
+        if let v_data = attributes["v_Data"] {
             result?.pointee = v_data as CFTypeRef
         }
         return errSecSuccess
@@ -128,14 +209,20 @@ public class PlayKeychain: NSObject {
     -> OSStatus {
         // Get the path to the keychain file
         let keychainPath = keychainPath(query)
-        // Read the dictionary from the keychain file
-        let keychainDict = NSDictionary(contentsOf: keychainPath)
         // Check the `r_Attributes` key. If it is set to 1 in the query
         // DROP, NOT IMPLEMENTED
         let classType = query[kSecClass as String] as? String ?? ""
         if query["r_Attributes"] as? Int == 1 {
-            return errSecItemNotFound
+            let attributesDict = getAttributes(query, keychainPath)
+            if attributesDict == nil {
+                return errSecItemNotFound
+            }
+            // convert to CFDictonary
+            let attributes = attributesDict! as CFDictionary
+            result?.pointee = attributes as CFTypeRef
+            return errSecSuccess
         }
+        let keychainDict = NSDictionary(contentsOf: keychainPath)
         // If the keychain file doesn't exist, return errSecItemNotFound
         if keychainDict == nil {
             debugLogger("Keychain file not found at \(keychainPath)")
