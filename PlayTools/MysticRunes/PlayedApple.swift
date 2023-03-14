@@ -213,6 +213,7 @@ public class PlayKeychain: NSObject {
         // DROP, NOT IMPLEMENTED
         let classType = query[kSecClass as String] as? String ?? ""
         if query["r_Attributes"] as? Int == 1 {
+            debugLogger("Attributes requested")
             let attributesDict = getAttributes(query, keychainPath)
             if attributesDict == nil {
                 return errSecItemNotFound
