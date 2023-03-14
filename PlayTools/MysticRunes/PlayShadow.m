@@ -51,12 +51,12 @@ __attribute__((visibility("hidden")))
     return 1;
 }
 
-- (BOOL) pm_return_false {
+- (bool) pm_return_false {
     // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return false;
 }
 
-- (BOOL) pm_return_true {
+- (bool) pm_return_true {
     // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return true;
 }
