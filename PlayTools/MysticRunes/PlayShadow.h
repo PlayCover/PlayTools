@@ -9,10 +9,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NSObject (Swizzle)
+@interface NSObject (ShadowSwizzle)
 
 - (void)swizzleInstanceMethod:(SEL)origSelector withMethod:(SEL)newSelector;
++ (void)swizzleClassMethod: (SEL)origSelector withMethod: (SEL)newSelector
 
 @end
-
 NS_ASSUME_NONNULL_END
