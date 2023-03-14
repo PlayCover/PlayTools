@@ -195,6 +195,7 @@ __attribute__((visibility("hidden")))
 
     // Class: AppsFlyerUtils
     [objc_getClass("AppsFlyerUtils") swizzleClassMethod:@selector(isJailBreakon) withMethod:@selector(pm_clsm_return_no)];
+    [objc_getClass("AppsFlyerUtils") swizzleClassMethod:@selector(isJailbroken) withMethod:@selector(pm_clsm_return_no)];
     [objc_getClass("AppsFlyerUtils") swizzleClassMethod:@selector(isJailbrokenWithSkipAdvancedJailbreakValidation:) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: jailBreak
