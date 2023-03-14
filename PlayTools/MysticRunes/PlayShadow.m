@@ -86,16 +86,23 @@ __attribute__((visibility("hidden")))
     return @"";
 }
 
+- (NSDictionary *) pm_return_empty_dictionary {
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    return @{};
+}
+
 @end
 
 @implementation PlayShadowLoader
 
 + (void) load {
-    // NSLog(@"PC-DEBUG: [PlayMask] Loaded");
+    [self debugLogger:@"PlayShadow is now loading"];
     if ([[PlaySettings shared] bypass]) [self loadJailbreakBypass];
+    // if ([[PlaySettings shared] bypass]) [self loadEnvironmentBypass]; # disabled as it might be too powerful
 }
 
 + (void) loadJailbreakBypass {
+    [self debugLogger:@"Jailbreak bypass loading"];
     // Swizzle NSProcessInfo to troll every app that tries to detect macCatalyst
     // [objc_getClass("NSProcessInfo") swizzleInstanceMethod:@selector(isMacCatalystApp) withMethod:@selector(pm_return_false)];
     // [objc_getClass("NSProcessInfo") swizzleInstanceMethod:@selector(isiOSAppOnMac) withMethod:@selector(pm_return_true)];
@@ -226,6 +233,16 @@ __attribute__((visibility("hidden")))
 
     // Class: ZDetection
     [objc_getClass("ZDetection") swizzleInstanceMethod:@selector(isRootedOrJailbroken) withMethod:@selector(pm_return_false)];
+}
+
++ (void) loadEnvironmentBypass {
+    [self debugLogger:@"Environment bypass loading"];
+    // Completely nuke everything in the environment variables
+    [objc_getClass("NSProcessInfo") swizzleInstanceMethod:@selector(environment) withMethod:@selector(pm_return_empty_dictionary)];
+}
+
++ (void) debugLogger: (NSString *) message {
+    NSLog(@"PC-DEBUG: %@", message);
 }
 
 @end
