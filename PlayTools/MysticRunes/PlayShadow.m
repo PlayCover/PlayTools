@@ -174,7 +174,7 @@ __attribute__((visibility("hidden")))
     // Some device info class
     [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(platform) withMethod:@selector(pm_return_empty)];
     [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(hwModel) withMethod:@selector(pm_return_empty)];
-    [objc_getClass("RNDeviceInfo") swizzleInstanceMethod:@selector(getDeviceType) withMethod:@selector(hook_deviceType)];
+    [objc_getClass("RNDeviceInfo") swizzleInstanceMethod:@selector(getDeviceType) withMethod:@selector(pm_hook_deviceType)];
         
     // Class: UIDevice
     [objc_getClass("UIDevice") swizzleClassMethod:@selector(isJailbroken) withMethod:@selector(pm_clsm_return_no)];
@@ -193,7 +193,7 @@ __attribute__((visibility("hidden")))
 
     // Class: AppsFlyerUtils
     [objc_getClass("AppsFlyerUtils") swizzleClassMethod:@selector(isJailBreakon) withMethod:@selector(pm_clsm_return_no)];
-    [objc_getClass("AppsFlyerUtils") swizzleClassMethod:@selector(a) withMethod:@selector(pm_clsm_return_false)];
+    [objc_getClass("AppsFlyerUtils") swizzleClassMethod:@selector(isJailbrokenWithSkipAdvancedJailbreakValidation:) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: jailBreak
     [objc_getClass("jailBreak") swizzleClassMethod:@selector(isJailBreak) withMethod:@selector(pm_clsm_return_false)];
