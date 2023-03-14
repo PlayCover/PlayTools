@@ -70,7 +70,9 @@ __attribute__((visibility("hidden")))
     }
 }
 
-- (NSInteger) hook_deviceType {
+
+
+- (NSInteger) pm_hook_deviceType {
     return 1;
 }
 
@@ -122,6 +124,26 @@ __attribute__((visibility("hidden")))
 + (NSInteger) pm_return_2 {
     // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return 2;
+}
+
++ (bool) pm_clsm_return_false {
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    return false;
+}
+
++ (bool) pm_clsm_return_true {
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    return true;
+}
+
++ (BOOL) pm_clsm_return_yes {
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    return YES;
+}
+
++ (BOOL) pm_clsm_return_no {
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    return NO;
 }
 
 @end
@@ -211,14 +233,14 @@ __attribute__((visibility("hidden")))
     [objc_getClass("FCRSystemMetadata") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_false)];
 
     // Class: v_VDMap
-    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isJailbrokenDetected) withMethod:@selector(pm_return_false)];
-    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isJailBrokenDetectedByVOS) withMethod:@selector(pm_return_false)];
-    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isDFPHookedDetecedByVOS) withMethod:@selector(pm_return_false)];
-    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isCodeInjectionDetectedByVOS) withMethod:@selector(pm_return_false)];
-    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isDebuggerCheckDetectedByVOS) withMethod:@selector(pm_return_false)];
-    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isAppSignerCheckDetectedByVOS) withMethod:@selector(pm_return_false)];
-    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(v_checkAModified) withMethod:@selector(pm_return_false)];
-    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isRuntimeTamperingDetected) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isJailbrokenDetected) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isJailBrokenDetectedByVOS) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isDFPHookedDetecedByVOS) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isCodeInjectionDetectedByVOS) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isDebuggerCheckDetectedByVOS) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isAppSignerCheckDetectedByVOS) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(v_checkAModified) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isRuntimeTamperingDetected) withMethod:@selector(pm_return_false)];
 
     // Class: SDMUtils
     [objc_getClass("SDMUtils") swizzleInstanceMethod:@selector(isJailBroken) withMethod:@selector(pm_return_no)];
