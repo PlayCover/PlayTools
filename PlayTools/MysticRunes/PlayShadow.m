@@ -6,7 +6,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "NSObject+Swizzle.h"
 #import <objc/runtime.h>
 #import <PlayTools/PlayTools-Swift.h>
 
@@ -14,7 +13,7 @@ __attribute__((visibility("hidden")))
 @interface PlayShadowLoader : NSObject
 @end
 
-@implementation NSObject (Swizzle)
+@implementation NSObject (ShadowSwizzle)
 
 - (void) swizzleInstanceMethod:(SEL)origSelector withMethod:(SEL)newSelector
 {
@@ -37,6 +36,30 @@ __attribute__((visibility("hidden")))
         
     } else {
         // SwizzleMethod maybe belongs to super
+        class_replaceMethod(cls,
+                            newSelector,
+                            class_replaceMethod(cls,
+                                                origSelector,
+                                                method_getImplementation(swizzledMethod),
+                                                method_getTypeEncoding(swizzledMethod)),
+                            method_getTypeEncoding(originalMethod));
+    }
+}
+
++ (void) swizzleClassMethod:(SEL)origSelector withMethod:(SEL)newSelector {
+    Class cls = object_getClass((id)self);
+    Method originalMethod = class_getClassMethod(cls, origSelector);
+    Method swizzledMethod = class_getClassMethod(cls, newSelector);
+
+    if (class_addMethod(cls,
+                        origSelector,
+                        method_getImplementation(swizzledMethod),
+                        method_getTypeEncoding(swizzledMethod)) ) {
+        class_replaceMethod(cls,
+                            newSelector,
+                            method_getImplementation(originalMethod),
+                            method_getTypeEncoding(originalMethod));
+    } else {
         class_replaceMethod(cls,
                             newSelector,
                             class_replaceMethod(cls,
@@ -91,6 +114,16 @@ __attribute__((visibility("hidden")))
     return @{};
 }
 
++ (void) pm_return_2_with_completion_handler:(void (^)(NSInteger))completionHandler {
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    completionHandler(2);
+}
+
++ (NSInteger) pm_return_2 {
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    return 2;
+}
+
 @end
 
 @implementation PlayShadowLoader
@@ -99,6 +132,10 @@ __attribute__((visibility("hidden")))
     [self debugLogger:@"PlayShadow is now loading"];
     if ([[PlaySettings shared] bypass]) [self loadJailbreakBypass];
     // if ([[PlaySettings shared] bypass]) [self loadEnvironmentBypass]; # disabled as it might be too powerful
+
+    // Swizzle ATTrackingManager
+    [objc_getClass("ATTrackingManager") swizzleClassMethod:@selector(requestTrackingAuthorizationWithCompletionHandler:) withMethod:@selector(pm_return_2_with_completion_handler:)];
+    [objc_getClass("ATTrackingManager") swizzleClassMethod:@selector(trackingAuthorizationStatus) withMethod:@selector(pm_return_2)];
 }
 
 + (void) loadJailbreakBypass {
@@ -246,4 +283,3 @@ __attribute__((visibility("hidden")))
 }
 
 @end
-
