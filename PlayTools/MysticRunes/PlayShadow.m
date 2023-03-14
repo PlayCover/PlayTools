@@ -146,6 +146,11 @@ __attribute__((visibility("hidden")))
     return NO;
 }
 
++ (int) pm_clsm_do_nothing_with_callback:(void (^)(int))callback {
+    // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
+    return 0;
+}
+
 @end
 
 @implementation PlayShadowLoader
@@ -241,6 +246,9 @@ __attribute__((visibility("hidden")))
     [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isAppSignerCheckDetectedByVOS) withMethod:@selector(pm_clsm_return_false)];
     [objc_getClass("v_VDMap") swizzleClassMethod:@selector(v_checkAModified) withMethod:@selector(pm_clsm_return_false)];
     [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isRuntimeTamperingDetected) withMethod:@selector(pm_clsm_return_false)];
+
+    // v_VPrivateUtility terminateApplicationAfter:
+    [objc_getClass("v_VPrivateUtility") swizzleClassMethod:@selector(terminateApplicationAfter:) withMethod:@selector(pm_clsm_do_nothing_with_callback:)];
 
     // Class: SDMUtils
     [objc_getClass("SDMUtils") swizzleInstanceMethod:@selector(isJailBroken) withMethod:@selector(pm_return_no)];
