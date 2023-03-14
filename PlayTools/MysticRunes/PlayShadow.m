@@ -175,9 +175,9 @@ __attribute__((visibility("hidden")))
     [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(platform) withMethod:@selector(pm_return_empty)];
     [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(hwModel) withMethod:@selector(pm_return_empty)];
     [objc_getClass("RNDeviceInfo") swizzleInstanceMethod:@selector(getDeviceType) withMethod:@selector(hook_deviceType)];
-    
+        
     // Class: UIDevice
-    [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_no)];
+    [objc_getClass("UIDevice") swizzleClassMethod:@selector(isJailbroken) withMethod:@selector(pm_clsm_return_no)];
     [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(isJailBreak) withMethod:@selector(pm_return_no)];
     [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(isJailBroken) withMethod:@selector(pm_return_no)];
 
@@ -185,18 +185,18 @@ __attribute__((visibility("hidden")))
     [objc_getClass("JailbreakDetectionVC") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_no)];
 
     // Class: DTTJailbreakDetection
-    [objc_getClass("DTTJailbreakDetection") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_no)];
+    [objc_getClass("DTTJailbreakDetection") swizzleClassMethod:@selector(isJailbroken) withMethod:@selector(pm_clsm_return_no)];
 
     // Class: ANSMetadata
     [objc_getClass("ANSMetadata") swizzleInstanceMethod:@selector(computeIsJailbroken) withMethod:@selector(pm_return_no)];
     [objc_getClass("ANSMetadata") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_no)];
 
     // Class: AppsFlyerUtils
-    [objc_getClass("AppsFlyerUtils") swizzleInstanceMethod:@selector(isJailBreakon) withMethod:@selector(pm_return_no)];
-    [objc_getClass("AppsFlyerUtils") swizzleInstanceMethod:@selector(a) withMethod:@selector(pm_return_false)];
+    [objc_getClass("AppsFlyerUtils") swizzleClassMethod:@selector(isJailBreakon) withMethod:@selector(pm_clsm_return_no)];
+    [objc_getClass("AppsFlyerUtils") swizzleClassMethod:@selector(a) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: jailBreak
-    [objc_getClass("jailBreak") swizzleInstanceMethod:@selector(isJailBreak) withMethod:@selector(pm_return_false)];
+    [objc_getClass("jailBreak") swizzleClassMethod:@selector(isJailBreak) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: GBDeviceInfo
     [objc_getClass("GBDeviceInfo") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_no)];
@@ -205,16 +205,16 @@ __attribute__((visibility("hidden")))
     [objc_getClass("CMARAppRestrictionsDelegate") swizzleInstanceMethod:@selector(isDeviceNonCompliant) withMethod:@selector(pm_return_false)];
 
     // Class: ADYSecurityChecks
-    [objc_getClass("ADYSecurityChecks") swizzleInstanceMethod:@selector(isDeviceJailbroken) withMethod:@selector(pm_return_false)];
+    [objc_getClass("ADYSecurityChecks") swizzleClassMethod:@selector(isDeviceJailbroken) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: UBReportMetadataDevice
     [objc_getClass("UBReportMetadataDevice") swizzleInstanceMethod:@selector(is_rooted) withMethod:@selector(pm_return_null)];
 
     // Class: UtilitySystem
-    [objc_getClass("UtilitySystem") swizzleInstanceMethod:@selector(isJailbreak) withMethod:@selector(pm_return_false)];
+    [objc_getClass("UtilitySystem") swizzleClassMethod:@selector(isJailbreak) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: GemaltoConfiguration
-    [objc_getClass("GemaltoConfiguration") swizzleInstanceMethod:@selector(isJailbreak) withMethod:@selector(pm_return_false)];
+    [objc_getClass("GemaltoConfiguration") swizzleClassMethod:@selector(isJailbreak) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: CPWRDeviceInfo
     [objc_getClass("CPWRDeviceInfo") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_false)];
@@ -223,7 +223,7 @@ __attribute__((visibility("hidden")))
     [objc_getClass("CPWRSessionInfo") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_false)];
 
     // Class: KSSystemInfo
-    [objc_getClass("KSSystemInfo") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_false)];
+    [objc_getClass("KSSystemInfo") swizzleClassMethod:@selector(isJailbroken) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: EMDSKPPConfiguration
     [objc_getClass("EMDSKPPConfiguration") swizzleInstanceMethod:@selector(jailBroken) withMethod:@selector(pm_return_false)];
@@ -238,23 +238,20 @@ __attribute__((visibility("hidden")))
     [objc_getClass("FCRSystemMetadata") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_false)];
 
     // Class: v_VDMap
-    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isJailbrokenDetected) withMethod:@selector(pm_clsm_return_false)];
-    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isJailBrokenDetectedByVOS) withMethod:@selector(pm_clsm_return_false)];
-    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isDFPHookedDetecedByVOS) withMethod:@selector(pm_clsm_return_false)];
-    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isCodeInjectionDetectedByVOS) withMethod:@selector(pm_clsm_return_false)];
-    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isDebuggerCheckDetectedByVOS) withMethod:@selector(pm_clsm_return_false)];
-    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isAppSignerCheckDetectedByVOS) withMethod:@selector(pm_clsm_return_false)];
-    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(v_checkAModified) withMethod:@selector(pm_clsm_return_false)];
-    [objc_getClass("v_VDMap") swizzleClassMethod:@selector(isRuntimeTamperingDetected) withMethod:@selector(pm_clsm_return_false)];
-
-    // v_VPrivateUtility terminateApplicationAfter:
-    [objc_getClass("v_VPrivateUtility") swizzleClassMethod:@selector(terminateApplicationAfter:) withMethod:@selector(pm_clsm_do_nothing_with_callback:)];
+    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isJailbrokenDetected) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isJailBrokenDetectedByVOS) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isDFPHookedDetecedByVOS) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isCodeInjectionDetectedByVOS) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isDebuggerCheckDetectedByVOS) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isAppSignerCheckDetectedByVOS) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(v_checkAModified) withMethod:@selector(pm_return_false)];
+    [objc_getClass("v_VDMap") swizzleInstanceMethod:@selector(isRuntimeTamperingDetected) withMethod:@selector(pm_return_false)];
 
     // Class: SDMUtils
     [objc_getClass("SDMUtils") swizzleInstanceMethod:@selector(isJailBroken) withMethod:@selector(pm_return_no)];
 
     // Class: OneSignalJailbreakDetection
-    [objc_getClass("OneSignalJailbreakDetection") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_no)];
+    [objc_getClass("OneSignalJailbreakDetection") swizzleClassMethod:@selector(isJailbroken) withMethod:@selector(pm_clsm_return_no)];
 
     // Class: DigiPassHandler
     [objc_getClass("DigiPassHandler") swizzleInstanceMethod:@selector(rootedDeviceTestResult) withMethod:@selector(pm_return_no)];
@@ -283,23 +280,24 @@ __attribute__((visibility("hidden")))
     [objc_getClass("FBAdBotDetector") swizzleInstanceMethod:@selector(isJailBrokenDevice) withMethod:@selector(pm_return_false)];
 
     // Class: TNGDeviceTool
-    [objc_getClass("TNGDeviceTool") swizzleInstanceMethod:@selector(isJailBreak) withMethod:@selector(pm_return_false)];
-    [objc_getClass("TNGDeviceTool") swizzleInstanceMethod:@selector(isJailBreak_file) withMethod:@selector(pm_return_false)];
-    [objc_getClass("TNGDeviceTool") swizzleInstanceMethod:@selector(isJailBreak_cydia) withMethod:@selector(pm_return_false)];
-    [objc_getClass("TNGDeviceTool") swizzleInstanceMethod:@selector(isJailBreak_appList) withMethod:@selector(pm_return_false)];
-    [objc_getClass("TNGDeviceTool") swizzleInstanceMethod:@selector(isJailBreak_env) withMethod:@selector(pm_return_false)];
+    [objc_getClass("TNGDeviceTool") swizzleClassMethod:@selector(isJailBreak) withMethod:@selector(pm_clsm_return_false)];
+    [objc_getClass("TNGDeviceTool") swizzleClassMethod:@selector(isJailBreak_file) withMethod:@selector(pm_clsm_return_false)];
+    [objc_getClass("TNGDeviceTool") swizzleClassMethod:@selector(isJailBreak_cydia) withMethod:@selector(pm_clsm_return_false)];
+    [objc_getClass("TNGDeviceTool") swizzleClassMethod:@selector(isJailBreak_appList) withMethod:@selector(pm_clsm_return_false)];
+    [objc_getClass("TNGDeviceTool") swizzleClassMethod:@selector(isJailBreak_env) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: DTDeviceInfo
-    [objc_getClass("DTDeviceInfo") swizzleInstanceMethod:@selector(isJailbreak) withMethod:@selector(pm_return_false)];
+    [objc_getClass("DTDeviceInfo") swizzleClassMethod:@selector(isJailbreak) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: SecVIDeviceUtil
-    [objc_getClass("SecVIDeviceUtil") swizzleInstanceMethod:@selector(isJailbreak) withMethod:@selector(pm_return_false)];
+    [objc_getClass("SecVIDeviceUtil") swizzleClassMethod:@selector(isJailbreak) withMethod:@selector(pm_clsm_return_false)];
 
     // Class: RVPBridgeExtension4Jailbroken
     [objc_getClass("RVPBridgeExtension4Jailbroken") swizzleInstanceMethod:@selector(isJailbroken) withMethod:@selector(pm_return_false)];
 
     // Class: ZDetection
-    [objc_getClass("ZDetection") swizzleInstanceMethod:@selector(isRootedOrJailbroken) withMethod:@selector(pm_return_false)];
+    [objc_getClass("ZDetection") swizzleClassMethod:@selector(isRootedOrJailbroken) withMethod:@selector(pm_clsm_return_false)];
+
 }
 
 + (void) loadEnvironmentBypass {
