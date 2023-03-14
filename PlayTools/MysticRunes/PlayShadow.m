@@ -70,7 +70,7 @@ __attribute__((visibility("hidden")))
     }
 }
 
-
+// Instance methods
 
 - (NSInteger) pm_hook_deviceType {
     return 1;
@@ -115,6 +115,8 @@ __attribute__((visibility("hidden")))
     // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
     return @{};
 }
+
+// Class methods
 
 + (void) pm_return_2_with_completion_handler:(void (^)(NSInteger))completionHandler {
     // NSLog(@"PC-DEBUG: [PlayMask] Jailbreak Detection Attempted");
