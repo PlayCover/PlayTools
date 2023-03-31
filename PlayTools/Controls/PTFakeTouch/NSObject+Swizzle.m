@@ -94,11 +94,13 @@ __attribute__((visibility("hidden")))
 }
 
 - (double) hook_nativeScale {
-    return 2.0;
+    return [[PlaySettings shared] customScaler];
 }
 
 - (double) hook_scale {
-    return 2.0;
+    // Return rounded value of [[PlaySettings shared] customScaler]
+    // Even though it is a double return, this will only accept .0 value or apps will crash
+    return round([[PlaySettings shared] customScaler]);
 }
 
 - (double) get_default_height {
