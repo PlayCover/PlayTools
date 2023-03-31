@@ -9,6 +9,7 @@ let screen = PlayScreen.shared
 let isInvertFixEnabled = PlaySettings.shared.inverseScreenValues && PlaySettings.shared.adaptiveDisplay
 let mainScreenWidth =  !isInvertFixEnabled ? PlaySettings.shared.windowSizeWidth : PlaySettings.shared.windowSizeHeight
 let mainScreenHeight = !isInvertFixEnabled ? PlaySettings.shared.windowSizeHeight : PlaySettings.shared.windowSizeWidth
+let customScaler = PlaySettings.shared.customScaler
 
 extension CGSize {
     func aspectRatio() -> CGFloat {
@@ -93,7 +94,7 @@ public class PlayScreen: NSObject {
     }
 
     @objc public static func nativeBounds(_ rect: CGRect) -> CGRect {
-            return rect.toAspectRatio(2)
+        return rect.toAspectRatio(CGFloat((customScaler)))
     }
 
     @objc public static func width(_ size: Int) -> Int {
@@ -172,7 +173,7 @@ public class PlayScreen: NSObject {
     }
 
     @objc public static func nativeBoundsDefault(_ rect: CGRect) -> CGRect {
-            return rect.toAspectRatioDefault(2)
+        return rect.toAspectRatioDefault(CGFloat((customScaler)))
     }
 
     @objc public static func sizeAspectRatioDefault(_ size: CGSize) -> CGSize {
