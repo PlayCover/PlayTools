@@ -1,5 +1,5 @@
 //
-//  PlayMask.m
+//  PlayShadow.m
 //  PlayTools
 //
 //  Created by Venti on 08/03/2023.
@@ -300,7 +300,6 @@ __attribute__((visibility("hidden")))
 
     // Class: ZDetection
     [objc_getClass("ZDetection") swizzleClassMethod:@selector(isRootedOrJailbroken) withMethod:@selector(pm_clsm_return_false)];
-
 }
 
 + (void) loadEnvironmentBypass {
