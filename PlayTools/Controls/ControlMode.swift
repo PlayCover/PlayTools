@@ -32,6 +32,7 @@ public class ControlMode {
                     PlayInput.shared.setup()
                 }
             }
+            Toucher.writeLog(logMessage: "cursor show switched to \(show)")
             visible = show
         }
     }

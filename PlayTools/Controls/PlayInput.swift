@@ -5,11 +5,11 @@ import UIKit
 class PlayInput {
     static let shared = PlayInput()
     var actions = [Action]()
-    static var keyboardMapped = false
-    private static var keyboardWillMap = true
+    static var keyboardMapped = true
     static var shouldLockCursor = true
 
-    static var touchQueue = DispatchQueue.init(label: "playcover.toucher", qos: .userInteractive)
+    static var touchQueue = DispatchQueue.init(label: "playcover.toucher", qos: .userInteractive,
+                                               autoreleaseFrequency: .workItem)
     static public var buttonHandlers: [String: [(Bool) -> Void]] = [:]
 
     func invalidate() {
@@ -89,6 +89,7 @@ class PlayInput {
 
     public func toggleEditor(show: Bool) {
         PlayInput.keyboardMapped = !show
+        Toucher.writeLog(logMessage: "editor opened? \(show)")
         if show {
             self.invalidate()
             mode.show(show)
@@ -189,10 +190,12 @@ class PlayInput {
         }
         parseKeymap()
         centre.addObserver(forName: UIApplication.keyboardDidHideNotification, object: nil, queue: main) { _ in
-            PlayInput.keyboardWillMap = true
+            PlayInput.keyboardMapped = true
+            Toucher.writeLog(logMessage: "virtual keyboard did hide")
         }
         centre.addObserver(forName: UIApplication.keyboardWillShowNotification, object: nil, queue: main) { _ in
-            PlayInput.keyboardWillMap = false
+            PlayInput.keyboardMapped = false
+            Toucher.writeLog(logMessage: "virtual keyboard will show")
         }
         centre.addObserver(forName: NSNotification.Name(rawValue: "NSWindowDidBecomeKeyNotification"), object: nil,
             queue: main) { _ in
@@ -236,11 +239,9 @@ class PlayInput {
         }
 
         AKInterface.shared!.initialize(keyboard: {keycode, pressed, isRepeat in
-            if PlayInput.keyboardWillMap != PlayInput.keyboardMapped && pressed {
-                PlayInput.keyboardMapped = PlayInput.keyboardWillMap
-            }
             if !PlayInput.keyboardMapped {
-                return false
+                // explicitly ignore repeated Enter key
+                return isRepeat && keycode == 36
             }
             if isRepeat {
                 return true
