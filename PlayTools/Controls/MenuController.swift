@@ -44,6 +44,13 @@ extension UIApplication {
     func downscaleElement(_ sender: AnyObject) {
         EditorController.shared.focusedControl?.resize(down: true)
     }
+
+    // put a mark in the toucher log, so as to align with tester description
+    @objc
+    func markToucherLog(_ sender: AnyObject) {
+        Toucher.writeLog(logMessage:"mark")
+        Toast.showHint(title: "Log marked")
+    }
 }
 
 extension UIViewController {
@@ -61,24 +68,19 @@ extension UIViewController {
 struct CommandsList {
     static let KeymappingToolbox = "keymapping"
 }
-// have to use a customized name, in case it conflicts with the game's localization file
-var keymapping = [
-    NSLocalizedString("menu.keymapping.toggleEditor", tableName: "Playtools",
-                      value: "Open/Close Keymapping Editor", comment: ""),
-    NSLocalizedString("menu.keymapping.deleteElement", tableName: "Playtools",
-                      value: "Delete selected element", comment: ""),
-    NSLocalizedString("menu.keymapping.upsizeElement", tableName: "Playtools",
-                      value: "Upsize selected element", comment: ""),
-    NSLocalizedString("menu.keymapping.downsizeElement", tableName: "Playtools",
-                      value: "Downsize selected element", comment: ""),
-    NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
-                      value: "Rotate display area", comment: "")
-  ]
+
+var keymapping = ["Open/Close Keymapping Editor",
+                  "Delete selected element",
+                  "Upsize selected element",
+                  "Downsize selected element",
+                  "Rotate display area",
+                  "Put a mark in toucher log"]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIViewController.rotateView(_:))]
+                           #selector(UIViewController.rotateView(_:)),
+                           #selector(UIApplication.markToucherLog)]
 
 class MenuController {
     init(with builder: UIMenuBuilder) {
@@ -86,7 +88,7 @@ class MenuController {
     }
 
     class func keymappingMenu() -> UIMenu {
-        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R" ]
+        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "L"]
 
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
@@ -104,8 +106,7 @@ class MenuController {
                                     options: .displayInline,
                                     children: arrowKeyChildrenCommands)
 
-        return UIMenu(title: NSLocalizedString("menu.keymapping", tableName: "Playtools",
-                                               value: "Keymapping", comment: ""),
+        return UIMenu(title: NSLocalizedString("Keymapping", comment: ""),
                       image: nil,
                       identifier: .keymappingMenu,
                       options: [],
