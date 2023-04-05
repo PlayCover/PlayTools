@@ -44,6 +44,13 @@ extension UIApplication {
     func downscaleElement(_ sender: AnyObject) {
         EditorController.shared.focusedControl?.resize(down: true)
     }
+
+    // put a mark in the toucher log, so as to align with tester description
+    @objc
+    func markToucherLog(_ sender: AnyObject) {
+        Toucher.writeLog(logMessage:"mark")
+        Toast.showHint(title: "Log marked")
+    }
 }
 
 extension UIViewController {
@@ -66,12 +73,14 @@ var keymapping = ["Open/Close Keymapping Editor",
                   "Delete selected element",
                   "Upsize selected element",
                   "Downsize selected element",
-                  "Rotate display area"]
+                  "Rotate display area",
+                  "Put a mark in toucher log"]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIViewController.rotateView(_:))]
+                           #selector(UIViewController.rotateView(_:)),
+                           #selector(UIApplication.markToucherLog)]
 
 class MenuController {
     init(with builder: UIMenuBuilder) {
@@ -79,7 +88,7 @@ class MenuController {
     }
 
     class func keymappingMenu() -> UIMenu {
-        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R" ]
+        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "L"]
 
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
