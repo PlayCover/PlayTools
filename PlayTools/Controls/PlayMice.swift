@@ -137,6 +137,7 @@ public class PlayMice {
             if EditorController.shared.editorMode && actionIndex != 2 && pressed {
                 EditorController.shared.setKey(buttonIndex[actionIndex]!)
             }
+            Toucher.writeLog(logMessage: "mouse button pressed? \(pressed)")
             return true
         }
         guard let curPos = self.cursorPos() else { return true }
