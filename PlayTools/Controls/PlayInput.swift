@@ -181,11 +181,10 @@ class PlayInput {
         let main = OperationQueue.main
 
         centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
-            if !mode.visible {
-                self.setup()
-            }
             if EditorController.shared.editorMode {
                 self.toggleEditor(show: true)
+            } else {
+                self.setup()
             }
         }
         parseKeymap()
