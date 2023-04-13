@@ -12,8 +12,9 @@
 #import "NSObject+Swizzle.h"
 
 // Get device model from playcover .plist
-#define DEVICE_MODEL ([[[PlaySettings shared] deviceModel] UTF8String])
-#define OEM_ID ([[[PlaySettings shared] oemID] UTF8String])
+// With a null terminator
+#define DEVICE_MODEL [[[PlaySettings shared] deviceModel] cStringUsingEncoding:NSUTF8StringEncoding]
+#define OEM_ID [[[PlaySettings shared] oemID] cStringUsingEncoding:NSUTF8StringEncoding]
 #define PLATFORM_IOS 2
 
 // Define dyld_get_active_platform function for interpose
@@ -60,22 +61,31 @@ static int pt_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0
 
 static int pt_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *newp, size_t newlen) {
     if ((strcmp(name, "hw.machine") == 0) || (strcmp(name, "hw.product") == 0) || (strcmp(name, "hw.model") == 0)) {
-        if (oldp != NULL) {
+        if (oldp == NULL) {
+            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
+            *oldlenp = strlen(DEVICE_MODEL) + 1;
+            return ret;
+        }
+        else if (oldp != NULL) {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
             const char *machine = DEVICE_MODEL;
             strncpy((char *)oldp, machine, strlen(machine));
-            *oldlenp = strlen(machine);
+            *oldlenp = strlen(machine) + 1;
             return ret;
         } else {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
             return ret;
         }
     } else if ((strcmp(name, "hw.target") == 0)) {
-        if (oldp != NULL) {
+        if (oldp == NULL) {
+            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
+            *oldlenp = strlen(OEM_ID) + 1;
+            return ret;
+        } else if (oldp != NULL) {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
             const char *machine = OEM_ID;
             strncpy((char *)oldp, machine, strlen(machine));
-            *oldlenp = strlen(machine);
+            *oldlenp = strlen(machine) + 1;
             return ret;
         } else {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
