@@ -33,6 +33,8 @@ let settings = PlaySettings.shared
 
     lazy var sensitivity = settingsData.sensitivity / 100
 
+    @objc lazy var bypass = settingsData.bypass
+
     @objc lazy var windowSizeHeight = CGFloat(settingsData.windowHeight)
 
     @objc lazy var windowSizeWidth = CGFloat(settingsData.windowWidth)

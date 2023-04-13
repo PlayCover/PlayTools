@@ -173,8 +173,6 @@ DYLD_INTERPOSE(pt_SecItemAdd, SecItemAdd)
 DYLD_INTERPOSE(pt_SecItemUpdate, SecItemUpdate)
 DYLD_INTERPOSE(pt_SecItemDelete, SecItemDelete)
 
-
-
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
