@@ -68,8 +68,8 @@ public class PlayKeychain: NSObject {
             debugLogger("Failed to write keychain file")
             return errSecIO
         }
-        // Place v_data in the result
-        if let v_data = attributes["v_data"] {
+        // Place v_Data in the result
+        if let v_data = attributes["v_Data"] {
             result?.pointee = v_data as CFTypeRef
         }
         return errSecSuccess
