@@ -172,6 +172,81 @@ class PlayInput {
         return screen.window?.rootViewController
     }
 
+    func setupHotkeys() {
+        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
+            keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
+                PlayInput.lCmdPressed = pressed
+            }
+            keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
+                PlayInput.rCmdPressed = pressed
+            }
+        }
+    }
+
+    func syncUserDefaults() -> Float {
+        let persistenceKeyname = "playtoolsKeymappingDisabledAt"
+        let lastUse = UserDefaults.standard.float(forKey: persistenceKeyname)
+        var thisUse = lastUse
+        if lastUse < 1 {
+            thisUse = 2
+        } else {
+            thisUse = Float(Date.timeIntervalSinceReferenceDate)
+        }
+        var token2: NSObjectProtocol?
+        let center = NotificationCenter.default
+        token2 = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillDisable,
+                                    object: nil, queue: OperationQueue.main) { _ in
+            center.removeObserver(token2!)
+            UserDefaults.standard.set(thisUse, forKey: persistenceKeyname)
+        }
+        return lastUse
+    }
+
+    func initializeToasts() {
+        if !settings.mouseMapping || !mode.visible {
+            return
+        }
+        self.parseKeymap()
+        if self.actions.count <= 0 {
+            return
+        }
+        self.invalidate()
+        let lastUse = syncUserDefaults()
+        if lastUse > Float(Date.now.addingTimeInterval(-86400*14).timeIntervalSinceReferenceDate) {
+            return
+        }
+        Toast.showHint(title: NSLocalizedString("hint.enableKeymapping.title",
+                                                tableName: "Playtools",
+                                                value: "Keymapping Disabled", comment: ""),
+                       text: [NSLocalizedString("hint.enableKeymapping.content.before",
+                                                tableName: "Playtools",
+                                                value: "Press", comment: ""),
+                              " option ⌥ ",
+                              NSLocalizedString("hint.enableKeymapping.content.after",
+                                                tableName: "Playtools",
+                                                value: "to enable keymapping", comment: "")],
+                       timeout: 10,
+                       notification: NSNotification.Name.playtoolsKeymappingWillEnable)
+        let center = NotificationCenter.default
+        var token: NSObjectProtocol?
+        token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
+                                   object: nil, queue: OperationQueue.main) { _ in
+            center.removeObserver(token!)
+            Toast.showHint(title: NSLocalizedString("hint.disableKeymapping.title",
+                                                    tableName: "Playtools",
+                                                    value: "Keymapping Enabled", comment: ""),
+                           text: [NSLocalizedString("hint.disableKeymapping.content.before",
+                                                    tableName: "Playtools",
+                                                    value: "Press", comment: ""),
+                                  " option ⌥ ",
+                                  NSLocalizedString("hint.disableKeymapping.content.after",
+                                                    tableName: "Playtools",
+                                                    value: "to disable keymapping", comment: "")],
+                           timeout: 10,
+                           notification: NSNotification.Name.playtoolsKeymappingWillDisable)
+        }
+    }
+
     func initialize() {
         if !PlaySettings.shared.keymapping {
             return
@@ -202,40 +277,8 @@ class PlayInput {
                 AKInterface.shared!.warpCursor()
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
-            if !mode.visible || self.actions.count <= 0 || !PlayInput.shouldLockCursor {
-                return
-            }
-            let persistenceKeyname = "playtoolsKeymappingDisabledAt"
-            let lastUse = UserDefaults.standard.float(forKey: persistenceKeyname)
-            var thisUse = lastUse
-            if lastUse < 1 {
-                thisUse = 2
-            } else {
-                thisUse = Float(Date.timeIntervalSinceReferenceDate)
-            }
-            var token2: NSObjectProtocol?
-            let center = NotificationCenter.default
-            token2 = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillDisable,
-                                        object: nil, queue: OperationQueue.main) { _ in
-                center.removeObserver(token2!)
-                UserDefaults.standard.set(thisUse, forKey: persistenceKeyname)
-            }
-            if lastUse > Float(Date.now.addingTimeInterval(-86400*14).timeIntervalSinceReferenceDate) {
-                return
-            }
-            Toast.showHint(title: "Mouse Mapping Disabled", text: ["Press ", "option ⌥", " to enable mouse mapping"],
-                           timeout: 10,
-                           notification: NSNotification.Name.playtoolsKeymappingWillEnable)
-            var token: NSObjectProtocol?
-            token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
-                                       object: nil, queue: OperationQueue.main) { _ in
-                center.removeObserver(token!)
-                Toast.showHint(title: "Cursor Locked", text: ["Press ", "option ⌥", " to release cursor"],
-                               timeout: 10,
-                               notification: NSNotification.Name.playtoolsKeymappingWillDisable)
-            }
-        }
+        setupHotkeys()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, qos: .utility, execute: initializeToasts)
 
         AKInterface.shared!.initialize(keyboard: {keycode, pressed, isRepeat in
             if !PlayInput.keyboardMapped {

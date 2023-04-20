@@ -68,13 +68,21 @@ extension UIViewController {
 struct CommandsList {
     static let KeymappingToolbox = "keymapping"
 }
-
-var keymapping = ["Open/Close Keymapping Editor",
-                  "Delete selected element",
-                  "Upsize selected element",
-                  "Downsize selected element",
-                  "Rotate display area",
-                  "Put a mark in toucher log"]
+// have to use a customized name, in case it conflicts with the game's localization file
+var keymapping = [
+    NSLocalizedString("menu.keymapping.toggleEditor", tableName: "Playtools",
+                      value: "Open/Close Keymapping Editor", comment: ""),
+    NSLocalizedString("menu.keymapping.deleteElement", tableName: "Playtools",
+                      value: "Delete selected element", comment: ""),
+    NSLocalizedString("menu.keymapping.upsizeElement", tableName: "Playtools",
+                      value: "Upsize selected element", comment: ""),
+    NSLocalizedString("menu.keymapping.downsizeElement", tableName: "Playtools",
+                      value: "Downsize selected element", comment: ""),
+    NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
+                      value: "Rotate display area", comment: ""),
+    NSLocalizedString("menu.keymapping.markLog", tableName: "Playtools",
+                      value: "Put a mark in toucher log", comment: "")
+  ]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
@@ -106,7 +114,8 @@ class MenuController {
                                     options: .displayInline,
                                     children: arrowKeyChildrenCommands)
 
-        return UIMenu(title: NSLocalizedString("Keymapping", comment: ""),
+        return UIMenu(title: NSLocalizedString("menu.keymapping", tableName: "Playtools",
+                                               value: "Keymapping", comment: ""),
                       image: nil,
                       identifier: .keymappingMenu,
                       options: [],

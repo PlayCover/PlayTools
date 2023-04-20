@@ -31,6 +31,8 @@ let settings = PlaySettings.shared
 
     lazy var sensitivity = settingsData.sensitivity / 100
 
+    @objc lazy var bypass = settingsData.bypass
+
     @objc lazy var windowSizeHeight = CGFloat(settingsData.windowHeight)
 
     @objc lazy var windowSizeWidth = CGFloat(settingsData.windowWidth)
@@ -63,6 +65,10 @@ let settings = PlaySettings.shared
     @objc lazy var playChain = settingsData.playChain
 
     @objc lazy var playChainDebugging = settingsData.playChainDebugging
+
+    @objc lazy var windowFixMethod = settingsData.windowFixMethod
+
+    @objc lazy var customScaler = settingsData.customScaler
 }
 
 struct AppSettingsData: Codable {
@@ -73,6 +79,7 @@ struct AppSettingsData: Codable {
     var iosDeviceModel = "iPad13,8"
     var windowWidth = 1920
     var windowHeight = 1080
+    var customScaler = 2.0
     var resolution = 2
     var aspectRatio = 1
     var notch = false
@@ -82,4 +89,5 @@ struct AppSettingsData: Codable {
     var playChain = false
     var playChainDebugging = false
     var inverseScreenValues = false
+    var windowFixMethod = 0
 }
