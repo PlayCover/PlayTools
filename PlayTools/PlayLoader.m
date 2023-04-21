@@ -63,7 +63,11 @@ static int pt_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
     if ((strcmp(name, "hw.machine") == 0) || (strcmp(name, "hw.product") == 0) || (strcmp(name, "hw.model") == 0)) {
         if (oldp == NULL) {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-            *oldlenp = strlen(DEVICE_MODEL) + 1;
+            // We don't want to accidentally decrease it because the real sysctl call will ENOMEM
+            // as model are much longer on Macs (eg. MacBookAir10,1)
+            if (*oldlenp < strlen(DEVICE_MODEL) + 1) {
+                *oldlenp = strlen(DEVICE_MODEL) + 1;
+            }
             return ret;
         }
         else if (oldp != NULL) {
@@ -79,7 +83,9 @@ static int pt_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
     } else if ((strcmp(name, "hw.target") == 0)) {
         if (oldp == NULL) {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-            *oldlenp = strlen(OEM_ID) + 1;
+            if (*oldlenp < strlen(OEM_ID) + 1) {
+                *oldlenp = strlen(OEM_ID) + 1;
+            }
             return ret;
         } else if (oldp != NULL) {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
