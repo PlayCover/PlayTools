@@ -136,16 +136,16 @@ class Toast {
         if lastUse > Float(Date.now.addingTimeInterval(-86400*14).timeIntervalSinceReferenceDate) {
             return
         }
-        Toast.showHint(title: NSLocalizedString("hint.enableKeymapping.title",
+        Toast.showHint(title: NSLocalizedString("hint.mouseMapping.title",
                                                 tableName: "Playtools",
-                                                value: "Keymapping Disabled", comment: ""),
-                       text: [NSLocalizedString("hint.enableKeymapping.content.before",
+                                                value: "Mouse mapping disabled", comment: ""),
+                       text: [NSLocalizedString("hint.mouseMapping.content.before",
                                                 tableName: "Playtools",
                                                 value: "Press", comment: ""),
                               " option ⌥ ",
-                              NSLocalizedString("hint.enableKeymapping.content.after",
+                              NSLocalizedString("hint.mouseMapping.content.after",
                                                 tableName: "Playtools",
-                                                value: "to enable keymapping", comment: "")],
+                                                value: "to enable mouse mapping", comment: "")],
                        timeout: 10,
                        notification: NSNotification.Name.playtoolsKeymappingWillEnable)
         let center = NotificationCenter.default
@@ -153,16 +153,16 @@ class Toast {
         token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
                                    object: nil, queue: OperationQueue.main) { _ in
             center.removeObserver(token!)
-            Toast.showHint(title: NSLocalizedString("hint.disableKeymapping.title",
+            Toast.showHint(title: NSLocalizedString("hint.showCursor.title",
                                                     tableName: "Playtools",
-                                                    value: "Keymapping Enabled", comment: ""),
-                           text: [NSLocalizedString("hint.disableKeymapping.content.before",
+                                                    value: "Cursor locked", comment: ""),
+                           text: [NSLocalizedString("hint.showCursor.content.before",
                                                     tableName: "Playtools",
                                                     value: "Press", comment: ""),
                                   " option ⌥ ",
-                                  NSLocalizedString("hint.disableKeymapping.content.after",
+                                  NSLocalizedString("hint.showCursor.content.after",
                                                     tableName: "Playtools",
-                                                    value: "to disable keymapping", comment: "")],
+                                                    value: "to unlock cursor", comment: "")],
                            timeout: 10,
                            notification: NSNotification.Name.playtoolsKeymappingWillDisable)
         }
