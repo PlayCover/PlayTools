@@ -48,7 +48,7 @@ extension UIApplication {
     // put a mark in the toucher log, so as to align with tester description
     @objc
     func markToucherLog(_ sender: AnyObject) {
-        Toucher.writeLog(logMessage:"mark")
+        Toucher.writeLog(logMessage: "mark")
         Toast.showHint(title: "Log marked")
     }
 }
@@ -79,25 +79,55 @@ var keymapping = [
     NSLocalizedString("menu.keymapping.downsizeElement", tableName: "Playtools",
                       value: "Downsize selected element", comment: ""),
     NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
-                      value: "Rotate display area", comment: ""),
-    NSLocalizedString("menu.keymapping.markLog", tableName: "Playtools",
-                      value: "Put a mark in toucher log", comment: "")
+                      value: "Rotate display area", comment: "")
   ]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIViewController.rotateView(_:)),
-                           #selector(UIApplication.markToucherLog)]
+                           #selector(UIViewController.rotateView(_:))
+    ]
 
 class MenuController {
     init(with builder: UIMenuBuilder) {
+        if Toucher.logEnabled {
+            builder.insertSibling(MenuController.debuggingMenu(), afterMenu: .view)
+        }
         builder.insertSibling(MenuController.keymappingMenu(), afterMenu: .view)
     }
 
-    class func keymappingMenu() -> UIMenu {
-        let keyCommands = [ "K", UIKeyCommand.inputDelete, UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "L"]
+    static func debuggingMenu() -> UIMenu {
+        let menuTitle = [
+            "Put a mark in toucher log"
+        ]
+        let keyCommands = ["L"]
+        let selectors = [
+            #selector(UIApplication.markToucherLog)
+        ]
+        let arrowKeyChildrenCommands = zip(keyCommands, menuTitle).map { (command, btn) in
+            UIKeyCommand(title: btn,
+                 image: nil,
+                 action: selectors[menuTitle.firstIndex(of: btn)!],
+                 input: command,
+                 modifierFlags: .command,
+                 propertyList: [CommandsList.KeymappingToolbox: btn]
+            )
+        }
+        return UIMenu(title: "Debug",
+                      image: nil,
+                      identifier: .debuggingMenu,
+                      options: [],
+                      children: [
+                        UIMenu(title: "",
+                               image: nil,
+                               identifier: .debuggingOptionsMenu,
+                               options: .displayInline,
+                               children: arrowKeyChildrenCommands)])
+    }
 
+    class func keymappingMenu() -> UIMenu {
+        let keyCommands = [ "K", UIKeyCommand.inputDelete,
+                            UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "L"]
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
                          image: nil,
@@ -126,4 +156,6 @@ class MenuController {
 extension UIMenu.Identifier {
     static var keymappingMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.editor") }
     static var keymappingOptionsMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.keymapping") }
+    static var debuggingMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.debug") }
+    static var debuggingOptionsMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.debugging") }
 }

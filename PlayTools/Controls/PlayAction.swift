@@ -60,15 +60,17 @@ class DraggableButtonAction: ButtonAction {
         if pressed {
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id)
             self.releasePoint = point
-            PlayMice.shared.draggableHandler[keyName] = self.onMouseMoved
+            PlayInput.draggableHandler[keyName] = self.onMouseMoved
+            AKInterface.shared!.hideCursor()
         } else {
-            PlayMice.shared.draggableHandler.removeValue(forKey: keyName)
+            PlayInput.draggableHandler.removeValue(forKey: keyName)
             Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: &id)
+            AKInterface.shared!.unhideCursor()
         }
     }
 
     override func invalidate() {
-        PlayMice.shared.draggableHandler.removeValue(forKey: keyName)
+        PlayInput.draggableHandler.removeValue(forKey: keyName)
         super.invalidate()
     }
 
@@ -95,9 +97,9 @@ class ContinuousJoystickAction: Action {
         position = center
         self.sensitivity = data.transform.size.absoluteSize / 4
         if key == PlayMice.elementName {
-            PlayMice.shared.joystickHandler[key] = self.mouseUpdate
+            PlayInput.joystickHandler[key] = self.mouseUpdate
         } else {
-            PlayMice.shared.joystickHandler[key] = self.thumbstickUpdate
+            PlayInput.joystickHandler[key] = self.thumbstickUpdate
         }
     }
 
@@ -129,22 +131,22 @@ class ContinuousJoystickAction: Action {
     }
 
     func invalidate() {
-        PlayMice.shared.joystickHandler.removeValue(forKey: key)
+        PlayInput.joystickHandler.removeValue(forKey: key)
     }
 }
 
 class JoystickAction: Action {
     let keys: [Int]
     let center: CGPoint
+    var touch: CGPoint
     let shift: CGFloat
     var id: Int?
-    var moving = false
-    private var keyPressed = [Bool](repeating: false, count: 4)
 
     init(keys: [Int], center: CGPoint, shift: CGFloat) {
         self.keys = keys
         self.center = center
-        self.shift = shift / 2
+        self.touch = center
+        self.shift = shift / 4
         for index in 0..<keys.count {
             let key = keys[index]
             PlayInput.registerButton(key: KeyCodeNames.keyCodes[key]!,
@@ -168,40 +170,76 @@ class JoystickAction: Action {
 
     func invalidate() {
         Toucher.touchcam(point: center, phase: UITouch.Phase.ended, tid: &id)
-        self.moving = false
     }
 
     func getPressedHandler(index: Int) -> (Bool) -> Void {
-        return { pressed in
-            self.keyPressed[index] = pressed
-            self.update()
+        // if the size of joystick is large, set control type to free, otherwise fixed.
+        // this is a temporary method. ideally should give the user an option.
+        if shift < 200 {
+            return { pressed in
+                self.updateTouch(index: index, pressed: pressed)
+                self.handleFixed()
+            }
+        } else {
+            return { pressed in
+                self.updateTouch(index: index, pressed: pressed)
+                self.handleFree()
+            }
         }
     }
 
-    func update() {
-        var touch = center
-        if keyPressed[0] {
-            touch.y -= shift / 2
-        } else if keyPressed[1] {
-            touch.y += shift / 2
-        }
-        if keyPressed[2] {
-            touch.x -= shift / 2
-        } else if keyPressed[3] {
-            touch.x += shift / 2
-        }
-        if moving {
-            if touch.equalTo(center) {
-                moving = false
-                Toucher.touchcam(point: touch, phase: UITouch.Phase.ended, tid: &id)
+    func updateTouch(index: Int, pressed: Bool) {
+        let isPlus = index & 1 != 0
+        let realShift = isPlus ? shift : -shift
+        if index > 1 {
+            if pressed {
+                touch.x = center.x + realShift
             } else {
-                Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: &id)
+                touch.x = center.x
             }
         } else {
-            if !touch.equalTo(center) {
-                moving = true
-                Toucher.touchcam(point: touch, phase: UITouch.Phase.began, tid: &id)
-            } // end if
-        } // end else
+            if pressed {
+                touch.y = center.y + realShift
+            } else {
+                touch.y = center.y
+            }
+        }
+    }
+
+    func atCenter() -> Bool {
+        return (center.x - touch.x).magnitude + (center.y - touch.y).magnitude < 8
+    }
+
+    func handleCommon(_ begin: () -> Void) {
+        let moving = id != nil
+        if atCenter() {
+            if moving {
+                Toucher.touchcam(point: touch, phase: UITouch.Phase.ended, tid: &id)
+            }
+        } else {
+            if moving {
+                Toucher.touchcam(point: touch, phase: UITouch.Phase.moved, tid: &id)
+            } else {
+                begin()
+            }
+        }
+    }
+
+    func handleFree() {
+        handleCommon {
+            Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: &id)
+            PlayInput.touchQueue.asyncAfter(deadline: .now() + 0.04, qos: .userInitiated) {
+                if self.id == nil {
+                    return
+                }
+                Toucher.touchcam(point: self.touch, phase: UITouch.Phase.moved, tid: &self.id)
+            } // end closure
+        }
+    }
+
+    func handleFixed() {
+        handleCommon {
+            Toucher.touchcam(point: self.touch, phase: UITouch.Phase.began, tid: &id)
+        }
     }
 }

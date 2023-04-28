@@ -8,7 +8,6 @@
 import AppKit
 import CoreGraphics
 import Foundation
-import GameController
 
 class AKPlugin: NSObject, Plugin {
     required override init() {
@@ -63,8 +62,8 @@ class AKPlugin: NSObject, Plugin {
     }
 
     private var modifierFlag: UInt = 0
-    func initialize(keyboard: @escaping(UInt16, Bool, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
-                    swapMode: @escaping() -> Bool) {
+    func setupKeyboard(keyboard: @escaping(UInt16, Bool, Bool) -> Bool,
+                       swapMode: @escaping() -> Bool) {
         func checkCmd(modifier: NSEvent.ModifierFlags) -> Bool {
             if modifier.contains(.command) {
                 self.cmdPressed = true
@@ -113,7 +112,10 @@ class AKPlugin: NSObject, Plugin {
             }
             return event
         })
-        let mask: NSEvent.EventTypeMask = [.leftMouseDragged, .otherMouseDragged, .rightMouseDragged, .mouseMoved]
+    }
+
+    func setupMouseMoved(mouseMoved: @escaping(CGFloat, CGFloat) -> Bool) {
+        let mask: NSEvent.EventTypeMask = [.leftMouseDragged, .otherMouseDragged, .rightMouseDragged]
         NSEvent.addLocalMonitorForEvents(matching: mask, handler: { event in
             let consumed = mouseMoved(event.deltaX, event.deltaY)
             if consumed {
@@ -121,21 +123,28 @@ class AKPlugin: NSObject, Plugin {
             }
             return event
         })
+        // transpass mouse moved event when no button pressed, for traffic light button to light up
+        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved, handler: { event in
+            _ = mouseMoved(event.deltaX, event.deltaY)
+            return event
+        })
     }
 
-    func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool) -> Bool) {
-        NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_up)), handler: { event in
+    func setupMouseButton(left: Bool, right: Bool, _ dontIgnore: @escaping(Bool) -> Bool) {
+        let downType: NSEvent.EventTypeMask = left ? .leftMouseDown : right ? .rightMouseDown : .otherMouseDown
+        let upType: NSEvent.EventTypeMask = left ? .leftMouseUp : right ? .rightMouseUp : .otherMouseUp
+        NSEvent.addLocalMonitorForEvents(matching: downType, handler: { event in
             // For traffic light buttons when fullscreen
             if event.window != NSApplication.shared.windows.first! {
                 return event
             }
-            if dontIgnore(_up, true) {
+            if dontIgnore(true) {
                 return event
             }
             return nil
         })
-        NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_down)), handler: { event in
-            if dontIgnore(_up, false) {
+        NSEvent.addLocalMonitorForEvents(matching: upType, handler: { event in
+            if dontIgnore(false) {
                 return event
             }
             return nil
