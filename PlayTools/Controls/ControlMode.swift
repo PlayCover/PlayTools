@@ -10,7 +10,17 @@ let mode = ControlMode.mode
 public class ControlMode {
 
     static public let mode = ControlMode()
-    public var visible: Bool = PlaySettings.shared.mouseMapping
+    public var visible: Bool = true
+    public var keyboardMapped = true
+
+    public static func trySwap() -> Bool {
+        if PlayInput.shouldLockCursor {
+            mode.show(!mode.visible)
+            return true
+        }
+        mode.show(true)
+        return false
+    }
 
     func show(_ show: Bool) {
         if !editor.editorMode {
@@ -21,25 +31,21 @@ public class ControlMode {
                     if screen.fullscreen {
                         screen.switchDock(true)
                     }
-                    if PlaySettings.shared.mouseMapping {
-                        AKInterface.shared!.unhideCursor()
-                    }
-                    PlayInput.shared.invalidate()
+                    AKInterface.shared!.unhideCursor()
+//                    PlayInput.shared.invalidate()
                 }
             } else {
                 if visible {
                     NotificationCenter.default.post(name: NSNotification.Name.playtoolsKeymappingWillEnable,
                                                     object: nil, userInfo: [:])
-                    if PlaySettings.shared.mouseMapping {
-                        AKInterface.shared!.hideCursor()
-                    }
+                    AKInterface.shared!.hideCursor()
                     if screen.fullscreen {
                         screen.switchDock(false)
                     }
-
-                    PlayInput.shared.setup()
+//                    PlayInput.shared.setup()
                 }
             }
+            Toucher.writeLog(logMessage: "cursor show switched to \(show)")
             visible = show
         }
     }
