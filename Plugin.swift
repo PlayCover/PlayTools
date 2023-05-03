@@ -17,14 +17,16 @@ public protocol Plugin: NSObjectProtocol {
     var mainScreenFrame: CGRect { get }
     var isMainScreenEqualToFirst: Bool { get }
     var isFullscreen: Bool { get }
+    var cmdPressed: Bool { get }
 
     func hideCursor()
     func warpCursor()
     func unhideCursor()
     func terminateApplication()
-    func initialize(keyboard: @escaping(UInt16, Bool, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
-                    swapMode: @escaping() -> Void)
-    func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool, Bool) -> Bool)
+    func setupKeyboard(keyboard: @escaping(UInt16, Bool, Bool) -> Bool,
+                       swapMode: @escaping() -> Bool)
+    func setupMouseMoved(mouseMoved: @escaping(CGFloat, CGFloat) -> Bool)
+    func setupMouseButton(left: Bool, right: Bool, _ dontIgnore: @escaping(Bool) -> Bool)
     func setupScrollWheel(_ onMoved: @escaping(CGFloat, CGFloat) -> Bool)
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
     func setMenuBarVisible(_ value: Bool)

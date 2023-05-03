@@ -8,7 +8,6 @@
 import AppKit
 import CoreGraphics
 import Foundation
-import GameController
 
 class AKPlugin: NSObject, Plugin {
     required override init() {
@@ -19,11 +18,11 @@ class AKPlugin: NSObject, Plugin {
     }
 
     var mousePoint: CGPoint {
-        NSApplication.shared.windows.first!.mouseLocationOutsideOfEventStream as CGPoint
+        NSApplication.shared.windows.first?.mouseLocationOutsideOfEventStream ?? CGPoint()
     }
 
     var windowFrame: CGRect {
-        NSApplication.shared.windows.first!.frame as CGRect
+        NSApplication.shared.windows.first?.frame ?? CGRect()
     }
 
     var isMainScreenEqualToFirst: Bool {
@@ -38,6 +37,8 @@ class AKPlugin: NSObject, Plugin {
         NSApplication.shared.windows.first!.styleMask.contains(.fullScreen)
     }
 
+    var cmdPressed: Bool = false
+
     func hideCursor() {
         NSCursor.hide()
         CGAssociateMouseAndMouseCursorPosition(0)
@@ -45,8 +46,10 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func warpCursor() {
+        guard let firstScreen = NSScreen.screens.first else {return}
         let frame = windowFrame
-        CGWarpMouseCursorPosition(CGPoint(x: frame.midX, y: frame.midY))
+        // Convert from NS coordinates to CG coordinates
+        CGWarpMouseCursorPosition(CGPoint(x: frame.midX, y: firstScreen.frame.height - frame.midY))
     }
 
     func unhideCursor() {
@@ -59,9 +62,21 @@ class AKPlugin: NSObject, Plugin {
     }
 
     private var modifierFlag: UInt = 0
-    func initialize(keyboard: @escaping(UInt16, Bool, Bool) -> Bool, mouseMoved: @escaping(CGFloat, CGFloat) -> Bool,
-                    swapMode: @escaping() -> Void) {
+    func setupKeyboard(keyboard: @escaping(UInt16, Bool, Bool) -> Bool,
+                       swapMode: @escaping() -> Bool) {
+        func checkCmd(modifier: NSEvent.ModifierFlags) -> Bool {
+            if modifier.contains(.command) {
+                self.cmdPressed = true
+                return true
+            } else if self.cmdPressed {
+                self.cmdPressed = false
+            }
+            return false
+        }
         NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
+            if checkCmd(modifier: event.modifierFlags) {
+                return event
+            }
             let consumed = keyboard(event.keyCode, true, event.isARepeat)
             if consumed {
                 return nil
@@ -69,6 +84,9 @@ class AKPlugin: NSObject, Plugin {
             return event
         })
         NSEvent.addLocalMonitorForEvents(matching: .keyUp, handler: { event in
+            if checkCmd(modifier: event.modifierFlags) {
+                return event
+            }
             let consumed = keyboard(event.keyCode, false, false)
             if consumed {
                 return nil
@@ -76,12 +94,17 @@ class AKPlugin: NSObject, Plugin {
             return event
         })
         NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { event in
+            if checkCmd(modifier: event.modifierFlags) {
+                return event
+            }
             let pressed = self.modifierFlag < event.modifierFlags.rawValue
             let changed = self.modifierFlag ^ event.modifierFlags.rawValue
             self.modifierFlag = event.modifierFlags.rawValue
             if pressed && NSEvent.ModifierFlags(rawValue: changed).contains(.option) {
-                swapMode()
-                return nil
+                if swapMode() {
+                    return nil
+                }
+                return event
             }
             let consumed = keyboard(event.keyCode, pressed, false)
             if consumed {
@@ -89,7 +112,10 @@ class AKPlugin: NSObject, Plugin {
             }
             return event
         })
-        let mask: NSEvent.EventTypeMask = [.leftMouseDragged, .otherMouseDragged, .rightMouseDragged, .mouseMoved]
+    }
+
+    func setupMouseMoved(mouseMoved: @escaping(CGFloat, CGFloat) -> Bool) {
+        let mask: NSEvent.EventTypeMask = [.leftMouseDragged, .otherMouseDragged, .rightMouseDragged]
         NSEvent.addLocalMonitorForEvents(matching: mask, handler: { event in
             let consumed = mouseMoved(event.deltaX, event.deltaY)
             if consumed {
@@ -97,18 +123,28 @@ class AKPlugin: NSObject, Plugin {
             }
             return event
         })
+        // transpass mouse moved event when no button pressed, for traffic light button to light up
+        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved, handler: { event in
+            _ = mouseMoved(event.deltaX, event.deltaY)
+            return event
+        })
     }
 
-    func setupMouseButton(_ _up: Int, _ _down: Int, _ dontIgnore: @escaping(Int, Bool, Bool) -> Bool) {
-        NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_up)), handler: { event in
-            let isEventWindow = event.window == NSApplication.shared.windows.first!
-            if dontIgnore(_up, true, isEventWindow) {
+    func setupMouseButton(left: Bool, right: Bool, _ dontIgnore: @escaping(Bool) -> Bool) {
+        let downType: NSEvent.EventTypeMask = left ? .leftMouseDown : right ? .rightMouseDown : .otherMouseDown
+        let upType: NSEvent.EventTypeMask = left ? .leftMouseUp : right ? .rightMouseUp : .otherMouseUp
+        NSEvent.addLocalMonitorForEvents(matching: downType, handler: { event in
+            // For traffic light buttons when fullscreen
+            if event.window != NSApplication.shared.windows.first! {
+                return event
+            }
+            if dontIgnore(true) {
                 return event
             }
             return nil
         })
-        NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask(rawValue: UInt64(_down)), handler: { event in
-            if dontIgnore(_up, false, true) {
+        NSEvent.addLocalMonitorForEvents(matching: upType, handler: { event in
+            if dontIgnore(false) {
                 return event
             }
             return nil
