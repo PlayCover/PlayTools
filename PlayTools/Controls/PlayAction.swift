@@ -141,7 +141,7 @@ class JoystickAction: Action {
     var touch: CGPoint
     let shift: CGFloat
     var id: Int?
-
+    private var keyPressed = [Bool](repeating: false, count: 4)
     init(keys: [Int], center: CGPoint, shift: CGFloat) {
         self.keys = keys
         self.center = center
@@ -189,17 +189,22 @@ class JoystickAction: Action {
     }
 
     func updateTouch(index: Int, pressed: Bool) {
+        self.keyPressed[index] = pressed
         let isPlus = index & 1 != 0
         let realShift = isPlus ? shift : -shift
         if index > 1 {
             if pressed {
                 touch.x = center.x + realShift
+            } else if self.keyPressed[index ^ 1] {
+                touch.x = center.x - realShift
             } else {
                 touch.x = center.x
             }
         } else {
             if pressed {
                 touch.y = center.y + realShift
+            } else if self.keyPressed[index ^ 1] {
+                touch.y = center.y - realShift
             } else {
                 touch.y = center.y
             }
