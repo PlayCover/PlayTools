@@ -32,9 +32,9 @@ class PlayInput {
     }
 
     func parseKeymap() {
-        actions = []
-        PlayInput.shouldLockCursor = false
+        actions = [PlayMice.shared]
         PlayInput.buttonHandlers.removeAll(keepingCapacity: true)
+        PlayInput.shouldLockCursor = false
         for button in keymap.keymapData.buttonModels {
             actions.append(ButtonAction(data: button))
         }
@@ -61,7 +61,7 @@ class PlayInput {
     }
 
     public func toggleEditor(show: Bool) {
-        mode.keyboardMapped = !show
+        mode.setMapping(!show)
         Toucher.writeLog(logMessage: "editor opened? \(show)")
         if show {
             self.invalidate()
@@ -156,11 +156,11 @@ class PlayKeyboard {
         let centre = NotificationCenter.default
         let main = OperationQueue.main
         centre.addObserver(forName: UIApplication.keyboardDidHideNotification, object: nil, queue: main) { _ in
-            mode.keyboardMapped = true
+            mode.setMapping(true)
             Toucher.writeLog(logMessage: "virtual keyboard did hide")
         }
         centre.addObserver(forName: UIApplication.keyboardWillShowNotification, object: nil, queue: main) { _ in
-            mode.keyboardMapped = false
+            mode.setMapping(false)
             Toucher.writeLog(logMessage: "virtual keyboard will show")
         }
         AKInterface.shared!.setupKeyboard(keyboard: {keycode, pressed, isRepeat in

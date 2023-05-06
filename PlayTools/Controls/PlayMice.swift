@@ -5,7 +5,7 @@
 
 import Foundation
 
-public class PlayMice {
+public class PlayMice: Action {
 
     public static let shared = PlayMice()
     public static let elementName = "Mouse"
@@ -139,6 +139,7 @@ public class PlayMice {
             }
             guard let curPos = self.cursorPos() else { return true }
             PlayInput.touchQueue.async(qos: .userInteractive, execute: {
+                // considering cases where cursor becomes hidden while holding left button
                 if self.fakedMousePressed {
                     Toucher.touchcam(point: curPos, phase: UITouch.Phase.ended, tid: &self.fakedMouseTouchPointId)
                     return
@@ -149,6 +150,7 @@ public class PlayMice {
                                      tid: &self.fakedMouseTouchPointId)
                     return
                 }
+                // considering cases where cursor becomes visible while holding left button
                 if let handlers = PlayInput.buttonHandlers["LMB"] {
                     for handler in handlers {
                         handler(pressed)
@@ -158,6 +160,11 @@ public class PlayMice {
             })
             return false
         }
+    }
+    // For all other actions, this is a destructor. should release held resources.
+    func invalidate() {
+        Toucher.touchcam(point: self.cursorPos() ?? CGPoint(x: 10, y: 10),
+                         phase: UITouch.Phase.ended, tid: &self.fakedMouseTouchPointId)
     }
 }
 
