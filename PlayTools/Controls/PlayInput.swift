@@ -65,7 +65,6 @@ class PlayInput {
         Toucher.writeLog(logMessage: "editor opened? \(show)")
         if show {
             self.invalidate()
-            mode.show(show)
             if let keyboard = GCKeyboard.coalesced!.keyboardInput {
                 keyboard.keyChangedHandler = { _, _, keyCode, pressed in
                     PlayKeyboard.handleEditorEvent(keyCode: keyCode, pressed: pressed)
