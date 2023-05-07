@@ -23,16 +23,17 @@ public class ControlMode {
     }
 
     func setMapping(_ mapped: Bool) {
-        keyboardMapped = mapped
         if mapped {
             PlayInput.shared.parseKeymap()
         } else {
+            show(true)
             PlayInput.shared.invalidate()
         }
+        keyboardMapped = mapped
     }
 
     func show(_ show: Bool) {
-        if !editor.editorMode {
+        if keyboardMapped {
             if show {
                 if !visible {
                     NotificationCenter.default.post(name: NSNotification.Name.playtoolsCursorWillShow,
