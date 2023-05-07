@@ -47,6 +47,9 @@ public class ControlMode {
             }
             Toucher.writeLog(logMessage: "cursor show switched to \(show)")
             visible = show
+            if PlaySettings.shared.noKMOnInput {
+                keyboardMapped = false
+            }
         }
     }
 }
