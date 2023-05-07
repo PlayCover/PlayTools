@@ -10,7 +10,7 @@ class Toucher {
     static weak var keyWindow: UIWindow?
     static weak var keyView: UIView?
     // For debug only
-    static var logEnabled = false
+    static var logEnabled = true
     static var logFilePath =
     NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] + "/toucher.log"
     static private var logCount = 0
