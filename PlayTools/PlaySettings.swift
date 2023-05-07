@@ -71,6 +71,8 @@ let settings = PlaySettings.shared
     @objc lazy var customScaler = settingsData.customScaler
     
     @objc lazy var rootWorkDir = settingsData.rootWorkDir
+    
+    @objc lazy var noKMOnInput = settingsData.noKMOnInput
 }
 
 struct AppSettingsData: Codable {
@@ -93,4 +95,5 @@ struct AppSettingsData: Codable {
     var inverseScreenValues = false
     var windowFixMethod = 0
     var rootWorkDir = true
+    var noKMOnInput = false
 }

@@ -155,13 +155,17 @@ class PlayKeyboard {
     public static func initialize() {
         let centre = NotificationCenter.default
         let main = OperationQueue.main
-        centre.addObserver(forName: UIApplication.keyboardDidHideNotification, object: nil, queue: main) { _ in
-            mode.keyboardMapped = true
-            Toucher.writeLog(logMessage: "virtual keyboard did hide")
-        }
-        centre.addObserver(forName: UIApplication.keyboardWillShowNotification, object: nil, queue: main) { _ in
-            mode.keyboardMapped = false
-            Toucher.writeLog(logMessage: "virtual keyboard will show")
+        
+        // Initialize observers to automatically hide keymappings
+        if PlaySettings.shared.noKMOnInput {
+            centre.addObserver(forName: UIApplication.keyboardDidHideNotification, object: nil, queue: main) { _ in
+                mode.keyboardMapped = true
+                Toucher.writeLog(logMessage: "virtual keyboard did hide")
+            }
+            centre.addObserver(forName: UIApplication.keyboardWillShowNotification, object: nil, queue: main) { _ in
+                mode.keyboardMapped = false
+                Toucher.writeLog(logMessage: "virtual keyboard will show")
+            }
         }
         AKInterface.shared!.setupKeyboard(keyboard: {keycode, pressed, isRepeat in
             if !mode.keyboardMapped {
