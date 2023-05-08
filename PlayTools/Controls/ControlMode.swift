@@ -22,27 +22,35 @@ public class ControlMode {
         return false
     }
 
+    func setMapping(_ mapped: Bool) {
+        if mapped {
+            PlayInput.shared.parseKeymap()
+        } else {
+            show(true)
+            PlayInput.shared.invalidate()
+        }
+        keyboardMapped = mapped
+    }
+
     func show(_ show: Bool) {
-        if !editor.editorMode {
+        if keyboardMapped {
             if show {
                 if !visible {
-                    NotificationCenter.default.post(name: NSNotification.Name.playtoolsKeymappingWillDisable,
+                    NotificationCenter.default.post(name: NSNotification.Name.playtoolsCursorWillShow,
                                                     object: nil, userInfo: [:])
                     if screen.fullscreen {
                         screen.switchDock(true)
                     }
                     AKInterface.shared!.unhideCursor()
-//                    PlayInput.shared.invalidate()
                 }
             } else {
                 if visible {
-                    NotificationCenter.default.post(name: NSNotification.Name.playtoolsKeymappingWillEnable,
+                    NotificationCenter.default.post(name: NSNotification.Name.playtoolsCursorWillHide,
                                                     object: nil, userInfo: [:])
                     AKInterface.shared!.hideCursor()
                     if screen.fullscreen {
                         screen.switchDock(false)
                     }
-//                    PlayInput.shared.setup()
                 }
             }
             Toucher.writeLog(logMessage: "cursor show switched to \(show)")
@@ -52,9 +60,9 @@ public class ControlMode {
 }
 
 extension NSNotification.Name {
-    public static let playtoolsKeymappingWillEnable: NSNotification.Name
-                    = NSNotification.Name("playtools.keymappingWillEnable")
+    public static let playtoolsCursorWillHide: NSNotification.Name
+                    = NSNotification.Name("playtools.cursorWillHide")
 
-    public static let playtoolsKeymappingWillDisable: NSNotification.Name
-                    = NSNotification.Name("playtools.keymappingWillDisable")
+    public static let playtoolsCursorWillShow: NSNotification.Name
+                    = NSNotification.Name("playtools.cursorWillShow")
 }

@@ -127,7 +127,7 @@ class Toast {
         }
         var token2: NSObjectProtocol?
         let center = NotificationCenter.default
-        token2 = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillDisable,
+        token2 = center.addObserver(forName: NSNotification.Name.playtoolsCursorWillShow,
                                     object: nil, queue: OperationQueue.main) { _ in
             center.removeObserver(token2!)
             UserDefaults.standard.set(thisUse, forKey: persistenceKeyname)
@@ -151,10 +151,10 @@ class Toast {
                                                 tableName: "Playtools",
                                                 value: "to enable mouse mapping", comment: "")],
                        timeout: 10,
-                       notification: NSNotification.Name.playtoolsKeymappingWillEnable)
+                       notification: NSNotification.Name.playtoolsCursorWillHide)
         let center = NotificationCenter.default
         var token: NSObjectProtocol?
-        token = center.addObserver(forName: NSNotification.Name.playtoolsKeymappingWillEnable,
+        token = center.addObserver(forName: NSNotification.Name.playtoolsCursorWillHide,
                                    object: nil, queue: OperationQueue.main) { _ in
             center.removeObserver(token!)
             Toast.showHint(title: NSLocalizedString("hint.showCursor.title",
@@ -168,7 +168,7 @@ class Toast {
                                                     tableName: "Playtools",
                                                     value: "to unlock cursor", comment: "")],
                            timeout: 10,
-                           notification: NSNotification.Name.playtoolsKeymappingWillDisable)
+                           notification: NSNotification.Name.playtoolsCursorWillShow)
         }
     }
     
