@@ -5,20 +5,36 @@ import UIKit
 class PlayInput {
     static let shared = PlayInput()
     var actions = [Action]()
-    var timeoutForBind = true
+    static var shouldLockCursor = true
 
-    static private var lCmdPressed = false
-    static private var rCmdPressed = false
+    static var touchQueue = DispatchQueue.init(label: "playcover.toucher", qos: .userInteractive,
+                                               autoreleaseFrequency: .workItem)
+    static public var buttonHandlers: [String: [(Bool) -> Void]] = [:],
+                    draggableHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
+                    cameraMoveHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
+                    cameraScaleHandler: [String: (CGFloat, CGFloat) -> Void] = [:],
+                    joystickHandler: [String: (CGFloat, CGFloat) -> Void] = [:]
 
     func invalidate() {
-        PlayMice.shared.stop()
         for action in self.actions {
             action.invalidate()
         }
     }
 
+    static public func registerButton(key: String, handler: @escaping (Bool) -> Void) {
+        if "LMB" == key {
+            PlayInput.shouldLockCursor = true
+        }
+        if PlayInput.buttonHandlers[key] == nil {
+            PlayInput.buttonHandlers[key] = []
+        }
+        PlayInput.buttonHandlers[key]!.append(handler)
+    }
+
     func parseKeymap() {
-        actions = []
+        actions = [PlayMice.shared]
+        PlayInput.buttonHandlers.removeAll(keepingCapacity: true)
+        PlayInput.shouldLockCursor = false
         for button in keymap.keymapData.buttonModels {
             actions.append(ButtonAction(data: button))
         }
@@ -28,9 +44,7 @@ class PlayInput {
         }
 
         for mouse in keymap.keymapData.mouseAreaModel {
-            if mouse.keyName.hasSuffix("tick") || settings.mouseMapping {
-                actions.append(CameraAction(data: mouse))
-            }
+            actions.append(CameraAction(data: mouse))
         }
 
         for joystick in keymap.keymapData.joystickModel {
@@ -41,98 +55,34 @@ class PlayInput {
                 actions.append(JoystickAction(data: joystick))
             }
         }
+        if !PlayInput.shouldLockCursor {
+            PlayInput.shouldLockCursor = PlayMice.shared.mouseMovementMapped()
+        }
     }
 
     public func toggleEditor(show: Bool) {
-        mode.show(show)
+        mode.setMapping(!show)
+        Toucher.writeLog(logMessage: "editor opened? \(show)")
         if show {
+            self.invalidate()
             if let keyboard = GCKeyboard.coalesced!.keyboardInput {
-                keyboard.keyChangedHandler = { _, _, keyCode, _ in
-                    if !PlayInput.cmdPressed()
-                        && !PlayInput.FORBIDDEN.contains(keyCode)
-                        && self.isSafeToBind(keyboard) {
-                        EditorController.shared.setKey(keyCode.rawValue)
-                    }
+                keyboard.keyChangedHandler = { _, _, keyCode, pressed in
+                    PlayKeyboard.handleEditorEvent(keyCode: keyCode, pressed: pressed)
                 }
             }
             if let controller = GCController.current?.extendedGamepad {
-                controller.valueChangedHandler = { _, element in
-                    // This is the index of controller buttons, which is String, not Int
-                    let alias: String! = element.aliases.first
-                    EditorController.shared.setKey(alias)
-                }
+                controller.valueChangedHandler = PlayController.handleEditorEvent
             }
         } else {
-            GCKeyboard.coalesced!.keyboardInput!.keyChangedHandler = nil
-            GCController.current?.extendedGamepad?.valueChangedHandler = nil
+            GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = nil
+            PlayController.initialize()
+            parseKeymap()
+            _ = ControlMode.trySwap()
         }
-    }
-
-    func setup() {
-        parseKeymap()
-
-        for mouse in GCMouse.mice() {
-            if settings.mouseMapping {
-                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleMouseMoved
-            } else {
-                mouse.mouseInput?.mouseMovedHandler = PlayMice.shared.handleFakeMouseMoved
-            }
-        }
-
     }
 
     static public func cmdPressed() -> Bool {
-        return lCmdPressed || rCmdPressed
-    }
-
-    private func isSafeToBind(_ input: GCKeyboardInput) -> Bool {
-           var result = true
-           for forbidden in PlayInput.FORBIDDEN where input.button(forKeyCode: forbidden)?.isPressed ?? false {
-               result = false
-               break
-           }
-           return result
-       }
-
-    private static let FORBIDDEN: [GCKeyCode] = [
-        .leftGUI,
-        .rightGUI,
-        .leftAlt,
-        .rightAlt,
-        .printScreen
-    ]
-
-    private func swapMode(_ pressed: Bool) {
-        if !settings.mouseMapping {
-            return
-        }
-        if pressed {
-            if !mode.visible {
-                self.invalidate()
-            }
-            mode.show(!mode.visible)
-        }
-    }
-
-    var root: UIViewController? {
-        return screen.window?.rootViewController
-    }
-
-    func setupShortcuts() {
-        if let keyboard = GCKeyboard.coalesced?.keyboardInput {
-            keyboard.button(forKeyCode: .leftGUI)?.pressedChangedHandler = { _, _, pressed in
-                PlayInput.lCmdPressed = pressed
-            }
-            keyboard.button(forKeyCode: .rightGUI)?.pressedChangedHandler = { _, _, pressed in
-                PlayInput.rCmdPressed = pressed
-            }
-            keyboard.button(forKeyCode: .leftAlt)?.pressedChangedHandler = { _, _, pressed in
-                self.swapMode(pressed)
-            }
-            keyboard.button(forKeyCode: .rightAlt)?.pressedChangedHandler = { _, _, pressed in
-                self.swapMode(pressed)
-            }
-        }
+        return AKInterface.shared!.cmdPressed
     }
 
     func initialize() {
@@ -143,33 +93,86 @@ class PlayInput {
         let centre = NotificationCenter.default
         let main = OperationQueue.main
 
-        centre.addObserver(forName: NSNotification.Name.GCKeyboardDidConnect, object: nil, queue: main) { _ in
-            self.setupShortcuts()
-            if !mode.visible {
-                self.setup()
-            }
-        }
-
-        centre.addObserver(forName: NSNotification.Name.GCMouseDidConnect, object: nil, queue: main) { _ in
-            if !mode.visible {
-                self.setup()
-            }
-        }
-
         centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
-            if !mode.visible {
-                self.setup()
+            if EditorController.shared.editorMode {
+                self.toggleEditor(show: true)
+            } else {
+                PlayController.initialize()
             }
         }
+        parseKeymap()
+        centre.addObserver(forName: NSNotification.Name(rawValue: "NSWindowDidBecomeKeyNotification"), object: nil,
+            queue: main) { _ in
+            if !mode.visible {
+                AKInterface.shared!.warpCursor()
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, qos: .utility) {
+            if !mode.visible || self.actions.count <= 0 || !PlayInput.shouldLockCursor {
+                return
+            }
+            Toast.initialize()
+        }
+        PlayKeyboard.initialize()
+        PlayMice.shared.initialize()
 
-        setupShortcuts()
+    }
+}
 
-        // Fix beep sound
-        AKInterface.shared!
-            .eliminateRedundantKeyPressEvents(self.dontIgnore)
+class PlayKeyboard {
+    public static func handleEditorEvent(keyCode: GCKeyCode, pressed: Bool) {
+        if !PlayInput.cmdPressed()
+            && !PlayKeyboard.FORBIDDEN.contains(keyCode)
+            && KeyCodeNames.keyCodes[keyCode.rawValue] != nil {
+            EditorController.shared.setKey(keyCode.rawValue)
+        }
     }
 
-    func dontIgnore() -> Bool {
-        (mode.visible && !EditorController.shared.editorMode) || PlayInput.cmdPressed()
+    private static let FORBIDDEN: [GCKeyCode] = [
+        .leftGUI,
+        .rightGUI,
+        .leftAlt,
+        .rightAlt,
+        .printScreen
+    ]
+
+    static func handleEvent(_ keyCode: UInt16, _ pressed: Bool) -> Bool {
+        let name = KeyCodeNames.virtualCodes[keyCode] ?? "Btn"
+        guard let handlers = PlayInput.buttonHandlers[name] else {
+            return false
+        }
+        var mapped = false
+        for handler in handlers {
+            PlayInput.touchQueue.async(qos: .userInteractive, execute: {
+                handler(pressed)
+            })
+            mapped = true
+        }
+        return mapped
+    }
+
+    public static func initialize() {
+        let centre = NotificationCenter.default
+        let main = OperationQueue.main
+        centre.addObserver(forName: UIApplication.keyboardDidHideNotification, object: nil, queue: main) { _ in
+            mode.setMapping(true)
+            Toucher.writeLog(logMessage: "virtual keyboard did hide")
+        }
+        centre.addObserver(forName: UIApplication.keyboardWillShowNotification, object: nil, queue: main) { _ in
+            mode.setMapping(false)
+            Toucher.writeLog(logMessage: "virtual keyboard will show")
+        }
+        AKInterface.shared!.setupKeyboard(keyboard: {keycode, pressed, isRepeat in
+            if !mode.keyboardMapped {
+                // explicitly ignore repeated Enter key
+                return isRepeat && keycode == 36
+            }
+            if isRepeat {
+                return true
+            }
+            let mapped = PlayKeyboard.handleEvent(keycode, pressed)
+            return mapped
+        },
+           swapMode: ControlMode.trySwap)
     }
 }

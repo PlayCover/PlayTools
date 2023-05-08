@@ -27,11 +27,11 @@ let settings = PlaySettings.shared
 
     lazy var keymapping = settingsData.keymapping
 
-    lazy var mouseMapping = settingsData.mouseMapping
-
     lazy var notch = settingsData.notch
 
     lazy var sensitivity = settingsData.sensitivity / 100
+
+    @objc lazy var bypass = settingsData.bypass
 
     @objc lazy var windowSizeHeight = CGFloat(settingsData.windowHeight)
 
@@ -61,22 +61,36 @@ let settings = PlaySettings.shared
             return "J320xAP"
         }
     }()
+
+    @objc lazy var playChain = settingsData.playChain
+
+    @objc lazy var playChainDebugging = settingsData.playChainDebugging
+
+    @objc lazy var windowFixMethod = settingsData.windowFixMethod
+
+    @objc lazy var customScaler = settingsData.customScaler
+    
+    @objc lazy var rootWorkDir = settingsData.rootWorkDir
 }
 
 struct AppSettingsData: Codable {
     var keymapping = true
-    var mouseMapping = true
     var sensitivity: Float = 50
 
     var disableTimeout = false
     var iosDeviceModel = "iPad13,8"
     var windowWidth = 1920
     var windowHeight = 1080
+    var customScaler = 2.0
     var resolution = 2
     var aspectRatio = 1
     var notch = false
     var bypass = false
     var discordActivity = DiscordActivity()
     var version = "2.0.0"
+    var playChain = false
+    var playChainDebugging = false
     var inverseScreenValues = false
+    var windowFixMethod = 0
+    var rootWorkDir = true
 }
