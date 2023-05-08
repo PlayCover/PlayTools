@@ -63,7 +63,8 @@ class Keymapping {
         }
     }
 }
-
+// Data structure definition should match those in
+// https://github.com/PlayCover/PlayCover/blob/develop/PlayCover/Model/Keymapping.swift
 struct KeyModelTransform: Codable {
     var size: CGFloat
     var xCoord: CGFloat

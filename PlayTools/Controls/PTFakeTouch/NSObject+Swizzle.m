@@ -11,7 +11,6 @@
 #import "UIKit/UIKit.h"
 #import <PlayTools/PlayTools-Swift.h>
 #import "PTFakeMetaTouch.h"
-#import <VideoSubscriberAccount/VideoSubscriberAccount.h>
 
 __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
@@ -94,11 +93,13 @@ __attribute__((visibility("hidden")))
 }
 
 - (double) hook_nativeScale {
-    return 2.0;
+    return [[PlaySettings shared] customScaler];
 }
 
 - (double) hook_scale {
-    return 2.0;
+    // Return rounded value of [[PlaySettings shared] customScaler]
+    // Even though it is a double return, this will only accept .0 value or apps will crash
+    return round([[PlaySettings shared] customScaler]);
 }
 
 - (double) get_default_height {
@@ -108,11 +109,6 @@ __attribute__((visibility("hidden")))
 - (double) get_default_width {
     return [[UIScreen mainScreen] bounds].size.width;
     
-}
-
-
-- (void) hook_setCurrentSubscription:(VSSubscription *)currentSubscription {
-    // do nothing
 }
 
 
@@ -183,21 +179,26 @@ bool menuWasCreated = false;
             }
         }
         else {
-            CGFloat newValueW = (CGFloat) [self get_default_width];
-            [[PlaySettings shared] setValue:@(newValueW) forKey:@"windowSizeWidth"];
-            
-            CGFloat newValueH = (CGFloat)[self get_default_height];
-            [[PlaySettings shared] setValue:@(newValueH) forKey:@"windowSizeHeight"];
-            if (![[PlaySettings shared] inverseScreenValues]) {
-                 [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
-                 [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_boundsDefault)];
-                 [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_sizeDelfault)];
+            if ([[PlaySettings shared] windowFixMethod] == 1) {
+                // do nothing:tm:
             }
-            [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
-            [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBoundsDefault)];
-            
-            [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
-            [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
+            else {
+                CGFloat newValueW = (CGFloat) [self get_default_width];
+                [[PlaySettings shared] setValue:@(newValueW) forKey:@"windowSizeWidth"];
+                
+                CGFloat newValueH = (CGFloat)[self get_default_height];
+                [[PlaySettings shared] setValue:@(newValueH) forKey:@"windowSizeHeight"];
+                if (![[PlaySettings shared] inverseScreenValues]) {
+                    [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
+                    [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_boundsDefault)];
+                    [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_sizeDelfault)];
+                }
+                [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(orientation) withMethod:@selector(hook_orientation)];
+                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBoundsDefault)];
+                
+                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
+                [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
+            }
         }
     } 
     else {
@@ -210,8 +211,6 @@ bool menuWasCreated = false;
     
     [objc_getClass("_UIMenuBuilder") swizzleInstanceMethod:sel_getUid("initWithRootMenu:") withMethod:@selector(initWithRootMenuHook:)];
     [objc_getClass("IOSViewController") swizzleInstanceMethod:@selector(prefersPointerLocked) withMethod:@selector(hook_prefersPointerLocked)];
-
-    [objc_getClass("VSSubscriptionRegistrationCenter") swizzleInstanceMethod:@selector(setCurrentSubscription:) withMethod:@selector(hook_setCurrentSubscription:)];
 }
 
 @end
