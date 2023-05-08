@@ -74,7 +74,7 @@ class EditorController {
                                                     tableName: "Playtools",
                                 value: "Click a button to edit its position or key bind\n"
                                         + "Click an empty area to open input menu", comment: "")],
-                           notification: NSNotification.Name.playtoolsKeymappingWillEnable)
+                           notification: NSNotification.Name.playtoolsCursorWillHide)
         }
 //        Toast.showOver(msg: "\(UIApplication.shared.windows.count)")
         lock.unlock()
