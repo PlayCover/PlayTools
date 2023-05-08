@@ -83,6 +83,10 @@ class Toast {
         messageLabel.center.x = parent.center.x
         messageLabel.center.y = -messageLabel.frame.size.height / 2
 
+        // Disable editing
+        messageLabel.isEditable = false
+        messageLabel.isSelectable = false
+
         hintView.append(messageLabel)
         parent.addSubview(messageLabel)
 
