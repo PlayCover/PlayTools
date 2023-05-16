@@ -38,9 +38,10 @@ class AKPlugin: NSObject, Plugin {
     }
 
     var cmdPressed: Bool = false
-
+    var cursorHideLevel = 0
     func hideCursor() {
         NSCursor.hide()
+        cursorHideLevel += 1
         CGAssociateMouseAndMouseCursorPosition(0)
         warpCursor()
     }
@@ -54,7 +55,10 @@ class AKPlugin: NSObject, Plugin {
 
     func unhideCursor() {
         NSCursor.unhide()
-        CGAssociateMouseAndMouseCursorPosition(1)
+        cursorHideLevel -= 1
+        if cursorHideLevel <= 0 {
+            CGAssociateMouseAndMouseCursorPosition(1)
+        }
     }
 
     func terminateApplication() {
