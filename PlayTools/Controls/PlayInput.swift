@@ -16,12 +16,14 @@ class PlayInput {
                     joystickHandler: [String: (CGFloat, CGFloat) -> Void] = [:]
 
     func invalidate() {
+        // this is called whenever keymapping disabled, to release all mapping resource
         for action in self.actions {
             action.invalidate()
         }
     }
 
     static public func registerButton(key: String, handler: @escaping (Bool) -> Void) {
+        // this function is called when setting up `button` type of mapping
         if "LMB" == key {
             PlayInput.shouldLockCursor = true
         }
@@ -34,7 +36,13 @@ class PlayInput {
     func parseKeymap() {
         actions = [PlayMice.shared]
         PlayInput.buttonHandlers.removeAll(keepingCapacity: true)
-        PlayInput.shouldLockCursor = false
+        // `shouldLockCursor` is used to disable `option` toggle when there is no mouse mapping
+        // but in the case this new feature disabled, `option` should always function.
+        // this variable is initilized here to be checked for mouse mapping later.
+        // intialize it to the reverse of the new feature's enable state makes
+        // it always true if the new feature is disabled, as it won't be set false in
+        // any case anywhere else in this case.
+        PlayInput.shouldLockCursor = !PlaySettings.shared.noKMOnInput
         for button in keymap.keymapData.buttonModels {
             actions.append(ButtonAction(data: button))
         }
@@ -65,6 +73,8 @@ class PlayInput {
         Toucher.writeLog(logMessage: "editor opened? \(show)")
         if show {
             self.invalidate()
+            // there is no special reason to use GC API for editor, instead of NSEvents.
+            // just voider did this and I'm not changing it yet.
             if let keyboard = GCKeyboard.coalesced!.keyboardInput {
                 keyboard.keyChangedHandler = { _, _, keyCode, pressed in
                     PlayKeyboard.handleEditorEvent(keyCode: keyCode, pressed: pressed)
@@ -163,6 +173,9 @@ class PlayKeyboard {
                 mode.setMapping(false)
                 Toucher.writeLog(logMessage: "virtual keyboard will show")
             }
+        } else {
+            // we want to initialize keymapping to false
+            mode.setMapping(false)
         }
         AKInterface.shared!.setupKeyboard(keyboard: {keycode, pressed, isRepeat in
             if !mode.keyboardMapped {
@@ -174,7 +187,8 @@ class PlayKeyboard {
             }
             let mapped = PlayKeyboard.handleEvent(keycode, pressed)
             return mapped
-        },
+        }, // passing the function to be called when `option` pressed.
+          // return `true` meaning this key press is consumed, `false` dispatching it to the App
            swapMode: ControlMode.trySwap)
     }
 }
