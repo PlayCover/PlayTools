@@ -14,6 +14,7 @@ public class ControlMode {
     public var keyboardMapped = true
 
     public static func trySwap() -> Bool {
+        // this function is called from `AKPlugin` when `option` is pressed.
         if PlayInput.shouldLockCursor {
             mode.show(!mode.visible)
             return true
@@ -24,16 +25,24 @@ public class ControlMode {
 
     func setMapping(_ mapped: Bool) {
         if mapped {
+            // `parseKeymap` and `invalidate` roughly do the opposite thing
             PlayInput.shared.parseKeymap()
         } else {
-            show(true)
+            // to avoid infinite recursion
+            if !visible {
+                show(true)
+            }
             PlayInput.shared.invalidate()
         }
         keyboardMapped = mapped
     }
 
     func show(_ show: Bool) {
-        if keyboardMapped {
+        // special cases where function of `option` should be temparorily disabled.
+        // if the new auto keymapping feature is enabled, it could cause problems to switch
+        // cursor show state while typing.
+        if (!PlaySettings.shared.noKMOnInput && !editor.editorMode)
+        || (PlaySettings.shared.noKMOnInput && keyboardMapped) {
             if show {
                 if !visible {
                     NotificationCenter.default.post(name: NSNotification.Name.playtoolsCursorWillShow,
@@ -56,7 +65,9 @@ public class ControlMode {
             Toucher.writeLog(logMessage: "cursor show switched to \(show)")
             visible = show
             if !PlaySettings.shared.noKMOnInput {
-                keyboardMapped = false
+                // we want to set keymapping as the reverse of curosr show status, not always false.
+                // as well as do some logic along with it
+                setMapping(!show)
             }
         }
     }
