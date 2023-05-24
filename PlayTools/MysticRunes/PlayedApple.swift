@@ -37,6 +37,9 @@ public class PlayKeychain: NSObject {
 
     private static func keychainPath(_ attributes: NSDictionary) -> URL {
         let keychainFolder = getKeychainDirectory()
+        if attributes["r_Ref"] as? Int == 1 {
+            attributes.setValue("keys", forKey: "class")
+        }
         // Generate a key path based on the key attributes
         let accountName = attributes[kSecAttrAccount as String] as? String ?? ""
         let serviceName = attributes[kSecAttrService as String] as? String ?? ""
@@ -56,10 +59,10 @@ public class PlayKeychain: NSObject {
     @objc static public func add(_ attributes: NSDictionary, result: UnsafeMutablePointer<CFTypeRef?>?) -> OSStatus {
         let keychainPath = keychainPath(attributes)
         // Check if the keychain file already exists
-        if FileManager.default.fileExists(atPath: keychainPath.path) {
-            debugLogger("Keychain file already exists")
-            return errSecDuplicateItem
-        }
+        // if FileManager.default.fileExists(atPath: keychainPath.path) {
+        //     debugLogger("Keychain file already exists")
+        //     return errSecDuplicateItem
+        // }
         // Write the dictionary to the keychain file
         do {
             try attributes.write(to: keychainPath)
@@ -131,16 +134,61 @@ public class PlayKeychain: NSObject {
         // Read the dictionary from the keychain file
         let keychainDict = NSDictionary(contentsOf: keychainPath)
         // Check the `r_Attributes` key. If it is set to 1 in the query
-        // DROP, NOT IMPLEMENTED
         let classType = query[kSecClass as String] as? String ?? ""
-        if query["r_Attributes"] as? Int == 1 {
-            return errSecItemNotFound
-        }
+
         // If the keychain file doesn't exist, return errSecItemNotFound
         if keychainDict == nil {
             debugLogger("Keychain file not found at \(keychainPath)")
             return errSecItemNotFound
         }
+
+        if query["r_Attributes"] as? Int == 1 {
+            // if the keychainDict is nil, we need to return errSecItemNotFound
+            if keychainDict == nil {
+                debugLogger("Keychain file not found at \(keychainPath)")
+                return errSecItemNotFound
+            }
+
+            // Create a dummy dictionary and return it
+            let dummyDict = NSMutableDictionary()
+            dummyDict.setValue(classType, forKey: "class")
+            dummyDict.setValue(query[kSecAttrAccount as String], forKey: "acct")
+            dummyDict.setValue(query[kSecAttrService as String], forKey: "svce")
+            dummyDict.setValue(query[kSecAttrGeneric as String], forKey: "gena")
+            result?.pointee = dummyDict
+            return errSecSuccess
+        }
+
+        // Check for r_Ref 
+        if query["r_Ref"] as? Int == 1 {
+            // Return the data on v_PersistentRef or v_Data if they exist
+            var key: CFTypeRef?
+            if let vData = keychainDict!["v_Data"] {
+                NSLog("found v_Data")
+                debugLogger("Read keychain file from \(keychainPath)")
+                key = vData as CFTypeRef
+            }
+            if let vPersistentRef = keychainDict!["v_PersistentRef"] {
+                NSLog("found persistent ref")
+                debugLogger("Read keychain file from \(keychainPath)")
+                key = vPersistentRef as CFTypeRef
+            }
+
+            if key == nil {
+                debugLogger("Keychain file not found at \(keychainPath)")
+                return errSecItemNotFound
+            }
+            
+            let dummyKeyAttrs = [
+                kSecAttrKeyType: keychainDict?["type"] ?? kSecAttrKeyTypeRSA,
+                kSecAttrKeyClass: keychainDict!["kcls"] ?? kSecAttrKeyClassPublic
+            ] as CFDictionary
+
+            let secKey = SecKeyCreateWithData(key as! CFData, dummyKeyAttrs, nil) // swiftlint:disable:this force_cast
+            result?.pointee = secKey
+            return errSecSuccess
+        }
+
         // Return v_Data if it exists
         if let vData = keychainDict!["v_Data"] {
             debugLogger("Read keychain file from \(keychainPath)")
