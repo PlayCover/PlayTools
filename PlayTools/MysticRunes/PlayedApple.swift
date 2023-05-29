@@ -35,7 +35,7 @@ public class PlayKeychain: NSObject {
         return keychainFolder
     }
 
-    private static func keychainPath(_ attributes: NSDictionary) -> URL {
+    private static func getKeychainPath(_ attributes: NSDictionary) -> URL {
         let keychainFolder = getKeychainDirectory()
         if attributes["r_Ref"] as? Int == 1 {
             attributes.setValue("keys", forKey: "class")
@@ -48,6 +48,27 @@ public class PlayKeychain: NSObject {
             .appendingPathComponent("\(serviceName)-\(accountName)-\(classType).plist")
     }
 
+    private static func findSimilarKeys(_ attributes: NSDictionary) -> URL? {
+        // Things we can fuzz: accountName
+
+        let keychainFolder = getKeychainDirectory()
+        let serviceName = attributes[kSecAttrService as String] as? String ?? ""
+        let classType = attributes[kSecClass as String] as? String ?? ""
+
+        let everyKeys = try? FileManager.default.contentsOfDirectory(at: keychainFolder!,
+                                                                     includingPropertiesForKeys: nil,
+                                                                     options: .skipsHiddenFiles)
+        let searchRegex = try? NSRegularExpression(pattern: "\(serviceName)-.*-\(classType).plist",
+                                                   options: .caseInsensitive)
+
+        for key in everyKeys! where searchRegex!.matches(in: key.path,
+                                                         options: [],
+                                                         range: NSRange(location: 0, length: key.path.count)).count > 0 {
+            return keychainFolder!.appendingPathComponent(key.lastPathComponent)
+        }
+        return nil
+    }
+
     @objc public static func debugLogger(_ logContent: String) {
         if PlaySettings.shared.settingsData.playChainDebugging {
             NSLog("PC-DEBUG: \(logContent)")
@@ -57,7 +78,7 @@ public class PlayKeychain: NSObject {
     // Store the entire dictionary as a plist
     // SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
     @objc static public func add(_ attributes: NSDictionary, result: UnsafeMutablePointer<CFTypeRef?>?) -> OSStatus {
-        let keychainPath = keychainPath(attributes)
+        let keychainPath = getKeychainPath(attributes)
         // Check if the keychain file already exists
         // if FileManager.default.fileExists(atPath: keychainPath.path) {
         //     debugLogger("Keychain file already exists")
@@ -81,7 +102,7 @@ public class PlayKeychain: NSObject {
     // SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate)
     @objc static public func update(_ query: NSDictionary, attributesToUpdate: NSDictionary) -> OSStatus {
         // Get the path to the keychain file
-        let keychainPath = keychainPath(query)
+        let keychainPath = getKeychainPath(query)
         // Read the dictionary from the keychain file
         let keychainDict = NSDictionary(contentsOf: keychainPath)
         debugLogger("Read keychain file from \(keychainPath)")
@@ -114,7 +135,7 @@ public class PlayKeychain: NSObject {
     // SecItemDelete(CFDictionaryRef query)
     @objc static public func delete(_ query: NSDictionary) -> OSStatus {
         // Get the path to the keychain file
-        let keychainPath = keychainPath(query)
+        let keychainPath = getKeychainPath(query)
         // Delete the keychain file
         do {
             try FileManager.default.removeItem(at: keychainPath)
@@ -130,7 +151,18 @@ public class PlayKeychain: NSObject {
     @objc static public func copyMatching(_ query: NSDictionary, result: UnsafeMutablePointer<CFTypeRef?>?)
     -> OSStatus {
         // Get the path to the keychain file
-        let keychainPath = keychainPath(query)
+        var keychainPath = getKeychainPath(query)
+        // If the keychain file doesn't exist, attempt to find a similar key
+        if !FileManager.default.fileExists(atPath: keychainPath.path) {
+            if let similarKey = findSimilarKeys(query) {
+                NSLog("Found similar key at \(similarKey)")
+                keychainPath = similarKey
+            } else {
+                debugLogger("Keychain file not found at \(keychainPath)")
+                return errSecItemNotFound
+            }
+        }
+
         // Read the dictionary from the keychain file
         let keychainDict = NSDictionary(contentsOf: keychainPath)
         // Check the `r_Attributes` key. If it is set to 1 in the query
@@ -143,6 +175,7 @@ public class PlayKeychain: NSObject {
         }
 
         if query["r_Attributes"] as? Int == 1 {
+            return errSecItemNotFound
             // if the keychainDict is nil, we need to return errSecItemNotFound
             if keychainDict == nil {
                 debugLogger("Keychain file not found at \(keychainPath)")
@@ -152,9 +185,9 @@ public class PlayKeychain: NSObject {
             // Create a dummy dictionary and return it
             let dummyDict = NSMutableDictionary()
             dummyDict.setValue(classType, forKey: "class")
-            dummyDict.setValue(query[kSecAttrAccount as String], forKey: "acct")
-            dummyDict.setValue(query[kSecAttrService as String], forKey: "svce")
-            dummyDict.setValue(query[kSecAttrGeneric as String], forKey: "gena")
+            dummyDict.setValue(keychainDict![kSecAttrAccount as String], forKey: "acct")
+            dummyDict.setValue(keychainDict![kSecAttrService as String], forKey: "svce")
+            dummyDict.setValue(keychainDict![kSecAttrGeneric as String], forKey: "gena")
             result?.pointee = dummyDict
             return errSecSuccess
         }
