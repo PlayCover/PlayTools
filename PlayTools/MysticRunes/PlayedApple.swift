@@ -154,13 +154,14 @@ public class PlayKeychain: NSObject {
         var keychainPath = getKeychainPath(query)
         // If the keychain file doesn't exist, attempt to find a similar key
         if !FileManager.default.fileExists(atPath: keychainPath.path) {
-            if let similarKey = findSimilarKeys(query) {
-                NSLog("Found similar key at \(similarKey)")
-                keychainPath = similarKey
-            } else {
-                debugLogger("Keychain file not found at \(keychainPath)")
-                return errSecItemNotFound
-            }
+            return errSecItemNotFound
+            // if let similarKey = findSimilarKeys(query) {
+            //     NSLog("Found similar key at \(similarKey)")
+            //     keychainPath = similarKey
+            // } else {
+            //     debugLogger("Keychain file not found at \(keychainPath)")
+            //     return errSecItemNotFound
+            // }
         }
 
         // Read the dictionary from the keychain file
@@ -175,7 +176,6 @@ public class PlayKeychain: NSObject {
         }
 
         if query["r_Attributes"] as? Int == 1 {
-            return errSecItemNotFound
             // if the keychainDict is nil, we need to return errSecItemNotFound
             if keychainDict == nil {
                 debugLogger("Keychain file not found at \(keychainPath)")
