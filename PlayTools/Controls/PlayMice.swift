@@ -38,6 +38,7 @@ public class PlayMice: Action {
     var fakedMousePressed: Bool {fakedMouseTouchPointId != nil}
 
     public func mouseMovementMapped() -> Bool {
+        // this is called from `parseKeymap` to set `shouldLockCursor`'s value
         for handler in [PlayInput.cameraMoveHandler, PlayInput.joystickHandler]
         where handler[PlayMice.elementName] != nil {
             return true
@@ -220,6 +221,9 @@ class CameraAction: Action {
 
     func invalidate() {
         PlayInput.cameraMoveHandler.removeValue(forKey: key)
+        // when noKMOnInput is false, swipe/pan gesture handler would be invalidated when keymapping disabled.
+        // as it's just a temporary toggle, not fixing it.
+        // but should remove that toggle as long as new feature considered stable.
         PlayInput.cameraScaleHandler[PlayMice.elementName] = nil
         swipeMove.invalidate()
         swipeScale1.invalidate()
