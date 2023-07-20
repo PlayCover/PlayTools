@@ -12,7 +12,7 @@ public class PlayCover: NSObject {
     var menuController: MenuController?
 
     @objc static public func launch() {
-        quitWhenClose()
+        // quitWhenClose()
         AKInterface.initialize()
         PlayInput.shared.initialize()
         DiscordIPC.shared.initialize()
