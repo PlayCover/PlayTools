@@ -159,7 +159,10 @@ __attribute__((visibility("hidden")))
 
 + (void) load {
     [self debugLogger:@"PlayShadow is now loading"];
-    if ([[PlaySettings shared] bypass]) [self loadJailbreakBypass];
+    // Gate this behind an environment variable
+    if ([[NSProcessInfo processInfo].environment[@"USE_EXTRA_ANTIJB"] isEqualToString:@"1"]) {
+        [self loadJailbreakBypass];
+    }
     // if ([[PlaySettings shared] bypass]) [self loadEnvironmentBypass]; # disabled as it might be too powerful
 
     // Swizzle ATTrackingManager
