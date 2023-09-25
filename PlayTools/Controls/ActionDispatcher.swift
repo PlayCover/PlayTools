@@ -9,10 +9,10 @@ import Foundation
 import Atomics
 
 // If the same key is mapped to multiple different tasks, distinguish by priority
-public class ActionDispatchPriority {
-    static public let DRAGGABLE = 0
-    static public let DEFAULT = 1
-    static public let CAMERA = 2
+public enum ActionDispatchPriority: Int {
+    case DRAGGABLE
+    case DEFAULT
+    case CAMERA
 }
 
 // This class reads keymap and thereby dispatch events
@@ -91,14 +91,8 @@ public class ActionDispatcher {
         // but in the case this new feature disabled, `option` should always function.
         // this variable is set here to be checked for mouse mapping later.
         cursorHideNecessary =
-        (
-            getDispatchPriority(key: KeyCodeNames.leftMouseButton) ?? ActionDispatchPriority.DRAGGABLE
-        )
-            > ActionDispatchPriority.DRAGGABLE ||
-        (
-            getDispatchPriority(key: KeyCodeNames.mouseMove) ?? ActionDispatchPriority.DRAGGABLE
-        )
-            > ActionDispatchPriority.DRAGGABLE
+        (getDispatchPriority(key: KeyCodeNames.leftMouseButton) ?? .DRAGGABLE) != .DRAGGABLE ||
+        (getDispatchPriority(key: KeyCodeNames.mouseMove) ?? .DRAGGABLE) != .DRAGGABLE
     }
 
     static public func register(key: String, handler: @escaping (Bool) -> Void) {
@@ -111,11 +105,11 @@ public class ActionDispatcher {
 
     static public func register(key: String,
                                 handler: @escaping (CGFloat, CGFloat) -> Void,
-                                priority: Int = ActionDispatchPriority.DEFAULT) {
-        let atomicHandler = directionPadHandlers[priority].first(where: { handler in
+                                priority: ActionDispatchPriority = .DEFAULT) {
+        let atomicHandler = directionPadHandlers[priority.rawValue].first(where: { handler in
             handler.load(ordering: .relaxed).key == key
         }) ??
-        directionPadHandlers[priority].first(where: { handler in
+        directionPadHandlers[priority.rawValue].first(where: { handler in
             handler.load(ordering: .relaxed).key.isEmpty
         })
 //        DispatchQueue.main.async {
@@ -130,7 +124,7 @@ public class ActionDispatcher {
 
     static public func unregister(key: String) {
         // Only draggable can be unregistered
-        let atomicHandler = directionPadHandlers[ActionDispatchPriority.DRAGGABLE].first(where: { handler in
+        let atomicHandler = directionPadHandlers[ActionDispatchPriority.DRAGGABLE.rawValue].first(where: { handler in
             handler.load(ordering: .relaxed).key == key
         })
 //        DispatchQueue.main.async {
@@ -155,18 +149,18 @@ public class ActionDispatcher {
         }
     }
 
-    static public func getDispatchPriority(key: String) -> Int? {
+    static public func getDispatchPriority(key: String) -> ActionDispatchPriority? {
         if let priority = directionPadHandlers.firstIndex(where: { handlers in
             handlers.contains(where: { handler in
                 handler.load(ordering: .acquiring).key == key
             })
         }) {
 //            Toast.showHint(title: "\(key) priority", text: ["\(priority)"])
-            return priority
+            return ActionDispatchPriority(rawValue: priority)
         }
 
         if buttonHandlers[key] != nil {
-            return ActionDispatchPriority.DEFAULT
+            return .DEFAULT
         }
         return nil
     }

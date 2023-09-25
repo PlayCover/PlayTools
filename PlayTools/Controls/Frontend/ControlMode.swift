@@ -8,18 +8,19 @@ import GameController
 
 let mode = ControlMode.mode
 
+public enum ControlModeLiteral: String {
+    case TEXT_INPUT = "textInput"
+    case CAMERA_ROTATE = "cameraRotate"
+    case ARBITRARY_CLICK = "arbitraryClick"
+    case OFF = "off"
+    case EDITOR = "editor"
+}
 // This class handles different control logic under different control mode
 
 public class ControlMode: Equatable {
     static public let mode = ControlMode()
 
-    static public let TEXT_INPUT = "textInput"
-    static public let CAMERA_ROTATE = "cameraRotate"
-    static public let ARBITRARY_CLICK = "arbitraryClick"
-    static public let OFF = "off"
-    static public let EDITOR = "editor"
-
-    private var controlMode = ControlMode.OFF
+    private var controlMode = ControlModeLiteral.OFF
 
     private var keyboardAdapter: KeyboardEventAdapter!
     private var mouseAdapter: MouseEventAdapter!
@@ -41,9 +42,9 @@ public class ControlMode: Equatable {
                 ModeAutomaton.onKeyboardShow()
                 Toucher.writeLog(logMessage: "virtual keyboard will show")
             }
-            set(ControlMode.ARBITRARY_CLICK)
+            set(.ARBITRARY_CLICK)
         } else {
-            set(ControlMode.OFF)
+            set(.OFF)
         }
 
         centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
@@ -79,7 +80,7 @@ public class ControlMode: Equatable {
         ActionDispatcher.build()
     }
 
-    public func set(_ mode: String) {
+    public func set(_ mode: ControlModeLiteral) {
         let wasHidden = mouseAdapter?.cursorHidden() ?? false
         let first = mouseAdapter == nil
         keyboardAdapter = EventAdapters.keyboard(controlMode: mode)
@@ -110,11 +111,11 @@ public class ControlMode: Equatable {
         }
     }
 
-    public static func == (lhs: String, rhs: ControlMode) -> Bool {
+    public static func == (lhs: ControlModeLiteral, rhs: ControlMode) -> Bool {
         lhs == rhs.controlMode
     }
 
-    public static func == (lhs: ControlMode, rhs: String) -> Bool {
+    public static func == (lhs: ControlMode, rhs: ControlModeLiteral) -> Bool {
         rhs == lhs
     }
 

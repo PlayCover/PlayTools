@@ -54,8 +54,7 @@ public class TouchscreenMouseEventAdapter: MouseEventAdapter {
         // draggable direction pad: move handler
         // default button: lift handler
         // kinda hacky but.. IT WORKS!
-        if ActionDispatcher.getDispatchPriority(key: KeyCodeNames.fakeMouse)
-            == ActionDispatchPriority.DRAGGABLE {
+        if ActionDispatcher.getDispatchPriority(key: KeyCodeNames.fakeMouse) == .DRAGGABLE {
             guard let pos = TouchscreenMouseEventAdapter.cursorPos() else { return false }
             return ActionDispatcher.dispatch(key: KeyCodeNames.fakeMouse, valueX: pos.x, valueY: pos.y)
         }

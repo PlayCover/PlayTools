@@ -63,7 +63,7 @@ class DraggableButtonAction: ButtonAction {
             self.releasePoint = point
             ActionDispatcher.register(key: KeyCodeNames.mouseMove,
                                       handler: self.onMouseMoved,
-                                      priority: ActionDispatchPriority.DRAGGABLE)
+                                      priority: .DRAGGABLE)
             if !mode.cursorHidden() {
                 AKInterface.shared!.hideCursor()
             }
@@ -271,7 +271,7 @@ class CameraAction: Action {
         swipeScale1 = SwipeAction()
         swipeScale2 = SwipeAction()
         ActionDispatcher.register(key: key, handler: self.moveUpdated,
-                                  priority: ActionDispatchPriority.CAMERA)
+                                  priority: .CAMERA)
         ActionDispatcher.register(key: KeyCodeNames.scrollWheelScale,
                                   handler: self.scaleUpdated)
         ActionDispatcher.register(key: KeyCodeNames.scrollWheelDrag,
@@ -393,7 +393,7 @@ class FakeMouseAction: Action {
         Toucher.touchcam(point: pos, phase: UITouch.Phase.began, tid: &id)
         ActionDispatcher.register(key: KeyCodeNames.fakeMouse,
                                   handler: movementHandler,
-                                  priority: ActionDispatchPriority.DRAGGABLE)
+                                  priority: .DRAGGABLE)
     }
 
     func buttonLiftHandler(pressed: Bool) {

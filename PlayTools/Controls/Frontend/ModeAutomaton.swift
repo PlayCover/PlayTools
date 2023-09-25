@@ -11,20 +11,20 @@ import Foundation
 
 public class ModeAutomaton {
     static public func onOption() -> Bool {
-        if mode == ControlMode.EDITOR || mode == ControlMode.TEXT_INPUT {
+        if mode == .EDITOR || mode == .TEXT_INPUT {
             return false
         }
-        if mode == ControlMode.OFF {
-            mode.set(ControlMode.CAMERA_ROTATE)
+        if mode == .OFF {
+            mode.set(.CAMERA_ROTATE)
 
-        } else if mode == ControlMode.ARBITRARY_CLICK && ActionDispatcher.cursorHideNecessary {
-            mode.set(ControlMode.CAMERA_ROTATE)
+        } else if mode == .ARBITRARY_CLICK && ActionDispatcher.cursorHideNecessary {
+            mode.set(.CAMERA_ROTATE)
 
-        } else if mode == ControlMode.CAMERA_ROTATE {
+        } else if mode == .CAMERA_ROTATE {
             if PlaySettings.shared.noKMOnInput {
-                mode.set(ControlMode.ARBITRARY_CLICK)
+                mode.set(.ARBITRARY_CLICK)
             } else {
-                mode.set(ControlMode.OFF)
+                mode.set(.OFF)
             }
         }
         // Some people want option key act as touchpad-touchscreen mapper
@@ -34,27 +34,27 @@ public class ModeAutomaton {
     static public func onCmdK() {
         EditorController.shared.switchMode()
 
-        if mode == ControlMode.EDITOR && !EditorController.shared.editorMode {
-            mode.set(ControlMode.CAMERA_ROTATE)
+        if mode == .EDITOR && !EditorController.shared.editorMode {
+            mode.set(.CAMERA_ROTATE)
             ActionDispatcher.build()
             Toucher.writeLog(logMessage: "editor closed")
         } else if EditorController.shared.editorMode {
-            mode.set(ControlMode.EDITOR)
+            mode.set(.EDITOR)
             Toucher.writeLog(logMessage: "editor opened")
         }
     }
 
     static public func onKeyboardShow() {
-        if mode == ControlMode.EDITOR {
+        if mode == .EDITOR {
             return
         }
-        mode.set(ControlMode.TEXT_INPUT)
+        mode.set(.TEXT_INPUT)
     }
 
     static public func onKeyboardHide() {
-        if mode == ControlMode.EDITOR {
+        if mode == .EDITOR {
             return
         }
-        mode.set(ControlMode.ARBITRARY_CLICK)
+        mode.set(.ARBITRARY_CLICK)
     }
 }

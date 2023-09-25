@@ -11,55 +11,43 @@ import Foundation
 
 public class EventAdapters {
 
-    static func keyboard(controlMode: String) -> KeyboardEventAdapter {
-        if controlMode == ControlMode.OFF || controlMode == ControlMode.TEXT_INPUT {
+    static func keyboard(controlMode: ControlModeLiteral) -> KeyboardEventAdapter {
+        switch controlMode {
+        case .OFF: fallthrough
+        case .TEXT_INPUT:
             return TransparentKeyboardEventAdapter()
-
-        } else if controlMode == ControlMode.CAMERA_ROTATE || controlMode == ControlMode.ARBITRARY_CLICK {
+        case .CAMERA_ROTATE: fallthrough
+        case .ARBITRARY_CLICK:
             return TouchscreenKeyboardEventAdapter()
-        } else if controlMode == ControlMode.EDITOR {
+        case .EDITOR:
             return EditorKeyboardEventAdapter()
-        } else {
-            Toast.showHint(title: "Control mode switch error",
-                           text: ["Cannot find keyboard event adapter for control mode " + controlMode])
-            return TransparentKeyboardEventAdapter()
         }
     }
 
-    static func mouse(controlMode: String) -> MouseEventAdapter {
-        if controlMode == ControlMode.OFF || controlMode == ControlMode.TEXT_INPUT {
+    static func mouse(controlMode: ControlModeLiteral) -> MouseEventAdapter {
+        switch controlMode {
+        case .OFF: fallthrough
+        case .TEXT_INPUT:
             return TransparentMouseEventAdapter()
-
-        } else if controlMode == ControlMode.CAMERA_ROTATE {
+        case .CAMERA_ROTATE:
             return CameraControlMouseEventAdapter()
-
-        } else if controlMode == ControlMode.ARBITRARY_CLICK {
+        case .ARBITRARY_CLICK:
             return TouchscreenMouseEventAdapter()
-
-        } else if controlMode == ControlMode.EDITOR {
+        case .EDITOR:
             return EditorMouseEventAdapter()
-        } else {
-            Toast.showHint(title: "Control mode switch error",
-                           text: ["Cannot find mouse event adapter for control mode " + controlMode])
-            return TouchscreenMouseEventAdapter()
         }
     }
 
-    static func controller(controlMode: String) -> ControllerEventAdapter {
-        if controlMode == ControlMode.OFF {
+    static func controller(controlMode: ControlModeLiteral) -> ControllerEventAdapter {
+        switch controlMode {
+        case .OFF:
             return TransparentControllerEventAdapter()
-
-        } else if controlMode == ControlMode.CAMERA_ROTATE
-                    || controlMode == ControlMode.ARBITRARY_CLICK
-                    || controlMode == ControlMode.TEXT_INPUT {
+        case .TEXT_INPUT: fallthrough
+        case .CAMERA_ROTATE: fallthrough
+        case .ARBITRARY_CLICK:
             return TouchscreenControllerEventAdapter()
-            
-        } else if controlMode == ControlMode.EDITOR {
+        case .EDITOR:
             return EditorControllerEventAdapter()
-        } else {
-            Toast.showHint(title: "Control mode switch error",
-                           text: ["Cannot find controller event adapter for control mode " + controlMode])
-            return TouchscreenControllerEventAdapter()
         }
     }
 }

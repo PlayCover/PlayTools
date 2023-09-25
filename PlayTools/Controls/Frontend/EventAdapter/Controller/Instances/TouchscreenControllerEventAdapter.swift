@@ -53,7 +53,7 @@ public class TouchscreenControllerEventAdapter: ControllerEventAdapter {
         let dispatchType = ActionDispatcher.getDispatchPriority(key: name)
         if dispatchType == nil {
             return
-        } else if dispatchType == ActionDispatchPriority.DEFAULT {
+        } else if dispatchType == .DEFAULT {
             _ = ActionDispatcher.dispatch(key: name, valueX: cgDx, valueY: cgDy)
         } else {
             if TouchscreenControllerEventAdapter.thumbstickCursorControl[name] == nil {
