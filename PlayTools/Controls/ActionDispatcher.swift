@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Atomics
 
 // If the same key is mapped to multiple different tasks, distinguish by priority
 public class ActionDispatchPriority {
@@ -19,18 +20,26 @@ public class ActionDispatchPriority {
 public class ActionDispatcher {
     static private let keymapVersion = "2.0."
     static private var actions = [Action]()
+    static private var buttonHandlers: [String: [(Bool) -> Void]] = [:]
+
     static private let PRIORITY_COUNT = 3
-    static private var buttonHandlers: [String: [(Bool) -> Void]] = [:],
-                       directionPadHandlers: [[String: (CGFloat, CGFloat) -> Void]] = Array(
-                        repeating: [:], count: PRIORITY_COUNT)
+    // You can't put more than 8 cameras or 8 joysticks in a keymap right?
+    static private let MAPPING_COUNT_PER_PRIORITY = 8
+    static private let directionPadHandlers: [[ManagedAtomic<AtomicHandler>]] = Array(
+        (0..<PRIORITY_COUNT).map({_ in
+            (0..<MAPPING_COUNT_PER_PRIORITY).map({_ in ManagedAtomic<AtomicHandler>(.EMPTY)})
+        })
+    )
 
     static private func clear() {
         invalidateActions()
         actions = []
         buttonHandlers.removeAll(keepingCapacity: true)
-        for priority in 0..<PRIORITY_COUNT {
-            directionPadHandlers[priority].removeAll(keepingCapacity: true)
-        }
+        directionPadHandlers.forEach({ handlers in
+            handlers.forEach({ handler in
+                handler.store(.EMPTY, ordering: .relaxed)
+            })
+        })
     }
 
     // Backend interfaces
@@ -103,12 +112,35 @@ public class ActionDispatcher {
     static public func register(key: String,
                                 handler: @escaping (CGFloat, CGFloat) -> Void,
                                 priority: Int = ActionDispatchPriority.DEFAULT) {
-        directionPadHandlers[priority][key] = handler
+        let atomicHandler = directionPadHandlers[priority].first(where: { handler in
+            handler.load(ordering: .relaxed).key == key
+        }) ??
+        directionPadHandlers[priority].first(where: { handler in
+            handler.load(ordering: .relaxed).key.isEmpty
+        })
+//        DispatchQueue.main.async {
+//            if screen.keyWindow == nil {
+//                return
+//            }
+//            Toast.showHint(title: "register",
+//               text: ["key: \(key), atomicHandler: \(String(describing: atomicHandler))"])
+//        }
+        atomicHandler?.store(AtomicHandler(key, handler), ordering: .releasing)
     }
 
     static public func unregister(key: String) {
         // Only draggable can be unregistered
-        directionPadHandlers[ActionDispatchPriority.DRAGGABLE].removeValue(forKey: key)
+        let atomicHandler = directionPadHandlers[ActionDispatchPriority.DRAGGABLE].first(where: { handler in
+            handler.load(ordering: .relaxed).key == key
+        })
+//        DispatchQueue.main.async {
+//            if screen.keyWindow == nil {
+//                return
+//            }
+//            Toast.showHint(title: "unregister",
+//               text: ["key: \(key), atomicHandler: \(String(describing: atomicHandler))"])
+//        }
+        atomicHandler?.store(.EMPTY, ordering: .releasing)
     }
 
     // Frontend interfaces
@@ -124,8 +156,12 @@ public class ActionDispatcher {
     }
 
     static public func getDispatchPriority(key: String) -> Int? {
-        for priority in 0..<PRIORITY_COUNT
-            where directionPadHandlers[priority][key] != nil {
+        if let priority = directionPadHandlers.firstIndex(where: { handlers in
+            handlers.contains(where: { handler in
+                handler.load(ordering: .acquiring).key == key
+            })
+        }) {
+//            Toast.showHint(title: "\(key) priority", text: ["\(priority)"])
             return priority
         }
 
@@ -151,14 +187,26 @@ public class ActionDispatcher {
     }
 
     static public func dispatch(key: String, valueX: CGFloat, valueY: CGFloat) -> Bool {
-        // WARNING: if you want to change this, beware of concurrency contention
-        PlayInput.touchQueue.async(qos: .userInteractive, execute: {
-            for priority in 0..<PRIORITY_COUNT
-            where directionPadHandlers[priority][key] != nil {
-                directionPadHandlers[priority][key]!(valueX, valueY)
-                return
+        for priority in 0..<PRIORITY_COUNT {
+            if let handler = directionPadHandlers[priority].first(where: { handler in
+                handler.load(ordering: .acquiring).key == key
+            }) {
+                PlayInput.touchQueue.async(qos: .userInteractive, execute: {
+                    handler.load(ordering: .relaxed).handle(valueX, valueY)
+                })
+                return true
             }
-        })
-        return getDispatchPriority(key: key) != nil
+        }
+        return false
+    }
+}
+
+private final class AtomicHandler: AtomicReference {
+    static fileprivate let EMPTY = AtomicHandler("", {_, _ in })
+    let key: String
+    let handle: (CGFloat, CGFloat) -> Void
+    init(_ key: String, _ handle: @escaping (CGFloat, CGFloat) -> Void) {
+        self.key = key
+        self.handle = handle
     }
 }
