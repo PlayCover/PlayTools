@@ -27,7 +27,7 @@ class RotateViewController: UIViewController {
 extension UIApplication {
     @objc
     func switchEditorMode(_ sender: AnyObject) {
-        EditorController.shared.switchMode()
+        ModeAutomaton.onCmdK()
     }
 
     @objc

@@ -8,6 +8,7 @@ import Foundation
 protocol Action {
     func invalidate()
 }
+// Actions hold touch point IDs, perform fake touch
 
 class ButtonAction: Action {
     func invalidate() {
@@ -26,7 +27,7 @@ class ButtonAction: Action {
         let code = keyCode
         let codeName = KeyCodeNames.keyCodes[code] ?? "Btn"
         // TODO: set both key names in draggable button, so as to depracate key code
-        PlayInput.registerButton(key: code == KeyCodeNames.defaultCode ? keyName: codeName, handler: self.update)
+        ActionDispatcher.register(key: code == KeyCodeNames.defaultCode ? keyName: codeName, handler: self.update)
     }
 
     convenience init(data: Button) {
@@ -60,17 +61,23 @@ class DraggableButtonAction: ButtonAction {
         if pressed {
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id)
             self.releasePoint = point
-            PlayInput.draggableHandler[keyName] = self.onMouseMoved
-            AKInterface.shared!.hideCursor()
+            ActionDispatcher.register(key: KeyCodeNames.mouseMove,
+                                      handler: self.onMouseMoved,
+                                      priority: .DRAGGABLE)
+            if !mode.cursorHidden() {
+                AKInterface.shared!.hideCursor()
+            }
         } else {
-            PlayInput.draggableHandler.removeValue(forKey: keyName)
+            ActionDispatcher.unregister(key: KeyCodeNames.mouseMove)
             Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: &id)
-            AKInterface.shared!.unhideCursor()
+            if !mode.cursorHidden() {
+                AKInterface.shared!.unhideCursor()
+            }
         }
     }
 
     override func invalidate() {
-        PlayInput.draggableHandler.removeValue(forKey: keyName)
+        ActionDispatcher.unregister(key: KeyCodeNames.mouseMove)
         super.invalidate()
     }
 
@@ -96,10 +103,10 @@ class ContinuousJoystickAction: Action {
         self.key = data.keyName
         position = center
         self.sensitivity = data.transform.size.absoluteSize / 4
-        if key == PlayMice.elementName {
-            PlayInput.joystickHandler[key] = self.mouseUpdate
+        if key == KeyCodeNames.mouseMove {
+            ActionDispatcher.register(key: key, handler: self.mouseUpdate)
         } else {
-            PlayInput.joystickHandler[key] = self.thumbstickUpdate
+            ActionDispatcher.register(key: key, handler: self.thumbstickUpdate)
         }
     }
 
@@ -131,7 +138,7 @@ class ContinuousJoystickAction: Action {
     }
 
     func invalidate() {
-        PlayInput.joystickHandler.removeValue(forKey: key)
+        Toucher.touchcam(point: CGPoint(x: 10, y: 10), phase: UITouch.Phase.ended, tid: &id)
     }
 }
 
@@ -149,7 +156,7 @@ class JoystickAction: Action {
         self.shift = shift / 4
         for index in 0..<keys.count {
             let key = keys[index]
-            PlayInput.registerButton(key: KeyCodeNames.keyCodes[key]!,
+            ActionDispatcher.register(key: KeyCodeNames.keyCodes[key]!,
                                      handler: self.getPressedHandler(index: index))
         }
     }
@@ -247,4 +254,169 @@ class JoystickAction: Action {
             Toucher.touchcam(point: self.touch, phase: UITouch.Phase.began, tid: &id)
         }
     }
+}
+
+class CameraAction: Action {
+    var swipeMove, swipeScale1, swipeScale2: SwipeAction
+    static var swipeDrag = SwipeAction()
+    var key: String!
+    var center: CGPoint
+    var distance1: CGFloat = 100, distance2: CGFloat = 100
+    init(data: MouseArea) {
+        self.key = data.keyName
+        let centerX = data.transform.xCoord.absoluteX
+        let centerY = data.transform.yCoord.absoluteY
+        center = CGPoint(x: centerX, y: centerY)
+        swipeMove = SwipeAction()
+        swipeScale1 = SwipeAction()
+        swipeScale2 = SwipeAction()
+        ActionDispatcher.register(key: key, handler: self.moveUpdated,
+                                  priority: .CAMERA)
+        ActionDispatcher.register(key: KeyCodeNames.scrollWheelScale,
+                                  handler: self.scaleUpdated)
+        ActionDispatcher.register(key: KeyCodeNames.scrollWheelDrag,
+                                  handler: CameraAction.dragUpdated)
+    }
+    func moveUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
+        swipeMove.move(from: {return center}, deltaX: deltaX, deltaY: deltaY)
+    }
+
+    func scaleUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
+        let distance = distance1 + distance2
+        let moveY = deltaY * (distance / 100.0)
+        distance1 += moveY
+        distance2 += moveY
+
+        swipeScale1.move(from: {
+            self.distance1 = 100
+            return CGPoint(x: center.x, y: center.y - 100)
+        }, deltaX: 0, deltaY: moveY)
+
+        swipeScale2.move(from: {
+            self.distance2 = 100
+            return CGPoint(x: center.x, y: center.y + 100)
+        }, deltaX: 0, deltaY: -moveY)
+    }
+
+    static func dragUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
+        swipeDrag.move(from: TouchscreenMouseEventAdapter.cursorPos, deltaX: deltaX * 4, deltaY: -deltaY * 4)
+    }
+
+    func invalidate() {
+        swipeMove.invalidate()
+        swipeScale1.invalidate()
+        swipeScale2.invalidate()
+    }
+}
+
+class SwipeAction: Action {
+    var location: CGPoint = CGPoint.zero
+    private var id: Int?
+    let timer = DispatchSource.makeTimerSource(flags: [], queue: PlayInput.touchQueue)
+    init() {
+        timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.1, leeway: DispatchTimeInterval.milliseconds(50))
+        timer.setEventHandler(qos: .userInteractive, handler: self.checkEnded)
+        timer.activate()
+        timer.suspend()
+    }
+
+    func delay(_ delay: Double, closure: @escaping () -> Void) {
+        let when = DispatchTime.now() + delay
+        PlayInput.touchQueue.asyncAfter(deadline: when, execute: closure)
+    }
+    // Count swipe duration
+    var counter = 0
+    // if should wait before beginning next touch
+    var cooldown = false
+    var lastCounter = 0
+
+    func checkEnded() {
+        if self.counter == self.lastCounter {
+            if self.counter < 4 {
+                counter += 1
+            } else {
+                timer.suspend()
+                self.doLiftOff()
+            }
+        }
+        self.lastCounter = self.counter
+     }
+
+    public func move(from: () -> CGPoint?, deltaX: CGFloat, deltaY: CGFloat) {
+        if id == nil {
+            if cooldown {
+                return
+            }
+            guard let start = from() else {return}
+            location = start
+            counter = 0
+            Toucher.touchcam(point: location, phase: UITouch.Phase.began, tid: &id)
+            timer.resume()
+        }
+        // count touch duration
+        counter += 1
+        self.location.x += deltaX
+        self.location.y -= deltaY
+        Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: &id)
+    }
+
+    public func doLiftOff() {
+        if id == nil {
+            return
+        }
+        Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: &id)
+        delay(0.02) {
+            self.cooldown = false
+        }
+        cooldown = true
+    }
+
+    func invalidate() {
+        timer.cancel()
+        self.doLiftOff()
+    }
+}
+
+class FakeMouseAction: Action {
+    var id: Int?
+    var pos: CGPoint!
+    public init() {
+        ActionDispatcher.register(key: KeyCodeNames.fakeMouse, handler: buttonPressHandler)
+        ActionDispatcher.register(key: KeyCodeNames.fakeMouse, handler: buttonLiftHandler)
+    }
+
+    func buttonPressHandler(xValue: CGFloat, yValue: CGFloat) {
+        pos = CGPoint(x: xValue, y: yValue)
+//        DispatchQueue.main.async {
+//            Toast.showHint(title: "Fake mouse pressed", text: ["\(self.pos)"])
+//        }
+        Toucher.touchcam(point: pos, phase: UITouch.Phase.began, tid: &id)
+        ActionDispatcher.register(key: KeyCodeNames.fakeMouse,
+                                  handler: movementHandler,
+                                  priority: .DRAGGABLE)
+    }
+
+    func buttonLiftHandler(pressed: Bool) {
+        if pressed {
+            Toast.showHint(title: "Error", text: ["Fake mouse lift handler received a press event"])
+            return
+        }
+//        DispatchQueue.main.async {
+//            Toast.showHint(title: " lift Fake mouse", text: ["\(self.pos)"])
+//        }
+        ActionDispatcher.unregister(key: KeyCodeNames.fakeMouse)
+        Toucher.touchcam(point: pos, phase: UITouch.Phase.ended, tid: &id)
+    }
+
+    func movementHandler(xValue: CGFloat, yValue: CGFloat) {
+        pos.x = xValue
+        pos.y = yValue
+        Toucher.touchcam(point: pos, phase: UITouch.Phase.moved, tid: &id)
+    }
+
+    func invalidate() {
+        Toucher.touchcam(point: pos ?? CGPoint(x: 10, y: 10),
+                         phase: UITouch.Phase.ended, tid: &self.id)
+    }
+
 }

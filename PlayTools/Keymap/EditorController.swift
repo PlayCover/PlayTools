@@ -58,12 +58,10 @@ class EditorController {
             // menu still holds this object until next responder hit test
             editorWindow = nil
             previousWindow?.makeKeyAndVisible()
-            PlayInput.shared.toggleEditor(show: false)
             focusedControl = nil
             Toast.showHint(title: NSLocalizedString("hint.keymapSaved",
                                                     tableName: "Playtools", value: "Keymap Saved", comment: ""))
         } else {
-            PlayInput.shared.toggleEditor(show: true)
             previousWindow = screen.keyWindow
             editorWindow = initWindow()
             editorWindow?.makeKeyAndVisible()

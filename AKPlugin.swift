@@ -118,7 +118,7 @@ class AKPlugin: NSObject, Plugin {
         })
     }
 
-    func setupMouseMoved(mouseMoved: @escaping(CGFloat, CGFloat) -> Bool) {
+    func setupMouseMoved(_ mouseMoved: @escaping(CGFloat, CGFloat) -> Bool) {
         let mask: NSEvent.EventTypeMask = [.leftMouseDragged, .otherMouseDragged, .rightMouseDragged]
         NSEvent.addLocalMonitorForEvents(matching: mask, handler: { event in
             let consumed = mouseMoved(event.deltaX, event.deltaY)
@@ -134,7 +134,7 @@ class AKPlugin: NSObject, Plugin {
         })
     }
 
-    func setupMouseButton(left: Bool, right: Bool, _ dontIgnore: @escaping(Bool) -> Bool) {
+    func setupMouseButton(left: Bool, right: Bool, _ consumed: @escaping(Int, Bool) -> Bool) {
         let downType: NSEvent.EventTypeMask = left ? .leftMouseDown : right ? .rightMouseDown : .otherMouseDown
         let upType: NSEvent.EventTypeMask = left ? .leftMouseUp : right ? .rightMouseUp : .otherMouseUp
         NSEvent.addLocalMonitorForEvents(matching: downType, handler: { event in
@@ -142,16 +142,16 @@ class AKPlugin: NSObject, Plugin {
             if event.window != NSApplication.shared.windows.first! {
                 return event
             }
-            if dontIgnore(true) {
-                return event
+            if consumed(event.buttonNumber, true) {
+                return nil
             }
-            return nil
+            return event
         })
         NSEvent.addLocalMonitorForEvents(matching: upType, handler: { event in
-            if dontIgnore(false) {
-                return event
+            if consumed(event.buttonNumber, false) {
+                return nil
             }
-            return nil
+            return event
         })
     }
 
