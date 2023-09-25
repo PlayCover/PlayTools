@@ -270,7 +270,8 @@ class CameraAction: Action {
         swipeMove = SwipeAction()
         swipeScale1 = SwipeAction()
         swipeScale2 = SwipeAction()
-        ActionDispatcher.register(key: key, handler: self.moveUpdated)
+        ActionDispatcher.register(key: key, handler: self.moveUpdated,
+                                  priority: ActionDispatchPriority.CAMERA)
         ActionDispatcher.register(key: KeyCodeNames.scrollWheelScale,
                                   handler: self.scaleUpdated)
         ActionDispatcher.register(key: KeyCodeNames.scrollWheelDrag,
