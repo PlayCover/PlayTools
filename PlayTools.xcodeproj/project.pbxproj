@@ -15,12 +15,27 @@
 		6E84A14528D0F94E00BF7495 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
 		6E84A15028D0F97500BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		951D8275299D097C00D35B20 /* Playtools.strings in Resources */ = {isa = PBXBuildFile; fileRef = 951D8277299D097C00D35B20 /* Playtools.strings */; };
-		95A553E729F2BBB200E34C26 /* PlayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95A553E629F2BBB200E34C26 /* PlayController.swift */; };
+		9562D1512AB484C7002C329D /* EventAdapters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1502AB484C7002C329D /* EventAdapters.swift */; };
+		9562D1532AB484FD002C329D /* EventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1522AB484FD002C329D /* EventAdapter.swift */; };
+		9562D1582AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1572AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift */; };
+		9562D15A2AB4FBBB002C329D /* TransparentKeyboardEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1592AB4FBBB002C329D /* TransparentKeyboardEventAdapter.swift */; };
+		9562D15C2AB4FC79002C329D /* TransparentMouseEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D15B2AB4FC79002C329D /* TransparentMouseEventAdapter.swift */; };
+		9562D15E2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D15D2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift */; };
+		9562D1602AB4FD46002C329D /* TransparentControllerEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D15F2AB4FD46002C329D /* TransparentControllerEventAdapter.swift */; };
+		9562D1622AB4FE73002C329D /* CameraControlMouseEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1612AB4FE73002C329D /* CameraControlMouseEventAdapter.swift */; };
+		9562D1642AB4FEB4002C329D /* TouchscreenMouseEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1632AB4FEB4002C329D /* TouchscreenMouseEventAdapter.swift */; };
+		9562D1662AB5049B002C329D /* KeyboardEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1652AB5049B002C329D /* KeyboardEventAdapter.swift */; };
+		9562D16B2AB505AD002C329D /* MouseEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D16A2AB505AD002C329D /* MouseEventAdapter.swift */; };
+		9562D16D2AB505D4002C329D /* ControllerEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D16C2AB505D4002C329D /* ControllerEventAdapter.swift */; };
+		9562D16F2AB50D34002C329D /* ActionDispatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D16E2AB50D34002C329D /* ActionDispatcher.swift */; };
+		9562D1732AB52416002C329D /* EditorKeyboardEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1722AB52416002C329D /* EditorKeyboardEventAdapter.swift */; };
+		9562D1752AB52479002C329D /* EditorMouseEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1742AB52479002C329D /* EditorMouseEventAdapter.swift */; };
+		9562D1772AB52550002C329D /* EditorControllerEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1762AB52550002C329D /* EditorControllerEventAdapter.swift */; };
+		9562D1792AB64458002C329D /* ModeAutomaton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1782AB64458002C329D /* ModeAutomaton.swift */; };
 		AA71970B287A44D200623C15 /* PlayLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719702287A44D200623C15 /* PlayLoader.m */; };
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
 		AA71970E287A44D200623C15 /* PlayLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719705287A44D200623C15 /* PlayLoader.h */; };
 		AA71970F287A44D200623C15 /* PlayCover.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719706287A44D200623C15 /* PlayCover.swift */; };
-		AA719758287A480D00623C15 /* PlayMice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719722287A480C00623C15 /* PlayMice.swift */; };
 		AA719759287A480D00623C15 /* PlayAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719723287A480C00623C15 /* PlayAction.swift */; };
 		AA71975A287A480D00623C15 /* Toucher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719724287A480C00623C15 /* Toucher.swift */; };
 		AA719789287A480D00623C15 /* PlayInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719755287A480C00623C15 /* PlayInput.swift */; };
@@ -79,7 +94,23 @@
 		6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AKInterface.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		951D8276299D097C00D35B20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Playtools.strings; sourceTree = "<group>"; };
 		951D8278299D098000D35B20 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Playtools.strings"; sourceTree = "<group>"; };
-		95A553E629F2BBB200E34C26 /* PlayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayController.swift; sourceTree = "<group>"; };
+		9562D1502AB484C7002C329D /* EventAdapters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventAdapters.swift; sourceTree = "<group>"; };
+		9562D1522AB484FD002C329D /* EventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventAdapter.swift; sourceTree = "<group>"; };
+		9562D1572AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchscreenKeyboardEventAdapter.swift; sourceTree = "<group>"; };
+		9562D1592AB4FBBB002C329D /* TransparentKeyboardEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransparentKeyboardEventAdapter.swift; sourceTree = "<group>"; };
+		9562D15B2AB4FC79002C329D /* TransparentMouseEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransparentMouseEventAdapter.swift; sourceTree = "<group>"; };
+		9562D15D2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchscreenControllerEventAdapter.swift; sourceTree = "<group>"; };
+		9562D15F2AB4FD46002C329D /* TransparentControllerEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransparentControllerEventAdapter.swift; sourceTree = "<group>"; };
+		9562D1612AB4FE73002C329D /* CameraControlMouseEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraControlMouseEventAdapter.swift; sourceTree = "<group>"; };
+		9562D1632AB4FEB4002C329D /* TouchscreenMouseEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchscreenMouseEventAdapter.swift; sourceTree = "<group>"; };
+		9562D1652AB5049B002C329D /* KeyboardEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardEventAdapter.swift; sourceTree = "<group>"; };
+		9562D16A2AB505AD002C329D /* MouseEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MouseEventAdapter.swift; sourceTree = "<group>"; };
+		9562D16C2AB505D4002C329D /* ControllerEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerEventAdapter.swift; sourceTree = "<group>"; };
+		9562D16E2AB50D34002C329D /* ActionDispatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionDispatcher.swift; sourceTree = "<group>"; };
+		9562D1722AB52416002C329D /* EditorKeyboardEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorKeyboardEventAdapter.swift; sourceTree = "<group>"; };
+		9562D1742AB52479002C329D /* EditorMouseEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorMouseEventAdapter.swift; sourceTree = "<group>"; };
+		9562D1762AB52550002C329D /* EditorControllerEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorControllerEventAdapter.swift; sourceTree = "<group>"; };
+		9562D1782AB64458002C329D /* ModeAutomaton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeAutomaton.swift; sourceTree = "<group>"; };
 		AA7196D8287A447700623C15 /* PlayTools.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PlayTools.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA719702287A44D200623C15 /* PlayLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlayLoader.m; sourceTree = "<group>"; };
 		AA719704287A44D200623C15 /* PlaySettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlaySettings.swift; sourceTree = "<group>"; };
@@ -87,7 +118,6 @@
 		AA719706287A44D200623C15 /* PlayCover.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayCover.swift; sourceTree = "<group>"; };
 		AA719708287A44D200623C15 /* PlayTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayTools.h; sourceTree = "<group>"; };
 		AA71970A287A44D200623C15 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AA719722287A480C00623C15 /* PlayMice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayMice.swift; sourceTree = "<group>"; };
 		AA719723287A480C00623C15 /* PlayAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayAction.swift; sourceTree = "<group>"; };
 		AA719724287A480C00623C15 /* Toucher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toucher.swift; sourceTree = "<group>"; };
 		AA719755287A480C00623C15 /* PlayInput.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayInput.swift; sourceTree = "<group>"; };
@@ -154,6 +184,103 @@
 			name = AKInterface;
 			sourceTree = "<group>";
 		};
+		9562D14F2AB4849C002C329D /* EventAdapter */ = {
+			isa = PBXGroup;
+			children = (
+				9562D1562AB48523002C329D /* Controller */,
+				9562D1552AB4851C002C329D /* Mouse */,
+				9562D1542AB48504002C329D /* Keyboard */,
+				9562D1502AB484C7002C329D /* EventAdapters.swift */,
+				9562D1522AB484FD002C329D /* EventAdapter.swift */,
+			);
+			path = EventAdapter;
+			sourceTree = "<group>";
+		};
+		9562D1542AB48504002C329D /* Keyboard */ = {
+			isa = PBXGroup;
+			children = (
+				9562D1672AB5050D002C329D /* Instances */,
+				9562D1652AB5049B002C329D /* KeyboardEventAdapter.swift */,
+			);
+			path = Keyboard;
+			sourceTree = "<group>";
+		};
+		9562D1552AB4851C002C329D /* Mouse */ = {
+			isa = PBXGroup;
+			children = (
+				9562D1682AB50564002C329D /* Instances */,
+				9562D16A2AB505AD002C329D /* MouseEventAdapter.swift */,
+			);
+			path = Mouse;
+			sourceTree = "<group>";
+		};
+		9562D1562AB48523002C329D /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				9562D1692AB50588002C329D /* Instances */,
+				9562D16C2AB505D4002C329D /* ControllerEventAdapter.swift */,
+			);
+			path = Controller;
+			sourceTree = "<group>";
+		};
+		9562D1672AB5050D002C329D /* Instances */ = {
+			isa = PBXGroup;
+			children = (
+				9562D1572AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift */,
+				9562D1592AB4FBBB002C329D /* TransparentKeyboardEventAdapter.swift */,
+				9562D1722AB52416002C329D /* EditorKeyboardEventAdapter.swift */,
+			);
+			path = Instances;
+			sourceTree = "<group>";
+		};
+		9562D1682AB50564002C329D /* Instances */ = {
+			isa = PBXGroup;
+			children = (
+				9562D15B2AB4FC79002C329D /* TransparentMouseEventAdapter.swift */,
+				9562D1612AB4FE73002C329D /* CameraControlMouseEventAdapter.swift */,
+				9562D1632AB4FEB4002C329D /* TouchscreenMouseEventAdapter.swift */,
+				9562D1742AB52479002C329D /* EditorMouseEventAdapter.swift */,
+			);
+			path = Instances;
+			sourceTree = "<group>";
+		};
+		9562D1692AB50588002C329D /* Instances */ = {
+			isa = PBXGroup;
+			children = (
+				9562D15D2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift */,
+				9562D15F2AB4FD46002C329D /* TransparentControllerEventAdapter.swift */,
+				9562D1762AB52550002C329D /* EditorControllerEventAdapter.swift */,
+			);
+			path = Instances;
+			sourceTree = "<group>";
+		};
+		9562D1702AB51B41002C329D /* Frontend */ = {
+			isa = PBXGroup;
+			children = (
+				9562D14F2AB4849C002C329D /* EventAdapter */,
+				9562D1782AB64458002C329D /* ModeAutomaton.swift */,
+				AA719756287A480C00623C15 /* ControlMode.swift */,
+			);
+			path = Frontend;
+			sourceTree = "<group>";
+		};
+		9562D1712AB51B57002C329D /* Backend */ = {
+			isa = PBXGroup;
+			children = (
+				9562D17A2AB6E5ED002C329D /* Action */,
+				AA719724287A480C00623C15 /* Toucher.swift */,
+			);
+			path = Backend;
+			sourceTree = "<group>";
+		};
+		9562D17A2AB6E5ED002C329D /* Action */ = {
+			isa = PBXGroup;
+			children = (
+				AA719723287A480C00623C15 /* PlayAction.swift */,
+			);
+			path = Action;
+			sourceTree = "<group>";
+		};
 		AA7196CE287A447700623C15 = {
 			isa = PBXGroup;
 			children = (
@@ -198,13 +325,11 @@
 			isa = PBXGroup;
 			children = (
 				AA719813287A813A00623C15 /* PTFakeTouch */,
-				AA719722287A480C00623C15 /* PlayMice.swift */,
-				AA719723287A480C00623C15 /* PlayAction.swift */,
-				AA719724287A480C00623C15 /* Toucher.swift */,
-				AA719755287A480C00623C15 /* PlayInput.swift */,
-				AA719756287A480C00623C15 /* ControlMode.swift */,
+				9562D1712AB51B57002C329D /* Backend */,
+				9562D1702AB51B41002C329D /* Frontend */,
 				AA719757287A480C00623C15 /* MenuController.swift */,
-				95A553E629F2BBB200E34C26 /* PlayController.swift */,
+				AA719755287A480C00623C15 /* PlayInput.swift */,
+				9562D16E2AB50D34002C329D /* ActionDispatcher.swift */,
 			);
 			path = Controls;
 			sourceTree = "<group>";
@@ -452,29 +577,43 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				95A553E729F2BBB200E34C26 /* PlayController.swift in Sources */,
+				9562D16D2AB505D4002C329D /* ControllerEventAdapter.swift in Sources */,
 				AA71975A287A480D00623C15 /* Toucher.swift in Sources */,
 				AA7197A1287A481500623C15 /* CircleMenuLoader.swift in Sources */,
 				6E76639B28D0FAE700DE4AF9 /* Plugin.swift in Sources */,
 				B1271729288284BE0025112B /* DiscordActivity.swift in Sources */,
 				AA7197AB287A481500623C15 /* ControlModel.swift in Sources */,
 				AA7197AE287A481500623C15 /* DragElementsView.swift in Sources */,
+				9562D1622AB4FE73002C329D /* CameraControlMouseEventAdapter.swift in Sources */,
+				9562D1642AB4FEB4002C329D /* TouchscreenMouseEventAdapter.swift in Sources */,
+				9562D1602AB4FD46002C329D /* TransparentControllerEventAdapter.swift in Sources */,
+				9562D1792AB64458002C329D /* ModeAutomaton.swift in Sources */,
 				AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */,
 				AA719759287A480D00623C15 /* PlayAction.swift in Sources */,
 				6E7663A528D0FEBE00DE4AF9 /* AKPluginLoader.swift in Sources */,
+				9562D16F2AB50D34002C329D /* ActionDispatcher.swift in Sources */,
 				2847AE48298EFC0F00B0F983 /* PlayScreen.swift in Sources */,
+				9562D1532AB484FD002C329D /* EventAdapter.swift in Sources */,
 				AA7197A2287A481500623C15 /* CircleMenu.swift in Sources */,
+				9562D15A2AB4FBBB002C329D /* TransparentKeyboardEventAdapter.swift in Sources */,
 				AA71978B287A480D00623C15 /* MenuController.swift in Sources */,
+				9562D1732AB52416002C329D /* EditorKeyboardEventAdapter.swift in Sources */,
+				9562D1752AB52479002C329D /* EditorMouseEventAdapter.swift in Sources */,
 				AA7197AA287A481500623C15 /* Toast.swift in Sources */,
 				AA719789287A480D00623C15 /* PlayInput.swift in Sources */,
 				AA71970B287A44D200623C15 /* PlayLoader.m in Sources */,
+				9562D1512AB484C7002C329D /* EventAdapters.swift in Sources */,
 				AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */,
 				AA71978A287A480D00623C15 /* ControlMode.swift in Sources */,
-				AA719758287A480D00623C15 /* PlayMice.swift in Sources */,
 				AA7197AD287A481500623C15 /* EditorController.swift in Sources */,
+				9562D16B2AB505AD002C329D /* MouseEventAdapter.swift in Sources */,
+				9562D15C2AB4FC79002C329D /* TransparentMouseEventAdapter.swift in Sources */,
+				9562D1772AB52550002C329D /* EditorControllerEventAdapter.swift in Sources */,
 				AA7197A3287A481500623C15 /* CircleMenuButton.swift in Sources */,
+				9562D1582AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift in Sources */,
 				AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */,
 				AA71986A287A81A000623C15 /* PTFakeMetaTouch.m in Sources */,
+				9562D15E2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift in Sources */,
 				ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */,
 				AA71986C287A81A000623C15 /* NSObject+Swizzle.m in Sources */,
 				AA71970F287A44D200623C15 /* PlayCover.swift in Sources */,
@@ -483,6 +622,7 @@
 				AA71985F287A81A000623C15 /* IOHIDEvent+KIF.m in Sources */,
 				B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */,
 				AB7DA47529B85BFB0034ACB2 /* PlayShadow.m in Sources */,
+				9562D1662AB5049B002C329D /* KeyboardEventAdapter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
