@@ -174,7 +174,7 @@ bool menuWasCreated = false;
             if ([[PlaySettings shared] inverseScreenValues]) {
                 // This lines set External Scene settings and other IOS10 Runtime services by swizzling
                 // In Sonoma 14.1 betas, frame method seems to be moved to FBSSceneSettingsCore
-                if(@available(iOS 17.0.1, *))
+                if(@available(iOS 17.1, *))
                     [objc_getClass("FBSSceneSettingsCore") swizzleExchangeMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
                 else
                     [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
@@ -188,7 +188,7 @@ bool menuWasCreated = false;
                 [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
             } else {
                 // This acutally runs when adaptiveDisplay is normally triggered
-                if(@available(iOS 17.0.1, *))
+                if(@available(iOS 17.1, *))
                     [objc_getClass("FBSSceneSettingsCore") swizzleExchangeMethod:@selector(frame) withMethod:@selector(hook_frame)];
                 else
                     [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
@@ -212,7 +212,7 @@ bool menuWasCreated = false;
                 CGFloat newValueH = (CGFloat)[self get_default_height];
                 [[PlaySettings shared] setValue:@(newValueH) forKey:@"windowSizeHeight"];
                 if (![[PlaySettings shared] inverseScreenValues]) {
-                    if(@available(iOS 17.0.1, *))
+                    if(@available(iOS 17.1, *))
                         [objc_getClass("FBSSceneSettingsCore") swizzleExchangeMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
                     else
                         [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
@@ -229,7 +229,7 @@ bool menuWasCreated = false;
     } 
     else {
         if ([[PlaySettings shared] adaptiveDisplay]) {
-                if(@available(iOS 17.0.1, *))
+                if(@available(iOS 17.1, *))
                     [objc_getClass("FBSSceneSettingsCore") swizzleExchangeMethod:@selector(frame) withMethod:@selector(hook_frame)];
                 else
                     [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
