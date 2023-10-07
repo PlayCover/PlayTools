@@ -122,6 +122,10 @@ __attribute__((visibility("hidden")))
     
 }
 
+- (void) hook_setCurrentSubscription:(VSSubscription *)currentSubscription {
+    // do nothing
+}
+
 // Hook for UIUserInterfaceIdiom
 
 // - (long long) hook_userInterfaceIdiom {
@@ -243,6 +247,8 @@ bool menuWasCreated = false;
     // Set idiom to iPad
     // [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(userInterfaceIdiom) withMethod:@selector(hook_userInterfaceIdiom)];
     // [objc_getClass("UITraitCollection") swizzleInstanceMethod:@selector(userInterfaceIdiom) withMethod:@selector(hook_userInterfaceIdiom)];
+    
+    [objc_getClass("VSSubscriptionRegistrationCenter") swizzleInstanceMethod:@selector(setCurrentSubscription:) withMethod:@selector(hook_setCurrentSubscription:)];
 }
 
 @end
