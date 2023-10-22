@@ -320,6 +320,10 @@ class SwipeAction: Action {
         timer.suspend()
     }
 
+    deinit {
+        timer.cancel()
+    }
+
     func delay(_ delay: Double, closure: @escaping () -> Void) {
         let when = DispatchTime.now() + delay
         PlayInput.touchQueue.asyncAfter(deadline: when, execute: closure)
@@ -372,7 +376,7 @@ class SwipeAction: Action {
     }
 
     func invalidate() {
-        timer.cancel()
+        timer.suspend()
         self.doLiftOff()
     }
 }
