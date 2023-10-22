@@ -32,6 +32,10 @@ public class ModeAutomaton {
     }
 
     static public func onCmdK() {
+        guard settings.keymapping else {
+            return
+        }
+
         EditorController.shared.switchMode()
 
         if mode == .EDITOR && !EditorController.shared.editorMode {
