@@ -91,13 +91,18 @@ public class ControlMode: Equatable {
 //            Toast.showHint(title: "should hide cursor? \(mouseAdapter.cursorHidden())",
 //                       text: ["current state: " + mode])
         }
-        if mouseAdapter.cursorHidden() != wasHidden {
+        if mouseAdapter.cursorHidden() != wasHidden && settings.keymapping {
             if wasHidden {
                 NotificationCenter.default.post(name: NSNotification.Name.playtoolsCursorWillShow,
                                                 object: nil, userInfo: [:])
                 if screen.fullscreen {
                     screen.switchDock(true)
                 }
+
+                if mode == .OFF || mode == .EDITOR {
+                    ActionDispatcher.invalidateActions()
+                }
+
                 AKInterface.shared!.unhideCursor()
             } else {
                 NotificationCenter.default.post(name: NSNotification.Name.playtoolsCursorWillHide,
