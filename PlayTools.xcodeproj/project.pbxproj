@@ -65,10 +65,10 @@
 		AB7DA47529B85BFB0034ACB2 /* PlayShadow.m in Sources */ = {isa = PBXBuildFile; fileRef = AB7DA47429B85BFB0034ACB2 /* PlayShadow.m */; };
 		AB7DA47729B8A78B0034ACB2 /* PlayShadow.h in Headers */ = {isa = PBXBuildFile; fileRef = AB7DA47629B8A78B0034ACB2 /* PlayShadow.h */; };
 		ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCECEE529750BA600746595 /* PlayedApple.swift */; };
-		B127172228817AB90025112B /* SwordRPC in Frameworks */ = {isa = PBXBuildFile; productRef = B127172128817AB90025112B /* SwordRPC */; };
 		B127172528817C040025112B /* DiscordIPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B127172428817C040025112B /* DiscordIPC.swift */; };
 		B1271729288284BE0025112B /* DiscordActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1271728288284BE0025112B /* DiscordActivity.swift */; };
 		B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */; };
+		B6D774FF2ACFC3D900C0D9D8 /* SwordRPC in Frameworks */ = {isa = PBXBuildFile; productRef = B6D774FE2ACFC3D900C0D9D8 /* SwordRPC */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -165,7 +165,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B127172228817AB90025112B /* SwordRPC in Frameworks */,
+				B6D774FF2ACFC3D900C0D9D8 /* SwordRPC in Frameworks */,
 				6E84A14528D0F94E00BF7495 /* UIKit.framework in Frameworks */,
 				AA818CB9287ABFB1000BEE9D /* IOKit.framework in Frameworks */,
 			);
@@ -476,7 +476,7 @@
 			);
 			name = PlayTools;
 			packageProductDependencies = (
-				B127172128817AB90025112B /* SwordRPC */,
+				B6D774FE2ACFC3D900C0D9D8 /* SwordRPC */,
 			);
 			productName = PlayTools;
 			productReference = AA7196D8287A447700623C15 /* PlayTools.framework */;
@@ -512,7 +512,7 @@
 			);
 			mainGroup = AA7196CE287A447700623C15;
 			packageReferences = (
-				B127172028817AB90025112B /* XCRemoteSwiftPackageReference "swordRPC" */,
+				B6D774FD2ACFC3D900C0D9D8 /* XCRemoteSwiftPackageReference "SwordRPC" */,
 			);
 			productRefGroup = AA7196D9287A447700623C15 /* Products */;
 			projectDirPath = "";
@@ -951,9 +951,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		B127172028817AB90025112B /* XCRemoteSwiftPackageReference "swordRPC" */ = {
+		B6D774FD2ACFC3D900C0D9D8 /* XCRemoteSwiftPackageReference "SwordRPC" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/khoralee/swordRPC";
+			repositoryURL = "https://github.com/PlayCover/SwordRPC";
 			requirement = {
 				branch = main;
 				kind = branch;
@@ -962,9 +962,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		B127172128817AB90025112B /* SwordRPC */ = {
+		B6D774FE2ACFC3D900C0D9D8 /* SwordRPC */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B127172028817AB90025112B /* XCRemoteSwiftPackageReference "swordRPC" */;
+			package = B6D774FD2ACFC3D900C0D9D8 /* XCRemoteSwiftPackageReference "SwordRPC" */;
 			productName = SwordRPC;
 		};
 /* End XCSwiftPackageProductDependency section */
