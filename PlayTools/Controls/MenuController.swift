@@ -51,6 +51,19 @@ extension UIApplication {
         Toucher.writeLog(logMessage: "mark")
         Toast.showHint(title: "Log marked")
     }
+
+    @objc
+    func rotateView(_ sender: AnyObject) {
+        Toast.showHint(title: "Rotate")
+        
+        for scene in connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows {
+                guard let rootViewController = window.rootViewController else { continue }
+                rootViewController.rotateView(sender)
+            }
+        }
+    }
 }
 
 extension UIViewController {
@@ -85,7 +98,7 @@ var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIViewController.rotateView(_:))
+                           #selector(UIApplication.rotateView(_:))
     ]
 
 class MenuController {
