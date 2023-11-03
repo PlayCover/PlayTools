@@ -54,8 +54,6 @@ extension UIApplication {
 
     @objc
     func rotateView(_ sender: AnyObject) {
-        Toast.showHint(title: "Rotate")
-        
         for scene in connectedScenes {
             guard let windowScene = scene as? UIWindowScene else { continue }
             for window in windowScene.windows {
@@ -63,6 +61,10 @@ extension UIApplication {
                 rootViewController.rotateView(sender)
             }
         }
+        
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 2, execute: {
+            Toast.showHint(title: "Rotated")
+        })
     }
 }
 
