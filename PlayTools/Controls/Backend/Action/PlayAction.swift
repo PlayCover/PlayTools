@@ -376,7 +376,7 @@ class SwipeAction: Action {
     }
 
     func invalidate() {
-        self.doLiftOff()
+        PlayInput.touchQueue.async(execute: self.doLiftOff)
     }
 }
 
