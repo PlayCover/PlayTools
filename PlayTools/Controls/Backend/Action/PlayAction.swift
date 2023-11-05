@@ -339,7 +339,6 @@ class SwipeAction: Action {
             if self.counter < 4 {
                 counter += 1
             } else {
-                timer.suspend()
                 self.doLiftOff()
             }
         }
@@ -369,6 +368,7 @@ class SwipeAction: Action {
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: &id)
+        timer.suspend()
         delay(0.02) {
             self.cooldown = false
         }
@@ -376,7 +376,6 @@ class SwipeAction: Action {
     }
 
     func invalidate() {
-        timer.suspend()
         self.doLiftOff()
     }
 }
