@@ -34,13 +34,13 @@ public class ControlMode: Equatable {
         let centre = NotificationCenter.default
         let main = OperationQueue.main
         if PlaySettings.shared.noKMOnInput {
-            centre.addObserver(forName: UIApplication.keyboardDidHideNotification, object: nil, queue: main) { _ in
-                ModeAutomaton.onKeyboardHide()
-                Toucher.writeLog(logMessage: "virtual keyboard did hide")
+            centre.addObserver(forName: UITextField.textDidEndEditingNotification, object: nil, queue: main) { _ in
+                ModeAutomaton.onTextFieldFinish()
+                Toucher.writeLog(logMessage: "textfield end edit")
             }
-            centre.addObserver(forName: UIApplication.keyboardWillShowNotification, object: nil, queue: main) { _ in
-                ModeAutomaton.onKeyboardShow()
-                Toucher.writeLog(logMessage: "virtual keyboard will show")
+            centre.addObserver(forName: UITextField.textDidBeginEditingNotification, object: nil, queue: main) { _ in
+                ModeAutomaton.onTextFieldEdit()
+                Toucher.writeLog(logMessage: "textfield begin edit")
             }
             set(.ARBITRARY_CLICK)
         } else {
