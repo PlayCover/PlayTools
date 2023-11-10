@@ -48,14 +48,14 @@ public class ModeAutomaton {
         }
     }
 
-    static public func onTextFieldEdit() {
+    static public func onUITextInputBeginEdit() {
         if mode == .EDITOR {
             return
         }
         mode.set(.TEXT_INPUT)
     }
 
-    static public func onTextFieldFinish() {
+    static public func onUITextInputEndEdit() {
         if mode == .EDITOR {
             return
         }
