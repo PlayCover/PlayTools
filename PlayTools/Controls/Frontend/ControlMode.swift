@@ -35,12 +35,20 @@ public class ControlMode: Equatable {
         let main = OperationQueue.main
         if PlaySettings.shared.noKMOnInput {
             centre.addObserver(forName: UITextField.textDidEndEditingNotification, object: nil, queue: main) { _ in
-                ModeAutomaton.onTextFieldFinish()
-                Toucher.writeLog(logMessage: "textfield end edit")
+                ModeAutomaton.onUITextInputEndEdit()
+                Toucher.writeLog(logMessage: "uitextinput end edit")
             }
             centre.addObserver(forName: UITextField.textDidBeginEditingNotification, object: nil, queue: main) { _ in
-                ModeAutomaton.onTextFieldEdit()
-                Toucher.writeLog(logMessage: "textfield begin edit")
+                ModeAutomaton.onUITextInputBeginEdit()
+                Toucher.writeLog(logMessage: "uitextinput begin edit")
+            }
+            centre.addObserver(forName: UITextView.textDidEndEditingNotification, object: nil, queue: main) { _ in
+                ModeAutomaton.onUITextInputEndEdit()
+                Toucher.writeLog(logMessage: "uitextinput end edit")
+            }
+            centre.addObserver(forName: UITextView.textDidBeginEditingNotification, object: nil, queue: main) { _ in
+                ModeAutomaton.onUITextInputBeginEdit()
+                Toucher.writeLog(logMessage: "uitextinput begin edit")
             }
             set(.ARBITRARY_CLICK)
         } else {
