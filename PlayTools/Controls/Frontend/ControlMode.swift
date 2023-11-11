@@ -57,11 +57,9 @@ public class ControlMode: Equatable {
             self.keyboardAdapter.handleKey(keycode: keycode, pressed: pressed, isRepeat: isRepeat)},
           swapMode: ModeAutomaton.onOption)
 
-        if PlaySettings.shared.enableScrollWheel {
-            AKInterface.shared!.setupScrollWheel({deltaX, deltaY in
+        AKInterface.shared!.setupScrollWheel({deltaX, deltaY in
                 self.mouseAdapter.handleScrollWheel(deltaX: deltaX, deltaY: deltaY)
             })
-        }
 
         AKInterface.shared!.setupMouseMoved({deltaX, deltaY in
             self.mouseAdapter.handleMove(deltaX: deltaX, deltaY: deltaY)
