@@ -156,7 +156,6 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func setupScrollWheel(_ onMoved: @escaping(CGFloat, CGFloat) -> Bool) {
-        /*
         NSEvent.addLocalMonitorForEvents(matching: NSEvent.EventTypeMask.scrollWheel, handler: { event in
             var deltaX = event.scrollingDeltaX, deltaY = event.scrollingDeltaY
             if !event.hasPreciseScrollingDeltas {
@@ -169,7 +168,6 @@ class AKPlugin: NSObject, Plugin {
             }
             return event
         })
-        */
     }
 
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {
