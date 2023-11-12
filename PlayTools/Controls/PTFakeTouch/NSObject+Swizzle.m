@@ -122,10 +122,6 @@ __attribute__((visibility("hidden")))
     
 }
 
-- (void) hook_setCurrentSubscription:(VSSubscription *)currentSubscription {
-    // do nothing
-}
-
 // Hook for UIUserInterfaceIdiom
 
 // - (long long) hook_userInterfaceIdiom {
