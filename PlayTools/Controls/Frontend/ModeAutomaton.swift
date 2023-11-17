@@ -48,14 +48,14 @@ public class ModeAutomaton {
         }
     }
 
-    static public func onKeyboardShow() {
+    static public func onUITextInputBeginEdit() {
         if mode == .EDITOR {
             return
         }
         mode.set(.TEXT_INPUT)
     }
 
-    static public func onKeyboardHide() {
+    static public func onUITextInputEndEdit() {
         if mode == .EDITOR {
             return
         }
