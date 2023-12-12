@@ -11,6 +11,7 @@
 #import "UIKit/UIKit.h"
 #import <PlayTools/PlayTools-Swift.h>
 #import "PTFakeMetaTouch.h"
+#import <VideoSubscriberAccount/VideoSubscriberAccount.h>
 
 __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
@@ -47,6 +48,16 @@ __attribute__((visibility("hidden")))
                                                 method_getTypeEncoding(swizzledMethod)),
                             method_getTypeEncoding(originalMethod));
     }
+}
+
+- (void) swizzleExchangeMethod:(SEL)origSelector withMethod:(SEL)newSelector
+{
+    Class cls = [self class];
+    // If current class doesn't exist selector, then get super
+    Method originalMethod = class_getInstanceMethod(cls, origSelector);
+    Method swizzledMethod = class_getInstanceMethod(cls, newSelector);
+    
+    method_exchangeImplementations(originalMethod, swizzledMethod);
 }
 
 - (BOOL) hook_prefersPointerLocked {
@@ -111,6 +122,15 @@ __attribute__((visibility("hidden")))
     
 }
 
+- (void) hook_setCurrentSubscription:(VSSubscription *)currentSubscription {
+    // do nothing
+}
+
+// Hook for UIUserInterfaceIdiom
+
+// - (long long) hook_userInterfaceIdiom {
+//     return UIUserInterfaceIdiomPad;
+// }
 
 bool menuWasCreated = false;
 - (id) initWithRootMenuHook:(id)rootMenu {
@@ -157,7 +177,11 @@ bool menuWasCreated = false;
             // This is an experimental fix
             if ([[PlaySettings shared] inverseScreenValues]) {
                 // This lines set External Scene settings and other IOS10 Runtime services by swizzling
-                [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
+                // In Sonoma 14.1 betas, frame method seems to be moved to FBSSceneSettingsCore
+                if(@available(iOS 17.1, *))
+                    [objc_getClass("FBSSceneSettingsCore") swizzleExchangeMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
+                else
+                    [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
                 [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_boundsDefault)];
                 [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_sizeDelfault)];
                 
@@ -168,7 +192,10 @@ bool menuWasCreated = false;
                 [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
             } else {
                 // This acutally runs when adaptiveDisplay is normally triggered
-                [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
+                if(@available(iOS 17.1, *))
+                    [objc_getClass("FBSSceneSettingsCore") swizzleExchangeMethod:@selector(frame) withMethod:@selector(hook_frame)];
+                else
+                    [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
                 [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
                 [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
                 
@@ -189,7 +216,10 @@ bool menuWasCreated = false;
                 CGFloat newValueH = (CGFloat)[self get_default_height];
                 [[PlaySettings shared] setValue:@(newValueH) forKey:@"windowSizeHeight"];
                 if (![[PlaySettings shared] inverseScreenValues]) {
-                    [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
+                    if(@available(iOS 17.1, *))
+                        [objc_getClass("FBSSceneSettingsCore") swizzleExchangeMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
+                    else
+                        [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frameDefault)];
                     [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_boundsDefault)];
                     [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_sizeDelfault)];
                 }
@@ -203,7 +233,10 @@ bool menuWasCreated = false;
     } 
     else {
         if ([[PlaySettings shared] adaptiveDisplay]) {
-                [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
+                if(@available(iOS 17.1, *))
+                    [objc_getClass("FBSSceneSettingsCore") swizzleExchangeMethod:@selector(frame) withMethod:@selector(hook_frame)];
+                else
+                    [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(frame) withMethod:@selector(hook_frame)];
                 [objc_getClass("FBSSceneSettings") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_bounds)];
                 [objc_getClass("FBSDisplayMode") swizzleInstanceMethod:@selector(size) withMethod:@selector(hook_size)];
             }
@@ -211,6 +244,11 @@ bool menuWasCreated = false;
     
     [objc_getClass("_UIMenuBuilder") swizzleInstanceMethod:sel_getUid("initWithRootMenu:") withMethod:@selector(initWithRootMenuHook:)];
     [objc_getClass("IOSViewController") swizzleInstanceMethod:@selector(prefersPointerLocked) withMethod:@selector(hook_prefersPointerLocked)];
+    // Set idiom to iPad
+    // [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(userInterfaceIdiom) withMethod:@selector(hook_userInterfaceIdiom)];
+    // [objc_getClass("UITraitCollection") swizzleInstanceMethod:@selector(userInterfaceIdiom) withMethod:@selector(hook_userInterfaceIdiom)];
+
+    [objc_getClass("VSSubscriptionRegistrationCenter") swizzleInstanceMethod:@selector(setCurrentSubscription:) withMethod:@selector(hook_setCurrentSubscription:)];
 }
 
 @end
