@@ -69,8 +69,12 @@ let settings = PlaySettings.shared
     @objc lazy var windowFixMethod = settingsData.windowFixMethod
 
     @objc lazy var customScaler = settingsData.customScaler
-    
+
     @objc lazy var rootWorkDir = settingsData.rootWorkDir
+
+    @objc lazy var noKMOnInput = settingsData.noKMOnInput
+
+    @objc lazy var enableScrollWheel = settingsData.enableScrollWheel
 }
 
 struct AppSettingsData: Codable {
@@ -93,4 +97,6 @@ struct AppSettingsData: Codable {
     var inverseScreenValues = false
     var windowFixMethod = 0
     var rootWorkDir = true
+    var noKMOnInput = false
+    var enableScrollWheel = true
 }

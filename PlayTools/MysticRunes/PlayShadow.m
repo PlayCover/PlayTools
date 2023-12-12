@@ -159,12 +159,18 @@ __attribute__((visibility("hidden")))
 
 + (void) load {
     [self debugLogger:@"PlayShadow is now loading"];
-    if ([[PlaySettings shared] bypass]) [self loadJailbreakBypass];
+    // Gate this behind an environment variable
+    if ([[NSProcessInfo processInfo].environment[@"USE_EXTRA_ANTIJB"] isEqualToString:@"1"]) {
+        [self loadJailbreakBypass];
+    }
     // if ([[PlaySettings shared] bypass]) [self loadEnvironmentBypass]; # disabled as it might be too powerful
 
     // Swizzle ATTrackingManager
     [objc_getClass("ATTrackingManager") swizzleClassMethod:@selector(requestTrackingAuthorizationWithCompletionHandler:) withMethod:@selector(pm_return_2_with_completion_handler:)];
     [objc_getClass("ATTrackingManager") swizzleClassMethod:@selector(trackingAuthorizationStatus) withMethod:@selector(pm_return_2)];
+
+    // canResizeToFitContent
+    // [objc_getClass("UIWindow") swizzleInstanceMethod:@selector(canResizeToFitContent) withMethod:@selector(pm_return_true)];
 }
 
 + (void) loadJailbreakBypass {
