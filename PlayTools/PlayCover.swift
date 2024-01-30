@@ -35,7 +35,39 @@ public class PlayCover: NSObject {
             queue: OperationQueue.main
         ) { notif in
             if PlayScreen.shared.nsWindow?.isEqual(notif.object) ?? false {
-                AKInterface.shared!.terminateApplication()
+                // Step 1: Resign active
+                for scene in UIApplication.shared.connectedScenes {
+                    scene.delegate?.sceneWillResignActive?(scene)
+                    NotificationCenter.default.post(name: UIScene.willDeactivateNotification,
+                                                    object: scene)
+                }
+                UIApplication.shared.delegate?.applicationWillResignActive?(UIApplication.shared)
+                NotificationCenter.default.post(name: UIApplication.willResignActiveNotification,
+                                                object: UIApplication.shared)
+
+                // Step 2: Enter background
+                for scene in UIApplication.shared.connectedScenes {
+                    scene.delegate?.sceneDidEnterBackground?(scene)
+                    NotificationCenter.default.post(name: UIScene.didEnterBackgroundNotification,
+                                                    object: scene)
+                }
+                UIApplication.shared.delegate?.applicationDidEnterBackground?(UIApplication.shared)
+                NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification,
+                                                object: UIApplication.shared)
+
+                // Step 2.5: End UIBackgroundTask
+                // There is an expiration handler, but idk how to invoke it. Skip for now.
+
+                // Step 3: Terminate
+                UIApplication.shared.delegate?.applicationWillTerminate?(UIApplication.shared)
+                NotificationCenter.default.post(name: UIApplication.willTerminateNotification,
+                                                object: UIApplication.shared)
+                DispatchQueue.main.async(execute: AKInterface.shared!.terminateApplication)
+
+                // Step 3.5: End BGTask
+                // BGTask typically runs in another process and is tricky to terminate.
+                // It may run into infinite loops, end up silently heating the device up.
+                // This actually happens for ToF. Hope future developers can solve this.
             }
         }
     }
