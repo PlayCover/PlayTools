@@ -37,9 +37,10 @@ public class PlayKeychain: NSObject {
 
     private static func getKeychainPath(_ attributes: NSDictionary) -> URL {
         let keychainFolder = getKeychainDirectory()
-        if attributes["r_Ref"] as? Int == 1 {
-            attributes.setValue("keys", forKey: "class")
-        }
+        // if attributes["r_Ref"] as? Int == 1 {
+            // attributes.setValue("keys", forKey: "class")
+            // What the hell Apple
+        // }
         // Generate a key path based on the key attributes
         let accountName = attributes[kSecAttrAccount as String] as? String ?? ""
         let serviceName = attributes[kSecAttrService as String] as? String ?? ""
