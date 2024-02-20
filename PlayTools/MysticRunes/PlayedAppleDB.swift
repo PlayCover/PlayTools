@@ -13,6 +13,7 @@ class PlayKeychainDB: NSObject {
     public static let shared = PlayKeychainDB()
 
     private var sqlite3DB: OpaquePointer?
+    private var dbLock: DispatchSemaphore = .init(value: 1)
     // https://developer.apple.com/documentation/security/keychain_services/keychain_items/item_class_keys_and_values
     // Synchronizable does not matter.
     private let primaryAttributes = [
@@ -122,6 +123,7 @@ class PlayKeychainDB: NSObject {
 
     func query(_ attributes: NSDictionary) -> NSMutableDictionary? {
         guard self.connectToDB() else { return nil }
+        defer { _ = self.disconnectFromDB() }
 
         guard let table_name = attributes[kSecClass] as? String,
               let primaryColumns = primaryAttributes[table_name as CFString],
@@ -326,10 +328,12 @@ class PlayKeychainDB: NSObject {
         let keychainDB = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("PlayChain")
             .appendingPathComponent("\(bundleID).db")
+        self.dbLock.wait()
+        defer { self.dbLock.signal() }
         let alreadyCreated = FileManager.default.fileExists(atPath: keychainDB.path)
         guard sqlite3_open(keychainDB.path, &self.sqlite3DB) == SQLITE_OK else { return false }
-        if !alreadyCreated { return structDB() }
-        return true
+        let result = alreadyCreated ? true : structDB()
+        return result
     }
 
     private func disconnectFromDB(_ force: Bool = false) -> Bool {

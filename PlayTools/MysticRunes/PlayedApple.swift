@@ -93,9 +93,6 @@ public class PlayKeychain: NSObject {
     -> OSStatus {
         guard let keychainDict = db.query(query) else {
             debugLogger("Keychain item not found in db")
-            let keys = query.allKeys(for: String.self)
-            debugLogger("\(keys.count)")
-            debugLogger("\(keys.map({ "\($0)" }))")
             return errSecItemNotFound
         }
         // Check the `r_Attributes` key. If it is set to 1 in the query
