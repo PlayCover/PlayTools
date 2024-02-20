@@ -121,7 +121,7 @@ class PlayKeychainDB: NSObject {
         kSecValuePersistentRef
     ]
 
-    func query(_ attributes: NSDictionary) -> NSMutableDictionary? {
+    func query(_ attributes: NSDictionary) -> [NSMutableDictionary]? {
         guard self.connectToDB() else { return nil }
         defer { _ = self.disconnectFromDB() }
 
@@ -150,20 +150,23 @@ class PlayKeychainDB: NSObject {
             return nil
         }
 
-        while sqlite3_step(stmt) == SQLITE_ROW {
+        var dictArr: [NSMutableDictionary] = []
+        let max_count = (attributes[kSecMatchLimit] as? String == kSecMatchLimit as String ? 1 : Int.max)
+        while sqlite3_step(stmt) == SQLITE_ROW && dictArr.count < max_count{
             let newDict: NSMutableDictionary = [:]
             let columns = sqlite3_column_count(stmt)
+            newDict[kSecClass] = table_name
             for index in 0..<columns {
                 let name = String(cString: sqlite3_column_name(stmt, index))
                 if let value = decodeData(stmt: stmt, index: index) {
                     newDict[name] = value
                 }
             }
-            return newDict
+            dictArr.append(newDict)
         }
 
         sqlite3_finalize(stmt)
-        return nil
+        return dictArr
     }
 
     func insert(_ attributes: NSDictionary) -> Bool {

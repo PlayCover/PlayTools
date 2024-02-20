@@ -52,7 +52,7 @@ public class PlayKeychain: NSObject {
 
     // SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate)
     @objc static public func update(_ query: NSDictionary, attributesToUpdate: NSDictionary) -> OSStatus {
-        guard let keychainDict = db.query(query) else {
+        guard let keychainDict = db.query(query)?.first else {
             debugLogger("Keychain item not found in db")
             return errSecItemNotFound
         }
@@ -76,7 +76,7 @@ public class PlayKeychain: NSObject {
 
     // SecItemDelete(CFDictionaryRef query)
     @objc static public func delete(_ query: NSDictionary) -> OSStatus {
-        guard db.query(query) != nil else {
+        guard db.query(query)?.first != nil else {
             debugLogger("Failed to find keychain item")
             return errSecItemNotFound
         }
@@ -91,9 +91,20 @@ public class PlayKeychain: NSObject {
     // SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
     @objc static public func copyMatching(_ query: NSDictionary, result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?)
     -> OSStatus {
-        guard let keychainDict = db.query(query) else {
+        guard let keychainDicts = db.query(query),
+              let keychainDict = keychainDicts.first else {
             debugLogger("Keychain item not found in db")
             return errSecItemNotFound
+        }
+
+        if query[kSecMatchLimit as String] as? String ==  kSecMatchLimitAll as String {
+            result?.pointee = Unmanaged.passRetained(keychainDicts.map({
+                $0.removeObject(forKey: kSecValueData)
+                $0.removeObject(forKey: kSecValueRef)
+                $0.removeObject(forKey: kSecValuePersistentRef)
+                return $0
+            }) as CFTypeRef)
+            return errSecSuccess
         }
         // Check the `r_Attributes` key. If it is set to 1 in the query
         let classType = query[kSecClass as String] as? String ?? ""
@@ -101,7 +112,6 @@ public class PlayKeychain: NSObject {
         if query["r_Attributes"] as? Int == 1 {
             // Create a dummy dictionary and return it
             let dummyDict = keychainDict
-            dummyDict.setValue(classType, forKey: "class")
             if query["r_Data"] as? Int != 1 {
                 dummyDict.removeObject(forKey: kSecValueData)
                 dummyDict.removeObject(forKey: kSecValueRef)
