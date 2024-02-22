@@ -12,7 +12,6 @@ import SQLite3
 class PlayKeychainDB: NSObject {
     public static let shared = PlayKeychainDB()
 
-    private var sqlite3DB: OpaquePointer?
     private var dbLock: DispatchSemaphore = .init(value: 1)
     // https://developer.apple.com/documentation/security/keychain_services/keychain_items/item_class_keys_and_values
     // Synchronizable does not matter.
@@ -122,12 +121,8 @@ class PlayKeychainDB: NSObject {
     ]
 
     func query(_ attributes: NSDictionary) -> [NSMutableDictionary]? {
-        guard self.connectToDB() else { return nil }
-        defer { _ = self.disconnectFromDB() }
-
         guard let table_name = attributes[kSecClass] as? String,
-              let primaryColumns = primaryAttributes[table_name as CFString],
-              let secondaryColumns = secondaryAttributes[table_name as CFString] else {
+              let primaryColumns = primaryAttributes[table_name as CFString] else {
             return nil
         }
 
@@ -143,36 +138,37 @@ class PlayKeychainDB: NSObject {
         let select_query = "SELECT * FROM \(table_name) WHERE \(where_qeury)"
         var stmt: OpaquePointer?
 
-        guard sqlite3_prepare(self.sqlite3DB, select_query, -1, &stmt, nil) == SQLITE_OK,
-              let stmt = stmt else {
-            PlayKeychain.debugLogger("Failed query \(select_query)")
-            PlayKeychain.debugLogger("Failed to query to db table: \(String(cString: sqlite3_errmsg(self.sqlite3DB)))")
-            return nil
-        }
-
         var dictArr: [NSMutableDictionary] = []
-        let max_count = (attributes[kSecMatchLimit] as? String == kSecMatchLimit as String ? 1 : Int.max)
-        while sqlite3_step(stmt) == SQLITE_ROW && dictArr.count < max_count{
-            let newDict: NSMutableDictionary = [:]
-            let columns = sqlite3_column_count(stmt)
-            newDict[kSecClass] = table_name
-            for index in 0..<columns {
-                let name = String(cString: sqlite3_column_name(stmt, index))
-                if let value = decodeData(stmt: stmt, index: index) {
-                    newDict[name] = value
-                }
+        guard usingDB({ sqlite3DB in
+            defer { sqlite3_finalize(stmt) }
+            guard sqlite3_prepare(sqlite3DB, select_query, -1, &stmt, nil) == SQLITE_OK,
+                  let stmt = stmt else {
+                PlayKeychain.debugLogger("Failed query \(select_query)")
+                PlayKeychain.debugLogger("Failed to query to db table: \(String(cString: sqlite3_errmsg(sqlite3DB)))")
+                return false
             }
-            dictArr.append(newDict)
-        }
 
-        sqlite3_finalize(stmt)
+            let max_count = (attributes[kSecMatchLimit] as? String == kSecMatchLimitOne as String ? 1 : Int.max)
+            while sqlite3_step(stmt) == SQLITE_ROW && dictArr.count < max_count {
+                let newDict: NSMutableDictionary = [:]
+                let columns = sqlite3_column_count(stmt)
+                newDict[kSecClass] = table_name
+                for index in 0..<columns {
+                    let name = String(cString: sqlite3_column_name(stmt, index))
+                    if let value = decodeData(stmt: stmt, index: index) {
+                        newDict[name] = value
+                    }
+                }
+                dictArr.append(newDict)
+            }
+
+            return true
+        }) else { return nil }
+
         return dictArr
     }
 
     func insert(_ attributes: NSDictionary) -> Bool {
-        guard self.connectToDB() else { return false }
-        defer { _ = self.disconnectFromDB() }
-
         guard let table_name = attributes[kSecClass] as? String,
               let primaryColumns = primaryAttributes[table_name as CFString],
               let secondaryColumns = secondaryAttributes[table_name as CFString] else {
@@ -195,32 +191,28 @@ class PlayKeychainDB: NSObject {
         let insert_query = "INSERT INTO \(table_name) (\(columns_query.joined(separator: ", "))) VALUES (\(Array(repeating: "?", count: values_query.count).joined(separator: ", ")))"
         var stmt: OpaquePointer?
 
-        guard sqlite3_prepare(self.sqlite3DB, insert_query, -1, &stmt, nil) == SQLITE_OK,
-              let stmt = stmt else {
-            PlayKeychain.debugLogger("Failed query \(insert_query)")
-            PlayKeychain.debugLogger("Failed to make query: \(String(cString: sqlite3_errmsg(self.sqlite3DB)))")
-            return false
-        }
+        guard usingDB({ sqlite3DB in
+            defer { sqlite3_finalize(stmt) }
+            guard sqlite3_prepare(sqlite3DB, insert_query, -1, &stmt, nil) == SQLITE_OK,
+                  let stmt = stmt else {
+                PlayKeychain.debugLogger("Failed query \(insert_query)")
+                PlayKeychain.debugLogger("Failed to make query: \(String(cString: sqlite3_errmsg(sqlite3DB)))")
+                return false
+            }
 
-        for (index, value) in values_query.enumerated()
-        where !encodeData(stmt: stmt, index: Int32(index + 1), value: value) {
-            PlayKeychain.debugLogger("Failed to insert into db: \(String(cString: sqlite3_errmsg(self.sqlite3DB)))")
-            return false
-        }
+            for (index, value) in values_query.enumerated()
+            where !encodeData(stmt: stmt, index: Int32(index + 1), value: value) {
+                PlayKeychain.debugLogger("Failed to insert into db: \(String(cString: sqlite3_errmsg(sqlite3DB)))")
+                return false
+            }
 
-        guard sqlite3_step(stmt) == SQLITE_DONE else {
-            PlayKeychain.debugLogger("Failed to insert into db: \(String(cString: sqlite3_errmsg(self.sqlite3DB)))")
-            return false
-        }
+            return sqlite3_step(stmt) == SQLITE_DONE
+        }) else { return false }
 
-        sqlite3_finalize(stmt)
         return true
     }
 
     func update(_ attributes: NSDictionary) -> Bool {
-        guard self.connectToDB() else { return false }
-        defer { _ = self.disconnectFromDB() }
-
         guard let table_name = attributes[kSecClass] as? String,
               let primaryColumns = primaryAttributes[table_name as CFString],
               let secondaryColumns = secondaryAttributes[table_name as CFString] else {
@@ -251,36 +243,31 @@ class PlayKeychainDB: NSObject {
         let update_query = "UPDATE \(table_name) SET \(columns_query.map({ return "\($0) = ?" }).joined(separator: ", ")) WHERE \(where_qeury)"
         var stmt: OpaquePointer?
 
-        guard sqlite3_prepare(self.sqlite3DB, update_query, -1, &stmt, nil) == SQLITE_OK,
-              let stmt = stmt else {
-            PlayKeychain.debugLogger("Failed query \(update_query)")
-            PlayKeychain.debugLogger("Failed to make query: \(String(cString: sqlite3_errmsg(self.sqlite3DB)))")
-            return false
-        }
-
-        for (index, value) in values_qeury.enumerated() {
-            if !encodeData(stmt: stmt, index: Int32(index + 1), value: value) {
-                PlayKeychain.debugLogger("Failed to update into db: \(String(cString: sqlite3_errmsg(self.sqlite3DB)))")
+        guard usingDB({ sqlite3DB in
+            defer { sqlite3_finalize(stmt) }
+            guard sqlite3_prepare(sqlite3DB, update_query, -1, &stmt, nil) == SQLITE_OK,
+                  let stmt = stmt else {
+                PlayKeychain.debugLogger("Failed query \(update_query)")
+                PlayKeychain.debugLogger("Failed to make query: \(String(cString: sqlite3_errmsg(sqlite3DB)))")
                 return false
             }
-        }
 
-        guard sqlite3_step(stmt) == SQLITE_DONE else {
-            PlayKeychain.debugLogger("Failed to update into db: \(String(cString: sqlite3_errmsg(self.sqlite3DB)))")
-            return false
-        }
+            for (index, value) in values_qeury.enumerated() {
+                if !encodeData(stmt: stmt, index: Int32(index + 1), value: value) {
+                    PlayKeychain.debugLogger("Failed to update into db: \(String(cString: sqlite3_errmsg(sqlite3DB)))")
+                    return false
+                }
+            }
 
-        sqlite3_finalize(stmt)
+            return sqlite3_step(stmt) == SQLITE_DONE
+        }) else { return false }
+
         return true
     }
 
     func delete(_ attributes: NSDictionary) -> Bool {
-        guard self.connectToDB() else { return false }
-        defer { _ = self.disconnectFromDB() }
-
         guard let table_name = attributes[kSecClass] as? String,
-              let primaryColumns = primaryAttributes[table_name as CFString],
-              let secondaryColumns = secondaryAttributes[table_name as CFString] else {
+              let primaryColumns = primaryAttributes[table_name as CFString] else {
             return false
         }
 
@@ -294,23 +281,24 @@ class PlayKeychainDB: NSObject {
         }).joined(separator: " AND ")
         let delete_query = "DELETE FROM \(table_name) where \(where_qeury)"
         var stmt: OpaquePointer?
+        PlayKeychain.debugLogger(delete_query)
 
-        guard sqlite3_prepare(self.sqlite3DB, delete_query, -1, &stmt, nil) == SQLITE_OK,
-              let stmt = stmt else {
-            PlayKeychain.debugLogger("Failed query \(delete_query)")
-            PlayKeychain.debugLogger("Failed to delte items from db table: \(String(cString: sqlite3_errmsg(self.sqlite3DB)))")
-            return false
-        }
+        guard usingDB({ sqlite3DB in
+            defer { sqlite3_finalize(stmt) }
+            guard sqlite3_prepare(sqlite3DB, delete_query, -1, &stmt, nil) == SQLITE_OK,
+                  let stmt = stmt else {
+                PlayKeychain.debugLogger("Failed query \(delete_query)")
+                PlayKeychain.debugLogger("Failed to delte items from db table: \(String(cString: sqlite3_errmsg(sqlite3DB)))")
+                return false
+            }
 
-        guard sqlite3_step(stmt) == SQLITE_OK else { return false }
+            return sqlite3_step(stmt) == SQLITE_OK
+        }) else { return false }
 
-        sqlite3_finalize(stmt)
         return true
     }
 
-    private func structDB(_ force: Bool = false) -> Bool {
-        guard self.sqlite3DB != nil || force else { return true } // Already sturcted is ok
-
+    private func structDB(_ sqlite3DB: OpaquePointer) -> Bool {
         for (key, value) in primaryAttributes {
             var columns: [CFString] = value
             columns.append(contentsOf: secondaryAttributes[key]!)
@@ -318,9 +306,9 @@ class PlayKeychainDB: NSObject {
             let columnsSetting = columns.map({ return "\($0) TEXT" }).joined(separator: ", ")
             let primaryKeysSetting = "PRIMARY KEY (\(value.map({ return "\($0)" }).joined(separator: ", ")))"
             let create_table_query = "CREATE TABLE IF NOT EXISTS \(key) (\(columnsSetting), \(primaryKeysSetting));"
-            guard sqlite3_exec(self.sqlite3DB, create_table_query, nil, nil, nil) == SQLITE_OK else {
+            guard sqlite3_exec(sqlite3DB, create_table_query, nil, nil, nil) == SQLITE_OK else {
                 PlayKeychain.debugLogger("Failed query \(create_table_query)")
-                PlayKeychain.debugLogger("Failed to create db table: \(String(cString: sqlite3_errmsg(self.sqlite3DB)))")
+                PlayKeychain.debugLogger("Failed to create db table: \(String(cString: sqlite3_errmsg(sqlite3DB)))")
                 return false
             }
         }
@@ -328,26 +316,36 @@ class PlayKeychainDB: NSObject {
         return true
     }
 
-    private func connectToDB(_ force: Bool = false) -> Bool {
-        guard self.sqlite3DB == nil || force else { return true } // Already open is ok
+    private func usingDB(_ callback: (OpaquePointer) -> Bool) -> Bool {
+        dbLock.wait()
+        defer { dbLock.signal() }
 
+        guard let sqlite3DB = connectToDB() else { return false }
+        let result = callback(sqlite3DB)
+        guard disconnectFromDB(sqlite3DB) else { return false }
+        return result
+    }
+
+    private func connectToDB() -> OpaquePointer? {
+        var sqlite3DB: OpaquePointer?
         let bundleID = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
         let keychainDB = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("PlayChain")
             .appendingPathComponent("\(bundleID).db")
-        self.dbLock.wait()
-        defer { self.dbLock.signal() }
         let alreadyCreated = FileManager.default.fileExists(atPath: keychainDB.path)
-        guard sqlite3_open(keychainDB.path, &self.sqlite3DB) == SQLITE_OK else { return false }
-        let result = alreadyCreated ? true : structDB()
-        return result
+        guard sqlite3_open(keychainDB.path, &sqlite3DB) == SQLITE_OK,
+              let sqlite3DB = sqlite3DB else {
+            return nil
+        }
+        guard alreadyCreated ? true : structDB(sqlite3DB) else {
+            _ = disconnectFromDB(sqlite3DB)
+            return nil
+        }
+        return sqlite3DB
     }
 
-    private func disconnectFromDB(_ force: Bool = false) -> Bool {
-        guard self.sqlite3DB != nil || force else { return true } // Already close is ok
-
-        guard sqlite3_close(self.sqlite3DB) == SQLITE_OK else { return false }
-        self.sqlite3DB = nil
+    private func disconnectFromDB(_ sqlite3DB: OpaquePointer?) -> Bool {
+        guard sqlite3_close(sqlite3DB) == SQLITE_OK else { return false }
         return true
     }
 
@@ -384,9 +382,4 @@ class PlayKeychainDB: NSObject {
             return nil
         }
     }
-
-    deinit {
-        _ = disconnectFromDB()
-    }
-
 }
