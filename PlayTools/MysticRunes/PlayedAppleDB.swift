@@ -285,7 +285,11 @@ class PlayKeychainDB: NSObject {
         }
 
         let where_qeury = primaryColumns.compactMap({
-            guard let attr = attributes[$0] else { return nil }
+            guard let attr = attributes[$0] else { return nil } // use only requested ones
+            if CFGetTypeID(attr as CFTypeRef) == CFDataGetTypeID(),
+               let string = (attr as? Data).map({ return String(data: $0, encoding: .utf8) }) {
+                return "\($0) LIKE '\(string!)'" // non null-termination in db
+            }
             return "\($0) = '\(attr)'"
         }).joined(separator: " AND ")
         let delete_query = "DELETE FROM \(table_name) where \(where_qeury)"
