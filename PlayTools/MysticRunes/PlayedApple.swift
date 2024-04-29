@@ -25,7 +25,7 @@ public class PlayKeychain: NSObject {
     // Store the entire dictionary as a plist
     // SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
     @objc static public func add(_ attributes: NSDictionary, result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
-        guard db.insert(attributes) else {
+        guard let keychainDict = db.insert(attributes) else {
             debugLogger("Failed to write keychain file")
             return errSecIO
         }
@@ -34,6 +34,19 @@ public class PlayKeychain: NSObject {
         guard let vData = attributes["v_Data"] as? CFTypeRef else {
             return errSecSuccess
         }
+        
+        if attributes["r_Attributes"] as? Int == 1 {
+            // Create a dummy dictionary and return it
+            let dummyDict = keychainDict
+            if attributes["r_Data"] as? Int != 1 {
+                dummyDict.removeObject(forKey: kSecValueData)
+                dummyDict.removeObject(forKey: kSecValueRef)
+                dummyDict.removeObject(forKey: kSecValuePersistentRef)
+            }
+            result?.pointee = Unmanaged.passRetained(dummyDict)
+            return errSecSuccess
+        }
+        
         if attributes["class"] as? String == "keys" {
             // kSecAttrKeyType is stored as `type` in the dictionary
             // kSecAttrKeyClass is stored as `kcls` in the dictionary

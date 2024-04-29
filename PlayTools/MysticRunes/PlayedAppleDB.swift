@@ -153,6 +153,7 @@ class PlayKeychainDB: NSObject {
                 let newDict: NSMutableDictionary = [:]
                 let columns = sqlite3_column_count(stmt)
                 newDict[kSecClass] = table_name
+                newDict[kSecAttrSynchronizable] = attributes[kSecAttrSynchronizable]
                 for index in 0..<columns {
                     let name = String(cString: sqlite3_column_name(stmt, index))
                     if let value = decodeData(stmt: stmt, index: index) {
@@ -168,11 +169,11 @@ class PlayKeychainDB: NSObject {
         return dictArr
     }
 
-    func insert(_ attributes: NSDictionary) -> Bool {
+    func insert(_ attributes: NSDictionary) -> NSMutableDictionary? {
         guard let table_name = attributes[kSecClass] as? String,
               let primaryColumns = primaryAttributes[table_name as CFString],
               let secondaryColumns = secondaryAttributes[table_name as CFString] else {
-            return false
+            return nil
         }
 
         var columns_query = primaryColumns.map({
@@ -190,6 +191,12 @@ class PlayKeychainDB: NSObject {
         })
         let insert_query = "INSERT INTO \(table_name) (\(columns_query.joined(separator: ", "))) VALUES (\(Array(repeating: "?", count: values_query.count).joined(separator: ", ")))"
         var stmt: OpaquePointer?
+        
+        let newDict: NSMutableDictionary = [:]
+        newDict[kSecClassKey] = table_name
+        for column in columns_query {
+            newDict[column] = attributes[column]
+        }
 
         guard usingDB({ sqlite3DB in
             defer { sqlite3_finalize(stmt) }
@@ -207,9 +214,9 @@ class PlayKeychainDB: NSObject {
             }
 
             return sqlite3_step(stmt) == SQLITE_DONE
-        }) else { return false }
+        }) else { return nil }
 
-        return true
+        return newDict
     }
 
     func update(_ attributes: NSDictionary) -> Bool {
@@ -361,6 +368,8 @@ class PlayKeychainDB: NSObject {
             let ptr = CFDataGetBytePtr(data)
             let size = CFDataGetLength(data)
             result = sqlite3_bind_blob(stmt, index, ptr, Int32(size), sqlite_transient)
+        case CFNullGetTypeID():
+            result = sqlite3_bind_null(stmt, index)
         default:
             PlayKeychain.debugLogger("Cannot encode this data type: \(CFGetTypeID(value))")
             result = sqlite3_bind_null(stmt, index)
@@ -378,7 +387,10 @@ class PlayKeychainDB: NSObject {
             guard let ptr = sqlite3_column_blob(stmt, index) else { return nil }
             let size = sqlite3_column_bytes(stmt, index)
             return CFDataCreate(nil, ptr, CFIndex(size))
+        case SQLITE_NULL:
+            return nil
         default:
+            PlayKeychain.debugLogger("Cannot decode this data \(sqlite3_column_type(stmt, index))")
             return nil
         }
     }
