@@ -313,6 +313,11 @@ class SwipeAction: Action {
     var location: CGPoint = CGPoint.zero
     private var id: Int?
     let timer = DispatchSource.makeTimerSource(flags: [], queue: PlayInput.touchQueue)
+    // Mouse polling rate as high as 3000 causes issue to some games
+    static private let maxPollingRate = 125
+    static private let minMoveInterval =
+        DispatchTimeInterval.milliseconds(1000/maxPollingRate)
+    private var lastMoveWhen = DispatchTime.now()
     init() {
         timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.1, leeway: DispatchTimeInterval.milliseconds(50))
         timer.setEventHandler(qos: .userInteractive, handler: self.checkEnded)
@@ -356,10 +361,19 @@ class SwipeAction: Action {
             Toucher.touchcam(point: location, phase: UITouch.Phase.began, tid: &id)
             timer.resume()
         }
-        // count touch duration
-        counter += 1
         self.location.x += deltaX
         self.location.y -= deltaY
+
+        // limit move frequency
+        let now = DispatchTime.now()
+        if now < lastMoveWhen.advanced(by: SwipeAction.minMoveInterval) {
+//            Toast.showHint(title: String(now.rawValue - lastMoveWhen.rawValue))
+            return
+        }
+        lastMoveWhen = now
+
+        // count touch duration
+        counter += 1
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: &id)
     }
 
