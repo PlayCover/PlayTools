@@ -149,6 +149,13 @@ public class ActionDispatcher {
         }
     }
 
+    static public func invalidateNonButtonActions() {
+        for action in actions 
+        where !(action as? ButtonAction != nil || action is JoystickAction){
+            action.invalidate()
+        }
+    }
+
     static public func getDispatchPriority(key: String) -> ActionDispatchPriority? {
         if let priority = directionPadHandlers.firstIndex(where: { handlers in
             handlers.contains(where: { handler in

@@ -418,6 +418,7 @@ class FakeMouseAction: Action {
     }
 
     func invalidate() {
+        ActionDispatcher.unregister(key: KeyCodeNames.fakeMouse)
         Toucher.touchcam(point: pos ?? CGPoint(x: 10, y: 10),
                          phase: UITouch.Phase.ended, tid: &self.id)
     }
