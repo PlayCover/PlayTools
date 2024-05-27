@@ -30,8 +30,9 @@ class PlayKeychainDB: NSObject {
             return "\($0) = '\(attr)'"
         }).joined(separator: " AND ")
         guard select_where.count > 0 else { return nil }
+        let select_limit = attributes[kSecMatchLimit] as? String == kSecMatchLimitOne as String ? 1 : Int.max
 
-        let select_query = "SELECT * FROM \(table_name) WHERE \(select_where)"
+        let select_query = "SELECT * FROM \(table_name) WHERE \(select_where) LIMIT \(select_limit)"
         var stmt: OpaquePointer?
 
         var dictArr: [NSMutableDictionary] = []
@@ -44,8 +45,7 @@ class PlayKeychainDB: NSObject {
                 return false
             }
 
-            let max_count = (attributes[kSecMatchLimit] as? String == kSecMatchLimitOne as String ? 1 : Int.max)
-            while sqlite3_step(stmt) == SQLITE_ROW && dictArr.count < max_count {
+            while sqlite3_step(stmt) == SQLITE_ROW && dictArr.count < select_limit {
                 let newDict: NSMutableDictionary = [:]
                 let columns = sqlite3_column_count(stmt)
                 newDict[kSecClass] = table_name
