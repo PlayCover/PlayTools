@@ -34,7 +34,7 @@ public class PlayKeychain: NSObject {
         guard let vData = attributes["v_Data"] as? CFTypeRef else {
             return errSecSuccess
         }
-        
+
         if attributes["r_Attributes"] as? Int == 1 {
             // Create a dummy dictionary and return it
             let dummyDict = keychainDict
@@ -46,7 +46,7 @@ public class PlayKeychain: NSObject {
             result?.pointee = Unmanaged.passRetained(dummyDict)
             return errSecSuccess
         }
-        
+
         if attributes["class"] as? String == "keys" {
             // kSecAttrKeyType is stored as `type` in the dictionary
             // kSecAttrKeyClass is stored as `kcls` in the dictionary
