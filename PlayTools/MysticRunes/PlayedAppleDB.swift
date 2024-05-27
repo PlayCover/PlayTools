@@ -13,6 +13,7 @@ class PlayKeychainDB: NSObject {
     public static let shared = PlayKeychainDB()
 
     private var dbLock: DispatchSemaphore = .init(value: 1)
+    private var dbVersion: Int = 1
 
     func query(_ attributes: NSDictionary) -> [NSMutableDictionary]? {
         guard let table_name = attributes[kSecClass] as? String,
@@ -218,6 +219,8 @@ class PlayKeychainDB: NSObject {
                 return false
             }
         }
+
+        sqlite3_exec(sqlite3DB, "PRAGMA user_version = \(dbVersion)", nil, nil, nil)
 
         return true
     }
