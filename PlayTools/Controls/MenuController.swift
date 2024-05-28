@@ -61,10 +61,15 @@ extension UIApplication {
                 rootViewController.rotateView(sender)
             }
         }
-        
+
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 2, execute: {
             Toast.showHint(title: "Rotated")
         })
+    }
+
+    @objc
+    func toggleDebugOverlay(_ sender: AnyObject) {
+        DebugController.instance.toggleDebugOverlay()
     }
 }
 
@@ -94,13 +99,16 @@ var keymapping = [
     NSLocalizedString("menu.keymapping.downsizeElement", tableName: "Playtools",
                       value: "Downsize selected element", comment: ""),
     NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
-                      value: "Rotate display area", comment: "")
+                      value: "Rotate display area", comment: ""),
+    NSLocalizedString("menu.keymapping.toggleDebug", tableName: "Playtools",
+                      value: "Toggle Debug Overlay", comment: ""),
   ]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIApplication.rotateView(_:))
+                           #selector(UIApplication.rotateView(_:)),
+                           #selector(UIApplication.toggleDebugOverlay(_:))
     ]
 
 class MenuController {
@@ -142,7 +150,7 @@ class MenuController {
 
     class func keymappingMenu() -> UIMenu {
         let keyCommands = [ "K", UIKeyCommand.inputDelete,
-                            UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "L"]
+                            UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "D"]
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
                          image: nil,
