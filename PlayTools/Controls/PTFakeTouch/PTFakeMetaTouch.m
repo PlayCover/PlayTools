@@ -94,7 +94,8 @@ void eventSendCallback(void* info) {
         [touch setPhaseAndUpdateTimestamp:phase];
     }
     CFRunLoopSourceSignal(source);
-    if(phase == UITouchPhaseEnded || phase == UITouchPhaseCancelled) {
+    // Set phase might somehow fail
+    if([touch phase] == UITouchPhaseEnded || [touch phase] == UITouchPhaseCancelled) {
         pointId = -1;
     }
     return pointId;
