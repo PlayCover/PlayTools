@@ -68,10 +68,12 @@ class DraggableButtonAction: ButtonAction {
                 AKInterface.shared!.hideCursor()
             }
         } else {
-            ActionDispatcher.unregister(key: KeyCodeNames.mouseMove)
             Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: &id)
-            if !mode.cursorHidden() {
-                AKInterface.shared!.unhideCursor()
+            if id == nil {
+                ActionDispatcher.unregister(key: KeyCodeNames.mouseMove)
+                if !mode.cursorHidden() {
+                    AKInterface.shared!.unhideCursor()
+                }
             }
         }
     }
@@ -397,11 +399,14 @@ class SwipeAction: Action {
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: &id)
-        timer.suspend()
-        delay(0.02) {
-            self.cooldown = false
+        // Touch might somehow fail to end
+        if id == nil {
+            timer.suspend()
+            delay(0.02) {
+                self.cooldown = false
+            }
+            cooldown = true
         }
-        cooldown = true
     }
 
     func invalidate() {
@@ -436,8 +441,10 @@ class FakeMouseAction: Action {
 //        DispatchQueue.main.async {
 //            Toast.showHint(title: " lift Fake mouse", text: ["\(self.pos)"])
 //        }
-        ActionDispatcher.unregister(key: KeyCodeNames.fakeMouse)
         Toucher.touchcam(point: pos, phase: UITouch.Phase.ended, tid: &id)
+        if id == nil {
+            ActionDispatcher.unregister(key: KeyCodeNames.fakeMouse)
+        }
     }
 
     func movementHandler(xValue: CGFloat, yValue: CGFloat) {
