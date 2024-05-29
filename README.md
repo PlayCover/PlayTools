@@ -12,15 +12,19 @@ PlayTools allows you to control:
 - Aspect Ratio: Supports 16:9, 16:10, 4:3 and custom aspect ratio
 - Scale Factor: Supports custom scale factor (e.g. 1.0, 1.5, 2.0)
 - Display Orientation: Supports manually rotating the game window during game play.
+- Application type (most useful case is changing to type `game` and the type reflects in screen time usage)
+- Custom discord activity
+- Device type
 
 ## Key Mapping
 
-PlayTools provides a key mapping tool to map game actions to the keyboard, mouse or controller.
+PlayTools provides a key mapping tool to map game actions to the keyboard, mouse, trackpad or controller.
 
 Supported input devices include:
 
 - Keyboard
 - Mouse
+- Trackpad
 - Controller
 
 Input from these devices can be mapped to these in-game actions:
@@ -71,7 +75,15 @@ PlayTools is built using Xcode.
 ## Production Build
 In release builds, the building script of PlayCover will automatically fetch the latest version of PlayTools from the official repository and build it. Generally, you do not need to build PlayTools manually.
 
-If you want to build PlayCover with a specific version of PlayTools, mostly for testing purposes, you can change the [Cartfile](https://github.com/PlayCover/PlayCover/blob/develop/Cartfile) of PlayCover to point to the specific version of PlayTools. You can specify which branch/tag of which repository to build from.
+To build PlayCover with a specific version of PlayTools, mostly for testing purposes, change the [Cartfile](https://github.com/PlayCover/PlayCover/blob/develop/Cartfile) of PlayCover to point to the specific version of PlayTools. You can specify which branch/tag of which repository to build from.
+
+You can also edit the Cartfile to build from a local directory. To do this, edit the Cartfile to be:
+```
+git "file:///path/to/playtools" "branch or tag"
+```
+See [Cartfile format](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#example-cartfile)
+
+In most cases, `Cartfile.resolved` would be automatically updated based on the Cartfile. In rare cases, you may need to manually edit the resolved file.
 
 ## Development Build
 PlayTools can also be built separately. This is useful when you want to modify the source code.
@@ -86,39 +98,67 @@ To do so,
 
 1. Build PlayTools towards iOS platform. This will create a `PlayTools.framework` in the build directory.
 
-2. Transform the target platform to Mac Catalyst. Run this script in the build directory:
+1. Find the build path. This can be done by right clicking on `PlayTools.framework` in `Product`, and selecting `Show in Finder`. 
+
+6. Deploy the build. Replace the `BUILD_PATH` in the following script with your build path and run:
+
 ```bash
 #!/bin/sh
+BUILD_PATH="~/Library/Developer/Xcode/DerivedData/PlayTools-<YOUR-UUID>/Build/Products/Debug-iphoneos"
+
 echo "Converting to maccatalyst"
 vtool \
 	-set-build-version maccatalyst 11.0 14.0 \
 	-replace -output \
-	"PlayTools.framework/PlayTools" \
-	"PlayTools.framework/PlayTools"
+	"$BUILD_PATH/PlayTools.framework/PlayTools" \
+	"$BUILD_PATH/PlayTools.framework/PlayTools"
 
 echo "Codesigning PlayTools"
-codesign -fs- "PlayTools.framework/PlayTools"
+codesign -fs- "$BUILD_PATH/PlayTools.framework/PlayTools"
+
+echo "Copying to PlayCover"
+cp "$BUILD_PATH/PlayTools.framework" "/Applications/PlayCover.app/Contents/Frameworks/PlayTools.framework"
 ```
+This script transforms the target platform to Mac Catalyst, codesigns PlayTools and copies the binaries into the PlayCover App.
 
-2. Copy the `PlayTools.framework` into the PlayCover App, and replace the old one.
-```bash
-cp "PlayTools.framework" "PlayCover.app/Contents/Frameworks/PlayTools.framework"
-```
+7. Relaunch PlayCover.
 
-3. Relaunch PlayCover.
-
-### Temporary Build
+### Temporary Deploy
 
 If you are debugging and testing your own code, relaunching PlayCover every time you make a change is a bit annoying. 
 
-In most cases, you can just copy the `PlayTools.framework/PlayTools` to `~/Library/Frameworks/PlayTools.framework/` instead of the whole `PlayTools.framework` directory, and avoid relaunching PlayCover:
+To avoid this, run this script instead:
 
 ```bash
-cp "PlayTools.framework/PlayTools" "~/Library/Frameworks/PlayTools.framework/"
-```
-This change will be lost when you relaunch PlayCover.
+#!/bin/sh
+BUILD_PATH="~/Library/Developer/Xcode/DerivedData/PlayTools-<YOUR-UUID>/Build/Products/Debug-iphoneos"
 
-If you modified `AKInerface` or added localization strings, you also need to copy them into the game you're testing on. This will be overwritten when you launch the game through PlayCover. You can launch the game from Finder to avoid this.
+echo "Converting to maccatalyst"
+vtool \
+	-set-build-version maccatalyst 11.0 14.0 \
+	-replace -output \
+	"$BUILD_PATH/PlayTools.framework/PlayTools" \
+	"$BUILD_PATH/PlayTools.framework/PlayTools"
+
+echo "Codesigning PlayTools"
+codesign -fs- "$BUILD_PATH/PlayTools.framework/PlayTools"
+
+echo "Copying to frameworks"
+cp "$BUILD_PATH/PlayTools.framework/PlayTools" "~/Library/Frameworks/PlayTools.framework/"
+```
+
+This only copies `PlayTools.framework/PlayTools` to `~/Library/Frameworks/PlayTools.framework/`, instead of the whole `PlayTools.framework` directory into PlayCover. Changes take effect immediately, no PlayCover relaunch needed. Changes will be lost when you relaunch PlayCover.
+
+However, If you modified `AKInerface` or added localization strings, the temporary deploy method may not work for you. You may copy the whole `PlayTools.framework` as described above, or directly copy them into the game you're testing on:
+```bash
+#!/bin/sh
+BUILD_PATH="~/Library/Developer/Xcode/DerivedData/PlayTools-<YOUR-UUID>/Build/Products/Debug-iphoneos"
+
+cp "$BUILD_PATH/PlayTools.framework/PlugIns/AKInterface.bundle" "~/Library/Containers/io.playcover.PlayCover/Applications/<YOUR-GAME-NAME>.app/PlugIns"
+
+cp "$BUILD_PATH/PlayTools.framework/*.lproj" "~/Library/Containers/io.playcover.PlayCover/Applications/<YOUR-GAME-NAME>.app/"
+```
+This will be overwritten when you launch the game through PlayCover. You can launch the game from Finder to avoid this.
 
 # Products
 
