@@ -51,8 +51,10 @@ void eventSendCallback(void* info) {
     // Do not let a "began" appear twice on a point
     for (UITouch *touch in begunTouchAry) {
         // Double check "began", because phase may have changed
-        if ([touch phase] == UITouchPhaseBegan) {
-            @synchronized (touch) {
+        @synchronized (touch) {
+            // Check condition needs to be synchronized too,
+            // otherwise phase might also change after condition met
+            if ([touch phase] == UITouchPhaseBegan) {
                 [touch setPhaseAndUpdateTimestamp:UITouchPhaseMoved];
             }
         }
