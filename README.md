@@ -104,7 +104,7 @@ To do so,
 
 ```bash
 #!/bin/sh
-BUILD_PATH="~/Library/Developer/Xcode/DerivedData/PlayTools-<YOUR-UUID>/Build/Products/Debug-iphoneos"
+BUILD_PATH=~/Library/Developer/Xcode/DerivedData/PlayTools-<YOUR-UUID>/Build/Products/Debug-iphoneos
 
 echo "Converting to maccatalyst"
 vtool \
@@ -117,7 +117,7 @@ echo "Codesigning PlayTools"
 codesign -fs- "$BUILD_PATH/PlayTools.framework/PlayTools"
 
 echo "Copying to PlayCover"
-cp "$BUILD_PATH/PlayTools.framework" "/Applications/PlayCover.app/Contents/Frameworks/PlayTools.framework"
+cp "$BUILD_PATH/PlayTools.framework" "/Applications/PlayCover.app/Contents/Frameworks/"
 ```
 This script transforms the target platform to Mac Catalyst, codesigns PlayTools and copies the binaries into the PlayCover App.
 
@@ -131,7 +131,7 @@ To avoid this, run this script instead:
 
 ```bash
 #!/bin/sh
-BUILD_PATH="~/Library/Developer/Xcode/DerivedData/PlayTools-<YOUR-UUID>/Build/Products/Debug-iphoneos"
+BUILD_PATH=~/Library/Developer/Xcode/DerivedData/PlayTools-<YOUR-UUID>/Build/Products/Debug-iphoneos
 
 echo "Converting to maccatalyst"
 vtool \
@@ -152,7 +152,7 @@ This only copies `PlayTools.framework/PlayTools` to `~/Library/Frameworks/PlayTo
 However, If you modified `AKInerface` or added localization strings, the temporary deploy method may not work for you. You may copy the whole `PlayTools.framework` as described above, or directly copy them into the game you're testing on:
 ```bash
 #!/bin/sh
-BUILD_PATH="~/Library/Developer/Xcode/DerivedData/PlayTools-<YOUR-UUID>/Build/Products/Debug-iphoneos"
+BUILD_PATH=~/Library/Developer/Xcode/DerivedData/PlayTools-<YOUR-UUID>/Build/Products/Debug-iphoneos
 
 cp "$BUILD_PATH/PlayTools.framework/PlugIns/AKInterface.bundle" "~/Library/Containers/io.playcover.PlayCover/Applications/<YOUR-GAME-NAME>.app/PlugIns"
 
