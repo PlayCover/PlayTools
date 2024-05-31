@@ -83,6 +83,7 @@ void eventSendCallback(void* info) {
         // Find and clear any 1 bit if possible
         if(atomic_load(&reusageMask) == 0){
             pointId = [livingTouchAry count];
+            [lock lock];
         }else{
             // reuse previous ID
             pointId = 0;
@@ -96,9 +97,12 @@ void eventSendCallback(void* info) {
             // 1. Other thread read
             // 2. This thread read and write
             // 3. Other thread write
+            [lock lock];
             atomic_fetch_and(&reusageMask, ~(1ull<<pointId));
+            // These must be locked together, because otherwise
+            // After we occupy this id, other thread may release it again,
+            // before we actually replace the UITouch
         }
-        [lock lock];
         [livingTouchAry setObject:touch atIndexedSubscript:pointId];
         [lock unlock];
     } else {
