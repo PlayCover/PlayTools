@@ -364,34 +364,8 @@ class SwipeAction: Action {
         }
         // count touch duration
         counter += 1
-        let newX = self.location.x + deltaX 
-        let newY = self.location.y - deltaY
-        // Check if new location is out of window (position overflows)
-        // May cause resource leak in some games if point moves out of window
-        // If this is out of window then lift off instead
-        if newX < 0 || newY < 0 || newX > screen.width || newY > screen.height {
-//            Toast.showHint(title: newX.description + newY.description)
-            // Move the point as far as possible, in case it always overflows and gets stuck
-            if newX < 0 {
-                self.location.x = 0
-            } else if newX > screen.width {
-                self.location.x = screen.width
-            } else {
-                self.location.x = newX
-            }
-
-            if newY < 0 {
-                self.location.y = 0
-            } else if newY > screen.height {
-                self.location.y = screen.height
-            } else {
-                self.location.y = newY
-            }
-            doLiftOff()
-            return
-        }
-        self.location.x = newX
-        self.location.y = newY
+        self.location.x += deltaX
+        self.location.y -= deltaY
     }
 
     public func doLiftOff() {
