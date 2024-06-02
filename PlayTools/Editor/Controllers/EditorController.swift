@@ -3,12 +3,6 @@ import SwiftUI
 
 let editor = EditorController.shared
 
-class EditorViewController: UIViewController {
-    override func loadView() {
-        view = EditorView()
-    }
-}
-
 class EditorController {
 
     static let shared = EditorController()
@@ -34,15 +28,16 @@ class EditorController {
         updateFocus(button: control.button)
     }
 
-    public func updateFocus(button: UIButton) {
+    public func updateFocus(button: Element) {
         view.setNeedsFocusUpdate()
         view.updateFocusIfNeeded()
         for cntrl in controls {
             cntrl.focus(false)
         }
 
-        if let mod = (button as? Element)?.model {
+        if let mod = button.model {
             mod.focus(true)
+            // TODO: why must we use a model instead of view here?
             focusedControl = mod
         }
     }
@@ -50,7 +45,7 @@ class EditorController {
     public func switchMode() {
         lock.lock()
         if editorMode {
-            KeymapHolder.shared.hide()
+            EditorCircleMenu.shared.hide()
             saveButtons()
             editorWindow?.isHidden = true
             editorWindow?.windowScene = nil
@@ -82,6 +77,7 @@ class EditorController {
 
     public func setKey(_ code: Int) {
         if editorMode {
+            // TODO: how can we set key without having to hold its reference?
             focusedControl?.setKey(codes: [code])
         }
     }
@@ -196,14 +192,21 @@ class EditorController {
 
     public func addMouseJoystick(_ center: CGPoint) {
         if editorMode {
-            addControlToView(control: JoystickModel(data: ControlData(keyCodes: [GCKeyCode.keyW.rawValue,
-                                                                                 GCKeyCode.keyS.rawValue,
-                                                                                 GCKeyCode.keyA.rawValue,
-                                                                                 GCKeyCode.keyD.rawValue],
-                                                                      keyName: "Mouse",
-                                                                      size: 20,
-                                                                      xCoord: center.x.relativeX,
-                                                                      yCoord: center.y.relativeY)))
+            addControlToView(
+                control: JoystickModel(
+                    data: ControlData(
+                        keyCodes: [
+                            GCKeyCode.keyW.rawValue,
+                            GCKeyCode.keyS.rawValue,
+                            GCKeyCode.keyA.rawValue,
+                            GCKeyCode.keyD.rawValue],
+                        keyName: "Mouse",
+                        size: 20,
+                        xCoord: center.x.relativeX,
+                        yCoord: center.y.relativeY
+                    )
+                )
+            )
         }
     }
 
@@ -230,71 +233,5 @@ class EditorController {
 
     func updateEditorText(_ str: String) {
         view.label?.text = str
-    }
-}
-
-extension UIResponder {
-    public var parentViewController: UIViewController? {
-        return next as? UIViewController ?? next?.parentViewController
-    }
-}
-
-class EditorView: UIView {
-    override var preferredFocusEnvironments: [UIFocusEnvironment] {
-        if let btn = editor.focusedControl?.button {
-            return [btn]
-        }
-        return [self]
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-
-        for control in editor.controls {
-            control.update()
-        }
-    }
-
-    init() {
-        super.init(frame: .zero)
-        self.frame = screen.screenRect
-        self.isUserInteractionEnabled = true
-        let single = UITapGestureRecognizer(target: self, action: #selector(self.doubleClick(sender:)))
-        single.numberOfTapsRequired = 1
-        self.addGestureRecognizer(single)
-    }
-
-    @objc func doubleClick(sender: UITapGestureRecognizer) {
-        for cntrl in editor.controls {
-            cntrl.focus(false)
-        }
-        editor.focusedControl = nil
-        KeymapHolder.shared.add(sender.location(in: self))
-    }
-
-    var label: UILabel?
-
-    @objc func pressed(sender: UIButton!) {
-        if let button = sender as? Element {
-            if editor.focusedControl?.button == nil || editor.focusedControl?.button != button {
-                editor.updateFocus(button: sender)
-            }
-        }
-    }
-
-    @objc func dragged(_ sender: UIPanGestureRecognizer) {
-        if let ele = sender.view as? Element {
-            if editor.focusedControl?.button == nil || editor.focusedControl?.button != ele {
-                editor.updateFocus(button: ele)
-            }
-            let translation = sender.translation(in: self)
-            editor.focusedControl?.move(deltaY: translation.y,
-                                        deltaX: translation.x)
-            sender.setTranslation(CGPoint.zero, in: self)
-        }
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }
