@@ -360,6 +360,7 @@ class SwipeAction: Action {
         counter += 1
         self.location.x += deltaX
         self.location.y -= deltaY
+
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: &id)
     }
 
