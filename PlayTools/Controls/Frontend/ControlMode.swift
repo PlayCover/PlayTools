@@ -71,9 +71,8 @@ public class ControlMode: Equatable {
             })
         }
 
-        AKInterface.shared!.setupMouseMoved({deltaX, deltaY in
-            self.mouseAdapter.handleMove(deltaX: deltaX, deltaY: deltaY)
-        })
+        // Mouse polling rate as high as 1000 causes issue to some games
+        setupMouseMoved(maxPollingRate: 125)
 
         AKInterface.shared!.setupMouseButton(left: true, right: false, {_, pressed in
             self.mouseAdapter.handleLeftButton(pressed: pressed)
@@ -88,6 +87,31 @@ public class ControlMode: Equatable {
         })
 
         ActionDispatcher.build()
+    }
+
+    private func setupMouseMoved(maxPollingRate: Int) {
+        let minMoveInterval =
+            DispatchTimeInterval.milliseconds(1000/maxPollingRate)
+        var lastMoveWhen = DispatchTime.now()
+        // Repeat the return value of last processed event
+        var consumed = true
+        var movement: CGVector = CGVector()
+
+        AKInterface.shared!.setupMouseMoved({deltaX, deltaY in
+            // limit move frequency
+            let now = DispatchTime.now()
+            movement.dy += deltaY
+            movement.dx += deltaX
+            if now < lastMoveWhen.advanced(by: minMoveInterval) {
+                return consumed
+            }
+
+            lastMoveWhen = now
+            consumed = self.mouseAdapter.handleMove(deltaX: movement.dx, deltaY: movement.dy)
+            movement.dy = 0
+            movement.dx = 0
+            return consumed
+        })
     }
 
     public func set(_ mode: ControlModeLiteral) {
@@ -111,6 +135,11 @@ public class ControlMode: Equatable {
 
                 if mode == .OFF || mode == .EDITOR {
                     ActionDispatcher.invalidateActions()
+                } else {
+                    // In case any touch point failed to release
+                    // (might because of system glitch)
+                    // Work around random zoom in zoom out
+                    ActionDispatcher.invalidateNonButtonActions()
                 }
 
                 AKInterface.shared!.unhideCursor()
@@ -118,6 +147,11 @@ public class ControlMode: Equatable {
                 NotificationCenter.default.post(name: NSNotification.Name.playtoolsCursorWillHide,
                                                 object: nil, userInfo: [:])
                 AKInterface.shared!.hideCursor()
+
+                // Fix when people hold fake mouse while pressing option
+                // and it becomes random zoom in zoom out
+                ActionDispatcher.invalidateNonButtonActions()
+
                 if screen.fullscreen {
                     screen.switchDock(false)
                 }
