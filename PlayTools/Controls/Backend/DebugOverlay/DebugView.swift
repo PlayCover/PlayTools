@@ -44,7 +44,7 @@ class RingView: UIView {
 
     private func commonInit() {
         shapeLayer.lineWidth = ringWidth
-        shapeLayer.fillColor = nil // 确保圆环是空心的
+        shapeLayer.fillColor = nil
         shapeLayer.strokeColor = ringColor.cgColor
         layer.addSublayer(shapeLayer)
 
@@ -75,7 +75,7 @@ class RingView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-
+        // Put label 30 pixels down the ring
         label.frame = CGRect(x: 0, y: 0, width: bounds.width, height: 20)
         label.center = CGPoint(x: bounds.midX, y: bounds.midY + 30)
     }
@@ -90,7 +90,7 @@ class DebugContainer: UIView {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
-    // Sync point data every frame
+    // This is called once when the view shows
     override func draw(_ rect: CGRect) {
         let data = DebugModel.instance.touches
         while subviews.count < data.count {
@@ -110,7 +110,7 @@ class DebugContainer: UIView {
             let description = point.description + ": " + point.phase.name()
             ring.setData(position: point.point, description: description, phase: point.phase)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             if self.superview == nil {
                 return
             }

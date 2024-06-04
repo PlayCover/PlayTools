@@ -19,7 +19,6 @@ class DebugController {
         let window = screen.keyWindow
         let controller = window!.rootViewController
         let view = controller!.view
-        // issue: always goes branch "Disabled"
         if debugView.superview == nil {
             view!.addSubview(debugView)
             view!.bringSubviewToFront(debugView)
