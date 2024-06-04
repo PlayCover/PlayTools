@@ -37,15 +37,25 @@ public class PlayKeychain: NSObject {
 
     private static func getKeychainPath(_ attributes: NSDictionary) -> URL {
         let keychainFolder = getKeychainDirectory()
-        if attributes["r_Ref"] as? Int == 1 {
-            attributes.setValue("keys", forKey: "class")
-        }
+        // if attributes["r_Ref"] as? Int == 1 {
+            // attributes.setValue("keys", forKey: "class")
+            // What the hell Apple
+        // }
         // Generate a key path based on the key attributes
-        let accountName = attributes[kSecAttrAccount as String] as? String ?? ""
-        let serviceName = attributes[kSecAttrService as String] as? String ?? ""
-        let classType = attributes[kSecClass as String] as? String ?? ""
+        let tagName = (attributes[kSecAttrApplicationTag as String] as? Data)
+            .map({return String(data: $0, encoding: .utf8)!})
+        let accountName = attributes[kSecAttrAccount as String] as? String
+        let serviceName = attributes[kSecAttrService as String] as? String
+        let classType = attributes[kSecClass as String] as? String
+        let keychainName = [
+            tagName,
+            accountName,
+            serviceName,
+            classType]
+            .compactMap({ return $0 })
+            .joined(separator: "-")
         return keychainFolder!
-            .appendingPathComponent("\(serviceName)-\(accountName)-\(classType).plist")
+            .appendingPathComponent("\(keychainName).plist")
     }
 
     private static func findSimilarKeys(_ attributes: NSDictionary) -> URL? {
@@ -77,7 +87,7 @@ public class PlayKeychain: NSObject {
     // Emulates SecItemAdd, SecItemUpdate, SecItemDelete and SecItemCopyMatching
     // Store the entire dictionary as a plist
     // SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
-    @objc static public func add(_ attributes: NSDictionary, result: UnsafeMutablePointer<CFTypeRef?>?) -> OSStatus {
+    @objc static public func add(_ attributes: NSDictionary, result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
         let keychainPath = getKeychainPath(attributes)
         // Check if the keychain file already exists
         // if FileManager.default.fileExists(atPath: keychainPath.path) {
@@ -93,9 +103,22 @@ public class PlayKeychain: NSObject {
             return errSecIO
         }
         // Place v_Data in the result
-        if let v_data = attributes["v_Data"] {
-            result?.pointee = v_data as CFTypeRef
+        guard let vData = attributes["v_Data"] as? CFTypeRef else {
+            return errSecSuccess
         }
+        if attributes["class"] as? String == "keys" {
+            // kSecAttrKeyType is stored as `type` in the dictionary
+            // kSecAttrKeyClass is stored as `kcls` in the dictionary
+            let keyAttributes = [
+                kSecAttrKeyType: attributes["type"] as! CFString, // swiftlint:disable:this force_cast
+                kSecAttrKeyClass: attributes["kcls"] as! CFString // swiftlint:disable:this force_cast
+            ]
+            let keyData = vData as! Data // swiftlint:disable:this force_cast
+            let key = SecKeyCreateWithData(keyData as CFData, keyAttributes as CFDictionary, nil)
+            result?.pointee = Unmanaged.passRetained(key!)
+            return errSecSuccess
+        }
+        result?.pointee = Unmanaged.passRetained(vData)
         return errSecSuccess
     }
 
@@ -136,6 +159,10 @@ public class PlayKeychain: NSObject {
     @objc static public func delete(_ query: NSDictionary) -> OSStatus {
         // Get the path to the keychain file
         let keychainPath = getKeychainPath(query)
+        // Check if the keychain file doesn't exist
+        if !FileManager.default.fileExists(atPath: keychainPath.path) {
+            return errSecItemNotFound
+        }
         // Delete the keychain file
         do {
             try FileManager.default.removeItem(at: keychainPath)
@@ -148,7 +175,7 @@ public class PlayKeychain: NSObject {
     }
 
     // SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
-    @objc static public func copyMatching(_ query: NSDictionary, result: UnsafeMutablePointer<CFTypeRef?>?)
+    @objc static public func copyMatching(_ query: NSDictionary, result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?)
     -> OSStatus {
         // Get the path to the keychain file
         var keychainPath = getKeychainPath(query)
@@ -188,7 +215,7 @@ public class PlayKeychain: NSObject {
             dummyDict.setValue(keychainDict![kSecAttrAccount as String], forKey: "acct")
             dummyDict.setValue(keychainDict![kSecAttrService as String], forKey: "svce")
             dummyDict.setValue(keychainDict![kSecAttrGeneric as String], forKey: "gena")
-            result?.pointee = dummyDict
+            result?.pointee = Unmanaged.passRetained(dummyDict)
             return errSecSuccess
         }
 
@@ -218,7 +245,7 @@ public class PlayKeychain: NSObject {
             ] as CFDictionary
 
             let secKey = SecKeyCreateWithData(key as! CFData, dummyKeyAttrs, nil) // swiftlint:disable:this force_cast
-            result?.pointee = secKey
+            result?.pointee = Unmanaged.passRetained(secKey!)
             return errSecSuccess
         }
 
@@ -236,10 +263,10 @@ public class PlayKeychain: NSObject {
                 ]
                 let keyData = vData as! Data // swiftlint:disable:this force_cast
                 let key = SecKeyCreateWithData(keyData as CFData, keyAttributes as CFDictionary, nil)
-                result?.pointee = key
+                result?.pointee = Unmanaged.passRetained(key!)
                 return errSecSuccess
             }
-            result?.pointee = vData as CFTypeRef
+            result?.pointee = Unmanaged.passRetained(vData as CFTypeRef)
             return errSecSuccess
         }
 

@@ -68,10 +68,12 @@ class DraggableButtonAction: ButtonAction {
                 AKInterface.shared!.hideCursor()
             }
         } else {
-            ActionDispatcher.unregister(key: KeyCodeNames.mouseMove)
             Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: &id)
-            if !mode.cursorHidden() {
-                AKInterface.shared!.unhideCursor()
+            if id == nil {
+                ActionDispatcher.unregister(key: KeyCodeNames.mouseMove)
+                if !mode.cursorHidden() {
+                    AKInterface.shared!.unhideCursor()
+                }
             }
         }
     }
@@ -333,6 +335,7 @@ class SwipeAction: Action {
     // if should wait before beginning next touch
     var cooldown = false
     var lastCounter = 0
+    var shouldEdgeReset = false
 
     func checkEnded() {
         if self.counter == self.lastCounter {
@@ -345,6 +348,34 @@ class SwipeAction: Action {
         self.lastCounter = self.counter
      }
 
+    private func checkXYOutOfWindow(coordX: CGFloat, coordY: CGFloat) -> Bool {
+        return coordX < 0 || coordY < 0 || coordX > screen.width || coordY > screen.height
+    }
+
+    /**
+     get a multiplier to current velocity, so as to make the predicted coordinate inside window
+     */
+    private func getVelocityScaler(predictX: CGFloat, predictY: CGFloat,
+                                   nowX: CGFloat, nowY: CGFloat) -> CGFloat {
+        var scaler = 1.0
+        if predictX < 0 {
+            let scale =  (0 - nowX) / (predictX - nowX)
+            scaler = min(scaler, scale)
+        } else if predictX > screen.width {
+            let scale =  (screen.width - nowX) / (predictX - nowX)
+            scaler = min(scaler, scale)
+        }
+
+        if predictY < 0 {
+            let scale =  (0 - nowY) / (predictY - nowY)
+            scaler = min(scaler, scale)
+        } else if predictY > screen.height {
+            let scale =  (screen.height - nowY) / (predictY - nowY)
+            scaler = min(scaler, scale)
+        }
+        return scaler
+    }
+
     public func move(from: () -> CGPoint?, deltaX: CGFloat, deltaY: CGFloat) {
         if id == nil {
             if cooldown {
@@ -355,12 +386,44 @@ class SwipeAction: Action {
             counter = 0
             Toucher.touchcam(point: location, phase: UITouch.Phase.began, tid: &id)
             timer.resume()
+        } else {
+            if shouldEdgeReset {
+                doLiftOff()
+                return
+            }
+            // 1. Put location update after touch action, so that final `end` touch has different location
+            // 2. If `began` touched, do not `move` touch at the same time, otherwise the two may conflict
+            Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: &id)
+        }
+        // Scale movement down, so that an edge reset won't cause a too short touch sequence
+        var scaledDeltaX = deltaX
+        var scaledDeltaY = deltaY
+        // A scroll must have this number of touch events to get inertia
+        let minTotalCounter = 16
+        if counter < minTotalCounter {
+            // Suppose the touch velocity doesn't change
+            let predictX = self.location.x + CGFloat((minTotalCounter - counter)) * deltaX
+            let predictY = self.location.y - CGFloat((minTotalCounter - counter)) * deltaY
+            if checkXYOutOfWindow(coordX: predictX, coordY: predictY) {
+                // Velocity needs scale down
+                let scaler = getVelocityScaler(predictX: predictX, predictY: predictY,
+                                               nowX: self.location.x, nowY: self.location.y)
+                scaledDeltaX *= scaler
+                scaledDeltaY *= scaler
+            }
         }
         // count touch duration
         counter += 1
-        self.location.x += deltaX
-        self.location.y -= deltaY
-        Toucher.touchcam(point: self.location, phase: UITouch.Phase.moved, tid: &id)
+        self.location.x += scaledDeltaX
+        self.location.y -= scaledDeltaY
+        // Check if new location is out of window (position overflows)
+        // May fail in some games if point moves out of window
+        // If next touch is predicted out of window then this lift off instead
+        if checkXYOutOfWindow(coordX: self.location.x + scaledDeltaX,
+                              coordY: self.location.y - scaledDeltaY) {
+            // Wait until next event to lift off, so as to maintain smooth scrolling speed
+            shouldEdgeReset = true
+        }
     }
 
     public func doLiftOff() {
@@ -368,11 +431,15 @@ class SwipeAction: Action {
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: &id)
-        timer.suspend()
-        delay(0.02) {
-            self.cooldown = false
+        // Touch might somehow fail to end
+        if id == nil {
+            timer.suspend()
+            delay(0.02) {
+                self.cooldown = false
+            }
+            cooldown = true
+            shouldEdgeReset = false
         }
-        cooldown = true
     }
 
     func invalidate() {
@@ -407,8 +474,10 @@ class FakeMouseAction: Action {
 //        DispatchQueue.main.async {
 //            Toast.showHint(title: " lift Fake mouse", text: ["\(self.pos)"])
 //        }
-        ActionDispatcher.unregister(key: KeyCodeNames.fakeMouse)
         Toucher.touchcam(point: pos, phase: UITouch.Phase.ended, tid: &id)
+        if id == nil {
+            ActionDispatcher.unregister(key: KeyCodeNames.fakeMouse)
+        }
     }
 
     func movementHandler(xValue: CGFloat, yValue: CGFloat) {
@@ -418,6 +487,7 @@ class FakeMouseAction: Action {
     }
 
     func invalidate() {
+        ActionDispatcher.unregister(key: KeyCodeNames.fakeMouse)
         Toucher.touchcam(point: pos ?? CGPoint(x: 10, y: 10),
                          phase: UITouch.Phase.ended, tid: &self.id)
     }
