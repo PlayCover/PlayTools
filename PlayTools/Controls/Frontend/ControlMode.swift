@@ -135,6 +135,11 @@ public class ControlMode: Equatable {
 
                 if mode == .OFF || mode == .EDITOR {
                     ActionDispatcher.invalidateActions()
+                } else {
+                    // In case any touch point failed to release
+                    // (might because of system glitch)
+                    // Work around random zoom in zoom out
+                    ActionDispatcher.invalidateNonButtonActions()
                 }
 
                 AKInterface.shared!.unhideCursor()
@@ -142,6 +147,11 @@ public class ControlMode: Equatable {
                 NotificationCenter.default.post(name: NSNotification.Name.playtoolsCursorWillHide,
                                                 object: nil, userInfo: [:])
                 AKInterface.shared!.hideCursor()
+
+                // Fix when people hold fake mouse while pressing option
+                // and it becomes random zoom in zoom out
+                ActionDispatcher.invalidateNonButtonActions()
+
                 if screen.fullscreen {
                     screen.switchDock(false)
                 }
