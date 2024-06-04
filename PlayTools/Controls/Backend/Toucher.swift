@@ -41,7 +41,7 @@ class Toucher {
         } else {
             recordId = tid!
         }
-        DebugModel.instance.record(point: point, phase: phase, tid: recordId, 
+        DebugModel.instance.record(point: point, phase: phase, tid: recordId,
                                    description: actionName + "(" + keyName + ")")
     }
 

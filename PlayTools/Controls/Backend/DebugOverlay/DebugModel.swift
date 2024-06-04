@@ -20,11 +20,19 @@ class DebugModel {
 
     public var touches: [TouchPoint]
     public func record(point: CGPoint, phase: UITouch.Phase, tid: Int, description: String) {
+        // If debug screen not enabled, do not record
+        if DebugContainer.instance.superview == nil {
+            return
+        }
         // Run in main thread, because `touches` is not thread safe
         DispatchQueue.main.async {
             while self.touches.count < tid {
                 // report error
-                self.touches.append(TouchPoint(point: CGPoint(x: 100, y: 100), phase: UITouch.Phase.cancelled, description: "Error recording debug info: point id exceeds record array"))
+                self.touches.append(TouchPoint(
+                    point: CGPoint(x: 100, y: 100),
+                    phase: UITouch.Phase.cancelled,
+                    description: "Error recording debug info: point id exceeds record array"
+                ))
             }
             if self.touches.count == tid {
                 self.touches.append(TouchPoint(point: point, phase: phase, description: description))
