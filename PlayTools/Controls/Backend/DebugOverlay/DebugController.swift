@@ -24,8 +24,14 @@ class DebugController {
             view!.bringSubviewToFront(debugView)
             debugView.isHidden = false
             debugView.isUserInteractionEnabled = false
+            PlayInput.touchQueue.async {
+                DebugModel.instance.enabled = true
+            }
         } else {
             debugView.removeFromSuperview()
+            PlayInput.touchQueue.async {
+                DebugModel.instance.enabled = false
+            }
         }
     }
 }
