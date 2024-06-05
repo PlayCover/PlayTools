@@ -7,22 +7,22 @@
 
 import Foundation
 
-class ButtonModel: ControlModel {
+class ButtonModel: ControlModel<Button> {
 
-    override init(data: ControlData) {
+    override init(data: Button) {
         super.init(data: data)
-        self.setKey(codes: data.keyCodes, name: data.keyName)
+        self.setKey(code: data.keyCode, name: data.keyName)
     }
 
     func save() -> Button {
-        Button(
-            keyCode: data.keyCodes[0], keyName: data.keyName,
-            transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
+        data
     }
 
-    override func setKey(codes: [Int], name: String) {
-        data.keyCodes = codes
-        data.keyName = name
+    override func setKey(code: Int, name: String) {
+        var buttonData = data
+        buttonData.keyCode = code
+        buttonData.keyName = name
+        data = buttonData
         button.setTitle(data.keyName, for: UIControl.State.normal)
     }
 }

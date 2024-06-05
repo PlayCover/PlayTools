@@ -7,9 +7,18 @@
 
 import Foundation
 
-class ControlModel {
+protocol ControlElement: AnyObject {
+    var button: Element { get }
+    func move(deltaY: CGFloat, deltaX: CGFloat)
+    func focus(_ focus: Bool)
+    func setKey(code: Int)
+    func setKey(name: String)
+    func resize(down: Bool)
+    func remove()
+}
 
-    var data: ControlData
+class ControlModel<ElementType: BaseElement>: ControlElement {
+    var data: ElementType
     var button: Element
 
     func focus(_ focus: Bool) {
@@ -17,14 +26,14 @@ class ControlModel {
 //        Toast.showHint(title: "Element controller focus")
     }
 
-    init(data: ControlData) {
+    init(data: ElementType) {
         button = Element(
             // Notice: data records center coord, not start coord
             frame: CGRect(
-                x: data.xCoord.absoluteX - data.size.absoluteSize/2,
-                y: data.yCoord.absoluteY - data.size.absoluteSize/2,
-                width: data.size.absoluteSize,
-                height: data.size.absoluteSize
+                x: data.transform.xCoord.absoluteX - data.transform.size.absoluteSize/2,
+                y: data.transform.yCoord.absoluteY - data.transform.size.absoluteSize/2,
+                width: data.transform.size.absoluteSize,
+                height: data.transform.size.absoluteSize
             )
         )
         self.data = data
@@ -39,27 +48,27 @@ class ControlModel {
         let newX = button.center.x + deltaX
         let newY = button.center.y + deltaY
         if newX > 0 && newX < screen.width {
-            data.xCoord = newX.relativeX
+            data.transform.xCoord = newX.relativeX
         }
         if newY > 0 && newY < screen.height {
-            data.yCoord = newY.relativeY
+            data.transform.yCoord = newY.relativeY
         }
         button.setCenterXY(newX: newX, newY: newY)
     }
 
     func resize(down: Bool) {
         let mod = down ? 0.9 : 1/0.9
-        data.size = (button.frame.width * CGFloat(mod)).relativeSize
-        button.setSize(newSize: data.size)
+        data.transform.size = (button.frame.width * CGFloat(mod)).relativeSize
+        button.setSize(newSize: data.transform.size.absoluteSize)
     }
 
-    func setKey(codes: [Int], name: String) {}
+    func setKey(code: Int, name: String) {}
 
-    func setKey(codes: [Int]) {
-        self.setKey(codes: codes, name: KeyCodeNames.keyCodes[codes[0]] ?? "Btn")
+    func setKey(code: Int) {
+        self.setKey(code: code, name: KeyCodeNames.keyCodes[code] ?? "Btn")
     }
 
     func setKey(name: String) {
-        self.setKey(codes: [KeyCodeNames.defaultCode], name: name)
+        self.setKey(code: KeyCodeNames.defaultCode, name: name)
     }
 }

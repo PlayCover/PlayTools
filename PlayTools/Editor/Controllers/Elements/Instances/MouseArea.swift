@@ -7,19 +7,20 @@
 
 import Foundation
 
-class MouseAreaModel: ControlModel {
+class MouseAreaModel: ControlModel<MouseArea> {
     func save() -> MouseArea {
-        MouseArea(keyName: data.keyName,
-                  transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
+        data
     }
 
     private func setDraggableButton(code: Int) {
         EditorController.shared.removeControl()
-        EditorController.shared.addDraggableButton(CGPoint(x: data.xCoord, y: data.yCoord), code)
+        EditorController.shared.addDraggableButton(CGPoint(
+            x: data.transform.xCoord.absoluteX,
+            y: data.transform.yCoord.absoluteY
+        ), code)
     }
 
-    override func setKey(codes: [Int], name: String) {
-        let code = codes[0]
+    override func setKey(code: Int, name: String) {
         if code < 0 {
             if name.hasSuffix("tick") {
                 self.data.keyName = name
@@ -32,7 +33,7 @@ class MouseAreaModel: ControlModel {
         button.setTitle(data.keyName, for: UIControl.State.normal)
     }
 
-    override init(data: ControlData) {
+    override init(data: MouseArea) {
         super.init(data: data)
         setKey(name: data.keyName)
     }

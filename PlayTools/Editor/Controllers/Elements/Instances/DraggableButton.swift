@@ -7,44 +7,45 @@
 
 import Foundation
 
-class DraggableButtonModel: ControlModel, ParentElement {
+class DraggableButtonModel: ControlModel<Button>, ParentElement {
     func unfocusChildren() {
         childButton?.focus(false)
     }
 
-    var childButton: JoystickButtonModel?
+    var childButton: ChildButtonModel?
 
     func save() -> Button {
-        return Button(keyCode: childButton!.data.keyCodes[0], keyName: data.keyName,
-                               transform: KeyModelTransform(size: data.size, xCoord: data.xCoord, yCoord: data.yCoord))
+        data.keyCode = childButton!.data.keyCode
+        return data
     }
 
-    override init(data: ControlData) {
+    override init(data: Button) {
         super.init(data: data)
         button = DraggableButtonElement(frame: CGRect(
-            x: data.xCoord.absoluteX - data.size.absoluteSize/2,
-            y: data.yCoord.absoluteY - data.size.absoluteSize/2,
-            width: data.size.absoluteSize,
-            height: data.size.absoluteSize
+            x: data.transform.xCoord.absoluteX - data.transform.size.absoluteSize/2,
+            y: data.transform.yCoord.absoluteY - data.transform.size.absoluteSize/2,
+            width: data.transform.size.absoluteSize,
+            height: data.transform.size.absoluteSize
         ))
         button.model = self
         // temporarily, cannot map controller keys to draggable buttons
         // `data.keyName` is the key for the move area, not that of the button key.
-        childButton = JoystickButtonModel(data: ControlData(
-            keyCodes: [data.keyCodes[0]], parent: self))
+        childButton = ChildButtonModel(
+            data: self.data,
+            parent: self
+        )
         setKey(name: data.keyName)
         button.update()
     }
 
-    override func setKey(codes: [Int], name: String) {
-        let code = codes[0]
+    override func setKey(code: Int, name: String) {
         if code == KeyCodeNames.defaultCode {
             // set the parent key
             self.data.keyName = name
             button.setTitle(data.keyName, for: UIControl.State.normal)
         } else {
             // set the child key
-            childButton!.setKey(codes: codes)
+            childButton!.setKey(code: code)
         }
     }
 

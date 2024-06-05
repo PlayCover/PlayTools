@@ -63,3 +63,12 @@ class Keymapping {
         }
     }
 }
+
+struct KeymappingData: Codable {
+    var buttonModels: [Button] = []
+    var draggableButtonModels: [Button] = []
+    var joystickModel: [Joystick] = []
+    var mouseAreaModel: [MouseArea] = []
+    var bundleIdentifier: String
+    var version = "2.0.0"
+}

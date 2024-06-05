@@ -7,7 +7,7 @@
 
 import Foundation
 class Element: UIButton {
-    weak var model: ControlModel?
+    weak var model: ControlElement?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -20,7 +20,6 @@ class Element: UIButton {
         let recognizer = UIPanGestureRecognizer(target: editor.view, action: #selector(editor.view.dragged(_:)))
         addGestureRecognizer(recognizer)
         isUserInteractionEnabled = true
-        layer.cornerRadius = 0.5 * bounds.size.width
         clipsToBounds = true
         titleLabel?.minimumScaleFactor = 0.01
         titleLabel?.numberOfLines = 2
@@ -36,16 +35,18 @@ class Element: UIButton {
     }
 
     func update() {
+        layer.cornerRadius = 0.5 * bounds.size.width
     }
 
     func setCenterXY(newX: CGFloat, newY: CGFloat) {
         self.center = CGPoint(x: newX, y: newY)
-        update()
     }
 
     func setSize(newSize: CGFloat) {
+        let center = self.center
         setWidth(width: newSize)
         setHeight(height: newSize)
+        self.center = center
         update()
     }
 

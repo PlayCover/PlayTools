@@ -17,7 +17,7 @@
 		951D8275299D097C00D35B20 /* Playtools.strings in Resources */ = {isa = PBXBuildFile; fileRef = 951D8277299D097C00D35B20 /* Playtools.strings */; };
 		954389C22B38922400B063BB /* MouseArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C12B38922400B063BB /* MouseArea.swift */; };
 		954389C42B38968C00B063BB /* Joystick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C32B38968C00B063BB /* Joystick.swift */; };
-		954389C62B3896E600B063BB /* JoystickButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C52B3896E600B063BB /* JoystickButton.swift */; };
+		954389C62B3896E600B063BB /* ChildButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C52B3896E600B063BB /* ChildButton.swift */; };
 		954389C82B392D5300B063BB /* Button.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C72B392D5300B063BB /* Button.swift */; };
 		954389CA2B392D7800B063BB /* DraggableButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C92B392D7800B063BB /* DraggableButton.swift */; };
 		954389CC2B39F03D00B063BB /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389CB2B39F03D00B063BB /* EditorView.swift */; };
@@ -41,7 +41,6 @@
 		9562D1772AB52550002C329D /* EditorControllerEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1762AB52550002C329D /* EditorControllerEventAdapter.swift */; };
 		9562D1792AB64458002C329D /* ModeAutomaton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1782AB64458002C329D /* ModeAutomaton.swift */; };
 		95D474FB2C0BA77B0072797F /* JoystickElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95D474FA2C0BA77B0072797F /* JoystickElement.swift */; };
-		95D474FD2C0BAD020072797F /* ParentElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95D474FC2C0BAD020072797F /* ParentElement.swift */; };
 		95D474FF2C0BDAB20072797F /* DraggableButtonElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95D474FE2C0BDAB20072797F /* DraggableButtonElement.swift */; };
 		AA71970B287A44D200623C15 /* PlayLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719702287A44D200623C15 /* PlayLoader.m */; };
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
@@ -107,7 +106,7 @@
 		951D8278299D098000D35B20 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Playtools.strings"; sourceTree = "<group>"; };
 		954389C12B38922400B063BB /* MouseArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MouseArea.swift; sourceTree = "<group>"; };
 		954389C32B38968C00B063BB /* Joystick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joystick.swift; sourceTree = "<group>"; };
-		954389C52B3896E600B063BB /* JoystickButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoystickButton.swift; sourceTree = "<group>"; };
+		954389C52B3896E600B063BB /* ChildButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildButton.swift; sourceTree = "<group>"; };
 		954389C72B392D5300B063BB /* Button.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Button.swift; sourceTree = "<group>"; };
 		954389C92B392D7800B063BB /* DraggableButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableButton.swift; sourceTree = "<group>"; };
 		954389CB2B39F03D00B063BB /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
@@ -131,7 +130,6 @@
 		9562D1762AB52550002C329D /* EditorControllerEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorControllerEventAdapter.swift; sourceTree = "<group>"; };
 		9562D1782AB64458002C329D /* ModeAutomaton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeAutomaton.swift; sourceTree = "<group>"; };
 		95D474FA2C0BA77B0072797F /* JoystickElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoystickElement.swift; sourceTree = "<group>"; };
-		95D474FC2C0BAD020072797F /* ParentElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentElement.swift; sourceTree = "<group>"; };
 		95D474FE2C0BDAB20072797F /* DraggableButtonElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableButtonElement.swift; sourceTree = "<group>"; };
 		AA7196D8287A447700623C15 /* PlayTools.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PlayTools.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA719702287A44D200623C15 /* PlayLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlayLoader.m; sourceTree = "<group>"; };
@@ -274,10 +272,9 @@
 			children = (
 				954389C12B38922400B063BB /* MouseArea.swift */,
 				954389C32B38968C00B063BB /* Joystick.swift */,
-				954389C52B3896E600B063BB /* JoystickButton.swift */,
+				954389C52B3896E600B063BB /* ChildButton.swift */,
 				954389C72B392D5300B063BB /* Button.swift */,
 				954389C92B392D7800B063BB /* DraggableButton.swift */,
-				95D474FC2C0BAD020072797F /* ParentElement.swift */,
 			);
 			path = Instances;
 			sourceTree = "<group>";
@@ -692,7 +689,6 @@
 				954389C22B38922400B063BB /* MouseArea.swift in Sources */,
 				AA7197AB287A481500623C15 /* Element.swift in Sources */,
 				AA7197AE287A481500623C15 /* EditorCircleMenu.swift in Sources */,
-				95D474FD2C0BAD020072797F /* ParentElement.swift in Sources */,
 				954389D22B3A5AE100B063BB /* ElementController.swift in Sources */,
 				95D474FF2C0BDAB20072797F /* DraggableButtonElement.swift in Sources */,
 				9562D1622AB4FE73002C329D /* CameraControlMouseEventAdapter.swift in Sources */,
@@ -729,7 +725,7 @@
 				AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */,
 				AA71986A287A81A000623C15 /* PTFakeMetaTouch.m in Sources */,
 				9562D15E2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift in Sources */,
-				954389C62B3896E600B063BB /* JoystickButton.swift in Sources */,
+				954389C62B3896E600B063BB /* ChildButton.swift in Sources */,
 				ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */,
 				AA71986C287A81A000623C15 /* NSObject+Swizzle.m in Sources */,
 				AA71970F287A44D200623C15 /* PlayCover.swift in Sources */,

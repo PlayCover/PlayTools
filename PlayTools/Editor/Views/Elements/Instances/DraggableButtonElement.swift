@@ -8,26 +8,10 @@
 import Foundation
 
 class DraggableButtonElement: Element {
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        commonInit()
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        commonInit()
-    }
-
-    override func commonInit() {
-        super.commonInit()
-        titleEdgeInsets = UIEdgeInsets(top: frame.height / 2, left: 0, bottom: 0, right: 0)
-    }
-
     override func update() {
         super.update()
+        titleEdgeInsets = UIEdgeInsets(top: frame.height / 2, left: 0, bottom: 0, right: 0)
         guard let child = (model as? DraggableButtonModel)?.childButton?.button else {
-//            Toast.showHint(title: "Draggable button view update error",
-//                           text: ["failed to obtain child button"])
             return
         }
         let buttonSize = frame.width / 3

@@ -9,11 +9,11 @@ class EditorController {
 
     let lock = NSLock()
 
-    var focusedControl: ControlModel?
+    var focusedControl: ControlElement?
 
     var editorWindow: UIWindow?
     weak var previousWindow: UIWindow?
-    var controls: [ControlModel] = []
+    var controls: [ControlElement] = []
     var view: EditorView! {editorWindow?.rootViewController?.view as? EditorView}
 
     private func initWindow() -> UIWindow {
@@ -22,7 +22,7 @@ class EditorController {
         return window
     }
 
-    private func addControlToView(control: ControlModel) {
+    private func addControlToView(control: ControlElement) {
         controls.append(control)
         view.addSubview(control.button)
         updateFocus(button: control.button)
@@ -37,7 +37,6 @@ class EditorController {
 
         if let mod = button.model {
             mod.focus(true)
-            // TODO: why must we use a model instead of view here?
             focusedControl = mod
         }
     }
@@ -77,8 +76,7 @@ class EditorController {
 
     public func setKey(_ code: Int) {
         if editorMode {
-            // TODO: how can we set key without having to hold its reference?
-            focusedControl?.setKey(codes: [code])
+            focusedControl?.setKey(code: code)
         }
     }
 
@@ -99,39 +97,20 @@ class EditorController {
 
     func showButtons() {
         for button in keymap.keymapData.draggableButtonModels {
-            let ctrl = DraggableButtonModel(data: ControlData(
-                keyCodes: [button.keyCode],
-                keyName: button.keyName,
-                size: button.transform.size,
-                xCoord: button.transform.xCoord,
-                yCoord: button.transform.yCoord))
+            let ctrl = DraggableButtonModel(data: button)
             addControlToView(control: ctrl)
         }
         for joystick in keymap.keymapData.joystickModel {
-            let ctrl = JoystickModel(data: ControlData(
-                keyCodes: [joystick.upKeyCode, joystick.downKeyCode, joystick.leftKeyCode, joystick.rightKeyCode],
-                keyName: joystick.keyName,
-                size: joystick.transform.size,
-                xCoord: joystick.transform.xCoord,
-                yCoord: joystick.transform.yCoord))
+            let ctrl = JoystickModel(data: joystick)
             addControlToView(control: ctrl)
         }
         for mouse in keymap.keymapData.mouseAreaModel {
             let ctrl =
-                MouseAreaModel(data: ControlData(
-                    keyName: mouse.keyName,
-                    size: mouse.transform.size,
-                    xCoord: mouse.transform.xCoord,
-                    yCoord: mouse.transform.yCoord))
+                MouseAreaModel(data: mouse)
             addControlToView(control: ctrl)
         }
         for button in keymap.keymapData.buttonModels {
-            let ctrl = ButtonModel(data: ControlData(
-                keyCodes: [button.keyCode],
-                keyName: button.keyName,
-                size: button.transform.size,
-                xCoord: button.transform.xCoord,
-                yCoord: button.transform.yCoord))
+            let ctrl = ButtonModel(data: button)
             addControlToView(control: ctrl)
         }
     }
@@ -160,25 +139,28 @@ class EditorController {
 
     public func addJoystick(_ center: CGPoint) {
         if editorMode {
-            addControlToView(control: JoystickModel(data: ControlData(keyCodes: [GCKeyCode.keyW.rawValue,
-                                                                                 GCKeyCode.keyS.rawValue,
-                                                                                 GCKeyCode.keyA.rawValue,
-                                                                                 GCKeyCode.keyD.rawValue],
-                                                                      keyName: "Keyboard",
-                                                                      size: 20,
-                                                                      xCoord: center.x.relativeX,
-                                                                      yCoord: center.y.relativeY)))
+            addControlToView(control: JoystickModel(data: Joystick(
+                upKeyCode: GCKeyCode.keyW.rawValue,
+                rightKeyCode: GCKeyCode.keyD.rawValue,
+                downKeyCode: GCKeyCode.keyS.rawValue,
+                leftKeyCode: GCKeyCode.keyA.rawValue,
+                keyName: "Keyboard",
+                transform: KeyModelTransform(
+                    size: 20, xCoord: center.x.relativeX, yCoord: center.y.relativeY
+                )
+            )))
         }
     }
 
     private func addButton(keyCode: Int, point: CGPoint) {
         if editorMode {
-            addControlToView(control: ButtonModel(data: ControlData(
-                keyCodes: [keyCode],
+            addControlToView(control: ButtonModel(data: Button(
+                keyCode: keyCode,
                 keyName: KeyCodeNames.keyCodes[keyCode] ?? "Btn",
-                size: 5,
-                xCoord: point.x.relativeX,
-                yCoord: point.y.relativeY)))
+                transform: KeyModelTransform(
+                    size: 5, xCoord: point.x.relativeX, yCoord: point.y.relativeY
+                )
+            )))
         }
     }
 
@@ -194,16 +176,15 @@ class EditorController {
         if editorMode {
             addControlToView(
                 control: JoystickModel(
-                    data: ControlData(
-                        keyCodes: [
-                            GCKeyCode.keyW.rawValue,
-                            GCKeyCode.keyS.rawValue,
-                            GCKeyCode.keyA.rawValue,
-                            GCKeyCode.keyD.rawValue],
+                    data: Joystick(
+                        upKeyCode: GCKeyCode.keyW.rawValue,
+                        rightKeyCode: GCKeyCode.keyD.rawValue,
+                        downKeyCode: GCKeyCode.keyS.rawValue,
+                        leftKeyCode: GCKeyCode.keyA.rawValue,
                         keyName: "Mouse",
-                        size: 20,
-                        xCoord: center.x.relativeX,
-                        yCoord: center.y.relativeY
+                        transform: KeyModelTransform(
+                            size: 20, xCoord: center.x.relativeX, yCoord: center.y.relativeY
+                        )
                     )
                 )
             )
@@ -212,22 +193,24 @@ class EditorController {
 
     public func addMouseArea(_ center: CGPoint) {
         if editorMode {
-            addControlToView(control: MouseAreaModel(data: ControlData(
+            addControlToView(control: MouseAreaModel(data: MouseArea(
                 keyName: "Mouse",
-                size: 25,
-                xCoord: center.x.relativeX,
-                yCoord: center.y.relativeY)))
+                transform: KeyModelTransform(
+                    size: 25, xCoord: center.x.relativeX, yCoord: center.y.relativeY
+                )
+            )))
         }
     }
 
     public func addDraggableButton(_ center: CGPoint, _ keyCode: Int) {
         if editorMode {
-            addControlToView(control: DraggableButtonModel(data: ControlData(
-                keyCodes: [keyCode],
+            addControlToView(control: DraggableButtonModel(data: Button(
+                keyCode: keyCode,
                 keyName: "Mouse",
-                size: 15,
-                xCoord: center.x,
-                yCoord: center.y)))
+                transform: KeyModelTransform(
+                    size: 15, xCoord: center.x.relativeX, yCoord: center.y.relativeY
+                )
+            )))
         }
     }
 

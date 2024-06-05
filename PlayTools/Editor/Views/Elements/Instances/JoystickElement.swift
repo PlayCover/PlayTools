@@ -8,34 +8,16 @@
 import Foundation
 
 class JoystickElement: Element {
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        commonInit()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func commonInit() {
-        super.commonInit()
-        layer.cornerRadius = 0.3 * bounds.size.width
-    }
-
     func setKey(showChild: Bool, name: String) {
         guard let childButtons = (model as? JoystickModel)?.joystickButtons.map({ controller in
             controller.button }) else { return }
-        if showChild {
-            setTitle("", for: UIControl.State.normal)
-            childButtons.forEach({ view in view.isHidden = false})
-        } else {
-            setTitle(name, for: UIControl.State.normal)
-            childButtons.forEach({ view in view.isHidden = true})
-        }
+        setTitle(name, for: UIControl.State.normal)
+        childButtons.forEach({ view in view.isHidden = !showChild})
     }
 
     override func update() {
         super.update()
+        layer.cornerRadius = 0.3 * bounds.size.width
         let buttonSize = frame.width / 3
         let xCoord1 = (frame.width / 2) - buttonSize / 2
         let yCoord1 = buttonSize / 4.5
