@@ -263,7 +263,7 @@ class CameraAction: Action {
     static var swipeDrag = SwipeAction()
     var key: String!
     var center: CGPoint
-    var distance1: CGFloat = 100, distance2: CGFloat = 100
+
     init(data: MouseArea) {
         self.key = data.keyName
         let centerX = data.transform.xCoord.absoluteX
@@ -284,20 +284,21 @@ class CameraAction: Action {
     }
 
     func scaleUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
-        let distance = distance1 + distance2
-        let moveY = deltaY * (distance / 100.0)
-        distance1 += moveY
-        distance2 += moveY
-
+        let centerY = screen.height/2
+        let centerX = screen.width/2
         swipeScale1.move(from: {
-            self.distance1 = 100
-            return CGPoint(x: center.x, y: center.y - 100)
-        }, deltaX: 0, deltaY: moveY)
+            CGPoint(x: centerX, y: centerY/2)
+        }, deltaX: 0, deltaY: deltaY)
 
         swipeScale2.move(from: {
-            self.distance2 = 100
-            return CGPoint(x: center.x, y: center.y + 100)
-        }, deltaX: 0, deltaY: -moveY)
+            CGPoint(x: centerX, y: centerY + (centerY/2))
+        }, deltaX: 0, deltaY: -deltaY)
+        // a move can't be longer than `centerY/16` due to the velocity limiter of `CameraAction`
+        // so lifting off before two touches meet
+        if swipeScale2.location.y - centerY < centerY/16 {
+            swipeScale1.doLiftOff()
+            swipeScale2.doLiftOff()
+        }
     }
 
     static func dragUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
