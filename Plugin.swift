@@ -23,7 +23,7 @@ public protocol Plugin: NSObjectProtocol {
     func warpCursor()
     func unhideCursor()
     func terminateApplication()
-    func setupKeyboard(keyboard: @escaping(UInt16, Bool, Bool) -> Bool,
+    func setupKeyboard(keyboard: @escaping(UInt16, Bool, Bool, Bool) -> Bool,
                        swapMode: @escaping() -> Bool)
     func setupMouseMoved(_ mouseMoved: @escaping(CGFloat, CGFloat) -> Bool)
     func setupMouseButton(left: Bool, right: Bool, _ consumed: @escaping(Int, Bool) -> Bool)
