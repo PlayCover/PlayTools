@@ -449,7 +449,7 @@ class SwipeAction: Action {
 
 class FakeMouseAction: Action {
     var id: Int?
-    var pos: CGPoint!
+    var pos: CGPoint = CGPoint()
     public init() {
         ActionDispatcher.register(key: KeyCodeNames.fakeMouse, handler: buttonPressHandler)
         ActionDispatcher.register(key: KeyCodeNames.fakeMouse, handler: buttonLiftHandler)
@@ -488,7 +488,7 @@ class FakeMouseAction: Action {
 
     func invalidate() {
         ActionDispatcher.unregister(key: KeyCodeNames.fakeMouse)
-        Toucher.touchcam(point: pos ?? CGPoint(x: 10, y: 10),
+        Toucher.touchcam(point: pos,
                          phase: UITouch.Phase.ended, tid: &self.id)
     }
 
