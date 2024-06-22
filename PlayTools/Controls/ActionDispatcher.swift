@@ -81,7 +81,7 @@ public class ActionDispatcher {
 
         for joystick in keymap.keymapData.joystickModel {
             // Left Thumbstick, Right Thumbstick, Mouse
-            if joystick.keyName.contains(Character("u")) {
+            if JoystickModel.isAnalog(joystick) {
                 actions.append(ContinuousJoystickAction(data: joystick))
             } else { // Keyboard
                 actions.append(JoystickAction(data: joystick))

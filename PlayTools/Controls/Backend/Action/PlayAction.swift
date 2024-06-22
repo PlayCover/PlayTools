@@ -471,7 +471,7 @@ class SwipeAction: Action {
 
 class FakeMouseAction: Action {
     var id: Int?
-    var pos: CGPoint!
+    var pos: CGPoint = CGPoint()
     public init() {
         ActionDispatcher.register(key: KeyCodeNames.fakeMouse, handler: buttonPressHandler)
         ActionDispatcher.register(key: KeyCodeNames.fakeMouse, handler: buttonLiftHandler)

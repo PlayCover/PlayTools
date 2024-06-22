@@ -354,7 +354,7 @@ open class CircleMenu: UIButton {
         tapRotatedAnimation(0.3, isSelected: isShow)
 
         if !buttonsIsShown() {
-            KeymapHolder.shared.hide()
+            EditorCircleMenu.shared.hide()
         }
     }
 
