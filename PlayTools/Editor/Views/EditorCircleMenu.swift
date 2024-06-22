@@ -6,9 +6,9 @@
 import Foundation
 import SwiftUI
 
-class KeymapHolder: CircleMenuDelegate {
+class EditorCircleMenu: CircleMenuDelegate {
 
-    static let shared = KeymapHolder()
+    static let shared = EditorCircleMenu()
 
     private var menu: CircleMenu?
 
