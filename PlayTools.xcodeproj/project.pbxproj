@@ -15,6 +15,14 @@
 		6E84A14528D0F94E00BF7495 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
 		6E84A15028D0F97500BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		951D8275299D097C00D35B20 /* Playtools.strings in Resources */ = {isa = PBXBuildFile; fileRef = 951D8277299D097C00D35B20 /* Playtools.strings */; };
+		954389C22B38922400B063BB /* MouseArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C12B38922400B063BB /* MouseArea.swift */; };
+		954389C42B38968C00B063BB /* Joystick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C32B38968C00B063BB /* Joystick.swift */; };
+		954389C62B3896E600B063BB /* ChildButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C52B3896E600B063BB /* ChildButton.swift */; };
+		954389C82B392D5300B063BB /* Button.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C72B392D5300B063BB /* Button.swift */; };
+		954389CA2B392D7800B063BB /* DraggableButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C92B392D7800B063BB /* DraggableButton.swift */; };
+		954389CC2B39F03D00B063BB /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389CB2B39F03D00B063BB /* EditorView.swift */; };
+		954389CE2B39F26600B063BB /* ElementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389CD2B39F26600B063BB /* ElementView.swift */; };
+		954389D22B3A5AE100B063BB /* ElementController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389D12B3A5AE100B063BB /* ElementController.swift */; };
 		9562D1512AB484C7002C329D /* EventAdapters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1502AB484C7002C329D /* EventAdapters.swift */; };
 		9562D1532AB484FD002C329D /* EventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1522AB484FD002C329D /* EventAdapter.swift */; };
 		9562D1582AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1572AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift */; };
@@ -32,6 +40,8 @@
 		9562D1752AB52479002C329D /* EditorMouseEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1742AB52479002C329D /* EditorMouseEventAdapter.swift */; };
 		9562D1772AB52550002C329D /* EditorControllerEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1762AB52550002C329D /* EditorControllerEventAdapter.swift */; };
 		9562D1792AB64458002C329D /* ModeAutomaton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1782AB64458002C329D /* ModeAutomaton.swift */; };
+		95D474FB2C0BA77B0072797F /* JoystickElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95D474FA2C0BA77B0072797F /* JoystickElement.swift */; };
+		95D474FF2C0BDAB20072797F /* DraggableButtonElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95D474FE2C0BDAB20072797F /* DraggableButtonElement.swift */; };
 		AA71970B287A44D200623C15 /* PlayLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719702287A44D200623C15 /* PlayLoader.m */; };
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
 		AA71970E287A44D200623C15 /* PlayLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719705287A44D200623C15 /* PlayLoader.h */; };
@@ -46,9 +56,9 @@
 		AA7197A3287A481500623C15 /* CircleMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71978F287A481500623C15 /* CircleMenuButton.swift */; };
 		AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719797287A481500623C15 /* PlayInfo.swift */; };
 		AA7197AA287A481500623C15 /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719798287A481500623C15 /* Toast.swift */; };
-		AA7197AB287A481500623C15 /* ControlModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979A287A481500623C15 /* ControlModel.swift */; };
+		AA7197AB287A481500623C15 /* Element.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979A287A481500623C15 /* Element.swift */; };
 		AA7197AD287A481500623C15 /* EditorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979C287A481500623C15 /* EditorController.swift */; };
-		AA7197AE287A481500623C15 /* DragElementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979D287A481500623C15 /* DragElementsView.swift */; };
+		AA7197AE287A481500623C15 /* EditorCircleMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979D287A481500623C15 /* EditorCircleMenu.swift */; };
 		AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71979E287A481500623C15 /* KeyCodeNames.swift */; };
 		AA719846287A81A000623C15 /* IOHIDEvent+KIF.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719818287A819F00623C15 /* IOHIDEvent+KIF.h */; };
 		AA719850287A81A000623C15 /* UITouch-KIFAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = AA719822287A819F00623C15 /* UITouch-KIFAdditions.m */; };
@@ -94,6 +104,14 @@
 		6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AKInterface.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		951D8276299D097C00D35B20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Playtools.strings; sourceTree = "<group>"; };
 		951D8278299D098000D35B20 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Playtools.strings"; sourceTree = "<group>"; };
+		954389C12B38922400B063BB /* MouseArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MouseArea.swift; sourceTree = "<group>"; };
+		954389C32B38968C00B063BB /* Joystick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joystick.swift; sourceTree = "<group>"; };
+		954389C52B3896E600B063BB /* ChildButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildButton.swift; sourceTree = "<group>"; };
+		954389C72B392D5300B063BB /* Button.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Button.swift; sourceTree = "<group>"; };
+		954389C92B392D7800B063BB /* DraggableButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableButton.swift; sourceTree = "<group>"; };
+		954389CB2B39F03D00B063BB /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
+		954389CD2B39F26600B063BB /* ElementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElementView.swift; sourceTree = "<group>"; };
+		954389D12B3A5AE100B063BB /* ElementController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElementController.swift; sourceTree = "<group>"; };
 		9562D1502AB484C7002C329D /* EventAdapters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventAdapters.swift; sourceTree = "<group>"; };
 		9562D1522AB484FD002C329D /* EventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventAdapter.swift; sourceTree = "<group>"; };
 		9562D1572AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchscreenKeyboardEventAdapter.swift; sourceTree = "<group>"; };
@@ -111,6 +129,8 @@
 		9562D1742AB52479002C329D /* EditorMouseEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorMouseEventAdapter.swift; sourceTree = "<group>"; };
 		9562D1762AB52550002C329D /* EditorControllerEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorControllerEventAdapter.swift; sourceTree = "<group>"; };
 		9562D1782AB64458002C329D /* ModeAutomaton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeAutomaton.swift; sourceTree = "<group>"; };
+		95D474FA2C0BA77B0072797F /* JoystickElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoystickElement.swift; sourceTree = "<group>"; };
+		95D474FE2C0BDAB20072797F /* DraggableButtonElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableButtonElement.swift; sourceTree = "<group>"; };
 		AA7196D8287A447700623C15 /* PlayTools.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PlayTools.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA719702287A44D200623C15 /* PlayLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlayLoader.m; sourceTree = "<group>"; };
 		AA719704287A44D200623C15 /* PlaySettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlaySettings.swift; sourceTree = "<group>"; };
@@ -128,9 +148,9 @@
 		AA71978F287A481500623C15 /* CircleMenuButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleMenuButton.swift; sourceTree = "<group>"; };
 		AA719797287A481500623C15 /* PlayInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayInfo.swift; sourceTree = "<group>"; };
 		AA719798287A481500623C15 /* Toast.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
-		AA71979A287A481500623C15 /* ControlModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControlModel.swift; sourceTree = "<group>"; };
+		AA71979A287A481500623C15 /* Element.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Element.swift; sourceTree = "<group>"; };
 		AA71979C287A481500623C15 /* EditorController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorController.swift; sourceTree = "<group>"; };
-		AA71979D287A481500623C15 /* DragElementsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DragElementsView.swift; sourceTree = "<group>"; };
+		AA71979D287A481500623C15 /* EditorCircleMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditorCircleMenu.swift; sourceTree = "<group>"; };
 		AA71979E287A481500623C15 /* KeyCodeNames.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyCodeNames.swift; sourceTree = "<group>"; };
 		AA719818287A819F00623C15 /* IOHIDEvent+KIF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "IOHIDEvent+KIF.h"; sourceTree = "<group>"; };
 		AA719822287A819F00623C15 /* UITouch-KIFAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UITouch-KIFAdditions.m"; sourceTree = "<group>"; };
@@ -182,6 +202,81 @@
 				6E76639628D0FA6200DE4AF9 /* AKInterface-Bridging-Header.h */,
 			);
 			name = AKInterface;
+			sourceTree = "<group>";
+		};
+		954389BE2B37C75C00B063BB /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				954389D32B3A6CCE00B063BB /* Elements */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		954389BF2B37C76600B063BB /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				954389DD2B3ACD5E00B063BB /* Elements */,
+				AA71978C287A481500623C15 /* CircleMenu */,
+				AA71979D287A481500623C15 /* EditorCircleMenu.swift */,
+				954389CB2B39F03D00B063BB /* EditorView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		954389C02B37C78200B063BB /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				AA71979C287A481500623C15 /* EditorController.swift */,
+				954389CF2B39F2DC00B063BB /* Elements */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		954389CF2B39F2DC00B063BB /* Elements */ = {
+			isa = PBXGroup;
+			children = (
+				954389D12B3A5AE100B063BB /* ElementController.swift */,
+				954389DE2B3ACD6F00B063BB /* Instances */,
+			);
+			path = Elements;
+			sourceTree = "<group>";
+		};
+		954389D02B3A010E00B063BB /* Keymap */ = {
+			isa = PBXGroup;
+			children = (
+				B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */,
+				AA71979E287A481500623C15 /* KeyCodeNames.swift */,
+			);
+			path = Keymap;
+			sourceTree = "<group>";
+		};
+		954389D32B3A6CCE00B063BB /* Elements */ = {
+			isa = PBXGroup;
+			children = (
+				AA71979A287A481500623C15 /* Element.swift */,
+			);
+			path = Elements;
+			sourceTree = "<group>";
+		};
+		954389DD2B3ACD5E00B063BB /* Elements */ = {
+			isa = PBXGroup;
+			children = (
+				954389CD2B39F26600B063BB /* ElementView.swift */,
+				95D474F92C0BA72B0072797F /* Instances */,
+			);
+			path = Elements;
+			sourceTree = "<group>";
+		};
+		954389DE2B3ACD6F00B063BB /* Instances */ = {
+			isa = PBXGroup;
+			children = (
+				954389C12B38922400B063BB /* MouseArea.swift */,
+				954389C32B38968C00B063BB /* Joystick.swift */,
+				954389C52B3896E600B063BB /* ChildButton.swift */,
+				954389C72B392D5300B063BB /* Button.swift */,
+				954389C92B392D7800B063BB /* DraggableButton.swift */,
+			);
+			path = Instances;
 			sourceTree = "<group>";
 		};
 		9562D14F2AB4849C002C329D /* EventAdapter */ = {
@@ -281,6 +376,15 @@
 			path = Action;
 			sourceTree = "<group>";
 		};
+		95D474F92C0BA72B0072797F /* Instances */ = {
+			isa = PBXGroup;
+			children = (
+				95D474FA2C0BA77B0072797F /* JoystickElement.swift */,
+				95D474FE2C0BDAB20072797F /* DraggableButtonElement.swift */,
+			);
+			path = Instances;
+			sourceTree = "<group>";
+		};
 		AA7196CE287A447700623C15 = {
 			isa = PBXGroup;
 			children = (
@@ -307,12 +411,12 @@
 				ABCECEE729750BB100746595 /* MysticRunes */,
 				B127172328817AC70025112B /* DiscordActivity */,
 				AA719721287A480C00623C15 /* Controls */,
-				AA719799287A481500623C15 /* Keymap */,
-				AA71978C287A481500623C15 /* Menu */,
+				AA719799287A481500623C15 /* Editor */,
+				954389D02B3A010E00B063BB /* Keymap */,
 				AA719791287A481500623C15 /* Utils */,
 				AA71970A287A44D200623C15 /* Info.plist */,
-				AA719706287A44D200623C15 /* PlayCover.swift */,
 				AA719704287A44D200623C15 /* PlaySettings.swift */,
+				AA719706287A44D200623C15 /* PlayCover.swift */,
 				AA719705287A44D200623C15 /* PlayLoader.h */,
 				AA719702287A44D200623C15 /* PlayLoader.m */,
 				AA719708287A44D200623C15 /* PlayTools.h */,
@@ -334,14 +438,14 @@
 			path = Controls;
 			sourceTree = "<group>";
 		};
-		AA71978C287A481500623C15 /* Menu */ = {
+		AA71978C287A481500623C15 /* CircleMenu */ = {
 			isa = PBXGroup;
 			children = (
 				AA71978D287A481500623C15 /* CircleMenuLoader.swift */,
 				AA71978E287A481500623C15 /* CircleMenu.swift */,
 				AA71978F287A481500623C15 /* CircleMenuButton.swift */,
 			);
-			path = Menu;
+			path = CircleMenu;
 			sourceTree = "<group>";
 		};
 		AA719791287A481500623C15 /* Utils */ = {
@@ -354,16 +458,14 @@
 			path = Utils;
 			sourceTree = "<group>";
 		};
-		AA719799287A481500623C15 /* Keymap */ = {
+		AA719799287A481500623C15 /* Editor */ = {
 			isa = PBXGroup;
 			children = (
-				AA71979A287A481500623C15 /* ControlModel.swift */,
-				AA71979C287A481500623C15 /* EditorController.swift */,
-				AA71979D287A481500623C15 /* DragElementsView.swift */,
-				AA71979E287A481500623C15 /* KeyCodeNames.swift */,
-				B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */,
+				954389BE2B37C75C00B063BB /* Models */,
+				954389BF2B37C76600B063BB /* Views */,
+				954389C02B37C78200B063BB /* Controllers */,
 			);
-			path = Keymap;
+			path = Editor;
 			sourceTree = "<group>";
 		};
 		AA719813287A813A00623C15 /* PTFakeTouch */ = {
@@ -577,24 +679,33 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				954389CA2B392D7800B063BB /* DraggableButton.swift in Sources */,
 				9562D16D2AB505D4002C329D /* ControllerEventAdapter.swift in Sources */,
 				AA71975A287A480D00623C15 /* Toucher.swift in Sources */,
 				AA7197A1287A481500623C15 /* CircleMenuLoader.swift in Sources */,
 				6E76639B28D0FAE700DE4AF9 /* Plugin.swift in Sources */,
 				B1271729288284BE0025112B /* DiscordActivity.swift in Sources */,
-				AA7197AB287A481500623C15 /* ControlModel.swift in Sources */,
-				AA7197AE287A481500623C15 /* DragElementsView.swift in Sources */,
+				954389CC2B39F03D00B063BB /* EditorView.swift in Sources */,
+				954389C22B38922400B063BB /* MouseArea.swift in Sources */,
+				AA7197AB287A481500623C15 /* Element.swift in Sources */,
+				AA7197AE287A481500623C15 /* EditorCircleMenu.swift in Sources */,
+				954389D22B3A5AE100B063BB /* ElementController.swift in Sources */,
+				95D474FF2C0BDAB20072797F /* DraggableButtonElement.swift in Sources */,
 				9562D1622AB4FE73002C329D /* CameraControlMouseEventAdapter.swift in Sources */,
+				954389C42B38968C00B063BB /* Joystick.swift in Sources */,
 				9562D1642AB4FEB4002C329D /* TouchscreenMouseEventAdapter.swift in Sources */,
 				9562D1602AB4FD46002C329D /* TransparentControllerEventAdapter.swift in Sources */,
 				9562D1792AB64458002C329D /* ModeAutomaton.swift in Sources */,
 				AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */,
+				95D474FB2C0BA77B0072797F /* JoystickElement.swift in Sources */,
 				AA719759287A480D00623C15 /* PlayAction.swift in Sources */,
+				954389C82B392D5300B063BB /* Button.swift in Sources */,
 				6E7663A528D0FEBE00DE4AF9 /* AKPluginLoader.swift in Sources */,
 				9562D16F2AB50D34002C329D /* ActionDispatcher.swift in Sources */,
 				2847AE48298EFC0F00B0F983 /* PlayScreen.swift in Sources */,
 				9562D1532AB484FD002C329D /* EventAdapter.swift in Sources */,
 				AA7197A2287A481500623C15 /* CircleMenu.swift in Sources */,
+				954389CE2B39F26600B063BB /* ElementView.swift in Sources */,
 				9562D15A2AB4FBBB002C329D /* TransparentKeyboardEventAdapter.swift in Sources */,
 				AA71978B287A480D00623C15 /* MenuController.swift in Sources */,
 				9562D1732AB52416002C329D /* EditorKeyboardEventAdapter.swift in Sources */,
@@ -614,6 +725,7 @@
 				AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */,
 				AA71986A287A81A000623C15 /* PTFakeMetaTouch.m in Sources */,
 				9562D15E2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift in Sources */,
+				954389C62B3896E600B063BB /* ChildButton.swift in Sources */,
 				ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */,
 				AA71986C287A81A000623C15 /* NSObject+Swizzle.m in Sources */,
 				AA71970F287A44D200623C15 /* PlayCover.swift in Sources */,
