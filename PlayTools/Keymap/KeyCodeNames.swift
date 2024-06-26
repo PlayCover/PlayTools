@@ -143,14 +143,14 @@ class KeyCodeNames {
         gcCode[GCKeyCode.F13.rawValue] = "F13"
         gcCode[GCKeyCode.F16.rawValue] = "F16"
         gcCode[GCKeyCode.F14.rawValue] = "F14"
-        gcCode[GCKeyCode.application.rawValue] = "Context Menu"
+        gcCode[GCKeyCode.application.rawValue] = "Ctx Menu"
         gcCode[GCKeyCode.F15.rawValue] = "F15"
         gcCode[GCKeyCode.insert.rawValue] = "Help"
         gcCode[GCKeyCode.home.rawValue] = "Home"
-        gcCode[GCKeyCode.pageUp.rawValue] = "Page Up"
-        gcCode[GCKeyCode.deleteForward.rawValue] = "Delete Forward"
+        gcCode[GCKeyCode.pageUp.rawValue] = "Pg Up"
+        gcCode[GCKeyCode.deleteForward.rawValue] = "Del Fwd"
         gcCode[GCKeyCode.end.rawValue] = "End"
-        gcCode[GCKeyCode.pageDown.rawValue] = "Page Down"
+        gcCode[GCKeyCode.pageDown.rawValue] = "Pg Down"
         return gcCode
     }()
 }
@@ -265,14 +265,14 @@ public static let virtualCodes: [UInt16: String] = [
     105: "F13",
     106: "F16",
     107: "F14",
-    110: "Context Menu",
+    110: "Ctx Menu",
     113: "F15",
     114: "Help",
     115: "Home",
-    116: "Page Up",
-    117: "Delete Forward",
+    116: "Pg Up",
+    117: "Del Fwd",
     119: "End",
-    121: "Page Down"
+    121: "Pg Down"
 ]
     private static let mapVirtualToGcLiteral: [UInt16: Int] = [
     0: 4,
