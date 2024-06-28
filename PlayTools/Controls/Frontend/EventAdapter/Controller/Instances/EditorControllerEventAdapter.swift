@@ -25,10 +25,13 @@ public class EditorControllerEventAdapter: ControllerEventAdapter {
                 alias = dpadElement.left.aliases.first!
             }
             if dpadElement.yAxis.value > 0 {
-                alias = dpadElement.down.aliases.first!
-            } else if dpadElement.yAxis.value < 0 {
                 alias = dpadElement.up.aliases.first!
+            } else if dpadElement.yAxis.value < 0 {
+                alias = dpadElement.down.aliases.first!
             }
+        }
+        if alias == "Direction Pad" {
+            return
         }
         EditorController.shared.setKey(alias)
     }
