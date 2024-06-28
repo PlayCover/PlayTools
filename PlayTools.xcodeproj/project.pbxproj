@@ -218,6 +218,8 @@
 				9555ED322C058E36006E469C /* DebugController.swift */,
 			);
 			path = DebugOverlay;
+			sourceTree = "<group>";
+		};
 		954389BE2B37C75C00B063BB /* Models */ = {
 			isa = PBXGroup;
 			children = (
