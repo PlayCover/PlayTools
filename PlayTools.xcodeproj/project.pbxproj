@@ -15,6 +15,9 @@
 		6E84A14528D0F94E00BF7495 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
 		6E84A15028D0F97500BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		951D8275299D097C00D35B20 /* Playtools.strings in Resources */ = {isa = PBXBuildFile; fileRef = 951D8277299D097C00D35B20 /* Playtools.strings */; };
+		9555ED2F2C058E08006E469C /* DebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED2E2C058E08006E469C /* DebugView.swift */; };
+		9555ED312C058E28006E469C /* DebugModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED302C058E28006E469C /* DebugModel.swift */; };
+		9555ED332C058E36006E469C /* DebugController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED322C058E36006E469C /* DebugController.swift */; };
 		954389C22B38922400B063BB /* MouseArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C12B38922400B063BB /* MouseArea.swift */; };
 		954389C42B38968C00B063BB /* Joystick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C32B38968C00B063BB /* Joystick.swift */; };
 		954389C62B3896E600B063BB /* ChildButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C52B3896E600B063BB /* ChildButton.swift */; };
@@ -104,6 +107,9 @@
 		6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AKInterface.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		951D8276299D097C00D35B20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Playtools.strings; sourceTree = "<group>"; };
 		951D8278299D098000D35B20 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Playtools.strings"; sourceTree = "<group>"; };
+		9555ED2E2C058E08006E469C /* DebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugView.swift; sourceTree = "<group>"; };
+		9555ED302C058E28006E469C /* DebugModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugModel.swift; sourceTree = "<group>"; };
+		9555ED322C058E36006E469C /* DebugController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugController.swift; sourceTree = "<group>"; };
 		954389C12B38922400B063BB /* MouseArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MouseArea.swift; sourceTree = "<group>"; };
 		954389C32B38968C00B063BB /* Joystick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joystick.swift; sourceTree = "<group>"; };
 		954389C52B3896E600B063BB /* ChildButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildButton.swift; sourceTree = "<group>"; };
@@ -204,6 +210,14 @@
 			name = AKInterface;
 			sourceTree = "<group>";
 		};
+		9555ED2D2C058DE3006E469C /* DebugOverlay */ = {
+			isa = PBXGroup;
+			children = (
+				9555ED2E2C058E08006E469C /* DebugView.swift */,
+				9555ED302C058E28006E469C /* DebugModel.swift */,
+				9555ED322C058E36006E469C /* DebugController.swift */,
+			);
+			path = DebugOverlay;
 		954389BE2B37C75C00B063BB /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -362,6 +376,7 @@
 		9562D1712AB51B57002C329D /* Backend */ = {
 			isa = PBXGroup;
 			children = (
+				9555ED2D2C058DE3006E469C /* DebugOverlay */,
 				9562D17A2AB6E5ED002C329D /* Action */,
 				AA719724287A480C00623C15 /* Toucher.swift */,
 			);
@@ -713,8 +728,10 @@
 				AA7197AA287A481500623C15 /* Toast.swift in Sources */,
 				AA719789287A480D00623C15 /* PlayInput.swift in Sources */,
 				AA71970B287A44D200623C15 /* PlayLoader.m in Sources */,
+				9555ED332C058E36006E469C /* DebugController.swift in Sources */,
 				9562D1512AB484C7002C329D /* EventAdapters.swift in Sources */,
 				AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */,
+				9555ED2F2C058E08006E469C /* DebugView.swift in Sources */,
 				AA71978A287A480D00623C15 /* ControlMode.swift in Sources */,
 				AA7197AD287A481500623C15 /* EditorController.swift in Sources */,
 				9562D16B2AB505AD002C329D /* MouseEventAdapter.swift in Sources */,
@@ -722,6 +739,7 @@
 				9562D1772AB52550002C329D /* EditorControllerEventAdapter.swift in Sources */,
 				AA7197A3287A481500623C15 /* CircleMenuButton.swift in Sources */,
 				9562D1582AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift in Sources */,
+				9555ED312C058E28006E469C /* DebugModel.swift in Sources */,
 				AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */,
 				AA71986A287A81A000623C15 /* PTFakeMetaTouch.m in Sources */,
 				9562D15E2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift in Sources */,
