@@ -16,10 +16,12 @@ public class EditorKeyboardEventAdapter: KeyboardEventAdapter {
         .rightGUI,
         .leftAlt,
         .rightAlt,
+        .leftControl,
+        .rightControl,
         .printScreen
     ]
 
-    public func handleKey(keycode: UInt16, pressed: Bool, isRepeat: Bool) -> Bool {
+    public func handleKey(keycode: UInt16, pressed: Bool, isRepeat: Bool, ctrlModified: Bool) -> Bool {
         if AKInterface.shared!.cmdPressed || !pressed || isRepeat {
             return false
         }
@@ -31,7 +33,16 @@ public class EditorKeyboardEventAdapter: KeyboardEventAdapter {
 //                Toast.showHint(title: "Invalid Key", text: ["This key is intentionally forbidden. Keyname: \(name)"])
             return false
         }
-        EditorController.shared.setKey(rawValue)
+
+        if ctrlModified {
+            if let name = KeyCodeNames.virtualCodes[keycode] {
+                // Setkey by name does not work with all kinds of mapping
+                EditorController.shared.setKey("⌃" + name)
+            }
+        } else {
+            EditorController.shared.setKey(rawValue)
+        }
+
         return true
     }
 
