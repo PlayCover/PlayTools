@@ -61,8 +61,9 @@ public class ControlMode: Equatable {
             }
         }
 
-        AKInterface.shared!.setupKeyboard(keyboard: { keycode, pressed, isRepeat in
-            self.keyboardAdapter.handleKey(keycode: keycode, pressed: pressed, isRepeat: isRepeat)},
+        AKInterface.shared!.setupKeyboard(keyboard: { keycode, pressed, isRepeat, ctrlModified in
+            self.keyboardAdapter.handleKey(keycode: keycode, pressed: pressed,
+                                           isRepeat: isRepeat, ctrlModified: ctrlModified)},
           swapMode: ModeAutomaton.onOption)
 
         if PlaySettings.shared.enableScrollWheel {

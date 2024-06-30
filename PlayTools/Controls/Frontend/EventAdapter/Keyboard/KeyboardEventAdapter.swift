@@ -10,5 +10,5 @@ import Foundation
 // All keyboard events under any mode
 
 public protocol KeyboardEventAdapter: EventAdapter {
-    func handleKey(keycode: UInt16, pressed: Bool, isRepeat: Bool) -> Bool
+    func handleKey(keycode: UInt16, pressed: Bool, isRepeat: Bool, ctrlModified: Bool) -> Bool
 }

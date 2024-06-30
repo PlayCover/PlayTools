@@ -10,7 +10,7 @@ import Foundation
 // Keyboard events handler when keyboard mapping is off
 
 public class TransparentKeyboardEventAdapter: KeyboardEventAdapter {
-    public func handleKey(keycode: UInt16, pressed: Bool, isRepeat: Bool) -> Bool {
+    public func handleKey(keycode: UInt16, pressed: Bool, isRepeat: Bool, ctrlModified: Bool) -> Bool {
         // explicitly eat repeated Enter key
         isRepeat && keycode == 36
     }
