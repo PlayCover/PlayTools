@@ -49,14 +49,19 @@ public class TouchscreenMouseEventAdapter: MouseEventAdapter {
     }
 
     public func handleMove(deltaX: CGFloat, deltaY: CGFloat) -> Bool {
-        // fake mouse handler:
-        // default direction pad: press handler
-        // draggable direction pad: move handler
-        // default button: lift handler
-        // kinda hacky but.. IT WORKS!
-        if ActionDispatcher.getDispatchPriority(key: KeyCodeNames.fakeMouse) == .DRAGGABLE {
+        if ActionDispatcher.getDispatchPriority(key: KeyCodeNames.mouseMove) == .DRAGGABLE {
+            // condition meets when draggable button pressed
+            return ActionDispatcher.dispatch(key: KeyCodeNames.mouseMove, valueX: deltaX, valueY: -deltaY)
+        } else if ActionDispatcher.getDispatchPriority(key: KeyCodeNames.fakeMouse) == .DRAGGABLE {
+            // condition meets when mouse pressed and draggable button not pressed
+            // fake mouse handler priority:
+            // default direction pad: press handler
+            // draggable direction pad: move handler
+            // default button: lift handler
+            // kinda hacky but.. IT WORKS!
             guard let pos = TouchscreenMouseEventAdapter.cursorPos() else { return false }
             return ActionDispatcher.dispatch(key: KeyCodeNames.fakeMouse, valueX: pos.x, valueY: pos.y)
+
         }
         return false
     }

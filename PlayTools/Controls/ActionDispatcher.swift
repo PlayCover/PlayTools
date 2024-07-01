@@ -81,7 +81,7 @@ public class ActionDispatcher {
 
         for joystick in keymap.keymapData.joystickModel {
             // Left Thumbstick, Right Thumbstick, Mouse
-            if joystick.keyName.contains(Character("u")) {
+            if JoystickModel.isAnalog(joystick) {
                 actions.append(ContinuousJoystickAction(data: joystick))
             } else { // Keyboard
                 actions.append(JoystickAction(data: joystick))
@@ -141,10 +141,30 @@ public class ActionDispatcher {
 
     static public var cursorHideNecessary = true
 
+    /**
+        Lift off (release) all actions' touch points.
+        Would be called during mode switching where target mode shouldn't have any touch remain.
+    */
     static public func invalidateActions() {
         for action in actions {
             // This is just a rescue feature, in case any key stuck pressed for any reason
             // Might be called on control mode state transition
+            action.invalidate()
+        }
+    }
+
+    /**
+        Lift off (release) touch points of actions that moves freely under control of the user. (e.g. camera control action)
+        Would be called during every mode switching where `invalidateActions` is not called.
+        In such scenario button-type actions are not released, because users may continue using them across different modes.
+        (e.g. holding W while unhiding cursor to click something)
+
+        But non-button-type actions (e.g. camera control action, fake mouse action) are unlikely used across modes.
+        If they're not released, they would interfere with and ruin the game's camera control (becomes random zoom in zoom out)
+    */
+    static public func invalidateNonButtonActions() {
+        for action in actions 
+        where !(action as? ButtonAction != nil || action is JoystickAction){
             action.invalidate()
         }
     }
