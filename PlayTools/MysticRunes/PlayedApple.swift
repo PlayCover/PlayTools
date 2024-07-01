@@ -14,70 +14,7 @@ import Security
 
 public class PlayKeychain: NSObject {
     static let shared = PlayKeychain()
-
-    private static func getKeychainDirectory() -> URL? {
-        let bundleID = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
-        let keychainFolder = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
-            .appendingPathComponent("PlayChain")
-            .appendingPathComponent(bundleID)
-
-        // Create the keychain folder if it doesn't exist
-        if !FileManager.default.fileExists(atPath: keychainFolder.path) {
-            do {
-                try FileManager.default.createDirectory(at: keychainFolder,
-                                                        withIntermediateDirectories: true,
-                                                        attributes: nil)
-            } catch {
-                debugLogger("Failed to create keychain folder")
-            }
-        }
-
-        return keychainFolder
-    }
-
-    private static func getKeychainPath(_ attributes: NSDictionary) -> URL {
-        let keychainFolder = getKeychainDirectory()
-        // if attributes["r_Ref"] as? Int == 1 {
-            // attributes.setValue("keys", forKey: "class")
-            // What the hell Apple
-        // }
-        // Generate a key path based on the key attributes
-        let tagName = (attributes[kSecAttrApplicationTag as String] as? Data)
-            .map({return String(data: $0, encoding: .utf8)!})
-        let accountName = attributes[kSecAttrAccount as String] as? String
-        let serviceName = attributes[kSecAttrService as String] as? String
-        let classType = attributes[kSecClass as String] as? String
-        let keychainName = [
-            tagName,
-            accountName,
-            serviceName,
-            classType]
-            .compactMap({ return $0 })
-            .joined(separator: "-")
-        return keychainFolder!
-            .appendingPathComponent("\(keychainName).plist")
-    }
-
-    private static func findSimilarKeys(_ attributes: NSDictionary) -> URL? {
-        // Things we can fuzz: accountName
-
-        let keychainFolder = getKeychainDirectory()
-        let serviceName = attributes[kSecAttrService as String] as? String ?? ""
-        let classType = attributes[kSecClass as String] as? String ?? ""
-
-        let everyKeys = try? FileManager.default.contentsOfDirectory(at: keychainFolder!,
-                                                                     includingPropertiesForKeys: nil,
-                                                                     options: .skipsHiddenFiles)
-        let searchRegex = try? NSRegularExpression(pattern: "\(serviceName)-.*-\(classType).plist",
-                                                   options: .caseInsensitive)
-
-        for key in everyKeys! where searchRegex!.matches(in: key.path,
-                                                         options: [],
-                                                         range: NSRange(location: 0, length: key.path.count)).count > 0 {
-            return keychainFolder!.appendingPathComponent(key.lastPathComponent)
-        }
-        return nil
-    }
+    private static let db = PlayKeychainDB.shared
 
     @objc public static func debugLogger(_ logContent: String) {
         if PlaySettings.shared.settingsData.playChainDebugging {
@@ -88,24 +25,28 @@ public class PlayKeychain: NSObject {
     // Store the entire dictionary as a plist
     // SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
     @objc static public func add(_ attributes: NSDictionary, result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
-        let keychainPath = getKeychainPath(attributes)
-        // Check if the keychain file already exists
-        // if FileManager.default.fileExists(atPath: keychainPath.path) {
-        //     debugLogger("Keychain file already exists")
-        //     return errSecDuplicateItem
-        // }
-        // Write the dictionary to the keychain file
-        do {
-            try attributes.write(to: keychainPath)
-            debugLogger("Wrote keychain file to \(keychainPath)")
-        } catch {
+        guard let keychainDict = db.insert(attributes) else {
             debugLogger("Failed to write keychain file")
             return errSecIO
         }
+        debugLogger("Wrote keychain item to db")
         // Place v_Data in the result
         guard let vData = attributes["v_Data"] as? CFTypeRef else {
             return errSecSuccess
         }
+
+        if attributes["r_Attributes"] as? Int == 1 {
+            // Create a dummy dictionary and return it
+            let dummyDict = keychainDict
+            if attributes["r_Data"] as? Int != 1 {
+                dummyDict.removeObject(forKey: kSecValueData)
+                dummyDict.removeObject(forKey: kSecValueRef)
+                dummyDict.removeObject(forKey: kSecValuePersistentRef)
+            }
+            result?.pointee = Unmanaged.passRetained(dummyDict)
+            return errSecSuccess
+        }
+
         if attributes["class"] as? String == "keys" {
             // kSecAttrKeyType is stored as `type` in the dictionary
             // kSecAttrKeyClass is stored as `kcls` in the dictionary
@@ -124,31 +65,22 @@ public class PlayKeychain: NSObject {
 
     // SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate)
     @objc static public func update(_ query: NSDictionary, attributesToUpdate: NSDictionary) -> OSStatus {
-        // Get the path to the keychain file
-        let keychainPath = getKeychainPath(query)
-        // Read the dictionary from the keychain file
-        let keychainDict = NSDictionary(contentsOf: keychainPath)
-        debugLogger("Read keychain file from \(keychainPath)")
-        // Check if the file exist
-        if keychainDict == nil {
-            debugLogger("Keychain file not found at \(keychainPath)")
+        guard let keychainDict = db.query(query)?.first else {
+            debugLogger("Keychain item not found in db")
             return errSecItemNotFound
         }
+        debugLogger("Select keychain item from db")
         // Reconstruct the dictionary (subscripting won't work as assignment is not allowed)
         let newKeychainDict = NSMutableDictionary()
-        for (key, value) in keychainDict! {
+        for (key, value) in keychainDict {
             newKeychainDict.setValue(value, forKey: key as! String) // swiftlint:disable:this force_cast
         }
         // Update the dictionary
         for (key, value) in attributesToUpdate {
             newKeychainDict.setValue(value, forKey: key as! String) // swiftlint:disable:this force_cast
         }
-        // Write the dictionary to the keychain file
-        do {
-            try newKeychainDict.write(to: keychainPath)
-            debugLogger("Wrote keychain file to \(keychainPath)")
-        } catch {
-            debugLogger("Failed to write keychain file")
+        guard db.update(newKeychainDict) else {
+            debugLogger("Failed to update keychain item to db")
             return errSecIO
         }
 
@@ -157,91 +89,74 @@ public class PlayKeychain: NSObject {
 
     // SecItemDelete(CFDictionaryRef query)
     @objc static public func delete(_ query: NSDictionary) -> OSStatus {
-        // Get the path to the keychain file
-        let keychainPath = getKeychainPath(query)
-        // Check if the keychain file doesn't exist
-        if !FileManager.default.fileExists(atPath: keychainPath.path) {
+        guard db.query(query)?.first != nil else {
+            debugLogger("Failed to find keychain item")
             return errSecItemNotFound
         }
-        // Delete the keychain file
-        do {
-            try FileManager.default.removeItem(at: keychainPath)
-            debugLogger("Deleted keychain file at \(keychainPath)")
-        } catch {
-            debugLogger("Failed to delete keychain file")
+        guard db.delete(query) else {
+            debugLogger("Failed to delete keychain item")
             return errSecIO
         }
+        debugLogger("Deleted keychain item in db")
         return errSecSuccess
     }
 
     // SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
     @objc static public func copyMatching(_ query: NSDictionary, result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?)
     -> OSStatus {
-        // Get the path to the keychain file
-        var keychainPath = getKeychainPath(query)
-        // If the keychain file doesn't exist, attempt to find a similar key
-        if !FileManager.default.fileExists(atPath: keychainPath.path) {
+        guard let keychainDicts = db.query(query),
+              let keychainDict = keychainDicts.first else {
+            debugLogger("Keychain item not found in db")
             return errSecItemNotFound
-            // if let similarKey = findSimilarKeys(query) {
-            //     NSLog("Found similar key at \(similarKey)")
-            //     keychainPath = similarKey
-            // } else {
-            //     debugLogger("Keychain file not found at \(keychainPath)")
-            //     return errSecItemNotFound
-            // }
         }
 
-        // Read the dictionary from the keychain file
-        let keychainDict = NSDictionary(contentsOf: keychainPath)
+        if query[kSecMatchLimit as String] as? String ==  kSecMatchLimitAll as String {
+            result?.pointee = Unmanaged.passRetained(keychainDicts.map({
+                $0.removeObject(forKey: kSecValueData)
+                $0.removeObject(forKey: kSecValueRef)
+                $0.removeObject(forKey: kSecValuePersistentRef)
+                return $0
+            }) as CFTypeRef)
+            return errSecSuccess
+        }
         // Check the `r_Attributes` key. If it is set to 1 in the query
         let classType = query[kSecClass as String] as? String ?? ""
 
-        // If the keychain file doesn't exist, return errSecItemNotFound
-        if keychainDict == nil {
-            debugLogger("Keychain file not found at \(keychainPath)")
-            return errSecItemNotFound
-        }
-
         if query["r_Attributes"] as? Int == 1 {
-            // if the keychainDict is nil, we need to return errSecItemNotFound
-            if keychainDict == nil {
-                debugLogger("Keychain file not found at \(keychainPath)")
-                return errSecItemNotFound
-            }
-
             // Create a dummy dictionary and return it
-            let dummyDict = NSMutableDictionary()
-            dummyDict.setValue(classType, forKey: "class")
-            dummyDict.setValue(keychainDict![kSecAttrAccount as String], forKey: "acct")
-            dummyDict.setValue(keychainDict![kSecAttrService as String], forKey: "svce")
-            dummyDict.setValue(keychainDict![kSecAttrGeneric as String], forKey: "gena")
+            let dummyDict = keychainDict
+            if query["r_Data"] as? Int != 1 {
+                dummyDict.removeObject(forKey: kSecValueData)
+                dummyDict.removeObject(forKey: kSecValueRef)
+                dummyDict.removeObject(forKey: kSecValuePersistentRef)
+            }
             result?.pointee = Unmanaged.passRetained(dummyDict)
             return errSecSuccess
         }
 
-        // Check for r_Ref 
+        // Check for r_Ref
         if query["r_Ref"] as? Int == 1 {
             // Return the data on v_PersistentRef or v_Data if they exist
             var key: CFTypeRef?
-            if let vData = keychainDict!["v_Data"] {
+            if let vData = keychainDict[kSecValueData] {
                 NSLog("found v_Data")
-                debugLogger("Read keychain file from \(keychainPath)")
+                debugLogger("Read keychain item from db")
                 key = vData as CFTypeRef
             }
-            if let vPersistentRef = keychainDict!["v_PersistentRef"] {
+            if let vPersistentRef = keychainDict[kSecValuePersistentRef] {
                 NSLog("found persistent ref")
-                debugLogger("Read keychain file from \(keychainPath)")
+                debugLogger("Read keychain item from db")
                 key = vPersistentRef as CFTypeRef
             }
 
             if key == nil {
-                debugLogger("Keychain file not found at \(keychainPath)")
+                debugLogger("Keychain item not found in db")
                 return errSecItemNotFound
             }
-            
+
             let dummyKeyAttrs = [
-                kSecAttrKeyType: keychainDict?["type"] ?? kSecAttrKeyTypeRSA,
-                kSecAttrKeyClass: keychainDict!["kcls"] ?? kSecAttrKeyClassPublic
+                kSecAttrKeyType: keychainDict[kSecAttrKeyType] ?? kSecAttrKeyTypeRSA,
+                kSecAttrKeyClass: keychainDict[kSecAttrKeyClass] ?? kSecAttrKeyClassPublic
             ] as CFDictionary
 
             let secKey = SecKeyCreateWithData(key as! CFData, dummyKeyAttrs, nil) // swiftlint:disable:this force_cast
@@ -250,16 +165,16 @@ public class PlayKeychain: NSObject {
         }
 
         // Return v_Data if it exists
-        if let vData = keychainDict!["v_Data"] {
-            debugLogger("Read keychain file from \(keychainPath)")
+        if let vData = keychainDict[kSecValueData] {
+            debugLogger("Read keychain file from db")
             // Check the class type, if it is a key we need to return the data
             // as SecKeyRef, otherwise we can return it as a CFTypeRef
             if classType == "keys" {
                 // kSecAttrKeyType is stored as `type` in the dictionary
                 // kSecAttrKeyClass is stored as `kcls` in the dictionary
                 let keyAttributes = [
-                    kSecAttrKeyType: keychainDict!["type"] as! CFString, // swiftlint:disable:this force_cast
-                    kSecAttrKeyClass: keychainDict!["kcls"] as! CFString // swiftlint:disable:this force_cast
+                    kSecAttrKeyType: keychainDict[kSecAttrKeyType] as! CFString, // swiftlint:disable:this force_cast
+                    kSecAttrKeyClass: keychainDict[kSecAttrKeyClass] as! CFString // swiftlint:disable:this force_cast
                 ]
                 let keyData = vData as! Data // swiftlint:disable:this force_cast
                 let key = SecKeyCreateWithData(keyData as CFData, keyAttributes as CFDictionary, nil)
