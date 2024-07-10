@@ -10,7 +10,15 @@ class PlayInput {
                                                qos: .userInteractive,
                                                autoreleaseFrequency: .workItem)
 
+    @objc func drainMainDispatchQueue() {
+        _dispatch_main_queue_callback_4CF(nil)
+    }
+
     func initialize() {
+        // drain the dispatch queue every frame for responding to GCController events
+        let displaylink = CADisplayLink(target: self, selector: #selector(drainMainDispatchQueue))
+        displaylink.add(to: .main, forMode: .common)
+
         if !PlaySettings.shared.keymapping {
             return
         }
