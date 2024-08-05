@@ -170,10 +170,26 @@ bool menuWasCreated = false;
  */
 
 @implementation PTSwizzleLoader
+- (bool) pm_return_true {
+    return true;
+}
+
+- (float) pm_return_battery_full {
+    return 1.0;
+}
+
+- (UIDeviceBatteryState) pm_return_charging {
+    return UIDeviceBatteryStateFull;
+}
 + (void)load {
     // This might need refactor soon
     if(@available(iOS 16.3, *)) {
         if ([[PlaySettings shared] adaptiveDisplay]) {
+            // battery level
+            [[UIDevice currentDevice] setBatteryMonitoringEnabled:YES];
+            [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(isBatteryMonitoringEnabled) withMethod:@selector(pm_return_true)];
+            [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(batteryState) withMethod:@selector(pm_return_charging)];
+            [objc_getClass("UIDevice") swizzleInstanceMethod:@selector(batteryLevel) withMethod:@selector(pm_return_battery_full)];
             // This is an experimental fix
             if ([[PlaySettings shared] inverseScreenValues]) {
                 // This lines set External Scene settings and other IOS10 Runtime services by swizzling
