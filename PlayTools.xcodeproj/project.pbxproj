@@ -15,9 +15,6 @@
 		6E84A14528D0F94E00BF7495 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
 		6E84A15028D0F97500BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		951D8275299D097C00D35B20 /* Playtools.strings in Resources */ = {isa = PBXBuildFile; fileRef = 951D8277299D097C00D35B20 /* Playtools.strings */; };
-		9555ED2F2C058E08006E469C /* DebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED2E2C058E08006E469C /* DebugView.swift */; };
-		9555ED312C058E28006E469C /* DebugModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED302C058E28006E469C /* DebugModel.swift */; };
-		9555ED332C058E36006E469C /* DebugController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED322C058E36006E469C /* DebugController.swift */; };
 		954389C22B38922400B063BB /* MouseArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C12B38922400B063BB /* MouseArea.swift */; };
 		954389C42B38968C00B063BB /* Joystick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C32B38968C00B063BB /* Joystick.swift */; };
 		954389C62B3896E600B063BB /* ChildButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C52B3896E600B063BB /* ChildButton.swift */; };
@@ -26,6 +23,9 @@
 		954389CC2B39F03D00B063BB /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389CB2B39F03D00B063BB /* EditorView.swift */; };
 		954389CE2B39F26600B063BB /* ElementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389CD2B39F26600B063BB /* ElementView.swift */; };
 		954389D22B3A5AE100B063BB /* ElementController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389D12B3A5AE100B063BB /* ElementController.swift */; };
+		9555ED2F2C058E08006E469C /* DebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED2E2C058E08006E469C /* DebugView.swift */; };
+		9555ED312C058E28006E469C /* DebugModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED302C058E28006E469C /* DebugModel.swift */; };
+		9555ED332C058E36006E469C /* DebugController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED322C058E36006E469C /* DebugController.swift */; };
 		9562D1512AB484C7002C329D /* EventAdapters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1502AB484C7002C329D /* EventAdapters.swift */; };
 		9562D1532AB484FD002C329D /* EventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1522AB484FD002C329D /* EventAdapter.swift */; };
 		9562D1582AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1572AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift */; };
@@ -81,6 +81,7 @@
 		B127172528817C040025112B /* DiscordIPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B127172428817C040025112B /* DiscordIPC.swift */; };
 		B1271729288284BE0025112B /* DiscordActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1271728288284BE0025112B /* DiscordActivity.swift */; };
 		B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */; };
+		B46C02C72C634AB5007637AB /* BatteryLevel.m in Sources */ = {isa = PBXBuildFile; fileRef = B46C02C62C634AB5007637AB /* BatteryLevel.m */; };
 		B6D774FF2ACFC3D900C0D9D8 /* SwordRPC in Frameworks */ = {isa = PBXBuildFile; productRef = B6D774FE2ACFC3D900C0D9D8 /* SwordRPC */; };
 		EEB248592B81D074000C230A /* PlayedAppleDB.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB248582B81D074000C230A /* PlayedAppleDB.swift */; };
 /* End PBXBuildFile section */
@@ -108,9 +109,6 @@
 		6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AKInterface.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		951D8276299D097C00D35B20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Playtools.strings; sourceTree = "<group>"; };
 		951D8278299D098000D35B20 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Playtools.strings"; sourceTree = "<group>"; };
-		9555ED2E2C058E08006E469C /* DebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugView.swift; sourceTree = "<group>"; };
-		9555ED302C058E28006E469C /* DebugModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugModel.swift; sourceTree = "<group>"; };
-		9555ED322C058E36006E469C /* DebugController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugController.swift; sourceTree = "<group>"; };
 		954389C12B38922400B063BB /* MouseArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MouseArea.swift; sourceTree = "<group>"; };
 		954389C32B38968C00B063BB /* Joystick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joystick.swift; sourceTree = "<group>"; };
 		954389C52B3896E600B063BB /* ChildButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildButton.swift; sourceTree = "<group>"; };
@@ -119,6 +117,9 @@
 		954389CB2B39F03D00B063BB /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
 		954389CD2B39F26600B063BB /* ElementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElementView.swift; sourceTree = "<group>"; };
 		954389D12B3A5AE100B063BB /* ElementController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElementController.swift; sourceTree = "<group>"; };
+		9555ED2E2C058E08006E469C /* DebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugView.swift; sourceTree = "<group>"; };
+		9555ED302C058E28006E469C /* DebugModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugModel.swift; sourceTree = "<group>"; };
+		9555ED322C058E36006E469C /* DebugController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugController.swift; sourceTree = "<group>"; };
 		9562D1502AB484C7002C329D /* EventAdapters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventAdapters.swift; sourceTree = "<group>"; };
 		9562D1522AB484FD002C329D /* EventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventAdapter.swift; sourceTree = "<group>"; };
 		9562D1572AB4FB9B002C329D /* TouchscreenKeyboardEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchscreenKeyboardEventAdapter.swift; sourceTree = "<group>"; };
@@ -178,6 +179,8 @@
 		B127172428817C040025112B /* DiscordIPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordIPC.swift; sourceTree = "<group>"; };
 		B1271728288284BE0025112B /* DiscordActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordActivity.swift; sourceTree = "<group>"; };
 		B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keymapping.swift; sourceTree = "<group>"; };
+		B46C02C62C634AB5007637AB /* BatteryLevel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BatteryLevel.m; sourceTree = "<group>"; };
+		B46C02C82C634C60007637AB /* BatteryLevel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BatteryLevel.h; sourceTree = "<group>"; };
 		EEB248582B81D074000C230A /* PlayedAppleDB.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayedAppleDB.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -210,16 +213,6 @@
 				6E76639628D0FA6200DE4AF9 /* AKInterface-Bridging-Header.h */,
 			);
 			name = AKInterface;
-			sourceTree = "<group>";
-		};
-		9555ED2D2C058DE3006E469C /* DebugOverlay */ = {
-			isa = PBXGroup;
-			children = (
-				9555ED2E2C058E08006E469C /* DebugView.swift */,
-				9555ED302C058E28006E469C /* DebugModel.swift */,
-				9555ED322C058E36006E469C /* DebugController.swift */,
-			);
-			path = DebugOverlay;
 			sourceTree = "<group>";
 		};
 		954389BE2B37C75C00B063BB /* Models */ = {
@@ -295,6 +288,16 @@
 				954389C92B392D7800B063BB /* DraggableButton.swift */,
 			);
 			path = Instances;
+			sourceTree = "<group>";
+		};
+		9555ED2D2C058DE3006E469C /* DebugOverlay */ = {
+			isa = PBXGroup;
+			children = (
+				9555ED2E2C058E08006E469C /* DebugView.swift */,
+				9555ED302C058E28006E469C /* DebugModel.swift */,
+				9555ED322C058E36006E469C /* DebugController.swift */,
+			);
+			path = DebugOverlay;
 			sourceTree = "<group>";
 		};
 		9562D14F2AB4849C002C329D /* EventAdapter */ = {
@@ -473,6 +476,8 @@
 				AA719797287A481500623C15 /* PlayInfo.swift */,
 				AA719798287A481500623C15 /* Toast.swift */,
 				6E7663A428D0FEBE00DE4AF9 /* AKPluginLoader.swift */,
+				B46C02C62C634AB5007637AB /* BatteryLevel.m */,
+				B46C02C82C634C60007637AB /* BatteryLevel.h */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -716,6 +721,7 @@
 				954389C42B38968C00B063BB /* Joystick.swift in Sources */,
 				9562D1642AB4FEB4002C329D /* TouchscreenMouseEventAdapter.swift in Sources */,
 				9562D1602AB4FD46002C329D /* TransparentControllerEventAdapter.swift in Sources */,
+				B46C02C72C634AB5007637AB /* BatteryLevel.m in Sources */,
 				9562D1792AB64458002C329D /* ModeAutomaton.swift in Sources */,
 				AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */,
 				95D474FB2C0BA77B0072797F /* JoystickElement.swift in Sources */,
