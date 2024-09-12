@@ -10,3 +10,6 @@ identifier_name:
 
 type_name:
   allowed_symbols: ['_']
+
+disabled_rules:
+  - todo

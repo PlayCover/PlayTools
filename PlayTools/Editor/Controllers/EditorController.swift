@@ -82,9 +82,9 @@ class EditorController {
 
     public func setKey(_ name: String) {
         if editorMode {
-            if name != "Mouse" || focusedControl as? MouseAreaModel != nil
-                || focusedControl as? JoystickModel != nil
-                || focusedControl as? DraggableButtonModel != nil {
+            if name != "Mouse" || focusedControl is MouseAreaModel
+                || focusedControl is JoystickModel
+                || focusedControl is DraggableButtonModel {
                 focusedControl?.setKey(name: name)
             }
         }

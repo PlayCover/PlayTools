@@ -14,7 +14,7 @@ import Security
 
 public class PlayKeychain: NSObject {
     static let shared = PlayKeychain()
-    private static let db = PlayKeychainDB.shared
+    private static let playChainDB = PlayKeychainDB.shared
 
     @objc public static func debugLogger(_ logContent: String) {
         if PlaySettings.shared.settingsData.playChainDebugging {
@@ -24,8 +24,9 @@ public class PlayKeychain: NSObject {
     // Emulates SecItemAdd, SecItemUpdate, SecItemDelete and SecItemCopyMatching
     // Store the entire dictionary as a plist
     // SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
-    @objc static public func add(_ attributes: NSDictionary, result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
-        guard let keychainDict = db.insert(attributes) else {
+    @objc static public func add(_ attributes: NSDictionary,
+                                 result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
+        guard let keychainDict = playChainDB.insert(attributes) else {
             debugLogger("Failed to write keychain file")
             return errSecIO
         }
@@ -65,7 +66,7 @@ public class PlayKeychain: NSObject {
 
     // SecItemUpdate(CFDictionaryRef query, CFDictionaryRef attributesToUpdate)
     @objc static public func update(_ query: NSDictionary, attributesToUpdate: NSDictionary) -> OSStatus {
-        guard let keychainDict = db.query(query)?.first else {
+        guard let keychainDict = playChainDB.query(query)?.first else {
             debugLogger("Keychain item not found in db")
             return errSecItemNotFound
         }
@@ -79,7 +80,7 @@ public class PlayKeychain: NSObject {
         for (key, value) in attributesToUpdate {
             newKeychainDict.setValue(value, forKey: key as! String) // swiftlint:disable:this force_cast
         }
-        guard db.update(newKeychainDict) else {
+        guard playChainDB.update(newKeychainDict) else {
             debugLogger("Failed to update keychain item to db")
             return errSecIO
         }
@@ -89,11 +90,11 @@ public class PlayKeychain: NSObject {
 
     // SecItemDelete(CFDictionaryRef query)
     @objc static public func delete(_ query: NSDictionary) -> OSStatus {
-        guard db.query(query)?.first != nil else {
+        guard playChainDB.query(query)?.first != nil else {
             debugLogger("Failed to find keychain item")
             return errSecItemNotFound
         }
-        guard db.delete(query) else {
+        guard playChainDB.delete(query) else {
             debugLogger("Failed to delete keychain item")
             return errSecIO
         }
@@ -102,9 +103,10 @@ public class PlayKeychain: NSObject {
     }
 
     // SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
-    @objc static public func copyMatching(_ query: NSDictionary, result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?)
-    -> OSStatus {
-        guard let keychainDicts = db.query(query),
+    // swiftlint:disable:next function_body_length
+    @objc static public func copyMatching(_ query: NSDictionary,
+                                          result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
+        guard let keychainDicts = playChainDB.query(query),
               let keychainDict = keychainDicts.first else {
             debugLogger("Keychain item not found in db")
             return errSecItemNotFound

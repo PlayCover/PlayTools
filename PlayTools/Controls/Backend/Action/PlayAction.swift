@@ -3,6 +3,7 @@
 //  PlayTools
 //
 
+// swiftlint:disable file_length
 import Foundation
 
 protocol Action {
@@ -332,7 +333,7 @@ class SwipeAction: Action {
     var location: CGPoint = CGPoint.zero
     private var id: Int?
     let timer = DispatchSource.makeTimerSource(flags: [], queue: PlayInput.touchQueue)
-    private let actionName: String, keyName: String;
+    private let actionName: String, keyName: String
     init(actionName: String, keyName: String) {
         self.actionName = actionName
         self.keyName = keyName
