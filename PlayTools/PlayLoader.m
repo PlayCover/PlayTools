@@ -179,10 +179,74 @@ DYLD_INTERPOSE(pt_SecItemAdd, SecItemAdd)
 DYLD_INTERPOSE(pt_SecItemUpdate, SecItemUpdate)
 DYLD_INTERPOSE(pt_SecItemDelete, SecItemDelete)
 
+static bool is_ue4 = false;
+
+static char const* ue4_fix_filename(char const* filename) {
+    char const UE4_PATTERN[] =  "Library//Users";
+    char const* p = NULL;
+    if (!is_ue4) {
+        return filename;
+    }
+
+    if ((p = strstr(filename, UE4_PATTERN))) {
+        return p + 8;
+    }
+
+    return filename;
+}
+
+static int pt_open(char const* restrict filename, int oflag, ... ) {
+    filename = ue4_fix_filename(filename);
+
+    if (oflag == O_CREAT) {
+        int mod;
+        va_list ap;
+        va_start(ap, oflag);
+        mod = va_arg(ap, int);
+        va_end(ap);
+
+        return open(filename, O_CREAT, mod);
+    }
+
+    return open(filename, oflag);
+}
+
+static int pt_stat(char const* restrict path, struct stat* restrict buf) {
+    return stat(ue4_fix_filename(path), buf);
+}
+
+static int pt_access(char const* path, int mode) {
+    return access(ue4_fix_filename(path), mode);
+}
+
+static int pt_rename(char const* restrict old_name, char const* restrict new_name) {
+    return rename(ue4_fix_filename(old_name), ue4_fix_filename(new_name));
+}
+
+static int pt_unlink(char const* path) {
+    return unlink(ue4_fix_filename(path));
+}
+
+DYLD_INTERPOSE(pt_open, open)
+DYLD_INTERPOSE(pt_stat, stat)
+DYLD_INTERPOSE(pt_access, access)
+DYLD_INTERPOSE(pt_rename, rename)
+DYLD_INTERPOSE(pt_unlink, unlink)
+
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
     [PlayCover launch];
+
+    NSURL* appFolder = [[NSBundle mainBundle] bundleURL];
+    NSURL* ue4commandlinetxt = [appFolder URLByAppendingPathComponent:@"ue4commandline.txt"];
+
+    is_ue4 |= !access(
+                      [[ue4commandlinetxt path] cStringUsingEncoding:NSUTF8StringEncoding], F_OK
+    );
+    if (is_ue4) {
+        [PlayKeychain debugLogger: [NSString stringWithFormat:@"Is it UE4? : %@", @(is_ue4)]];
+    }
 }
 
 @end
