@@ -118,7 +118,7 @@ internal class CircleMenuButton: UIButton {
                 withDuration: duration,
                 delay: delay,
                 options: UIView.AnimationOptions(),
-                animations: { () -> Void in
+                animations: {
                     container.layer.transform = rotateTransform
                 },
                 completion: nil)
@@ -149,11 +149,11 @@ internal extension CircleMenuButton {
             usingSpringWithDamping: 0.7,
             initialSpringVelocity: 0,
             options: UIView.AnimationOptions.curveLinear,
-            animations: { () -> Void in
+            animations: {
                 self.container?.superview?.layoutIfNeeded()
                 self.transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
                 self.alpha = 1
-            }, completion: { (_) -> Void in
+            }, completion: { _ in
         })
     }
 
@@ -167,10 +167,10 @@ internal extension CircleMenuButton {
             withDuration: duration,
             delay: delay,
             options: UIView.AnimationOptions.curveEaseIn,
-            animations: { () -> Void in
+            animations: {
                 self.container?.superview?.layoutIfNeeded()
                 self.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
-            }, completion: { (_) -> Void in
+            }, completion: { _ in
                 self.alpha = 0
 
                 if self.container != nil {
@@ -191,7 +191,7 @@ internal extension CircleMenuButton {
             withDuration: duration,
             delay: delay,
             options: UIView.AnimationOptions.curveEaseIn,
-            animations: { () -> Void in
+            animations: {
                 self.container?.superview?.layoutIfNeeded()
             },
             completion: nil)

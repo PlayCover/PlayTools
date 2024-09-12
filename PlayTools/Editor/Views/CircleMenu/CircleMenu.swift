@@ -22,9 +22,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// swiftlint:disable type_body_length
 // swiftlint:disable file_length
-// swiftlint:disable line_length
 
 import UIKit
 
@@ -46,7 +44,8 @@ func customize<Type>(_ value: Type, block: (_ object: Type) -> Void) -> Type {
      Tells the delegate the circle menu is about to draw a button for a particular index.
 
      - parameter circleMenu: The circle menu object informing the delegate of this impending event.
-     - parameter button:     A circle menu button object that circle menu is going to use when drawing the row. Don't change button.tag
+     - parameter button:     A circle menu button object that circle menu is going to use
+                                when drawing the row. Don't change button.tag
      - parameter atIndex:    An button index.
      */
     @objc optional func circleMenu(_ circleMenu: CircleMenu, willDisplay button: UIButton, atIndex: Int)
@@ -86,6 +85,7 @@ func customize<Type>(_ value: Type, block: (_ object: Type) -> Void) -> Type {
 
 // MARK: CircleMenu
 
+// swiftlint:disable type_body_length
 /// A Button object with pop ups buttons
 open class CircleMenu: UIButton {
 
@@ -126,7 +126,8 @@ open class CircleMenu: UIButton {
     /**
      Initializes and returns a circle menu object.
 
-     - parameter frame:        A rectangle specifying the initial location and size of the circle menu in its superview’s coordinates.
+     - parameter frame:        A rectangle specifying the initial location and size of the circle menu in
+                                its superview’s coordinates.
      - parameter normalIcon:   The image to use for the specified normal state.
      - parameter selectedIcon: The image to use for the specified selected state.
      - parameter buttonsCount: The number of buttons.
@@ -428,9 +429,9 @@ open class CircleMenu: UIButton {
         transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
         UIView.animate(withDuration: duration, delay: 0, usingSpringWithDamping: 0.3, initialSpringVelocity: 5,
                        options: UIView.AnimationOptions.curveLinear,
-                       animations: { () -> Void in
-                        self.transform = CGAffineTransform(scaleX: 1, y: 1)
-        },
+                       animations: {
+                            self.transform = CGAffineTransform(scaleX: 1, y: 1)
+                       },
                        completion: completion)
     }
 
@@ -492,7 +493,7 @@ open class CircleMenu: UIButton {
     fileprivate func hideCenterButton(duration: Double, delay: Double = 0) {
         UIView.animate(withDuration: TimeInterval(duration), delay: TimeInterval(delay),
                        options: UIView.AnimationOptions.curveEaseOut,
-                       animations: { () -> Void in
+                       animations: {
                         self.transform = CGAffineTransform(scaleX: 0.001, y: 0.001)
         }, completion: nil)
     }
@@ -500,7 +501,7 @@ open class CircleMenu: UIButton {
     fileprivate func showCenterButton(duration: Float, delay: Double) {
         UIView.animate(withDuration: TimeInterval(duration), delay: TimeInterval(delay), usingSpringWithDamping: 0.78,
                        initialSpringVelocity: 0, options: UIView.AnimationOptions.curveLinear,
-                       animations: { () -> Void in
+                       animations: {
                         self.transform = CGAffineTransform(scaleX: 1, y: 1)
                         self.alpha = 1
         },
@@ -538,6 +539,8 @@ open class CircleMenu: UIButton {
         customSelectedIconView?.layer.add(fade, forKey: nil)
     }
 }
+
+// swiftlint:enable type_body_length
 
 // MARK: extension
 

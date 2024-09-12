@@ -171,9 +171,8 @@ class Toast {
                            notification: NSNotification.Name.playtoolsCursorWillShow)
         }
     }
-    
-    // swiftlint:disable function_body_length
 
+    // swiftlint:disable:next function_body_length
     private static func show(message: String, parent: UIView) {
         let toastContainer = UIView(frame: CGRect())
         toastContainer.backgroundColor = UIColor.black.withAlphaComponent(0.6)

@@ -82,6 +82,7 @@
 		B1271729288284BE0025112B /* DiscordActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1271728288284BE0025112B /* DiscordActivity.swift */; };
 		B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */; };
 		B46C02C72C634AB5007637AB /* BatteryLevel.m in Sources */ = {isa = PBXBuildFile; fileRef = B46C02C62C634AB5007637AB /* BatteryLevel.m */; };
+		B66E65002C936EA100E48FD0 /* PlayedAppleDBConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66E64FF2C936E9800E48FD0 /* PlayedAppleDBConstants.swift */; };
 		B6D774FF2ACFC3D900C0D9D8 /* SwordRPC in Frameworks */ = {isa = PBXBuildFile; productRef = B6D774FE2ACFC3D900C0D9D8 /* SwordRPC */; };
 		EEB248592B81D074000C230A /* PlayedAppleDB.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB248582B81D074000C230A /* PlayedAppleDB.swift */; };
 /* End PBXBuildFile section */
@@ -181,6 +182,7 @@
 		B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keymapping.swift; sourceTree = "<group>"; };
 		B46C02C62C634AB5007637AB /* BatteryLevel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BatteryLevel.m; sourceTree = "<group>"; };
 		B46C02C82C634C60007637AB /* BatteryLevel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BatteryLevel.h; sourceTree = "<group>"; };
+		B66E64FF2C936E9800E48FD0 /* PlayedAppleDBConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayedAppleDBConstants.swift; sourceTree = "<group>"; };
 		EEB248582B81D074000C230A /* PlayedAppleDB.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayedAppleDB.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -530,6 +532,7 @@
 		ABCECEE729750BB100746595 /* MysticRunes */ = {
 			isa = PBXGroup;
 			children = (
+				B66E64FF2C936E9800E48FD0 /* PlayedAppleDBConstants.swift */,
 				ABCECEE529750BA600746595 /* PlayedApple.swift */,
 				EEB248582B81D074000C230A /* PlayedAppleDB.swift */,
 				AB7DA47429B85BFB0034ACB2 /* PlayShadow.m */,
@@ -733,6 +736,7 @@
 				9562D1532AB484FD002C329D /* EventAdapter.swift in Sources */,
 				AA7197A2287A481500623C15 /* CircleMenu.swift in Sources */,
 				954389CE2B39F26600B063BB /* ElementView.swift in Sources */,
+				B66E65002C936EA100E48FD0 /* PlayedAppleDBConstants.swift in Sources */,
 				9562D15A2AB4FBBB002C329D /* TransparentKeyboardEventAdapter.swift in Sources */,
 				AA71978B287A480D00623C15 /* MenuController.swift in Sources */,
 				9562D1732AB52416002C329D /* EditorKeyboardEventAdapter.swift in Sources */,

@@ -151,10 +151,10 @@ internal class CircleMenuLoader: UIView {
             withDuration: CFTimeInterval(duration),
             delay: delay,
             options: UIView.AnimationOptions.curveEaseIn,
-            animations: { () -> Void in
+            animations: {
                 self.alpha = 0
             },
-            completion: { (_) -> Void in
+            completion: { _ in
                 self.removeFromSuperview()
                 completion()
         })
