@@ -101,7 +101,7 @@ var keymapping = [
     NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
                       value: "Rotate display area", comment: ""),
     NSLocalizedString("menu.keymapping.toggleDebug", tableName: "Playtools",
-                      value: "Toggle Debug Overlay", comment: ""),
+                      value: "Toggle Debug Overlay", comment: "")
   ]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),

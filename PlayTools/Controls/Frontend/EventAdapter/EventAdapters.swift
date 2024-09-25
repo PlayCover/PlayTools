@@ -13,11 +13,9 @@ public class EventAdapters {
 
     static func keyboard(controlMode: ControlModeLiteral) -> KeyboardEventAdapter {
         switch controlMode {
-        case .OFF: fallthrough
-        case .TEXT_INPUT:
+        case  .OFF, .TEXT_INPUT:
             return TransparentKeyboardEventAdapter()
-        case .CAMERA_ROTATE: fallthrough
-        case .ARBITRARY_CLICK:
+        case .CAMERA_ROTATE, .ARBITRARY_CLICK:
             return TouchscreenKeyboardEventAdapter()
         case .EDITOR:
             return EditorKeyboardEventAdapter()
@@ -26,8 +24,7 @@ public class EventAdapters {
 
     static func mouse(controlMode: ControlModeLiteral) -> MouseEventAdapter {
         switch controlMode {
-        case .OFF: fallthrough
-        case .TEXT_INPUT:
+        case .OFF, .TEXT_INPUT:
             return TransparentMouseEventAdapter()
         case .CAMERA_ROTATE:
             return CameraControlMouseEventAdapter()
@@ -42,9 +39,7 @@ public class EventAdapters {
         switch controlMode {
         case .OFF:
             return TransparentControllerEventAdapter()
-        case .TEXT_INPUT: fallthrough
-        case .CAMERA_ROTATE: fallthrough
-        case .ARBITRARY_CLICK:
+        case .TEXT_INPUT, .CAMERA_ROTATE, .ARBITRARY_CLICK:
             return TouchscreenControllerEventAdapter()
         case .EDITOR:
             return EditorControllerEventAdapter()

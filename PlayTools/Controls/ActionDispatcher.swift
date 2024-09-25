@@ -154,17 +154,19 @@ public class ActionDispatcher {
     }
 
     /**
-        Lift off (release) touch points of actions that moves freely under control of the user. (e.g. camera control action)
-        Would be called during every mode switching where `invalidateActions` is not called.
-        In such scenario button-type actions are not released, because users may continue using them across different modes.
+        Lift off (release) touch points of actions that moves freely under control of the
+        user. (e.g. camera control action) Would be called during every mode switching
+        where `invalidateActions` is not called. In such scenario button-type
+        actions are not released, because users may continue using them across different modes.
         (e.g. holding W while unhiding cursor to click something)
 
-        But non-button-type actions (e.g. camera control action, fake mouse action) are unlikely used across modes.
-        If they're not released, they would interfere with and ruin the game's camera control (becomes random zoom in zoom out)
+        But non-button-type actions (e.g. camera control action, fake mouse action) are unlikely
+        used across modes. If they're not released, they would interfere with and ruin the game's
+        camera control (becomes random zoom in zoom out)
     */
     static public func invalidateNonButtonActions() {
-        for action in actions 
-        where !(action as? ButtonAction != nil || action is JoystickAction){
+        for action in actions
+        where !(action is ButtonAction || action is JoystickAction) {
             action.invalidate()
         }
     }
