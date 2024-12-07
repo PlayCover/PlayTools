@@ -179,24 +179,27 @@ DYLD_INTERPOSE(pt_SecItemAdd, SecItemAdd)
 DYLD_INTERPOSE(pt_SecItemUpdate, SecItemUpdate)
 DYLD_INTERPOSE(pt_SecItemDelete, SecItemDelete)
 
-static bool is_ue4 = false;
+static uint8_t ue_status = 0;
 
-static char const* ue4_fix_filename(char const* filename) {
-    char const UE4_PATTERN[] =  "Library//Users";
-    char const* p = NULL;
-    if (!is_ue4) {
-        return filename;
+static char const* ue_fix_filename(char const* filename) {
+    static char UE_PATTERN[1024] = "//Users/";
+    getlogin_r(UE_PATTERN + 8, sizeof(UE_PATTERN) - 8);
+    
+    char const* p = filename;
+    if (ue_status == 2) {
+        char const* last_p = p;
+        while ((p = strstr(p, UE_PATTERN))) {
+            last_p = ++p;
+        }
+        
+        return last_p;
     }
 
-    if ((p = strstr(filename, UE4_PATTERN))) {
-        return p + 8;
-    }
-
-    return filename;
+    return p;
 }
 
 static int pt_open(char const* restrict filename, int oflag, ... ) {
-    filename = ue4_fix_filename(filename);
+    filename = ue_fix_filename(filename);
 
     if (oflag == O_CREAT) {
         int mod;
@@ -212,19 +215,19 @@ static int pt_open(char const* restrict filename, int oflag, ... ) {
 }
 
 static int pt_stat(char const* restrict path, struct stat* restrict buf) {
-    return stat(ue4_fix_filename(path), buf);
+    return stat(ue_fix_filename(path), buf);
 }
 
 static int pt_access(char const* path, int mode) {
-    return access(ue4_fix_filename(path), mode);
+    return access(ue_fix_filename(path), mode);
 }
 
 static int pt_rename(char const* restrict old_name, char const* restrict new_name) {
-    return rename(ue4_fix_filename(old_name), ue4_fix_filename(new_name));
+    return rename(ue_fix_filename(old_name), ue_fix_filename(new_name));
 }
 
 static int pt_unlink(char const* path) {
-    return unlink(ue4_fix_filename(path));
+    return unlink(ue_fix_filename(path));
 }
 
 DYLD_INTERPOSE(pt_open, open)
@@ -237,15 +240,23 @@ DYLD_INTERPOSE(pt_unlink, unlink)
 
 static void __attribute__((constructor)) initialize(void) {
     [PlayCover launch];
+    
+    if (ue_status == 0) {
+        NSURL* appFolder = [[NSBundle mainBundle] bundleURL];
+        NSArray* ueFiles = @[
+            [appFolder URLByAppendingPathComponent:@"ue4commandline.txt"],
+            [appFolder URLByAppendingPathComponent:@"uecommandline.txt"],
+        ];
 
-    NSURL* appFolder = [[NSBundle mainBundle] bundleURL];
-    NSURL* ue4commandlinetxt = [appFolder URLByAppendingPathComponent:@"ue4commandline.txt"];
-
-    is_ue4 |= !access(
-                      [[ue4commandlinetxt path] cStringUsingEncoding:NSUTF8StringEncoding], F_OK
-    );
-    if (is_ue4) {
-        [PlayKeychain debugLogger: [NSString stringWithFormat:@"Is it UE4? : %@", @(is_ue4)]];
+        for (NSURL* ueFile in ueFiles) {
+            if (!access([[ueFile path] cStringUsingEncoding:NSUTF8StringEncoding], F_OK)) {
+                ue_status = 2;
+            }
+        }
+    }
+    
+    if (ue_status == 2) {
+        [PlayKeychain debugLogger: [NSString stringWithFormat:@"UnrealEngine Hooked"]];
     }
 }
 
