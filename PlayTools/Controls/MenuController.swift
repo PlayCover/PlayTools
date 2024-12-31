@@ -71,7 +71,7 @@ extension UIApplication {
     func toggleDebugOverlay(_ sender: AnyObject) {
         DebugController.instance.toggleDebugOverlay()
     }
-    
+
     @objc func hideCursor(_ sender: AnyObject) {
         AKInterface.shared!.hideCursorMove()
     }
@@ -157,7 +157,7 @@ class MenuController {
 
     class func keymappingMenu() -> UIMenu {
         let keyCommands = [ "K", UIKeyCommand.inputDelete,
-                            UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "D","."]
+                            UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "D", "."]
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
                          image: nil,
