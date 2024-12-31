@@ -73,9 +73,7 @@ extension UIApplication {
     }
     
     @objc func hideCursor(_ sender: AnyObject) {
-        if(AKInterface.shared!.isFullscreen) {
-            AKInterface.shared!.hideCursorMove()
-        }
+        AKInterface.shared!.hideCursorMove()
     }
 }
 
@@ -109,7 +107,7 @@ var keymapping = [
     NSLocalizedString("menu.keymapping.toggleDebug", tableName: "Playtools",
                       value: "Toggle Debug Overlay", comment: ""),
     NSLocalizedString("menu.keymapping.hide.pointer", tableName: "Playtools",
-                      value: "Hide pointer on fullscreen", comment: "")
+                      value: "Hide Mouse Pointer", comment: "")
   ]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
@@ -190,5 +188,4 @@ extension UIMenu.Identifier {
     static var keymappingOptionsMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.keymapping") }
     static var debuggingMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.debug") }
     static var debuggingOptionsMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.debugging") }
-    static var hidePointer: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.hide.pointer") }
 }
