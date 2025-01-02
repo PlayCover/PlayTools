@@ -61,6 +61,8 @@ let settings = PlaySettings.shared
             return "A2896"
         case "iPhone16,2":
             return "A2849"
+        case "iPhone17,2":
+            return "A3084"
         default:
             return "J320xAP"
         }
