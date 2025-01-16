@@ -54,6 +54,7 @@ class JoystickModel: ControlModel<Joystick>, ParentElement {
             parent: self
         ))
         self.setKey(name: data.keyName)
+        self.setJoystickMode(mode: data.mode ?? Joystick.defaultMode)
         button.update()
     }
 
@@ -95,27 +96,19 @@ class JoystickModel: ControlModel<Joystick>, ParentElement {
         }
     }
 
-    // This is currently not used
-    // Prepare to add joystick mode switch
-    // So that people don't need to upsize it to half a screen
-    // Should be called from a menu
-    func setJoystickMode(dynamic: Bool) {
-        if dynamic {
-            // If "Dynamic" is read and saved by old editor, it becomes "Mouse",
-            // due to old implementation of "SetKey"
-            // But this case should be rare 
-            // and user should update if they want new feature so nevermind
-            self.data.keyName = "Dynamic"
-        } else {
-            // For backwards compatibility, "Keyboard" represents static
-            self.data.keyName = "Keyboard"
-        }
+    func setJoystickMode(mode: JoystickMode) {
         guard let btn = button as? JoystickElement else {
             Toast.showHint(title: "setJoystickMode error", text: ["View is not JoystickView"])
             return
         }
-        // will show the mode along with the child buttons
-        btn.setKey(showChild: true, name: dynamic ? "Dynamic" : "Static")
+        data.mode = mode
+        btn.setJoystickMode(mode: mode)
+    }
+
+    func switchToNextJoystickMode() {
+        let oldMode = data.mode ?? Joystick.defaultMode
+        let newMode = (oldMode == .FIXED) ? JoystickMode.FLOATING : JoystickMode.FIXED
+        self.setJoystickMode(mode: newMode)
     }
 
     static public func isAnalog(_ data: Joystick) -> Bool {
