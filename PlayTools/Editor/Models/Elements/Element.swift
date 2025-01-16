@@ -20,13 +20,20 @@ struct Button: BaseElement {
     var transform: KeyModelTransform
 }
 
+enum JoystickMode: Int, Codable {
+    case FIXED
+    case FLOATING
+}
+
 struct Joystick: BaseElement {
+    static let defaultMode = JoystickMode.FIXED
     var upKeyCode: Int
     var rightKeyCode: Int
     var downKeyCode: Int
     var leftKeyCode: Int
     var keyName: String = "Keyboard"
     var transform: KeyModelTransform
+    var mode: JoystickMode?
 }
 
 struct MouseArea: BaseElement {
