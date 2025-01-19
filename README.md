@@ -117,7 +117,9 @@ echo "Codesigning PlayTools"
 codesign -fs- "$BUILD_PATH/PlayTools.framework/PlayTools"
 
 echo "Copying to PlayCover"
-cp "$BUILD_PATH/PlayTools.framework" "/Applications/PlayCover.app/Contents/Frameworks/"
+rm -r "/Applications/PlayCover.app/Contents/Frameworks/PlayTools.framework"
+cp -r "$BUILD_PATH/PlayTools.framework" "/Applications/PlayCover.app/Contents/Frameworks/"
+
 ```
 This script transforms the target platform to Mac Catalyst, codesigns PlayTools and copies the binaries into the PlayCover App.
 
