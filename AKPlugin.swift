@@ -46,6 +46,10 @@ class AKPlugin: NSObject, Plugin {
         warpCursor()
     }
 
+    func hideCursorMove() {
+        NSCursor.setHiddenUntilMouseMoves(true)
+    }
+
     func warpCursor() {
         guard let firstScreen = NSScreen.screens.first else {return}
         let frame = windowFrame
