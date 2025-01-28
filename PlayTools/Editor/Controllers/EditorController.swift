@@ -147,7 +147,8 @@ class EditorController {
                 keyName: "Keyboard",
                 transform: KeyModelTransform(
                     size: 20, xCoord: center.x.relativeX, yCoord: center.y.relativeY
-                )
+                ),
+                mode: .FIXED
             )))
         }
     }
@@ -184,7 +185,8 @@ class EditorController {
                         keyName: "Mouse",
                         transform: KeyModelTransform(
                             size: 20, xCoord: center.x.relativeX, yCoord: center.y.relativeY
-                        )
+                        ),
+                        mode: .FIXED
                     )
                 )
             )

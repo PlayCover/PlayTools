@@ -103,6 +103,7 @@ class ContinuousJoystickAction: Action {
     var position: CGPoint!
     private var id: Int?
     var sensitivity: CGFloat
+    var mode: JoystickMode
     var begun = false
 
     init(data: Joystick) {
@@ -112,6 +113,7 @@ class ContinuousJoystickAction: Action {
         self.key = data.keyName
         position = center
         self.sensitivity = data.transform.size.absoluteSize / 4
+        self.mode = data.mode ?? Joystick.defaultMode
         if key == KeyCodeNames.mouseMove {
             ActionDispatcher.register(key: key, handler: self.mouseUpdate)
         } else {
@@ -129,11 +131,27 @@ class ContinuousJoystickAction: Action {
             }
         } else if !begun {
             begun = true
-            Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id,
-                             actionName: "ControllerJoystick", keyName: key)
+            beginTouch(point)
         } else {
             Toucher.touchcam(point: point, phase: UITouch.Phase.moved, tid: &id,
                              actionName: "ControllerJoystick", keyName: key)
+        }
+    }
+
+    func beginTouch(_ point: CGPoint) {
+        if mode == .FIXED {
+            Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id,
+                             actionName: "ControllerJoystick", keyName: key)
+        } else if mode == .FLOATING {
+            Toucher.touchcam(point: self.center, phase: UITouch.Phase.began, tid: &id,
+                             actionName: "ControllerJoystick", keyName: key)
+            PlayInput.touchQueue.asyncAfter(deadline: .now() + 0.04, qos: .userInitiated) {
+                if self.id == nil {
+                    return
+                }
+                Toucher.touchcam(point: point, phase: UITouch.Phase.moved, tid: &self.id,
+                                 actionName: "ControllerJoystick", keyName: self.key)
+            }
         }
     }
 
@@ -160,13 +178,15 @@ class JoystickAction: Action {
     let center: CGPoint
     var touch: CGPoint
     let shift: CGFloat
+    var mode: JoystickMode
     var id: Int?
     private var keyPressed = [Bool](repeating: false, count: 4)
-    init(keys: [Int], center: CGPoint, shift: CGFloat) {
+    init(keys: [Int], center: CGPoint, shift: CGFloat, mode: JoystickMode) {
         self.keys = keys
         self.center = center
         self.touch = center
         self.shift = shift / 4
+        self.mode = mode
         for index in 0..<keys.count {
             let key = keys[index]
             ActionDispatcher.register(key: KeyCodeNames.keyCodes[key]!,
@@ -185,7 +205,8 @@ class JoystickAction: Action {
             center: CGPoint(
                 x: data.transform.xCoord.absoluteX,
                 y: data.transform.yCoord.absoluteY),
-            shift: data.transform.size.absoluteSize)
+            shift: data.transform.size.absoluteSize,
+            mode: data.mode ?? Joystick.defaultMode)
     }
 
     func invalidate() {
@@ -194,17 +215,19 @@ class JoystickAction: Action {
     }
 
     func getPressedHandler(index: Int) -> (Bool) -> Void {
-        // if the size of joystick is large, set control type to free, otherwise fixed.
-        // this is a temporary method. ideally should give the user an option.
-        if shift < 200 {
+        if mode == .FIXED {
             return { pressed in
                 self.updateTouch(index: index, pressed: pressed)
                 self.handleFixed()
             }
-        } else {
+        } else if mode == .FLOATING {
             return { pressed in
                 self.updateTouch(index: index, pressed: pressed)
                 self.handleFree()
+            }
+        } else {
+            return { _ in
+                // do nothing
             }
         }
     }
