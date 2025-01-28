@@ -39,7 +39,7 @@ class Keymapping {
             keymapConfig = try PropertyListDecoder().decode(KeymapConfig.self, from: data)
         } catch {
             print("[PlayTools] Failed to decode config url.\n%@")
-            keymapConfig = KeymapConfig(defaultKm: "default", aspectRatio: "auto")
+            keymapConfig = KeymapConfig(defaultKm: "default")
             resetConfig()
         }
 
@@ -57,7 +57,10 @@ class Keymapping {
         reloadKeymapCache()
 
         currentKeymap = getKeymap(name: keymapConfig.defaultKm)
-        keymapIdx = keymapURLs.index(forKey: keymapConfig.defaultKm).
+
+        if let defaultKmIdx = keymapURLs.keys.firstIndex(of: keymapConfig.defaultKm) {
+            keymapIdx = keymapURLs.distance(from: keymapURLs.startIndex, to: defaultKmIdx)
+        }
     }
 
     public func reloadKeymapCache() {
@@ -98,6 +101,10 @@ class Keymapping {
         }
     }
 
+    public func getCurrentKeymap() -> KeymappingData {
+        return getKeymap(name: Array(keymapURLs.keys)[keymapIdx])
+    }
+
     public func setKeymap(name: String, map: KeymappingData) {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .xml
@@ -120,6 +127,10 @@ class Keymapping {
         }
     }
 
+    public func setCurrentKeymap(map: KeymappingData) {
+        setKeymap(name: Array(keymapURLs.keys)[keymapIdx], map: map)
+    }
+
     @discardableResult
     public func reset(name: String) -> KeymappingData {
         setKeymap(name: name, map: KeymappingData(bundleIdentifier: bundleIdentifier))
@@ -135,7 +146,7 @@ class Keymapping {
             return resetConfig()
         }
 
-        keymapConfig = KeymapConfig(defaultKm: defaultKm, aspectRatio: "auto")
+        keymapConfig = KeymapConfig(defaultKm: defaultKm)
 
         return keymapConfig
     }
@@ -153,5 +164,4 @@ struct KeymappingData: Codable {
 
 struct KeymapConfig: Codable {
     var defaultKm: String
-    var aspectRatio: String
 }

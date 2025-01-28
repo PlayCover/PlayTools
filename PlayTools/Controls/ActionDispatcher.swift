@@ -54,32 +54,32 @@ public class ActionDispatcher {
         // in future, keymap format will be upgraded.
         // PlayTools would maintain limited backwards compatibility.
         // Meanwhile, keymap format upgrade would be rare.
-        if !keymap.keymapData.version.hasPrefix(keymapVersion) {
+        if !keymap.getCurrentKeymap().version.hasPrefix(keymapVersion) {
             DispatchQueue.main.asyncAfter(
                 deadline: .now() + .seconds(5)) {
                     Toast.showHint(title: "Keymap format too new",
-                       text: ["Current keymap version \(keymap.keymapData.version)" +
+                       text: ["Current keymap version \(keymap.getCurrentKeymap().version)" +
                               " is too new and cannot be recognized\n" +
-                             "For protection of your data, keymap is not loaded\n" +
-                             "Please upgrade PlayCover, " +
+                              "For protection of your data, keymap is not loaded\n" +
+                              "Please upgrade PlayCover, " +
                               "or import an older version of keymap (requires \(keymapVersion)x"])
             }
             return
         }
 
-        for button in keymap.keymapData.buttonModels {
+        for button in keymap.getCurrentKeymap().buttonModels {
             actions.append(ButtonAction(data: button))
         }
 
-        for draggableButton in keymap.keymapData.draggableButtonModels {
+        for draggableButton in keymap.getCurrentKeymap().draggableButtonModels {
             actions.append(DraggableButtonAction(data: draggableButton))
         }
 
-        for mouse in keymap.keymapData.mouseAreaModel {
+        for mouse in keymap.getCurrentKeymap().mouseAreaModel {
             actions.append(CameraAction(data: mouse))
         }
 
-        for joystick in keymap.keymapData.joystickModel {
+        for joystick in keymap.getCurrentKeymap().joystickModel {
             // Left Thumbstick, Right Thumbstick, Mouse
             if JoystickModel.isAnalog(joystick) {
                 actions.append(ContinuousJoystickAction(data: joystick))
