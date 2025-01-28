@@ -15,12 +15,14 @@ class DiscordIPC {
         if PlaySettings.shared.discordActivity.enable {
             let ipc: SwordRPC
             let custom = PlaySettings.shared.discordActivity
+
             if custom.applicationID.isEmpty {
                 ipc = SwordRPC(appId: "996108521680678993")
             } else {
                 ipc = SwordRPC(appId: custom.applicationID)
             }
-            Task.init(priority: .background) {
+
+            Task(priority: .background) {
                 let activity = await createActivity(from: custom)
                 ipc.connect()
                 ipc.setPresence(activity)
@@ -68,9 +70,10 @@ class DiscordIPC {
 
         activity.timestamps.start = Date()
 
-        activity.buttons[0].label = "Download PlayCover"
-        activity.buttons[0].url = "https://github.com/PlayCover/PlayCover/releases"
-        activity.buttons.removeLast()
+        activity.buttons = [
+            RichPresence.Button(label: "Download PlayCover",
+                                url: "https://github.com/PlayCover/PlayCover/releases")
+        ]
 
         return activity
     }
