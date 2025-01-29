@@ -15,13 +15,45 @@ class Keymapping {
     let bundleIdentifier = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? ""
 
     private var keymapIdx: Int
-    var currentKeymap: KeymappingData
+    public var currentKeymap: KeymappingData {
+        get {
+            getKeymap(name: currentKeymapName)
+        }
+        set {
+            setKeymap(name: currentKeymapName, map: newValue)
+        }
+    }
 
-    var baseKeymapURL: URL
-    let configURL: URL
-    public private(set) var keymapURLs: [String: URL]
+    private let baseKeymapURL: URL
+    private let configURL: URL
+    private var keymapURLs: [String: URL]
 
-    var keymapConfig: KeymapConfig
+    public var keymapConfig: KeymapConfig {
+        get {
+            do {
+                let data = try Data(contentsOf: configURL)
+                return try PropertyListDecoder().decode(KeymapConfig.self, from: data)
+            } catch {
+                print("[PlayTools] Failed to decode config url.\n%@")
+                return resetConfig()
+            }
+        }
+        set {
+            let encoder = PropertyListEncoder()
+            encoder.outputFormat = .xml
+
+            do {
+                let data = try encoder.encode(newValue)
+                try data.write(to: configURL)
+            } catch {
+                print("[PlayTools] Keymapping encode failed.\n%@")
+            }
+        }
+    }
+
+    public var currentKeymapName: String {
+        Array(keymapURLs.keys)[keymapIdx]
+    }
 
     init() {
         baseKeymapURL = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
@@ -32,8 +64,6 @@ class Keymapping {
         keymapURLs = [:]
 
         keymapIdx = 0
-
-        currentKeymap = KeymappingData(bundleIdentifier: bundleIdentifier)
 
         do {
             let data = try Data(contentsOf: configURL)
@@ -60,8 +90,6 @@ class Keymapping {
         }
 
         reloadKeymapCache()
-
-        currentKeymap = getKeymap(name: keymapConfig.defaultKm)
 
         if let defaultKmIdx = keymapURLs.keys.firstIndex(of: keymapConfig.defaultKm) {
             keymapIdx = keymapURLs.distance(from: keymapURLs.startIndex, to: defaultKmIdx)
@@ -90,7 +118,7 @@ class Keymapping {
         reloadKeymapCache()
     }
 
-    public func getKeymap(name: String) -> KeymappingData {
+    private func getKeymap(name: String) -> KeymappingData {
         if let keymapURL = keymapURLs[name] {
             do {
                 let data = try Data(contentsOf: keymapURL)
@@ -98,19 +126,15 @@ class Keymapping {
                 return map
             } catch {
                 print("[PlayTools] Keymapping decode failed.\n%@")
-                return reset(name: name)
             }
         } else {
             print("[PlayTools] Unable to find keymap with name \(name).\n%@")
-            return reset(name: name)
         }
+
+        return resetKeymap(name: name)
     }
 
-    public func getCurrentKeymap() -> KeymappingData {
-        return getKeymap(name: Array(keymapURLs.keys)[keymapIdx])
-    }
-
-    public func setKeymap(name: String, map: KeymappingData) {
+    private func setKeymap(name: String, map: KeymappingData) {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .xml
 
@@ -132,12 +156,16 @@ class Keymapping {
         }
     }
 
-    public func setCurrentKeymap(map: KeymappingData) {
-        setKeymap(name: Array(keymapURLs.keys)[keymapIdx], map: map)
+    public func nextKeymap() {
+        keymapIdx = (keymapIdx + 1) % keymapURLs.count
+    }
+
+    public func previousKeymap() {
+        keymapIdx = (keymapIdx - 1 + keymapURLs.count) % keymapURLs.count
     }
 
     @discardableResult
-    public func reset(name: String) -> KeymappingData {
+    public func resetKeymap(name: String) -> KeymappingData {
         setKeymap(name: name, map: KeymappingData(bundleIdentifier: bundleIdentifier))
         return getKeymap(name: name)
     }

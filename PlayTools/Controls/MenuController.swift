@@ -72,8 +72,31 @@ extension UIApplication {
         DebugController.instance.toggleDebugOverlay()
     }
 
-    @objc func hideCursor(_ sender: AnyObject) {
+    @objc
+    func hideCursor(_ sender: AnyObject) {
         AKInterface.shared!.hideCursorMove()
+    }
+
+    @objc
+    func nextKeymap(_ sender: AnyObject) {
+        if mode == .EDITOR {
+            ModeAutomaton.onCmdK()
+        }
+
+        keymap.nextKeymap()
+        Toast.showHint(title: "Switched to next keymap: \(keymap.currentKeymapName)")
+        ActionDispatcher.build()
+    }
+
+    @objc
+    func previousKeymap(_ sender: AnyObject) {
+        if mode == .EDITOR {
+            ModeAutomaton.onCmdK()
+        }
+
+        keymap.previousKeymap()
+        Toast.showHint(title: "Switched to previous keymap: \(keymap.currentKeymapName)")
+        ActionDispatcher.build()
     }
 }
 
@@ -107,7 +130,11 @@ var keymapping = [
     NSLocalizedString("menu.keymapping.toggleDebug", tableName: "Playtools",
                       value: "Toggle Debug Overlay", comment: ""),
     NSLocalizedString("menu.keymapping.hide.pointer", tableName: "Playtools",
-                      value: "Hide Mouse Pointer", comment: "")
+                      value: "Hide Mouse Pointer", comment: ""),
+    NSLocalizedString("menu.keymapping.nextKeymap", tableName: "Playtools",
+                      value: "Next Keymap", comment: ""),
+    NSLocalizedString("menu.keymapping.previousKeymap", tableName: "Playtools",
+                      value: "Previous Keymap", comment: "")
   ]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
@@ -115,7 +142,10 @@ var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
                            #selector(UIApplication.rotateView(_:)),
                            #selector(UIApplication.toggleDebugOverlay(_:)),
-                           #selector(UIApplication.hideCursor(_:))
+                           #selector(UIApplication.hideCursor(_:)),
+                           #selector(UIApplication.nextKeymap(_:)),
+                           #selector(UIApplication.previousKeymap(_:)),
+
     ]
 
 class MenuController {
@@ -156,8 +186,17 @@ class MenuController {
     }
 
     class func keymappingMenu() -> UIMenu {
-        let keyCommands = [ "K", UIKeyCommand.inputDelete,
-                            UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "R", "D", "."]
+        let keyCommands = [
+            "K",                            // Toggle keymap editor
+            UIKeyCommand.inputDelete,       // Remove keymap element
+            UIKeyCommand.inputUpArrow,      // Increase keymap element size
+            UIKeyCommand.inputDownArrow,    // Decrease keymap element size
+            "R",                            // Rotate display
+            "D",                            // Toggle debug overlay
+            ".",                            // Hide cursor until move
+            "N",                            // Next keymap
+            "B",                            // Previous keymap
+        ]
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
                          image: nil,

@@ -54,11 +54,11 @@ public class ActionDispatcher {
         // in future, keymap format will be upgraded.
         // PlayTools would maintain limited backwards compatibility.
         // Meanwhile, keymap format upgrade would be rare.
-        if !keymap.getCurrentKeymap().version.hasPrefix(keymapVersion) {
+        if !keymap.currentKeymap.version.hasPrefix(keymapVersion) {
             DispatchQueue.main.asyncAfter(
                 deadline: .now() + .seconds(5)) {
                     Toast.showHint(title: "Keymap format too new",
-                       text: ["Current keymap version \(keymap.getCurrentKeymap().version)" +
+                       text: ["Current keymap version \(keymap.currentKeymap.version)" +
                               " is too new and cannot be recognized\n" +
                               "For protection of your data, keymap is not loaded\n" +
                               "Please upgrade PlayCover, " +
@@ -67,19 +67,19 @@ public class ActionDispatcher {
             return
         }
 
-        for button in keymap.getCurrentKeymap().buttonModels {
+        for button in keymap.currentKeymap.buttonModels {
             actions.append(ButtonAction(data: button))
         }
 
-        for draggableButton in keymap.getCurrentKeymap().draggableButtonModels {
+        for draggableButton in keymap.currentKeymap.draggableButtonModels {
             actions.append(DraggableButtonAction(data: draggableButton))
         }
 
-        for mouse in keymap.getCurrentKeymap().mouseAreaModel {
+        for mouse in keymap.currentKeymap.mouseAreaModel {
             actions.append(CameraAction(data: mouse))
         }
 
-        for joystick in keymap.getCurrentKeymap().joystickModel {
+        for joystick in keymap.currentKeymap.joystickModel {
             // Left Thumbstick, Right Thumbstick, Mouse
             if JoystickModel.isAnalog(joystick) {
                 actions.append(ContinuousJoystickAction(data: joystick))
