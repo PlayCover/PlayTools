@@ -26,6 +26,7 @@ class Keymapping {
     init() {
         baseKeymapURL = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("Keymapping")
+            .appendingPathComponent(bundleIdentifier)
 
         configURL = baseKeymapURL.appendingPathComponent(".config").appendingPathExtension("plist")
         keymapURLs = [:]
@@ -43,6 +44,10 @@ class Keymapping {
             resetConfig()
         }
 
+        loadKeymapData()
+    }
+
+    private func loadKeymapData() {
         if !FileManager.default.fileExists(atPath: baseKeymapURL.path) {
             do {
                 try FileManager.default.createDirectory(
