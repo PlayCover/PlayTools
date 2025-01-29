@@ -96,20 +96,20 @@ class EditorController {
     }
 
     func showButtons() {
-        for button in keymap.keymapData.draggableButtonModels {
+        for button in keymap.currentKeymap.draggableButtonModels {
             let ctrl = DraggableButtonModel(data: button)
             addControlToView(control: ctrl)
         }
-        for joystick in keymap.keymapData.joystickModel {
+        for joystick in keymap.currentKeymap.joystickModel {
             let ctrl = JoystickModel(data: joystick)
             addControlToView(control: ctrl)
         }
-        for mouse in keymap.keymapData.mouseAreaModel {
+        for mouse in keymap.currentKeymap.mouseAreaModel {
             let ctrl =
                 MouseAreaModel(data: mouse)
             addControlToView(control: ctrl)
         }
-        for button in keymap.keymapData.buttonModels {
+        for button in keymap.currentKeymap.buttonModels {
             let ctrl = ButtonModel(data: button)
             addControlToView(control: ctrl)
         }
@@ -132,7 +132,7 @@ class EditorController {
                 break
             }
         }
-        keymap.keymapData = keymapData
+        keymap.currentKeymap = keymapData
         controls = []
         view.subviews.forEach { $0.removeFromSuperview() }
     }
