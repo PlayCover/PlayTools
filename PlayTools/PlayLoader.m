@@ -182,11 +182,14 @@ DYLD_INTERPOSE(pt_SecItemDelete, SecItemDelete)
 static uint8_t ue_status = 0;
 
 static char const* ue_fix_filename(char const* filename) {
-    static char UE_PATTERN[1024] = "//Users/";
-    getlogin_r(UE_PATTERN + 8, sizeof(UE_PATTERN) - 8);
-    
     char const* p = filename;
     if (ue_status == 2) {
+        static char* UE_PATTERN = NULL;
+        if (!UE_PATTERN) {
+            char const* username = [NSUserName() UTF8String];
+            asprintf(&UE_PATTERN, "//Users/%s", username);
+        }
+
         char const* last_p = p;
         while ((p = strstr(p, UE_PATTERN))) {
             last_p = ++p;
@@ -201,14 +204,14 @@ static char const* ue_fix_filename(char const* filename) {
 static int pt_open(char const* restrict filename, int oflag, ... ) {
     filename = ue_fix_filename(filename);
 
-    if (oflag == O_CREAT) {
+    if (oflag & O_CREAT) {
         int mod;
         va_list ap;
         va_start(ap, oflag);
         mod = va_arg(ap, int);
         va_end(ap);
 
-        return open(filename, O_CREAT, mod);
+        return open(filename, oflag, mod);
     }
 
     return open(filename, oflag);
