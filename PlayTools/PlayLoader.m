@@ -201,14 +201,14 @@ static char const* ue_fix_filename(char const* filename) {
 static int pt_open(char const* restrict filename, int oflag, ... ) {
     filename = ue_fix_filename(filename);
 
-    if (oflag == O_CREAT) {
+    if (oflag & O_CREAT) {
         int mod;
         va_list ap;
         va_start(ap, oflag);
         mod = va_arg(ap, int);
         va_end(ap);
 
-        return open(filename, O_CREAT, mod);
+        return open(filename, oflag, mod);
     }
 
     return open(filename, oflag);
