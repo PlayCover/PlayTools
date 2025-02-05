@@ -23,6 +23,7 @@ public protocol Plugin: NSObjectProtocol {
     func hideCursorMove()
     func warpCursor()
     func unhideCursor()
+    func setupCustomCursor(imageUrl: URL, size: CGSize, hotSpot: CGPoint)
     func terminateApplication()
     func setupKeyboard(keyboard: @escaping (UInt16, Bool, Bool, Bool) -> Bool,
                        swapMode: @escaping () -> Bool)
