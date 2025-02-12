@@ -65,6 +65,10 @@ class AKPlugin: NSObject, Plugin {
         }
     }
 
+    func setupCustomCursor(imageUrl: URL, size: CGSize, hotSpot: CGPoint) {
+        PlayCursor.shared.setupCustomCursor(imageUrl: imageUrl, size: size, hotSpot: hotSpot)
+    }
+
     func terminateApplication() {
         NSApplication.shared.terminate(self)
     }

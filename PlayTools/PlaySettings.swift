@@ -81,6 +81,8 @@ let settings = PlaySettings.shared
     @objc lazy var noKMOnInput = settingsData.noKMOnInput
 
     @objc lazy var enableScrollWheel = settingsData.enableScrollWheel
+
+    lazy var cursorSetting = settingsData.cursorSetting
 }
 
 struct AppSettingsData: Codable {
@@ -105,4 +107,13 @@ struct AppSettingsData: Codable {
     var rootWorkDir = true
     var noKMOnInput = false
     var enableScrollWheel = true
+    var cursorSetting = CursorSetting()
+}
+
+struct CursorSetting: Codable {
+    var enable = false
+    var width = 32
+    var height = 32
+    var hotSpotX = 0
+    var hotSpotY = 0
 }
