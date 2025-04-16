@@ -242,16 +242,8 @@ static void __attribute__((constructor)) initialize(void) {
     [PlayCover launch];
     
     if (ue_status == 0) {
-        NSURL* appFolder = [[NSBundle mainBundle] bundleURL];
-        NSArray* ueFiles = @[
-            [appFolder URLByAppendingPathComponent:@"ue4commandline.txt"],
-            [appFolder URLByAppendingPathComponent:@"uecommandline.txt"],
-        ];
-
-        for (NSURL* ueFile in ueFiles) {
-            if (!access([[ueFile path] cStringUsingEncoding:NSUTF8StringEncoding], F_OK)) {
-                ue_status = 2;
-            }
+        if (PlayInfo.isUnrealEngine) {
+            ue_status = 2;
         }
     }
     
