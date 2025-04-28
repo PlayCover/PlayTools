@@ -13,35 +13,35 @@ public class EventAdapters {
 
     static func keyboard(controlMode: ControlModeLiteral) -> KeyboardEventAdapter {
         switch controlMode {
-        case  .OFF, .TEXT_INPUT:
+        case  .off, .textInput:
             return TransparentKeyboardEventAdapter()
-        case .CAMERA_ROTATE, .ARBITRARY_CLICK:
+        case .cameraRotate, .arbitraryClick:
             return TouchscreenKeyboardEventAdapter()
-        case .EDITOR:
+        case .editor:
             return EditorKeyboardEventAdapter()
         }
     }
 
     static func mouse(controlMode: ControlModeLiteral) -> MouseEventAdapter {
         switch controlMode {
-        case .OFF, .TEXT_INPUT:
+        case .off, .textInput:
             return TransparentMouseEventAdapter()
-        case .CAMERA_ROTATE:
+        case .cameraRotate:
             return CameraControlMouseEventAdapter()
-        case .ARBITRARY_CLICK:
+        case .arbitraryClick:
             return TouchscreenMouseEventAdapter()
-        case .EDITOR:
+        case .editor:
             return EditorMouseEventAdapter()
         }
     }
 
     static func controller(controlMode: ControlModeLiteral) -> ControllerEventAdapter {
         switch controlMode {
-        case .OFF:
+        case .off:
             return TransparentControllerEventAdapter()
-        case .TEXT_INPUT, .CAMERA_ROTATE, .ARBITRARY_CLICK:
+        case .textInput, .cameraRotate, .arbitraryClick:
             return TouchscreenControllerEventAdapter()
-        case .EDITOR:
+        case .editor:
             return EditorControllerEventAdapter()
         }
     }

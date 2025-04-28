@@ -9,18 +9,18 @@ import GameController
 let mode = ControlMode.mode
 
 public enum ControlModeLiteral: String {
-    case TEXT_INPUT = "textInput"
-    case CAMERA_ROTATE = "cameraRotate"
-    case ARBITRARY_CLICK = "arbitraryClick"
-    case OFF = "off"
-    case EDITOR = "editor"
+    case textInput
+    case cameraRotate
+    case arbitraryClick
+    case off
+    case editor
 }
 // This class handles different control logic under different control mode
 
 public class ControlMode: Equatable {
     static public let mode = ControlMode()
 
-    private var controlMode = ControlModeLiteral.OFF
+    private var controlMode = ControlModeLiteral.off
 
     private var keyboardAdapter: KeyboardEventAdapter!
     private var mouseAdapter: MouseEventAdapter!
@@ -50,9 +50,9 @@ public class ControlMode: Equatable {
                 ModeAutomaton.onUITextInputBeginEdit()
                 Toucher.writeLog(logMessage: "uitextinput begin edit")
             }
-            set(.ARBITRARY_CLICK)
+            set(.arbitraryClick)
         } else {
-            set(.OFF)
+            set(.off)
         }
 
         centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
@@ -134,7 +134,7 @@ public class ControlMode: Equatable {
                     screen.switchDock(true)
                 }
 
-                if mode == .OFF || mode == .EDITOR {
+                if mode == .off || mode == .editor {
                     ActionDispatcher.invalidateActions()
                 } else {
                     // In case any touch point failed to release

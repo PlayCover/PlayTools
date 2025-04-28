@@ -1,5 +1,6 @@
 disabled_rules:
   - inclusive_language
+  - todo
 
 excluded:
   - Carthage
@@ -10,6 +11,3 @@ identifier_name:
 
 type_name:
   allowed_symbols: ['_']
-
-disabled_rules:
-  - todo
