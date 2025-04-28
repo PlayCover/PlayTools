@@ -11,20 +11,20 @@ import Foundation
 
 public class ModeAutomaton {
     static public func onOption() -> Bool {
-        if mode == .EDITOR || mode == .TEXT_INPUT {
+        if mode == .editor || mode == .textInput {
             return false
         }
-        if mode == .OFF {
-            mode.set(.CAMERA_ROTATE)
+        if mode == .off {
+            mode.set(.cameraRotate)
 
-        } else if mode == .ARBITRARY_CLICK && ActionDispatcher.cursorHideNecessary {
-            mode.set(.CAMERA_ROTATE)
+        } else if mode == .arbitraryClick && ActionDispatcher.cursorHideNecessary {
+            mode.set(.cameraRotate)
 
-        } else if mode == .CAMERA_ROTATE {
+        } else if mode == .cameraRotate {
             if PlaySettings.shared.noKMOnInput {
-                mode.set(.ARBITRARY_CLICK)
+                mode.set(.arbitraryClick)
             } else {
-                mode.set(.OFF)
+                mode.set(.off)
             }
         }
         // Some people want option key act as touchpad-touchscreen mapper
@@ -38,27 +38,27 @@ public class ModeAutomaton {
 
         EditorController.shared.switchMode()
 
-        if mode == .EDITOR && !EditorController.shared.editorMode {
-            mode.set(.CAMERA_ROTATE)
+        if mode == .editor && !EditorController.shared.editorMode {
+            mode.set(.cameraRotate)
             ActionDispatcher.build()
             Toucher.writeLog(logMessage: "editor closed")
         } else if EditorController.shared.editorMode {
-            mode.set(.EDITOR)
+            mode.set(.editor)
             Toucher.writeLog(logMessage: "editor opened")
         }
     }
 
     static public func onUITextInputBeginEdit() {
-        if mode == .EDITOR {
+        if mode == .editor {
             return
         }
-        mode.set(.TEXT_INPUT)
+        mode.set(.textInput)
     }
 
     static public func onUITextInputEndEdit() {
-        if mode == .EDITOR {
+        if mode == .editor {
             return
         }
-        mode.set(.ARBITRARY_CLICK)
+        mode.set(.arbitraryClick)
     }
 }
