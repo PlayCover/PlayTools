@@ -134,7 +134,7 @@ class MenuController {
             setupMenu(with: builder)
         }
     }
-    
+
     func setupMenu(with builder: UIMenuBuilder) {
         if Toucher.logEnabled {
             builder.insertSibling(MenuController.debuggingMenu(), afterMenu: .view)
