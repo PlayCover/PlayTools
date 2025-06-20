@@ -22,12 +22,12 @@ public class ActionDispatcher {
     static private var actions = [Action]()
     static private var buttonHandlers: [String: [(Bool) -> Void]] = [:]
 
-    static private let PRIORITY_COUNT = 3
+    static private let priorityCount = 3
     // You can't put more than 8 cameras or 8 joysticks in a keymap right?
-    static private let MAPPING_COUNT_PER_PRIORITY = 8
+    static private let mappingCountPerPriority = 8
     static private let directionPadHandlers: [[ManagedAtomic<AtomicHandler>]] = Array(
-        (0..<PRIORITY_COUNT).map({_ in
-            (0..<MAPPING_COUNT_PER_PRIORITY).map({_ in ManagedAtomic<AtomicHandler>(.EMPTY)})
+        (0..<priorityCount).map({_ in
+            (0..<mappingCountPerPriority).map({_ in ManagedAtomic<AtomicHandler>(.EMPTY)})
         })
     )
 
@@ -203,7 +203,7 @@ public class ActionDispatcher {
     }
 
     static public func dispatch(key: String, valueX: CGFloat, valueY: CGFloat) -> Bool {
-        for priority in 0..<PRIORITY_COUNT {
+        for priority in 0..<priorityCount {
             if let handler = directionPadHandlers[priority].first(where: { handler in
                 handler.load(ordering: .acquiring).key == key
             }) {

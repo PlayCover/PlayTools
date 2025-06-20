@@ -16,12 +16,12 @@ class PlayKeychainDB: NSObject {
     private var dbVersion: Int = 1
 
     func query(_ attributes: NSDictionary) -> [NSMutableDictionary]? {
-        guard let table_name = attributes[kSecClass] as? String,
-              let primaryColumns = PlayedAppleDBConstants.primaries[table_name as CFString] else {
+        guard let tableName = attributes[kSecClass] as? String,
+              let primaryColumns = PlayedAppleDBConstants.primaries[tableName as CFString] else {
             return nil
         }
 
-        let select_where = primaryColumns.compactMap({
+        let selectWhere = primaryColumns.compactMap({
             guard let attr = attributes[$0] else { return nil } // use only requested ones
             if CFGetTypeID(attr as CFTypeRef) == CFDataGetTypeID(),
                let string = (attr as? Data).map({ String(data: $0, encoding: .utf8) }) {
@@ -29,26 +29,26 @@ class PlayKeychainDB: NSObject {
             }
             return "\($0) = '\(attr)'"
         }).joined(separator: " AND ")
-        guard select_where.count > 0 else { return nil }
-        let select_limit = attributes[kSecMatchLimit] as? String == kSecMatchLimitOne as String ? 1 : Int.max
+        guard selectWhere.count > 0 else { return nil }
+        let selectLimit = attributes[kSecMatchLimit] as? String == kSecMatchLimitOne as String ? 1 : Int.max
 
-        let select_query = "SELECT * FROM \(table_name) WHERE \(select_where) LIMIT \(select_limit)"
+        let selectQuery = "SELECT * FROM \(tableName) WHERE \(selectWhere) LIMIT \(selectLimit)"
         var stmt: OpaquePointer?
 
         var dictArr: [NSMutableDictionary] = []
         guard usingDB({ sqlite3DB in
             defer { sqlite3_finalize(stmt) }
-            guard sqlite3_prepare(sqlite3DB, select_query, -1, &stmt, nil) == SQLITE_OK,
+            guard sqlite3_prepare(sqlite3DB, selectQuery, -1, &stmt, nil) == SQLITE_OK,
                   let stmt = stmt else {
-                PlayKeychain.debugLogger("Failed query \(select_query)")
+                PlayKeychain.debugLogger("Failed query \(selectQuery)")
                 PlayKeychain.debugLogger("Failed to query to db table: \(String(cString: sqlite3_errmsg(sqlite3DB)))")
                 return false
             }
 
-            while sqlite3_step(stmt) == SQLITE_ROW && dictArr.count < select_limit {
+            while sqlite3_step(stmt) == SQLITE_ROW && dictArr.count < selectLimit {
                 let newDict: NSMutableDictionary = [:]
                 let columns = sqlite3_column_count(stmt)
-                newDict[kSecClass] = table_name
+                newDict[kSecClass] = tableName
                 newDict[kSecAttrSynchronizable] = attributes[kSecAttrSynchronizable]
                 for index in 0..<columns {
                     let name = String(cString: sqlite3_column_name(stmt, index))
@@ -66,45 +66,45 @@ class PlayKeychainDB: NSObject {
     }
 
     func insert(_ attributes: NSDictionary) -> NSMutableDictionary? {
-        guard let table_name = attributes[kSecClass] as? String,
-              let primaryColumns = PlayedAppleDBConstants.primaries[table_name as CFString],
-              let secondaryColumns = PlayedAppleDBConstants.attributes[table_name as CFString] else {
+        guard let tableName = attributes[kSecClass] as? String,
+              let primaryColumns = PlayedAppleDBConstants.primaries[tableName as CFString],
+              let secondaryColumns = PlayedAppleDBConstants.attributes[tableName as CFString] else {
             return nil
         }
 
-        var columns_query = primaryColumns.map({ "\($0)" })
-        columns_query.append(contentsOf: secondaryColumns.compactMap({
+        var columnsQuery = primaryColumns.map({ "\($0)" })
+        columnsQuery.append(contentsOf: secondaryColumns.compactMap({
             attributes[$0] != nil ? "\($0)" : nil
         }))
-        columns_query.append(contentsOf: PlayedAppleDBConstants.values.compactMap({
+        columnsQuery.append(contentsOf: PlayedAppleDBConstants.values.compactMap({
             attributes[$0] != nil ? "\($0)" : nil
         }))
 
-        let insert_values = columns_query.map({ attributes[$0] as CFTypeRef })
+        let insertValues = columnsQuery.map({ attributes[$0] as CFTypeRef })
 
-        let insert_columns = columns_query.joined(separator: ", ")
-        let insert_placeholders = Array(repeating: "?", count: insert_values.count).joined(separator: ", ")
+        let insertColumns = columnsQuery.joined(separator: ", ")
+        let insertPlaceholders = Array(repeating: "?", count: insertValues.count).joined(separator: ", ")
 
-        let insert_query = "INSERT INTO \(table_name) (\(insert_columns)) VALUES (\(insert_placeholders))"
+        let insertQuery = "INSERT INTO \(tableName) (\(insertColumns)) VALUES (\(insertPlaceholders))"
         var stmt: OpaquePointer?
 
         let newDict: NSMutableDictionary = [:]
-        newDict[kSecClassKey] = table_name
-        for column in columns_query {
+        newDict[kSecClassKey] = tableName
+        for column in columnsQuery {
             newDict[column] = attributes[column]
         }
 
         guard usingDB({ sqlite3DB in
             defer { sqlite3_finalize(stmt) }
-            guard sqlite3_prepare(sqlite3DB, insert_query, -1, &stmt, nil) == SQLITE_OK,
+            guard sqlite3_prepare(sqlite3DB, insertQuery, -1, &stmt, nil) == SQLITE_OK,
                   let stmt = stmt else {
                 let errorMessage = String(cString: sqlite3_errmsg(sqlite3DB))
-                PlayKeychain.debugLogger("Failed query \(insert_query)")
+                PlayKeychain.debugLogger("Failed query \(insertQuery)")
                 PlayKeychain.debugLogger("Failed to make query: \(errorMessage)")
                 return false
             }
 
-            for (index, value) in insert_values.enumerated()
+            for (index, value) in insertValues.enumerated()
             where !encodeData(stmt: stmt, index: Int32(index + 1), value: value) {
                 let erorrMessage = String(cString: sqlite3_errmsg(sqlite3DB))
                 PlayKeychain.debugLogger("Failed to insert into db: \(erorrMessage)")
@@ -118,24 +118,24 @@ class PlayKeychainDB: NSObject {
     }
 
     func update(_ attributes: NSDictionary) -> Bool {
-        guard let table_name = attributes[kSecClass] as? String,
-              let primaryColumns = PlayedAppleDBConstants.primaries[table_name as CFString],
-              let secondaryColumns = PlayedAppleDBConstants.attributes[table_name as CFString] else {
+        guard let tableName = attributes[kSecClass] as? String,
+              let primaryColumns = PlayedAppleDBConstants.primaries[tableName as CFString],
+              let secondaryColumns = PlayedAppleDBConstants.attributes[tableName as CFString] else {
             return false
         }
 
-        var columns_query = primaryColumns.map({ "\($0)" })
-        columns_query.append(contentsOf: secondaryColumns.compactMap({
+        var columnsQuery = primaryColumns.map({ "\($0)" })
+        columnsQuery.append(contentsOf: secondaryColumns.compactMap({
             attributes[$0] != nil ? "\($0)" : nil
         }))
-        columns_query.append(contentsOf: PlayedAppleDBConstants.values.compactMap({
+        columnsQuery.append(contentsOf: PlayedAppleDBConstants.values.compactMap({
             attributes[$0] != nil ? "\($0)" : nil
         }))
 
-        let update_values = columns_query.map({ attributes[$0] as CFTypeRef })
+        let updateValues = columnsQuery.map({ attributes[$0] as CFTypeRef })
 
-        let update_columns = columns_query.map({ return "\($0) = ?" }).joined(separator: ", ")
-        let update_where = primaryColumns.compactMap({
+        let updateColumns = columnsQuery.map({ return "\($0) = ?" }).joined(separator: ", ")
+        let updateWhere = primaryColumns.compactMap({
             guard let attr = attributes[$0] else { return nil }
             if CFGetTypeID(attr as CFTypeRef) == CFDataGetTypeID(),
                let string = (attr as? Data).map({ return String(data: $0, encoding: .utf8) }) {
@@ -144,20 +144,20 @@ class PlayKeychainDB: NSObject {
             return "\($0) = '\(attr)'"
         }).joined(separator: " AND ")
 
-        let update_query = "UPDATE \(table_name) SET \(update_columns) WHERE \(update_where)"
+        let updateQuery = "UPDATE \(tableName) SET \(updateColumns) WHERE \(updateWhere)"
         var stmt: OpaquePointer?
 
         guard usingDB({ sqlite3DB in
             defer { sqlite3_finalize(stmt) }
-            guard sqlite3_prepare(sqlite3DB, update_query, -1, &stmt, nil) == SQLITE_OK,
+            guard sqlite3_prepare(sqlite3DB, updateQuery, -1, &stmt, nil) == SQLITE_OK,
                   let stmt = stmt else {
                 let errorMessage = String(cString: sqlite3_errmsg(sqlite3DB))
-                PlayKeychain.debugLogger("Failed query \(update_query)")
+                PlayKeychain.debugLogger("Failed query \(updateQuery)")
                 PlayKeychain.debugLogger("Failed to make query: \(errorMessage)")
                 return false
             }
 
-            for (index, value) in update_values.enumerated()
+            for (index, value) in updateValues.enumerated()
             where !encodeData(stmt: stmt, index: Int32(index + 1), value: value) {
                 let errorMessage = String(cString: sqlite3_errmsg(sqlite3DB))
                 PlayKeychain.debugLogger("Failed to update into db: \(errorMessage)")
@@ -171,12 +171,12 @@ class PlayKeychainDB: NSObject {
     }
 
     func delete(_ attributes: NSDictionary) -> Bool {
-        guard let table_name = attributes[kSecClass] as? String,
-              let primaryColumns = PlayedAppleDBConstants.primaries[table_name as CFString] else {
+        guard let tableName = attributes[kSecClass] as? String,
+              let primaryColumns = PlayedAppleDBConstants.primaries[tableName as CFString] else {
             return false
         }
 
-        let delete_where = primaryColumns.compactMap({
+        let deleteWhere = primaryColumns.compactMap({
             guard let attr = attributes[$0] else { return nil } // use only requested ones
             if CFGetTypeID(attr as CFTypeRef) == CFDataGetTypeID(),
                let string = (attr as? Data).map({ return String(data: $0, encoding: .utf8) }) {
@@ -185,15 +185,15 @@ class PlayKeychainDB: NSObject {
             return "\($0) = '\(attr)'"
         }).joined(separator: " AND ")
 
-        let delete_query = "DELETE FROM \(table_name) where \(delete_where)"
+        let deleteQuery = "DELETE FROM \(tableName) where \(deleteWhere)"
         var stmt: OpaquePointer?
 
         guard usingDB({ sqlite3DB in
             defer { sqlite3_finalize(stmt) }
-            guard sqlite3_prepare(sqlite3DB, delete_query, -1, &stmt, nil) == SQLITE_OK,
+            guard sqlite3_prepare(sqlite3DB, deleteQuery, -1, &stmt, nil) == SQLITE_OK,
                   let stmt = stmt else {
                 let errorMessage = String(cString: sqlite3_errmsg(sqlite3DB))
-                PlayKeychain.debugLogger("Failed query \(delete_query)")
+                PlayKeychain.debugLogger("Failed query \(deleteQuery)")
                 PlayKeychain.debugLogger("Failed to delte items from db table: \(errorMessage)")
                 return false
             }
@@ -211,10 +211,10 @@ class PlayKeychainDB: NSObject {
             columns.append(contentsOf: PlayedAppleDBConstants.values)
             let columnsSetting = columns.map({ return "\($0) TEXT" }).joined(separator: ", ")
             let primaryKeysSetting = "PRIMARY KEY (\(value.map({ return "\($0)" }).joined(separator: ", ")))"
-            let create_table_query = "CREATE TABLE IF NOT EXISTS \(key) (\(columnsSetting), \(primaryKeysSetting));"
-            guard sqlite3_exec(sqlite3DB, create_table_query, nil, nil, nil) == SQLITE_OK else {
+            let createTableQuery = "CREATE TABLE IF NOT EXISTS \(key) (\(columnsSetting), \(primaryKeysSetting));"
+            guard sqlite3_exec(sqlite3DB, createTableQuery, nil, nil, nil) == SQLITE_OK else {
                 let errorMessage = String(cString: sqlite3_errmsg(sqlite3DB))
-                PlayKeychain.debugLogger("Failed query \(create_table_query)")
+                PlayKeychain.debugLogger("Failed query \(createTableQuery)")
                 PlayKeychain.debugLogger("Failed to create db table: \(errorMessage)")
                 return false
             }
@@ -268,17 +268,17 @@ class PlayKeychainDB: NSObject {
     }
 
     private func encodeData(stmt: OpaquePointer, index: Int32, value: CFTypeRef) -> Bool {
-        let sqlite_transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+        let sqliteTransient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
         var result = SQLITE_FAIL
         switch CFGetTypeID(value) {
         case CFStringGetTypeID():
             let string = value as! String // swiftlint:disable:this force_cast
-            result = sqlite3_bind_text(stmt, index, string, -1, sqlite_transient)
+            result = sqlite3_bind_text(stmt, index, string, -1, sqliteTransient)
         case CFDataGetTypeID():
             let data = value as! CFData // swiftlint:disable:this force_cast
             let ptr = CFDataGetBytePtr(data)
             let size = CFDataGetLength(data)
-            result = sqlite3_bind_blob(stmt, index, ptr, Int32(size), sqlite_transient)
+            result = sqlite3_bind_blob(stmt, index, ptr, Int32(size), sqliteTransient)
         case CFNullGetTypeID():
             result = sqlite3_bind_null(stmt, index)
         default:
