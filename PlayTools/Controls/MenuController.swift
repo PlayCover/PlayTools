@@ -144,7 +144,7 @@ var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.toggleDebugOverlay(_:)),
                            #selector(UIApplication.hideCursor(_:)),
                            #selector(UIApplication.nextKeymap(_:)),
-                           #selector(UIApplication.previousKeymap(_:)),
+                           #selector(UIApplication.previousKeymap(_:))
 
     ]
 
@@ -195,7 +195,7 @@ class MenuController {
             "D",                            // Toggle debug overlay
             ".",                            // Hide cursor until move
             "N",                            // Next keymap
-            "B",                            // Previous keymap
+            "B"                             // Previous keymap
         ]
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
