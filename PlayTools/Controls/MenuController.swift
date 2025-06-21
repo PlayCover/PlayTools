@@ -79,7 +79,7 @@ extension UIApplication {
 
     @objc
     func nextKeymap(_ sender: AnyObject) {
-        if mode == .EDITOR {
+        if mode == .editor {
             ModeAutomaton.onCmdK()
         }
 
@@ -90,7 +90,7 @@ extension UIApplication {
 
     @objc
     func previousKeymap(_ sender: AnyObject) {
-        if mode == .EDITOR {
+        if mode == .editor {
             ModeAutomaton.onCmdK()
         }
 
