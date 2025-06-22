@@ -205,8 +205,8 @@ class MenuController {
             "R",                            // Rotate display
             "D",                            // Toggle debug overlay
             ".",                            // Hide cursor until move
-            "N",                            // Next keymap
-            "B"                             // Previous keymap
+            "[",                            // Next keymap
+            "]"                             // Previous keymap
         ]
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
