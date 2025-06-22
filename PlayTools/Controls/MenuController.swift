@@ -79,24 +79,36 @@ extension UIApplication {
 
     @objc
     func nextKeymap(_ sender: AnyObject) {
-        if mode == .editor {
+        let isCmdK = mode == .editor
+
+        if isCmdK {
             ModeAutomaton.onCmdK()
         }
 
         keymap.nextKeymap()
         Toast.showHint(title: "Switched to next keymap: \(keymap.currentKeymapName)")
         ActionDispatcher.build()
+
+        if isCmdK {
+            ModeAutomaton.onCmdK()
+        }
     }
 
     @objc
     func previousKeymap(_ sender: AnyObject) {
-        if mode == .editor {
+        let isCmdK = mode == .editor
+
+        if isCmdK {
             ModeAutomaton.onCmdK()
         }
 
         keymap.previousKeymap()
         Toast.showHint(title: "Switched to previous keymap: \(keymap.currentKeymapName)")
         ActionDispatcher.build()
+
+        if isCmdK {
+            ModeAutomaton.onCmdK()
+        }
     }
 }
 
@@ -145,7 +157,6 @@ var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.hideCursor(_:)),
                            #selector(UIApplication.nextKeymap(_:)),
                            #selector(UIApplication.previousKeymap(_:))
-
     ]
 
 class MenuController {
