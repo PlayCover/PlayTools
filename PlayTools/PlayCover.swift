@@ -134,6 +134,7 @@ public class PlayCover: NSObject {
 
     // Helper: hide titlebar while keeping traffic lights using UIKit reflection
     fileprivate static func hideTitleBar(_ scene: UIWindowScene?) {
+        return
         guard let scene = scene else { return }
         // Use KVC to access private 'titlebar' property if it exists (macOS 13+)
         if let titlebar = (scene as AnyObject).value(forKey: "titlebar") {
