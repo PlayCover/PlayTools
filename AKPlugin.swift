@@ -14,28 +14,13 @@ class AKPlugin: NSObject, Plugin {
         super.init()
         // Enable window resizing with enhanced configuration
         if let window = NSApplication.shared.windows.first {
-            // Enable all window management features
-            window.styleMask.insert([.resizable, .fullSizeContentView])
-            window.collectionBehavior = [.fullScreenPrimary, .managed, .participatesInCycle]
-            
-            // Enable automatic window management
-            window.isMovable = true
-            window.isMovableByWindowBackground = true
-            window.titlebarAppearsTransparent = true
-            window.titleVisibility = .hidden
-            window.toolbar = nil
-            window.title = ""
-            NSWindow.allowsAutomaticWindowTabbing = true
+            applyWindowAppearance(to: window)
         }
         
         // Apply the same appearance rules to any subsequent windows that may be created
         NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main) { notif in
             guard let win = notif.object as? NSWindow else { return }
-            win.styleMask.insert([.resizable, .fullSizeContentView])
-            win.titlebarAppearsTransparent = true
-            win.titleVisibility = .hidden
-            win.toolbar = nil
-            win.title = ""
+            self.applyWindowAppearance(to: win)
         }
     }
 
@@ -212,5 +197,44 @@ class AKPlugin: NSObject, Plugin {
 
     func setMenuBarVisible(_ visible: Bool) {
         NSMenu.setMenuBarVisible(visible)
+    }
+
+    private func applyWindowAppearance(to window: NSWindow) {
+        // Enable all window management features
+        window.styleMask.insert([.resizable, .fullSizeContentView])
+        window.collectionBehavior = [.fullScreenPrimary, .managed, .participatesInCycle]
+
+        // Enable automatic window management
+        window.isMovable = true
+        window.isMovableByWindowBackground = true
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.toolbar = nil
+        window.title = ""
+        NSWindow.allowsAutomaticWindowTabbing = true
+
+        // Ensure content does not intercept clicks on traffic-light buttons (≈28-pt band)
+        guard let contentView = window.contentView else { return }
+        let titlebarHeight: CGFloat = 28
+        if #available(macOS 11.0, *) {
+            let guide = window.contentLayoutGuide
+            // Avoid duplicating constraints if they already exist
+            if guide.constraints.isEmpty {
+                NSLayoutConstraint.activate([
+                    guide.topAnchor.constraint(equalTo: contentView.topAnchor, constant: titlebarHeight),
+                    guide.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                    guide.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                    guide.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+                ])
+            }
+        } else {
+            // Fallback for older macOS – adjust frame directly once
+            var frame = contentView.frame
+            if frame.origin.y == 0 {
+                frame.origin.y += titlebarHeight
+                frame.size.height -= titlebarHeight
+                contentView.frame = frame
+            }
+        }
     }
 }
