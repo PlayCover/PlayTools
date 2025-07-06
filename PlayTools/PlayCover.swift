@@ -158,10 +158,18 @@ public class PlayCover: NSObject {
                 nsWindow.setValue(NSNumber(value: mask), forKey: "styleMask")
             }
         }
-        // Hide titlebar but keep traffic lights
+        // 2. Hide the title-bar (keep traffic lights)
         nsWindow.setValue(NSNumber(value: 1), forKey: "titleVisibility") // hidden
         nsWindow.setValue(true, forKey: "titlebarAppearsTransparent")
         nsWindow.setValue(nil, forKey: "toolbar")
+
+        // 3. Prevent the root view from intercepting clicks on the traffic-light area
+        if let uiWindow = uiWindow, let rootVC = uiWindow.rootViewController {
+            let defaultInset: CGFloat = 28 // Typical title-bar height on macOS
+            if rootVC.additionalSafeAreaInsets.top < defaultInset {
+                rootVC.additionalSafeAreaInsets.top = defaultInset
+            }
+        }
     }
 
     // Helper: hide titlebar while keeping traffic lights using UIKit reflection
