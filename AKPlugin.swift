@@ -217,15 +217,18 @@ class AKPlugin: NSObject, Plugin {
         guard let contentView = window.contentView else { return }
         let titlebarHeight: CGFloat = 28
         if #available(macOS 11.0, *) {
-            let guide = window.contentLayoutGuide
-            // Avoid duplicating constraints if they already exist
-            if guide.constraints.isEmpty {
-                NSLayoutConstraint.activate([
-                    guide.topAnchor.constraint(equalTo: contentView.topAnchor, constant: titlebarHeight),
-                    guide.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-                    guide.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-                    guide.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
-                ])
+            if let guide = window.contentLayoutGuide as? NSLayoutGuide {
+                // Add a guard to avoid stacking identical constraints repeatedly
+                let existing = guide.constraintsAffectingLayout(for: .vertical)
+                let alreadyPinned = existing.contains { $0.firstAnchor === guide.topAnchor }
+                if !alreadyPinned {
+                    NSLayoutConstraint.activate([
+                        guide.topAnchor.constraint(equalTo: contentView.topAnchor, constant: titlebarHeight),
+                        guide.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                        guide.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                        guide.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+                    ])
+                }
             }
         } else {
             // Fallback for older macOS – adjust frame directly once
