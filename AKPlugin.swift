@@ -11,6 +11,28 @@ import Foundation
 
 class AKPlugin: NSObject, Plugin {
     required override init() {
+        super.init()
+        // Enable window resizing with enhanced configuration
+        if let window = NSApplication.shared.windows.first {
+            // Enable all window management features
+            window.styleMask.insert([.resizable, .fullSizeContentView])
+            window.collectionBehavior = [.fullScreenPrimary, .managed, .participatesInCycle]
+            
+            // Enable automatic window management
+            window.isMovable = true
+            window.isMovableByWindowBackground = true
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.toolbar = nil
+            window.title = ""
+            NSWindow.allowsAutomaticWindowTabbing = true
+            
+            // Set minimum size to prevent too small windows
+            //window.minSize = NSSize(width: 640, height: 480)
+            
+            // Enable automatic frame adjustments
+            //window.setFrame(window.screen?.visibleFrame ?? window.frame, display: true, animate: true)
+        }
     }
 
     var screenCount: Int {

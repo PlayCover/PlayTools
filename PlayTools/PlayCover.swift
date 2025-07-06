@@ -10,10 +10,61 @@ public class PlayCover: NSObject {
 
     static let shared = PlayCover()
     var menuController: MenuController?
+    private static var windowInitRetryCount = 0
+    private static let maxRetries = 10 // Maximum number of retries
+
+    private static func tryShowWindowSizeDebug() {
+        guard windowInitRetryCount < maxRetries else { return }
+        
+        if screen.keyWindow != nil {
+            DebugController.instance.toggleWindowSizeOverlay()
+        } else {
+            windowInitRetryCount += 1
+            // Retry after a delay, increasing the delay each time
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(windowInitRetryCount) * 0.5) {
+                tryShowWindowSizeDebug()
+            }
+        }
+    }
 
     @objc static public func launch() {
         quitWhenClose()
         AKInterface.initialize()
+        
+        // Configure window for resizing through AKInterface
+        if let window = screen.window {
+            // Make underlying NSWindow resizable via KVC
+            enableWindowResize(window)
+            
+            // Enable automatic window sizing
+            if let hostingWindow = window.value(forKey: "_hostWindow") as? NSObject {
+                hostingWindow.setValue(true, forKey: "allowsAutomaticWindowSizeAdjustment")
+                hostingWindow.setValue(true, forKey: "allowsResizing")
+                hostingWindow.setValue(true, forKey: "allowsAutoResizing")
+                
+                // Set content size behavior
+                hostingWindow.setValue(true, forKey: "preservesContentSizeWhenMovedToActiveSpace")
+//                hostingWindow.setValue(NSSize(width: 640, height: 480), forKey: "minContentSize")
+            }
+            
+            // Update window frame to match screen
+            if let windowScene = window.windowScene {
+                // Remove Catalyst size restrictions to allow free corner dragging
+                if let restrictions = windowScene.sizeRestrictions {
+                    restrictions.minimumSize = .zero
+                    restrictions.maximumSize = CGSize(width: CGFloat.greatestFiniteMagnitude,
+                                                      height: CGFloat.greatestFiniteMagnitude)
+                }
+                // Hide titlebar via UIKit reflection and keep traffic lights
+                hideTitleBar(windowScene)
+                // Ensure window is resizable
+                enableWindowResize(window)
+
+                let screenSize = windowScene.screen.bounds.size
+                window.frame = CGRect(origin: window.frame.origin, size: screenSize)
+            }
+        }
+        
         PlayInput.shared.initialize()
         // DiscordIPC.shared.initialize()
 
@@ -21,38 +72,36 @@ public class PlayCover: NSObject {
             // Change the working directory to / just like iOS
             FileManager.default.changeCurrentDirectoryPath("/")
         }
-
-        // Apply window tweaks after first runloop cycle
-        DispatchQueue.main.async {
-            if let window = screen.window {
-                // enableWindowResize(window)
-                hideTitleBar(window.windowScene)
-                // Hide the underlying NSWindow toolbar/strip so only traffic lights remain
-                if let nsWin = window.nsWindow {
-                    nsWin.setValue(true, forKey: "titlebarAppearsTransparent")
-                    nsWin.setValue(nil,  forKey: "toolbar")
-                }
-
-                // Lift any Catalyst size limits so the user can resize freely
-                window.windowScene?.sizeRestrictions?.minimumSize = .zero
-                window.windowScene?.sizeRestrictions?.maximumSize = CGSize(width: CGFloat.greatestFiniteMagnitude,
-                                                                            height: CGFloat.greatestFiniteMagnitude)
-            }
+        
+        // Start trying to show window size debug view
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            tryShowWindowSizeDebug()
         }
-
-        // Re-apply when a new key window becomes active
-        NotificationCenter.default.addObserver(forName: UIWindow.didBecomeKeyNotification,
-                                               object: nil,
-                                               queue: .main) { _ in
+        
+        // Also listen for window creation
+        NotificationCenter.default.addObserver(
+            forName: UIWindow.didBecomeKeyNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            if windowInitRetryCount < maxRetries {
+                tryShowWindowSizeDebug()
+            }
             if let win = screen.keyWindow {
                 enableWindowResize(win)
-                hideTitleBar(win.windowScene)
-                if let nsWin = win.nsWindow {
-                    nsWin.setValue(true, forKey: "titlebarAppearsTransparent")
-                    nsWin.setValue(nil,  forKey: "toolbar")
+                if let ws = win.windowScene {
+                    hideTitleBar(ws)
                 }
             }
         }
+
+        // Also hide titlebar for new key window
+//        if let win = screen.keyWindow, let ws = win.windowScene, #available(macCatalyst 15.0, *) {
+//            if let titlebar = ws.titlebar {
+//                titlebar.titleVisibility = .hidden
+//                titlebar.toolbar = nil
+//            }
+//        }
     }
 
     @objc static public func initMenu(menu: NSObject) {
@@ -109,24 +158,19 @@ public class PlayCover: NSObject {
         DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
     }
 
-    // MARK: – Catalyst window helpers
-
-    /// Ensures the underlying NSWindow is resizable **and** hides the title-bar
-    /// while preserving the red/yellow/green traffic lights.
+    // Helper: add resizable style mask to underlying NSWindow via KVC (works on Catalyst without AppKit)
     fileprivate static func enableWindowResize(_ uiWindow: UIWindow?) {
         guard let nsWindow = uiWindow?.nsWindow else { return }
-
-        // 1. Make the window resizable (add the `.resizable` bit)
-        let resizableBit: UInt64 = 1 << 3 // NSWindowStyleMaskResizable
-        if let maskNum = nsWindow.value(forKey: "styleMask") as? NSNumber {
-            var mask = maskNum.uint64Value
+        // NSWindowStyleMaskResizable = 1 << 3
+        let resizableBit: UInt64 = 1 << 3
+        if let maskNumber = nsWindow.value(forKey: "styleMask") as? NSNumber {
+            var mask = maskNumber.uint64Value
             if mask & resizableBit == 0 {
                 mask |= resizableBit
                 nsWindow.setValue(NSNumber(value: mask), forKey: "styleMask")
             }
         }
-
-        // 2. Hide the title-bar (keep traffic lights)
+        // Hide titlebar but keep traffic lights
         nsWindow.setValue(NSNumber(value: 1), forKey: "titleVisibility") // hidden
         nsWindow.setValue(true, forKey: "titlebarAppearsTransparent")
         nsWindow.setValue(nil, forKey: "toolbar")
