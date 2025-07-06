@@ -33,6 +33,16 @@ class AKPlugin: NSObject, Plugin {
             // Enable automatic frame adjustments
             //window.setFrame(window.screen?.visibleFrame ?? window.frame, display: true, animate: true)
         }
+        
+        // Apply the same appearance rules to any subsequent windows that may be created
+        NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main) { notif in
+            guard let win = notif.object as? NSWindow else { return }
+            win.styleMask.insert([.resizable, .fullSizeContentView])
+            win.titlebarAppearsTransparent = true
+            win.titleVisibility = .hidden
+            win.toolbar = nil
+            win.title = ""
+        }
     }
 
     var screenCount: Int {
