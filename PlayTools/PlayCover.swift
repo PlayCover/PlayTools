@@ -13,20 +13,6 @@ public class PlayCover: NSObject {
     private static var windowInitRetryCount = 0
     private static let maxRetries = 10 // Maximum number of retries
 
-    private static func tryShowWindowSizeDebug() {
-        guard windowInitRetryCount < maxRetries else { return }
-        
-        if screen.keyWindow != nil {
-            DebugController.instance.toggleWindowSizeOverlay()
-        } else {
-            windowInitRetryCount += 1
-            // Retry after a delay, increasing the delay each time
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(windowInitRetryCount) * 0.5) {
-                tryShowWindowSizeDebug()
-            }
-        }
-    }
-
     @objc static public func launch() {
         quitWhenClose()
         AKInterface.initialize()
@@ -73,20 +59,12 @@ public class PlayCover: NSObject {
             FileManager.default.changeCurrentDirectoryPath("/")
         }
         
-        // Start trying to show window size debug view
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            tryShowWindowSizeDebug()
-        }
-        
         // Also listen for window creation
         NotificationCenter.default.addObserver(
             forName: UIWindow.didBecomeKeyNotification,
             object: nil,
             queue: .main
         ) { _ in
-            if windowInitRetryCount < maxRetries {
-                tryShowWindowSizeDebug()
-            }
             if let win = screen.keyWindow {
                 enableWindowResize(win)
                 if let ws = win.windowScene {
