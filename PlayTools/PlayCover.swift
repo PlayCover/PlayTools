@@ -138,30 +138,30 @@ public class PlayCover: NSObject {
 
     // Helper: add resizable style mask to underlying NSWindow via KVC (works on Catalyst without AppKit)
     fileprivate static func enableWindowResize(_ uiWindow: UIWindow?) {
-        guard let nsWindow = uiWindow?.nsWindow else { return }
-        // NSWindowStyleMaskResizable = 1 << 3
-        let resizableBit: UInt64 = 1 << 3
-        // NSWindowStyleMaskFullSizeContentView = 1 << 15
-        let fullSizeContentViewBit: UInt64 = 1 << 15
-        if let maskNumber = nsWindow.value(forKey: "styleMask") as? NSNumber {
-            var mask = maskNumber.uint64Value
-            var changed = false
-            if mask & resizableBit == 0 {
-                mask |= resizableBit
-                changed = true
-            }
-            if mask & fullSizeContentViewBit == 0 {
-                mask |= fullSizeContentViewBit
-                changed = true
-            }
-            if changed {
-                nsWindow.setValue(NSNumber(value: mask), forKey: "styleMask")
-            }
-        }
+        // guard let nsWindow = uiWindow?.nsWindow else { return }
+        // // NSWindowStyleMaskResizable = 1 << 3
+        // let resizableBit: UInt64 = 1 << 3
+        // // NSWindowStyleMaskFullSizeContentView = 1 << 15
+        // let fullSizeContentViewBit: UInt64 = 1 << 15
+        // if let maskNumber = nsWindow.value(forKey: "styleMask") as? NSNumber {
+        //     var mask = maskNumber.uint64Value
+        //     var changed = false
+        //     if mask & resizableBit == 0 {
+        //         mask |= resizableBit
+        //         changed = true
+        //     }
+        //     if mask & fullSizeContentViewBit == 0 {
+        //         mask |= fullSizeContentViewBit
+        //         changed = true
+        //     }
+        //     if changed {
+        //         nsWindow.setValue(NSNumber(value: mask), forKey: "styleMask")
+        //     }
+        // }
         // Hide titlebar but keep traffic lights
-        nsWindow.setValue(NSNumber(value: 1), forKey: "titleVisibility") // hidden
-        nsWindow.setValue(true, forKey: "titlebarAppearsTransparent")
-        nsWindow.setValue(nil, forKey: "toolbar")
+        // nsWindow.setValue(NSNumber(value: 1), forKey: "titleVisibility") // hidden
+        // nsWindow.setValue(true, forKey: "titlebarAppearsTransparent")
+        // nsWindow.setValue(nil, forKey: "toolbar")
     }
 
     // Helper: hide titlebar while keeping traffic lights using UIKit reflection
