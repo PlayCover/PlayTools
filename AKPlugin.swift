@@ -15,7 +15,7 @@ class AKPlugin: NSObject, Plugin {
         // Enable window resizing with enhanced configuration
         if let window = NSApplication.shared.windows.first {
             // Enable all window management features
-            window.styleMask.insert(.resizable)
+            window.styleMask.insert([.resizable, .fullSizeContentView])
             window.collectionBehavior = [.fullScreenPrimary, .managed, .participatesInCycle]
             
             // Enable automatic window management
@@ -31,7 +31,7 @@ class AKPlugin: NSObject, Plugin {
         // Apply the same appearance rules to any subsequent windows that may be created
         NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main) { notif in
             guard let win = notif.object as? NSWindow else { return }
-            win.styleMask.insert(.resizable)
+            win.styleMask.insert([.resizable, .fullSizeContentView])
             win.titlebarAppearsTransparent = true
             win.titleVisibility = .hidden
             win.toolbar = nil
