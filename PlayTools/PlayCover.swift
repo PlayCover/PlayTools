@@ -27,6 +27,11 @@ public class PlayCover: NSObject {
             if let window = screen.window {
                 // enableWindowResize(window)
                 hideTitleBar(window.windowScene)
+                // Hide the underlying NSWindow toolbar/strip so only traffic lights remain
+                if let nsWin = window.nsWindow {
+                    nsWin.setValue(true, forKey: "titlebarAppearsTransparent")
+                    nsWin.setValue(nil,  forKey: "toolbar")
+                }
 
                 // Lift any Catalyst size limits so the user can resize freely
                 window.windowScene?.sizeRestrictions?.minimumSize = .zero
@@ -42,6 +47,10 @@ public class PlayCover: NSObject {
             if let win = screen.keyWindow {
                 enableWindowResize(win)
                 hideTitleBar(win.windowScene)
+                if let nsWin = win.nsWindow {
+                    nsWin.setValue(true, forKey: "titlebarAppearsTransparent")
+                    nsWin.setValue(nil,  forKey: "toolbar")
+                }
             }
         }
     }
@@ -123,12 +132,15 @@ public class PlayCover: NSObject {
         nsWindow.setValue(nil, forKey: "toolbar")
     }
 
-    /// UIKit-side helper that hides the title-bar via reflection (no AppKit import).
+    // Helper: hide titlebar while keeping traffic lights using UIKit reflection
     fileprivate static func hideTitleBar(_ scene: UIWindowScene?) {
         guard let scene = scene else { return }
+        // Use KVC to access private 'titlebar' property if it exists (macOS 13+)
         if let titlebar = (scene as AnyObject).value(forKey: "titlebar") {
-            (titlebar as AnyObject).setValue(1, forKey: "titleVisibility") // hide title text
-            (titlebar as AnyObject).setValue(nil, forKey: "toolbar")       // shrink bar height
+            // 1 == UITitlebarTitleVisibility.hidden
+            (titlebar as AnyObject).setValue(1, forKey: "titleVisibility")
+            // Remove toolbar to shrink title area
+            (titlebar as AnyObject).setValue(nil, forKey: "toolbar")
         }
     }
 }
