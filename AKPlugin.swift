@@ -195,6 +195,17 @@ class AKPlugin: NSObject, Plugin {
             if isInTrafficLightArea(event) {
                 return event
             }
+
+            // Detect double-clicks on the title-bar area (respecting system preference)
+            if left && event.clickCount == 2, let win = event.window {
+                let contentRect = win.contentLayoutRect
+                // Title-bar area is the region above contentLayoutRect
+                if event.locationInWindow.y > contentRect.maxY {
+                    win.performZoom(nil)
+                    return nil
+                }
+            }
+
             // For traffic light buttons when fullscreen
             if event.window != NSApplication.shared.windows.first! {
                 return event
