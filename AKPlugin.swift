@@ -173,7 +173,28 @@ class AKPlugin: NSObject, Plugin {
     func setupMouseButton(left: Bool, right: Bool, _ consumed: @escaping (Int, Bool) -> Bool) {
         let downType: NSEvent.EventTypeMask = left ? .leftMouseDown : right ? .rightMouseDown : .otherMouseDown
         let upType: NSEvent.EventTypeMask = left ? .leftMouseUp : right ? .rightMouseUp : .otherMouseUp
+
+        // Helper to detect whether the event is inside any of the window "traffic-light" buttons
+        func isInTrafficLightArea(_ event: NSEvent) -> Bool {
+            guard let win = event.window else { return false }
+            let pointInWindow = event.locationInWindow
+            let buttonTypes: [NSWindow.ButtonType] = [.closeButton, .miniaturizeButton, .zoomButton, .fullScreenButton]
+            for type in buttonTypes {
+                if let button = win.standardWindowButton(type) {
+                    let localPoint = button.convert(pointInWindow, from: nil) // convert from window coords
+                    if button.bounds.contains(localPoint) {
+                        return true
+                    }
+                }
+            }
+            return false
+        }
+
         NSEvent.addLocalMonitorForEvents(matching: downType, handler: { event in
+            // Always allow clicks on the window traffic-light buttons to pass through
+            if isInTrafficLightArea(event) {
+                return event
+            }
             // For traffic light buttons when fullscreen
             if event.window != NSApplication.shared.windows.first! {
                 return event
@@ -184,6 +205,10 @@ class AKPlugin: NSObject, Plugin {
             return event
         })
         NSEvent.addLocalMonitorForEvents(matching: upType, handler: { event in
+            // Always allow releases on the traffic-light buttons to pass through
+            if isInTrafficLightArea(event) {
+                return event
+            }
             if consumed(event.buttonNumber, false) {
                 return nil
             }
