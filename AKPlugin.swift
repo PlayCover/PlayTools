@@ -12,12 +12,14 @@ import Foundation
 class AKPlugin: NSObject, Plugin {
     required override init() {
         super.init()
-        // Enable window resizing with enhanced configuration
+        if PlaySettings.shared.hideTitleBar == false {
+                return
+        }
         if let window = NSApplication.shared.windows.first {
             // Enable all window management features
             window.styleMask.insert([.resizable, .fullSizeContentView])
             window.collectionBehavior = [.fullScreenPrimary, .managed, .participatesInCycle]
-            
+
             // Enable automatic window management
             window.isMovable = true
             window.isMovableByWindowBackground = true
@@ -27,7 +29,7 @@ class AKPlugin: NSObject, Plugin {
             window.title = ""
             NSWindow.allowsAutomaticWindowTabbing = true
         }
-        
+
         // Apply the same appearance rules to any subsequent windows that may be created
         NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main) { notif in
             guard let win = notif.object as? NSWindow else { return }
@@ -176,6 +178,9 @@ class AKPlugin: NSObject, Plugin {
 
         // Helper to detect whether the event is inside any of the window "traffic-light" buttons
         func isInTrafficLightArea(_ event: NSEvent) -> Bool {
+            if PlaySettings.shared.hideTitleBar == false {
+                return false
+            }
             guard let win = event.window else { return false }
             let pointInWindow = event.locationInWindow
             let buttonTypes: [NSWindow.ButtonType] = [.closeButton, .miniaturizeButton, .zoomButton, .fullScreenButton]
@@ -197,7 +202,8 @@ class AKPlugin: NSObject, Plugin {
             }
 
             // Detect double-clicks on the title-bar area (respecting system preference)
-            if left && event.clickCount == 2, let win = event.window {
+
+            if left && event.clickCount == 2, PlaySettings.shared.hideTitleBar, let win = event.window {
                 let contentRect = win.contentLayoutRect
                 // Title-bar area is the region above contentLayoutRect
                 if event.locationInWindow.y > contentRect.maxY {
