@@ -16,38 +16,6 @@ public class PlayCover: NSObject {
     @objc static public func launch() {
         quitWhenClose()
         AKInterface.initialize()
-        
-        // Configure window for resizing through AKInterface
-        if let window = screen.window {
-     
-            // Enable automatic window sizing
-            if let hostingWindow = window.value(forKey: "_hostWindow") as? NSObject {
-                hostingWindow.setValue(true, forKey: "allowsAutomaticWindowSizeAdjustment")
-                hostingWindow.setValue(true, forKey: "allowsResizing")
-                hostingWindow.setValue(true, forKey: "allowsAutoResizing")
-                
-                // Set content size behavior
-                hostingWindow.setValue(true, forKey: "preservesContentSizeWhenMovedToActiveSpace")
-//                hostingWindow.setValue(NSSize(width: 640, height: 480), forKey: "minContentSize")
-            }
-            
-            // Update window frame to match screen
-            if let windowScene = window.windowScene {
-                // Remove Catalyst size restrictions to allow free corner dragging
-                if let restrictions = windowScene.sizeRestrictions {
-                    restrictions.minimumSize = .zero
-                    restrictions.maximumSize = CGSize(width: CGFloat.greatestFiniteMagnitude,
-                                                      height: CGFloat.greatestFiniteMagnitude)
-                }
-                // Hide titlebar via UIKit reflection and keep traffic lights
-                hideTitleBar(windowScene)
-                // Ensure window is resizable
-
-                let screenSize = windowScene.screen.bounds.size
-                window.frame = CGRect(origin: window.frame.origin, size: screenSize)
-            }
-        }
-        
         PlayInput.shared.initialize()
         // DiscordIPC.shared.initialize()
 
@@ -55,27 +23,6 @@ public class PlayCover: NSObject {
             // Change the working directory to / just like iOS
             FileManager.default.changeCurrentDirectoryPath("/")
         }
-        
-        // Also listen for window creation
-        NotificationCenter.default.addObserver(
-            forName: UIWindow.didBecomeKeyNotification,
-            object: nil,
-            queue: .main
-        ) { _ in
-            if let win = screen.keyWindow {
-                if let ws = win.windowScene {
-                    hideTitleBar(ws)
-                }
-            }
-        }
-
-        // Also hide titlebar for new key window
-//        if let win = screen.keyWindow, let ws = win.windowScene, #available(macCatalyst 15.0, *) {
-//            if let titlebar = ws.titlebar {
-//                titlebar.titleVisibility = .hidden
-//                titlebar.toolbar = nil
-//            }
-//        }
     }
 
     @objc static public func initMenu(menu: NSObject) {
@@ -130,18 +77,5 @@ public class PlayCover: NSObject {
     static func delay(_ delay: Double, closure: @escaping () -> Void) {
         let when = DispatchTime.now() + delay
         DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
-    }
-
-    // Helper: hide titlebar while keeping traffic lights using UIKit reflection
-    fileprivate static func hideTitleBar(_ scene: UIWindowScene?) {
-        return
-        guard let scene = scene else { return }
-        // Use KVC to access private 'titlebar' property if it exists (macOS 13+)
-        if let titlebar = (scene as AnyObject).value(forKey: "titlebar") {
-            // 1 == UITitlebarTitleVisibility.hidden
-            (titlebar as AnyObject).setValue(1, forKey: "titleVisibility")
-            // Remove toolbar to shrink title area
-            (titlebar as AnyObject).setValue(nil, forKey: "toolbar")
-        }
     }
 }
