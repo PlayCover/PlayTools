@@ -9,10 +9,15 @@ import AppKit
 import CoreGraphics
 import Foundation
 
+// Add a lightweight struct so we can decode only the flag we care about
+private struct AKAppSettingsData: Codable {
+    var hideTitleBar: Bool?
+}
+
 class AKPlugin: NSObject, Plugin {
     required override init() {
         super.init()
-        if PlaySettings.shared.hideTitleBar == false {
+        if hideTitleBarSetting == false {
                 return
         }
         if let window = NSApplication.shared.windows.first {
@@ -178,7 +183,7 @@ class AKPlugin: NSObject, Plugin {
 
         // Helper to detect whether the event is inside any of the window "traffic-light" buttons
         func isInTrafficLightArea(_ event: NSEvent) -> Bool {
-            if PlaySettings.shared.hideTitleBar == false {
+            if self.hideTitleBarSetting == false {
                 return false
             }
             guard let win = event.window else { return false }
@@ -203,7 +208,7 @@ class AKPlugin: NSObject, Plugin {
 
             // Detect double-clicks on the title-bar area (respecting system preference)
 
-            if left && event.clickCount == 2, PlaySettings.shared.hideTitleBar, let win = event.window {
+            if left && event.clickCount == 2, self.hideTitleBarSetting, let win = event.window {
                 let contentRect = win.contentLayoutRect
                 // Title-bar area is the region above contentLayoutRect
                 if event.locationInWindow.y > contentRect.maxY {
@@ -255,4 +260,21 @@ class AKPlugin: NSObject, Plugin {
     func setMenuBarVisible(_ visible: Bool) {
         NSMenu.setMenuBarVisible(visible)
     }
+
+    /// Convenience instance property that exposes the cached static preference.
+    private var hideTitleBarSetting: Bool { Self.hideTitleBarPreference }
+
+    /// Reads the plist settings file and returns the user preference for hiding the title-bar.
+    /// If the file cannot be read or the value is missing, it defaults to `false`.
+    private static var hideTitleBarPreference: Bool = {
+        let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
+        let settingsURL = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
+            .appendingPathComponent("App Settings")
+            .appendingPathComponent("\(bundleIdentifier).plist")
+        guard let data = try? Data(contentsOf: settingsURL),
+              let decoded = try? PropertyListDecoder().decode(AKAppSettingsData.self, from: data) else {
+            return false
+        }
+        return decoded.hideTitleBar ?? false
+    }()
 }
