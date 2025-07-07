@@ -264,9 +264,7 @@ class AKPlugin: NSObject, Plugin {
     /// Convenience instance property that exposes the cached static preference.
     private var hideTitleBarSetting: Bool { Self.hideTitleBarPreference }
 
-    /// Reads the plist settings file and returns the user preference for hiding the title-bar.
-    /// If the file cannot be read or the value is missing, it defaults to `false`.
-    private static var hideTitleBarPreference: Bool = {
+    fileprivate static var hideTitleBarPreference: Bool = {
         let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
         let settingsURL = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("App Settings")
