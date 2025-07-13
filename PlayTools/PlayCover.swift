@@ -10,6 +10,8 @@ public class PlayCover: NSObject {
 
     static let shared = PlayCover()
     var menuController: MenuController?
+    private static var windowInitRetryCount = 0
+    private static let maxRetries = 10 // Maximum number of retries
 
     @objc static public func launch() {
         quitWhenClose()
