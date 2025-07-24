@@ -12,6 +12,7 @@
 #import <PlayTools/PlayTools-Swift.h>
 #import "PTFakeMetaTouch.h"
 #import <VideoSubscriberAccount/VideoSubscriberAccount.h>
+#import <AVFoundation/AVFoundation.h>
 
 __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
@@ -138,6 +139,15 @@ __attribute__((visibility("hidden")))
                                                                 withTemplate:template
                                                                      options:options
                                                                        range:range];
+}
+
+- (void)hook_requestRecordPermission:(void (^)(BOOL))response {
+    BOOL granted = [[AVAudioSession sharedInstance] recordPermission] == AVAudioSessionRecordPermissionGranted;
+    if (granted) {
+        response(granted);
+    } else {
+        [self hook_requestRecordPermission:response];
+    }
 }
 
 // Hook for UIUserInterfaceIdiom
@@ -272,6 +282,10 @@ bool menuWasCreated = false;
             SEL newSelector = @selector(hook_stringByReplacingOccurrencesOfRegularExpressionPattern:withTemplate:options:range:);
             [objc_getClass("NSString") swizzleInstanceMethod:origSelector withMethod:newSelector];
         }
+    }
+
+    if ([[PlaySettings shared] checkMicPermissionSync]) {
+        [objc_getClass("AVAudioSession") swizzleInstanceMethod:@selector(requestRecordPermission:) withMethod:@selector(hook_requestRecordPermission:)];
     }
 }
 
