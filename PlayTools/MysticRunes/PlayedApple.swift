@@ -33,6 +33,7 @@ public class PlayKeychain: NSObject {
         debugLogger("Wrote keychain item to db")
         // Place v_Data in the result
         guard let vData = attributes["v_Data"] as? CFTypeRef else {
+            result?.pointee = nil
             return errSecSuccess
         }
 
@@ -49,15 +50,25 @@ public class PlayKeychain: NSObject {
         }
 
         if attributes["class"] as? String == "keys" {
-            // kSecAttrKeyType is stored as `type` in the dictionary
-            // kSecAttrKeyClass is stored as `kcls` in the dictionary
-            let keyAttributes = [
-                kSecAttrKeyType: attributes["type"] as! CFString, // swiftlint:disable:this force_cast
-                kSecAttrKeyClass: attributes["kcls"] as! CFString // swiftlint:disable:this force_cast
-            ]
-            let keyData = vData as! Data // swiftlint:disable:this force_cast
-            let key = SecKeyCreateWithData(keyData as CFData, keyAttributes as CFDictionary, nil)
-            result?.pointee = Unmanaged.passRetained(key!)
+            if let keyDataValue = vData as? Data {
+                // kSecAttrKeyType is stored as `type` in the dictionary
+                // kSecAttrKeyClass is stored as `kcls` in the dictionary
+                let keyAttributesDictionary = [
+                    kSecAttrKeyType: attributes["type"] as? String
+                        ?? (attributes[kSecAttrKeyType as String] as? String),
+                    kSecAttrKeyClass: attributes["kcls"] as? String
+                        ?? (attributes[kSecAttrKeyType as String] as? String)
+                ]
+                if let key = SecKeyCreateWithData(
+                    keyDataValue as CFData,
+                    keyAttributesDictionary as CFDictionary,
+                    nil
+                ) {
+                    result?.pointee = Unmanaged.passRetained(key)
+                    return errSecSuccess
+                }
+            }
+            result?.pointee = nil
             return errSecSuccess
         }
         result?.pointee = Unmanaged.passRetained(vData)
