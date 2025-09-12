@@ -161,6 +161,7 @@ var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
 
 class MenuController {
     init(with builder: UIMenuBuilder) {
+    #if canImport(UIKit.UIMainMenuSystem)
         if #available(iOS 26.0, *) {
             // Delay to avoid error
             // Cannot set a main menu system configuration while the main menu system is building.
@@ -174,6 +175,9 @@ class MenuController {
         } else {
             setupMenu(with: builder)
         }
+    #else
+        setupMenu(with: builder)
+    #endif
     }
 
     func setupMenu(with builder: UIMenuBuilder) {
