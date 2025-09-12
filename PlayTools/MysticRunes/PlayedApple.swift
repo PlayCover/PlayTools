@@ -67,7 +67,7 @@ public class PlayKeychain: NSObject {
                     return errSecSuccess
                 }
             }
-            return errSecSuccess
+            return errSecBadReq
         }
         result?.pointee = Unmanaged.passRetained(vData)
         return errSecSuccess
