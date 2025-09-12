@@ -33,7 +33,6 @@ public class PlayKeychain: NSObject {
         debugLogger("Wrote keychain item to db")
         // Place v_Data in the result
         guard let vData = attributes["v_Data"] as? CFTypeRef else {
-            result?.pointee = nil
             return errSecSuccess
         }
 
@@ -68,7 +67,6 @@ public class PlayKeychain: NSObject {
                     return errSecSuccess
                 }
             }
-            result?.pointee = nil
             return errSecSuccess
         }
         result?.pointee = Unmanaged.passRetained(vData)
