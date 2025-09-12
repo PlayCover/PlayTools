@@ -81,6 +81,10 @@ let settings = PlaySettings.shared
     @objc lazy var noKMOnInput = settingsData.noKMOnInput
 
     @objc lazy var enableScrollWheel = settingsData.enableScrollWheel
+
+    @objc lazy var hideTitleBar = settingsData.hideTitleBar
+
+    @objc lazy var checkMicPermissionSync = settingsData.checkMicPermissionSync
 }
 
 struct AppSettingsData: Codable {
@@ -105,4 +109,6 @@ struct AppSettingsData: Codable {
     var rootWorkDir = true
     var noKMOnInput = false
     var enableScrollWheel = true
+    var hideTitleBar = false
+    var checkMicPermissionSync = false
 }
