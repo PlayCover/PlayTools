@@ -85,6 +85,8 @@ let settings = PlaySettings.shared
     @objc lazy var hideTitleBar = settingsData.hideTitleBar
 
     @objc lazy var checkMicPermissionSync = settingsData.checkMicPermissionSync
+
+    @objc lazy var limitMotionUpdateFrequency = settingsData.limitMotionUpdateFrequency
 }
 
 struct AppSettingsData: Codable {
@@ -111,4 +113,5 @@ struct AppSettingsData: Codable {
     var enableScrollWheel = true
     var hideTitleBar = false
     var checkMicPermissionSync = false
+    var limitMotionUpdateFrequency = false
 }

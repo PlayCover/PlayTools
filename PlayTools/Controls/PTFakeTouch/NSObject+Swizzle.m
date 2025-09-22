@@ -13,6 +13,7 @@
 #import "PTFakeMetaTouch.h"
 #import <VideoSubscriberAccount/VideoSubscriberAccount.h>
 #import <AVFoundation/AVFoundation.h>
+#import <CoreMotion/CoreMotion.h>
 
 __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
@@ -148,6 +149,15 @@ __attribute__((visibility("hidden")))
     } else {
         [self hook_requestRecordPermission:response];
     }
+}
+
+- (instancetype)hook_CMMotionManager_init {
+    CMMotionManager *motionManager = (CMMotionManager *)[self hook_CMMotionManager_init];
+    // The default update interval is 0, which may lead to excessive CPU usage
+    motionManager.accelerometerUpdateInterval = 0.01;
+    motionManager.deviceMotionUpdateInterval = 0.01;
+    motionManager.gyroUpdateInterval = 0.01;
+    return motionManager;
 }
 
 // Hook for UIUserInterfaceIdiom
@@ -286,6 +296,10 @@ bool menuWasCreated = false;
 
     if ([[PlaySettings shared] checkMicPermissionSync]) {
         [objc_getClass("AVAudioSession") swizzleInstanceMethod:@selector(requestRecordPermission:) withMethod:@selector(hook_requestRecordPermission:)];
+    }
+
+    if ([[PlaySettings shared] limitMotionUpdateFrequency]) {
+        [objc_getClass("CMMotionManager") swizzleInstanceMethod:@selector(init) withMethod:@selector(hook_CMMotionManager_init)];
     }
 }
 
