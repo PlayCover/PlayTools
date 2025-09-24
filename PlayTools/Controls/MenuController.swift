@@ -148,6 +148,17 @@ var keymapping = [
     NSLocalizedString("menu.keymapping.previousKeymap", tableName: "Playtools",
                       value: "Previous Keymap", comment: "")
   ]
+var iconsSelctor = [
+    UIImage(systemName: "pencil"),
+    UIImage(systemName: "trash.fill"),
+    UIImage(systemName: "square.resize.up"),
+    UIImage(systemName: "square.resize.down"),
+    UIImage(systemName: "rectangle.landscape.rotate"),
+    UIImage(systemName: "wrench.and.screwdriver"),
+    UIImage(systemName: "pointer.arrow.slash"),
+    UIImage(systemName: "arrow.down.square"),
+    UIImage(systemName: "arrow.up.square")
+  ]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
@@ -228,9 +239,10 @@ class MenuController {
             "[",                            // Next keymap
             "]"                             // Previous keymap
         ]
-        let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
-            UIKeyCommand(title: btn,
-                         image: nil,
+        let arrowKeyChildrenCommands = zip(zip(keyCommands, keymapping), iconsSelctor).map { (arg0, image) in
+            let (command, btn) = arg0
+            return UIKeyCommand(title: btn,
+                         image: image,
                          action: keymappingSelectors[keymapping.firstIndex(of: btn)!],
                          input: command,
                          modifierFlags: .command,
