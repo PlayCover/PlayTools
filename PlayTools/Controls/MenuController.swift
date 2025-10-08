@@ -143,10 +143,10 @@ var keymapping = [
                       value: "Toggle Debug Overlay", comment: ""),
     NSLocalizedString("menu.keymapping.hide.pointer", tableName: "Playtools",
                       value: "Hide Mouse Pointer", comment: ""),
-    NSLocalizedString("menu.keymapping.nextKeymap", tableName: "Playtools",
-                      value: "Next Keymap", comment: ""),
     NSLocalizedString("menu.keymapping.previousKeymap", tableName: "Playtools",
-                      value: "Previous Keymap", comment: "")
+                      value: "Previous Keymap", comment: ""),
+    NSLocalizedString("menu.keymapping.nextKeymap", tableName: "Playtools",
+                      value: "Next Keymap", comment: "")
   ]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
@@ -155,8 +155,8 @@ var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.rotateView(_:)),
                            #selector(UIApplication.toggleDebugOverlay(_:)),
                            #selector(UIApplication.hideCursor(_:)),
-                           #selector(UIApplication.nextKeymap(_:)),
-                           #selector(UIApplication.previousKeymap(_:))
+                           #selector(UIApplication.previousKeymap(_:)),
+                           #selector(UIApplication.nextKeymap(_:))
     ]
 
 class MenuController {
@@ -225,8 +225,8 @@ class MenuController {
             "R",                            // Rotate display
             "D",                            // Toggle debug overlay
             ".",                            // Hide cursor until move
-            "[",                            // Next keymap
-            "]"                             // Previous keymap
+            "[",                            // Previous keymap
+            "]"                             // Next keymap
         ]
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
             UIKeyCommand(title: btn,
