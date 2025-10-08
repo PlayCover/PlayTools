@@ -49,16 +49,25 @@ public class PlayKeychain: NSObject {
         }
 
         if attributes["class"] as? String == "keys" {
-            // kSecAttrKeyType is stored as `type` in the dictionary
-            // kSecAttrKeyClass is stored as `kcls` in the dictionary
-            let keyAttributes = [
-                kSecAttrKeyType: attributes["type"] as! CFString, // swiftlint:disable:this force_cast
-                kSecAttrKeyClass: attributes["kcls"] as! CFString // swiftlint:disable:this force_cast
-            ]
-            let keyData = vData as! Data // swiftlint:disable:this force_cast
-            let key = SecKeyCreateWithData(keyData as CFData, keyAttributes as CFDictionary, nil)
-            result?.pointee = Unmanaged.passRetained(key!)
-            return errSecSuccess
+            if let keyDataValue = vData as? Data {
+                // kSecAttrKeyType is stored as `type` in the dictionary
+                // kSecAttrKeyClass is stored as `kcls` in the dictionary
+                let keyAttributesDictionary = [
+                    kSecAttrKeyType: attributes["type"] as? String
+                        ?? (attributes[kSecAttrKeyType as String] as? String),
+                    kSecAttrKeyClass: attributes["kcls"] as? String
+                        ?? (attributes[kSecAttrKeyType as String] as? String)
+                ]
+                if let key = SecKeyCreateWithData(
+                    keyDataValue as CFData,
+                    keyAttributesDictionary as CFDictionary,
+                    nil
+                ) {
+                    result?.pointee = Unmanaged.passRetained(key)
+                    return errSecSuccess
+                }
+            }
+            return errSecBadReq
         }
         result?.pointee = Unmanaged.passRetained(vData)
         return errSecSuccess
