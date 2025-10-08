@@ -17,16 +17,16 @@ class Keymapping {
     private var keymapIdx: Int
     public var currentKeymap: KeymappingData {
         get {
-            getKeymap(name: currentKeymapName)
+            getKeymap(path: currentKeymapURL)
         }
         set {
-            setKeymap(name: currentKeymapName, map: newValue)
+            setKeymap(path: currentKeymapURL, map: newValue)
         }
     }
 
     private let baseKeymapURL: URL
     private let configURL: URL
-    private var keymapURLs: [String: URL]
+    private var keymapOrder: [URL: KeymappingData] = [:]
 
     public var keymapConfig: KeymapConfig {
         get {
@@ -51,8 +51,12 @@ class Keymapping {
         }
     }
 
+    public var currentKeymapURL: URL {
+        keymapConfig.keymapOrder[keymapIdx]
+    }
+
     public var currentKeymapName: String {
-        Array(keymapURLs.keys)[keymapIdx]
+        currentKeymapURL.deletingPathExtension().lastPathComponent
     }
 
     init() {
@@ -61,20 +65,14 @@ class Keymapping {
             .appendingPathComponent(bundleIdentifier)
 
         configURL = baseKeymapURL.appendingPathComponent(".config").appendingPathExtension("plist")
-        keymapURLs = [:]
 
         keymapIdx = 0
 
-        do {
-            let data = try Data(contentsOf: configURL)
-            keymapConfig = try PropertyListDecoder().decode(KeymapConfig.self, from: data)
-        } catch {
-            print("[PlayTools] Failed to decode config url.\n%@")
-            keymapConfig = KeymapConfig(defaultKm: "default")
-            resetConfig()
-        }
-
         loadKeymapData()
+    }
+
+    private func constructKeymapPath(name: String) -> URL {
+        baseKeymapURL.appendingPathComponent(name).appendingPathExtension("plist")
     }
 
     private func loadKeymapData() {
@@ -89,97 +87,68 @@ class Keymapping {
             }
         }
 
-        reloadKeymapCache()
+        keymapOrder.removeAll()
 
-        if let defaultKmIdx = keymapURLs.keys.firstIndex(of: keymapConfig.defaultKm) {
-            keymapIdx = keymapURLs.distance(from: keymapURLs.startIndex, to: defaultKmIdx)
-        }
-    }
-
-    public func reloadKeymapCache() {
-        keymapURLs = [:]
-
-        do {
-            let directoryContents = try FileManager.default
-                .contentsOfDirectory(at: baseKeymapURL, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
-
-            if directoryContents.count > 0 {
-                for keymap in directoryContents where keymap.pathExtension.contains("plist") {
-                    keymapURLs[keymap.deletingPathExtension().lastPathComponent] = keymap
-                }
-
-                return
-            }
-        } catch {
-            print("[PlayTools] Failed to get keymapping directory.\n%@")
+        for keymap in keymapConfig.keymapOrder {
+            keymapOrder[keymap] = getKeymap(path: keymap)
         }
 
-        setKeymap(name: "default", map: KeymappingData(bundleIdentifier: bundleIdentifier))
-        reloadKeymapCache()
-    }
-
-    private func getKeymap(name: String) -> KeymappingData {
-        if let keymapURL = keymapURLs[name] {
-            do {
-                let data = try Data(contentsOf: keymapURL)
-                let map = try PropertyListDecoder().decode(KeymappingData.self, from: data)
-                return map
-            } catch {
-                print("[PlayTools] Keymapping decode failed.\n%@")
-            }
+        if let defaultKmIdx = keymapOrder.keys.firstIndex(of: keymapConfig.defaultKm) {
+            keymapIdx = keymapOrder.distance(from: keymapOrder.startIndex, to: defaultKmIdx)
         } else {
-            print("[PlayTools] Unable to find keymap with name \(name).\n%@")
+            setKeymap(path: keymapConfig.defaultKm, map: KeymappingData(bundleIdentifier: bundleIdentifier))
+            loadKeymapData()
         }
-
-        return resetKeymap(name: name)
     }
 
-    private func setKeymap(name: String, map: KeymappingData) {
+    private func getKeymap(path: URL) -> KeymappingData {
+        do {
+            let data = try Data(contentsOf: path)
+            let map = try PropertyListDecoder().decode(KeymappingData.self, from: data)
+            return map
+        } catch {
+            print("[PlayTools] Keymapping decode failed.\n%@")
+        }
+
+        return resetKeymap(path: path)
+    }
+
+    private func setKeymap(path: URL, map: KeymappingData) {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .xml
 
-        if !keymapURLs.keys.contains(name) {
-            let mapURL = baseKeymapURL.appendingPathComponent(name).appendingPathExtension("plist")
+        do {
+            let data = try encoder.encode(map)
+            try data.write(to: path)
 
-            keymapURLs[name] = mapURL
-        }
-
-        if let keymapURL = keymapURLs[name] {
-            do {
-                let data = try encoder.encode(map)
-                try data.write(to: keymapURL)
-            } catch {
-                print("[PlayTools] Keymapping encode failed.\n%@")
+            if !keymapOrder.keys.contains(path) {
+                keymapConfig.keymapOrder.append(path)
+                keymapOrder[path] = getKeymap(path: path)
             }
-        } else {
-            print("[PlayTools] Unable to find keymap with name \(name).\n%@")
+        } catch {
+            print("[PlayTools] Keymapping encode failed.\n%@")
         }
     }
 
     public func nextKeymap() {
-        keymapIdx = (keymapIdx + 1) % keymapURLs.count
+        keymapIdx = (keymapIdx + 1) % keymapOrder.count
     }
 
     public func previousKeymap() {
-        keymapIdx = (keymapIdx - 1 + keymapURLs.count) % keymapURLs.count
+        keymapIdx = (keymapIdx - 1 + keymapOrder.count) % keymapOrder.count
     }
 
     @discardableResult
-    public func resetKeymap(name: String) -> KeymappingData {
-        setKeymap(name: name, map: KeymappingData(bundleIdentifier: bundleIdentifier))
-        return getKeymap(name: name)
+    public func resetKeymap(path: URL) -> KeymappingData {
+        setKeymap(path: path, map: KeymappingData(bundleIdentifier: bundleIdentifier))
+        return getKeymap(path: path)
     }
 
     @discardableResult
     private func resetConfig() -> KeymapConfig {
-        let defaultKm = keymapURLs.keys.contains("default") ? "default" : keymapURLs.keys.first
+        let defaultURL = constructKeymapPath(name: "default")
 
-        guard let defaultKm = defaultKm else {
-            reloadKeymapCache()
-            return resetConfig()
-        }
-
-        keymapConfig = KeymapConfig(defaultKm: defaultKm)
+        keymapConfig = KeymapConfig(defaultKm: defaultURL, keymapOrder: [defaultURL])
 
         return keymapConfig
     }
@@ -196,5 +165,6 @@ struct KeymappingData: Codable {
 }
 
 struct KeymapConfig: Codable {
-    var defaultKm: String
+    var defaultKm: URL
+    var keymapOrder: [URL]
 }
