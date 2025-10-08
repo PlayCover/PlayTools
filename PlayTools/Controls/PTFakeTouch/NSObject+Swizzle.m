@@ -14,6 +14,7 @@
 #import <VideoSubscriberAccount/VideoSubscriberAccount.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreMotion/CoreMotion.h>
+#import <GameController/GameController.h>
 
 __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
@@ -60,6 +61,30 @@ __attribute__((visibility("hidden")))
     Method swizzledMethod = class_getInstanceMethod(cls, newSelector);
     
     method_exchangeImplementations(originalMethod, swizzledMethod);
+}
+
++ (void) swizzleClassMethod:(SEL)origSelector withMethod:(SEL)newSelector {
+    Class cls = object_getClass((id)self);
+    Method originalMethod = class_getClassMethod(cls, origSelector);
+    Method swizzledMethod = class_getClassMethod(cls, newSelector);
+
+    if (class_addMethod(cls,
+                        origSelector,
+                        method_getImplementation(swizzledMethod),
+                        method_getTypeEncoding(swizzledMethod))) {
+        class_replaceMethod(cls,
+                            newSelector,
+                            method_getImplementation(originalMethod),
+                            method_getTypeEncoding(originalMethod));
+    } else {
+        class_replaceMethod(cls,
+                            newSelector,
+                            class_replaceMethod(cls,
+                                                origSelector,
+                                                method_getImplementation(swizzledMethod),
+                                                method_getTypeEncoding(swizzledMethod)),
+                            method_getTypeEncoding(originalMethod));
+    }
 }
 
 - (BOOL) hook_prefersPointerLocked {
@@ -158,6 +183,14 @@ __attribute__((visibility("hidden")))
     motionManager.deviceMotionUpdateInterval = 0.01;
     motionManager.gyroUpdateInterval = 0.01;
     return motionManager;
+}
+
++ (GCMouse *)hook_GCMouse_current {
+    return nil;
+}
+
++ (NSArray *)hook_GCMouse_mice {
+    return @[];
 }
 
 // Hook for UIUserInterfaceIdiom
@@ -300,6 +333,11 @@ bool menuWasCreated = false;
 
     if ([[PlaySettings shared] limitMotionUpdateFrequency]) {
         [objc_getClass("CMMotionManager") swizzleInstanceMethod:@selector(init) withMethod:@selector(hook_CMMotionManager_init)];
+    }
+
+    if (([[PlaySettings shared] disableBuiltinMouse])) {
+        [objc_getClass("GCMouse") swizzleClassMethod:@selector(current) withMethod:@selector(hook_GCMouse_current)];
+        [objc_getClass("GCMouse") swizzleClassMethod:@selector(mice) withMethod:@selector(hook_GCMouse_mice)];
     }
 }
 
