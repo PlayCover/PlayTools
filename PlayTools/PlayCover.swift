@@ -68,6 +68,7 @@ public class PlayCover: NSObject {
                 // Some apps will freeze or crash when click close button if we send willTerminateNotification.
                 // The developer documentation says this is a "may be called method", so it can be safely skipped.
                 // https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1623111-applicationwillterminate
+                // swiftlint:disable:previous line_length
 //                NotificationCenter.default.post(name: UIApplication.willTerminateNotification,
 //                                                object: UIApplication.shared)
                 DispatchQueue.main.async(execute: AKInterface.shared!.terminateApplication)
