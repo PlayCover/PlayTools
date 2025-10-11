@@ -149,6 +149,14 @@ __attribute__((visibility("hidden")))
     
 }
 
+- (CGRect) hook_boundsResizable {
+    return [PlayScreen boundsResizable:[self hook_boundsResizable]];
+}
+
+- (BOOL) hook_requiresFullScreen {
+    return NO;
+}
+
 - (void) hook_setCurrentSubscription:(VSSubscription *)currentSubscription {
     // do nothing
 }
@@ -240,7 +248,13 @@ bool menuWasCreated = false;
 + (void)load {
     // This might need refactor soon
     if(@available(iOS 16.3, *)) {
-        if ([[PlaySettings shared] adaptiveDisplay]) {
+        if ([[PlaySettings shared] resizableWindow]) {
+            [objc_getClass("_UIApplicationInfoParser") swizzleInstanceMethod:NSSelectorFromString(@"requiresFullScreen") withMethod:@selector(hook_requiresFullScreen)];
+            [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_boundsResizable)];
+            [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
+            [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
+        }
+        else if ([[PlaySettings shared] adaptiveDisplay]) {
             // This is an experimental fix
             if ([[PlaySettings shared] inverseScreenValues]) {
                 // This lines set External Scene settings and other IOS10 Runtime services by swizzling

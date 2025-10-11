@@ -13,6 +13,9 @@ import Foundation
 private struct AKAppSettingsData: Codable {
     var hideTitleBar: Bool?
     var floatingWindow: Bool?
+    var resolution: Int?
+    var resizableAspectRatioWidth: Int?
+    var resizableAspectRatioHeight: Int?
 }
 
 class AKPlugin: NSObject, Plugin {
@@ -35,6 +38,11 @@ class AKPlugin: NSObject, Plugin {
             if self.floatingWindowSetting == true {
                 window.level = .floating
             }
+
+            if let aspectRatio = self.aspectRatioSetting {
+                window.contentAspectRatio = aspectRatio
+            }
+
             NSWindow.allowsAutomaticWindowTabbing = true
         }
 
@@ -56,6 +64,10 @@ class AKPlugin: NSObject, Plugin {
 
                 if self.floatingWindowSetting == true {
                     win.level = .floating
+                }
+
+                if let aspectRatio = self.aspectRatioSetting {
+                    win.contentAspectRatio = aspectRatio
                 }
         }
     }
@@ -278,6 +290,17 @@ class AKPlugin: NSObject, Plugin {
     /// Convenience instance property that exposes the cached static preference.
     private var hideTitleBarSetting: Bool { Self.akAppSettingsData?.hideTitleBar ?? false }
     private var floatingWindowSetting: Bool { Self.akAppSettingsData?.floatingWindow ?? false }
+    private var aspectRatioSetting: NSSize? {
+        guard Self.akAppSettingsData?.resolution == 6 else {
+            return nil
+        }
+        let width = Self.akAppSettingsData?.resizableAspectRatioWidth ?? 0
+        let height = Self.akAppSettingsData?.resizableAspectRatioHeight ?? 0
+        guard width > 0 && height > 0 else {
+            return nil
+        }
+        return NSSize(width: width, height: height)
+    }
 
     fileprivate static var akAppSettingsData: AKAppSettingsData? = {
         let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
