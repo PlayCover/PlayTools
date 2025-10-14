@@ -230,4 +230,3 @@ extension NSNotification.Name {
     public static let playtoolsCursorWillShow: NSNotification.Name
                     = NSNotification.Name("playtools.cursorWillShow")
 }
-
