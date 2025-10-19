@@ -14,18 +14,6 @@ class RotateViewController: UIViewController {
 
     static func rotate() {
         orientationTraverser += 1
-        if PlaySettings.shared.keepDisplayRotation && orientationTraverser > PlaySettings.shared.displayRotation {
-            PlaySettings.shared.settingsData.displayRotation = orientationTraverser
-            let encoder = PropertyListEncoder()
-            encoder.outputFormat = .xml
-
-            do {
-                let data = try encoder.encode(PlaySettings.shared.settingsData)
-                try data.write(to: PlaySettings.shared.settingsUrl)
-            } catch {
-                print(error)
-            }
-        }
         if orientationTraverser == PlaySettings.shared.displayRotation-1 {
             DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5, execute: {
                 UIApplication.shared.rotateView(self)
