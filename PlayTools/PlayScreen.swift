@@ -85,6 +85,20 @@ extension UIScreen {
 public class PlayScreen: NSObject {
     @objc public static let shared = PlayScreen()
 
+    func initialize() {
+        if resizable {
+            // Remove default size restrictions
+            NotificationCenter.default.addObserver(forName: UIWindow.didBecomeKeyNotification, object: nil,
+                queue: .main) { notification in
+                if let window = notification.object as? UIWindow,
+                   let windowScene = window.windowScene {
+                    windowScene.sizeRestrictions?.minimumSize = CGSize(width: 0, height: 0)
+                    windowScene.sizeRestrictions?.maximumSize = CGSize(width: .max, height: .max)
+                }
+            }
+        }
+    }
+
     @objc public static func frame(_ rect: CGRect) -> CGRect {
         return rect.toAspectRatioReversed()
     }
@@ -111,6 +125,10 @@ public class PlayScreen: NSObject {
 
     var fullscreen: Bool {
         return AKInterface.shared!.isFullscreen
+    }
+
+    var resizable: Bool {
+        return PlaySettings.shared.resizableWindow
     }
 
     @objc public var screenRect: CGRect {
@@ -183,6 +201,13 @@ public class PlayScreen: NSObject {
             return rect.toAspectRatioDefault()
     }
 
+    private static weak var cachedWindow: UIWindow?
+    @objc public static func boundsResizable(_ rect: CGRect) -> CGRect {
+        if cachedWindow == nil {
+            cachedWindow = PlayScreen.shared.keyWindow
+        }
+        return cachedWindow?.bounds ?? rect
+    }
 }
 
 extension CGFloat {
