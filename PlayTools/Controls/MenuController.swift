@@ -12,13 +12,8 @@ class RotateViewController: UIViewController {
         .landscapeLeft, .portrait, .landscapeRight, .portraitUpsideDown]
     static var orientationTraverser = 0
 
-    static func rotate() {
-        orientationTraverser += 1
-        if orientationTraverser == PlaySettings.shared.displayRotation-1 {
-            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5, execute: {
-                UIApplication.shared.rotateView(self)
-            })
-        }
+    static func rotate(ori: Int) {
+        orientationTraverser = ori
     }
 
     override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
@@ -63,7 +58,10 @@ extension UIApplication {
             guard let windowScene = scene as? UIWindowScene else { continue }
             for window in windowScene.windows {
                 guard let rootViewController = window.rootViewController else { continue }
-                rootViewController.rotateView(sender)
+                if let dict = sender.propertyList as? [String: Any],
+                   let index = dict["rotationIndex"] as? Int {
+                    rootViewController.rotateView(sender, ori:index)
+                }
             }
         }
 
@@ -119,8 +117,8 @@ extension UIApplication {
 
 extension UIViewController {
     @objc
-    func rotateView(_ sender: AnyObject) {
-        RotateViewController.rotate()
+    func rotateView(_ sender: AnyObject, ori: Int) {
+        RotateViewController.rotate(ori:ori)
         RotateViewController.orientationTraverser %= RotateViewController.orientationList.count
         let viewController = RotateViewController(nibName: nil, bundle: nil)
         self.present(viewController, animated: true)
@@ -228,7 +226,6 @@ class MenuController {
             UIKeyCommand.inputDelete,       // Remove keymap element
             UIKeyCommand.inputUpArrow,      // Increase keymap element size
             UIKeyCommand.inputDownArrow,    // Decrease keymap element size
-            "R",                            // Rotate display
             "D",                            // Toggle debug overlay
             ".",                            // Hide cursor until move
             "[",                            // Previous keymap
@@ -244,11 +241,42 @@ class MenuController {
             )
         }
 
-        let arrowKeysGroup = UIMenu(title: "",
-                                    image: nil,
-                                    identifier: .keymappingOptionsMenu,
-                                    options: .displayInline,
-                                    children: arrowKeyChildrenCommands)
+        let rotationTitles = [
+            "Landscape Left (0°)",
+            "Portrait (90°)",
+            "Landscape Right (180°)",
+            "Portrait Upside Down (270°)"
+        ]
+        let rotationInputs = ["1", "2", "3", "4"]
+            
+        // Every rotation item calls the *same selector*, passing its index in propertyList
+        let rotationMenuItems = rotationTitles.enumerated().map { (index, title) in
+            UIKeyCommand(
+                title: title,
+                image: nil,
+                action: #selector(UIApplication.rotateView(_:)),
+                input: rotationInputs[index],
+                modifierFlags: [.command, .shift], // ⌘⇧1–4
+                propertyList: ["rotationIndex": index]
+            )
+        }
+            
+        let rotationMenu = UIMenu(
+            title: "Rotate Display",
+            image: nil,
+            identifier: UIMenu.Identifier("io.playcover.PlayTools.menus.rotation"),
+            options: .displayInline,
+            children: rotationMenuItems
+        )
+            
+        // Combine all menus
+        let arrowKeysGroup = UIMenu(
+            title: "",
+            image: nil,
+            identifier: .keymappingOptionsMenu,
+            options: .displayInline,
+            children: arrowKeyChildrenCommands + [rotationMenu]
+        )
 
         return UIMenu(title: NSLocalizedString("menu.keymapping", tableName: "Playtools",
                                                value: "Keymapping", comment: ""),

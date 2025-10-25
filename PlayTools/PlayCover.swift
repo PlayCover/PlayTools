@@ -23,9 +23,22 @@ public class PlayCover: NSObject {
         }
 
         if PlaySettings.shared.displayRotation != 0 {
-            while RotateViewController.orientationTraverser<PlaySettings.shared.displayRotation-1 {
-                RotateViewController.rotate()
-            }
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5, execute: {
+                let rotateCommand = UIKeyCommand(
+                    title: "Keep Rotation Command",
+                    image: nil,
+                    action: #selector(UIApplication.rotateView(_:)),
+                    input: "",
+                    modifierFlags: [],
+                    propertyList: ["rotationIndex": PlaySettings.shared.displayRotation]
+                )
+                UIApplication.shared.sendAction(
+                    #selector(UIApplication.rotateView(_:)),
+                    to: UIApplication.shared,
+                    from: rotateCommand,
+                    for: nil
+                )
+            })
         }
     }
 
