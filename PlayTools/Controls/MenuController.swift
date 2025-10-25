@@ -141,8 +141,6 @@ var keymapping = [
                       value: "Upsize selected element", comment: ""),
     NSLocalizedString("menu.keymapping.downsizeElement", tableName: "Playtools",
                       value: "Downsize selected element", comment: ""),
-    NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
-                      value: "Rotate display area", comment: ""),
     NSLocalizedString("menu.keymapping.toggleDebug", tableName: "Playtools",
                       value: "Toggle Debug Overlay", comment: ""),
     NSLocalizedString("menu.keymapping.hide.pointer", tableName: "Playtools",
