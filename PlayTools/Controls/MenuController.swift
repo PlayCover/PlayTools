@@ -260,10 +260,11 @@ class MenuController {
         }
             
         let rotationMenu = UIMenu(
-            title: "Rotate Display",
+            title: NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
+                              value: "Rotate display area", comment: ""),
             image: nil,
-            identifier: UIMenu.Identifier("io.playcover.PlayTools.menus.rotation"),
-            options: .displayInline,
+            identifier: .rotationOptionsMenu,
+            options: [],
             children: rotationMenuItems
         )
             
@@ -290,4 +291,5 @@ extension UIMenu.Identifier {
     static var keymappingOptionsMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.keymapping") }
     static var debuggingMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.debug") }
     static var debuggingOptionsMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.debugging") }
+    static var rotationOptionsMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.rotation") }
 }
