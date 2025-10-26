@@ -12,8 +12,8 @@ class RotateViewController: UIViewController {
         .landscapeLeft, .portrait, .landscapeRight, .portraitUpsideDown]
     static var orientationTraverser = 0
 
-    static func rotate(ori: Int) {
-        orientationTraverser = ori
+    static func rotate(deviceOrientation: Int) {
+        orientationTraverser = deviceOrientation
     }
 
     override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
@@ -60,7 +60,7 @@ extension UIApplication {
                 guard let rootViewController = window.rootViewController else { continue }
                 if let dict = sender.propertyList as? [String: Any],
                    let index = dict["rotationIndex"] as? Int {
-                    rootViewController.rotateView(sender, ori:index)
+                    rootViewController.rotateView(sender, deviceOrientation: index)
                 }
             }
         }
@@ -117,8 +117,8 @@ extension UIApplication {
 
 extension UIViewController {
     @objc
-    func rotateView(_ sender: AnyObject, ori: Int) {
-        RotateViewController.rotate(ori:ori)
+    func rotateView(_ sender: AnyObject, deviceOrientation: Int) {
+        RotateViewController.rotate(deviceOrientation: deviceOrientation)
         RotateViewController.orientationTraverser %= RotateViewController.orientationList.count
         let viewController = RotateViewController(nibName: nil, bundle: nil)
         self.present(viewController, animated: true)
@@ -246,7 +246,7 @@ class MenuController {
             "Portrait Upside Down (270°)"
         ]
         let rotationInputs = ["1", "2", "3", "4"]
-            
+
         // Every rotation item calls the *same selector*, passing its index in propertyList
         let rotationMenuItems = rotationTitles.enumerated().map { (index, title) in
             UIKeyCommand(
@@ -258,7 +258,7 @@ class MenuController {
                 propertyList: ["rotationIndex": index]
             )
         }
-            
+
         let rotationMenu = UIMenu(
             title: NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
                               value: "Rotate display area", comment: ""),
@@ -267,7 +267,7 @@ class MenuController {
             options: [],
             children: rotationMenuItems
         )
-            
+
         // Combine all menus
         let arrowKeysGroup = UIMenu(
             title: "",
