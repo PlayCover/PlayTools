@@ -117,28 +117,22 @@ __attribute__((visibility("hidden")))
     return @{};
 }
 
-// Endfield UIAlertController hook - adds Dismiss button to all alerts
-- (void)pm_endfield_viewDidAppear:(BOOL)animated {
-    [self pm_endfield_viewDidAppear:animated];
-    
-    UIAlertController *alertController = (UIAlertController *)self;
-    
-    // Check if this alert already has a dismiss action
-    for (UIAlertAction *action in alertController.actions) {
-        if ([action.title isEqualToString:@"Dismiss"]) {
-            return;
+// Endfield UIAlertController hook - silently blocks all alerts
+- (void)pm_endfield_presentViewController:(UIViewController *)viewControllerToPresent
+                                 animated:(BOOL)flag
+                               completion:(void (^)(void))completion {
+    // If it's a UIAlertController, silently ignore it
+    if ([viewControllerToPresent isKindOfClass:[UIAlertController class]]) {
+        NSLog(@"PC-DEBUG: [PlayShadow] Blocked UIAlertController for Endfield");
+        // Call completion handler if provided so the app doesn't hang
+        if (completion) {
+            completion();
         }
+        return;
     }
     
-    // Add a dismiss button to allow bypassing jailbreak detection alerts
-    UIAlertAction *dismissAction = [UIAlertAction actionWithTitle:@"Dismiss"
-                                                            style:UIAlertActionStyleCancel
-                                                          handler:^(UIAlertAction * _Nonnull action) {
-        [alertController dismissViewControllerAnimated:YES completion:nil];
-    }];
-    [alertController addAction:dismissAction];
-    
-    NSLog(@"PC-DEBUG: [PlayShadow] Added Dismiss button to UIAlertController for Endfield");
+    // Otherwise, present normally
+    [self pm_endfield_presentViewController:viewControllerToPresent animated:flag completion:completion];
 }
 
 // Class methods
@@ -197,11 +191,11 @@ __attribute__((visibility("hidden")))
     // canResizeToFitContent
     // [objc_getClass("UIWindow") swizzleInstanceMethod:@selector(canResizeToFitContent) withMethod:@selector(pm_return_true)];
     
-    // Endfield: Add dismiss button to UIAlertController for jailbreak bypass
+    // Endfield: Block UIAlertController presentation for jailbreak bypass
     NSString *bundleID = [[NSBundle mainBundle] bundleIdentifier];
     if ([bundleID isEqualToString:@"com.gryphline.endfield.ios"]) {
         [self debugLogger:@"Endfield detected, loading UIAlertController bypass"];
-        [objc_getClass("UIAlertController") swizzleInstanceMethod:@selector(viewDidAppear:) withMethod:@selector(pm_endfield_viewDidAppear:)];
+        [objc_getClass("UIViewController") swizzleInstanceMethod:@selector(presentViewController:animated:completion:) withMethod:@selector(pm_endfield_presentViewController:animated:completion:)];
     }
 }
 
