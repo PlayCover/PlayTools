@@ -117,14 +117,13 @@ __attribute__((visibility("hidden")))
     return @{};
 }
 
-// Endfield UIAlertController hook - silently blocks all alerts
+// Endfield UIAlertController hook
 - (void)pm_endfield_presentViewController:(UIViewController *)viewControllerToPresent
                                  animated:(BOOL)flag
                                completion:(void (^)(void))completion {
     // If it's a UIAlertController, silently ignore it
     if ([viewControllerToPresent isKindOfClass:[UIAlertController class]]) {
         NSLog(@"PC-DEBUG: [PlayShadow] Blocked UIAlertController for Endfield");
-        // Call completion handler if provided so the app doesn't hang
         if (completion) {
             completion();
         }
@@ -191,10 +190,11 @@ __attribute__((visibility("hidden")))
     // canResizeToFitContent
     // [objc_getClass("UIWindow") swizzleInstanceMethod:@selector(canResizeToFitContent) withMethod:@selector(pm_return_true)];
     
-    // Endfield: Block UIAlertController presentation for jailbreak bypass
+    // Block UIAlertController presentation to bypass Endfield jailbreak message
     NSString *bundleID = [[NSBundle mainBundle] bundleIdentifier];
-    if ([bundleID isEqualToString:@"com.gryphline.endfield.ios"]) {
-        [self debugLogger:@"Endfield detected, loading UIAlertController bypass"];
+    if ([bundleID isEqualToString:@"com.gryphline.endfield.ios"] || 
+    [bundleID isEqualToString:@"com.hypergryph.endfield"]) {
+        [self debugLogger:@"loading UIAlertController bypass"];
         [objc_getClass("UIViewController") swizzleInstanceMethod:@selector(presentViewController:animated:completion:) withMethod:@selector(pm_endfield_presentViewController:animated:completion:)];
     }
 }
