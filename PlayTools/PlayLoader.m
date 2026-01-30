@@ -244,36 +244,38 @@ static int pt_usleep(useconds_t time) {
         [thread_sleep_lock lock];
     });
     
-    int thread_id = pthread_mach_thread_np(pthread_self());
-    NSNumber *threadKey = @(thread_id);
-    
-    int thread_sleep_counter = [thread_sleep_counters[threadKey] intValue];
-    int last_sleep_attempt = [last_sleep_attempts[threadKey] intValue];
-    
-    if (time == 100000) {
-        int timestamp = (int)[[NSDate date] timeIntervalSince1970];
-        // If it sleeps too fast, increase counter
-        if (timestamp - last_sleep_attempt < 2) {
-            thread_sleep_counter++;
-        } else {
-            thread_sleep_counter = 1;
+    if ([[PlaySettings shared] blockSleepSpamming]) {
+        int thread_id = pthread_mach_thread_np(pthread_self());
+        NSNumber *threadKey = @(thread_id);
+        
+        int thread_sleep_counter = [thread_sleep_counters[threadKey] intValue];
+        int last_sleep_attempt = [last_sleep_attempts[threadKey] intValue];
+        
+        if (time == 100000) {
+            int timestamp = (int)[[NSDate date] timeIntervalSince1970];
+            // If it sleeps too fast, increase counter
+            if (timestamp - last_sleep_attempt < 2) {
+                thread_sleep_counter++;
+            } else {
+                thread_sleep_counter = 1;
+            }
+            last_sleep_attempt = timestamp;
+            thread_sleep_counters[threadKey] = @(thread_sleep_counter);
+            last_sleep_attempts[threadKey] = @(last_sleep_attempt);
+            
         }
-        last_sleep_attempt = timestamp;
-        thread_sleep_counters[threadKey] = @(thread_sleep_counter);
-        last_sleep_attempts[threadKey] = @(last_sleep_attempt);
         
-    }
-    
-    if (thread_sleep_counter > 100) {
-        // Stop this thread from spamming usleep calls
-        NSLog(@"[PC] Thread %i exceeded usleep limit. Seem sus, stopping this "
-              @"thread FOREVER",
-              thread_id);
-
-        [thread_sleep_lock lock];
-        [thread_sleep_lock unlock];
-        
-        return 0;
+        if (thread_sleep_counter > 100) {
+            // Stop this thread from spamming usleep calls
+            NSLog(@"[PC] Thread %i exceeded usleep limit. Seem sus, stopping this "
+                  @"thread FOREVER",
+                  thread_id);
+            
+            [thread_sleep_lock lock];
+            [thread_sleep_lock unlock];
+            
+            return 0;
+        }
     }
     
     return usleep(time);
@@ -301,13 +303,15 @@ static void __attribute__((constructor)) initialize(void) {
         [PlayKeychain debugLogger: [NSString stringWithFormat:@"UnrealEngine Hooked"]];
     }
 
-    // Add an observer so we can unlock threads on app termination
-    [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillTerminateNotification
-                                                      object:nil
-                                                       queue:[NSOperationQueue mainQueue]
-                                                  usingBlock:^(NSNotification * _Nonnull note) {
-        [thread_sleep_lock unlock];
-    }];
+    if ([[PlaySettings shared] blockSleepSpamming]) {
+        // Add an observer so we can unlock threads on app termination
+        [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillTerminateNotification
+                                                          object:nil
+                                                           queue:[NSOperationQueue mainQueue]
+                                                      usingBlock:^(NSNotification * _Nonnull note) {
+            [thread_sleep_lock unlock];
+        }];
+    }
 }
 
 @end
