@@ -81,6 +81,7 @@ public class ControlMode: Equatable {
         let centre = NotificationCenter.default
         let main = OperationQueue.main
         centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
+            GCController.shouldMonitorBackgroundEvents = true
             GCController.current?.extendedGamepad?.valueChangedHandler = { profile, element in
                 self.controllerAdapter.handleValueChanged(profile, element)
             }
