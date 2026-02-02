@@ -75,6 +75,7 @@ static int pt_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
             const char *machine = DEVICE_MODEL;
             strncpy((char *)oldp, machine, strlen(machine));
+            ((char *)oldp)[strlen(machine)] = '\0';
             *oldlenp = strlen(machine) + 1;
             return ret;
         } else {
@@ -92,6 +93,7 @@ static int pt_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
             const char *machine = OEM_ID;
             strncpy((char *)oldp, machine, strlen(machine));
+            ((char *)oldp)[strlen(machine)] = '\0';
             *oldlenp = strlen(machine) + 1;
             return ret;
         } else {
