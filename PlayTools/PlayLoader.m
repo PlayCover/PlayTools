@@ -25,7 +25,8 @@ int pt_dyld_get_active_platform(void) { return PLATFORM_IOS; }
 // Change the machine output by uname to match expected output on iOS
 static int pt_uname(struct utsname *uts) {
     uname(uts);
-    strncpy(uts->machine, DEVICE_MODEL, strlen(DEVICE_MODEL) + 1);
+    strncpy(uts->machine, DEVICE_MODEL, sizeof(uts->machine) - 1);
+    uts->machine[sizeof(uts->machine) - 1] = '\0';
     return 0;
 }
 
@@ -37,7 +38,7 @@ static int pt_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0
         if (NULL == buf) {
             *size = strlen(DEVICE_MODEL) + 1;
         } else {
-            if (*size > strlen(DEVICE_MODEL)) {
+            if (*size > strlen(DEVICE_MODEL) + 1) {
                 strcpy(buf, DEVICE_MODEL);
             } else {
                 return ENOMEM;
@@ -48,7 +49,7 @@ static int pt_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0
         if (NULL == buf) {
             *size = strlen(OEM_ID) + 1;
         } else {
-            if (*size > strlen(OEM_ID)) {
+            if (*size > strlen(OEM_ID) + 1) {
                 strcpy(buf, OEM_ID);
             } else {
                 return ENOMEM;
@@ -63,37 +64,31 @@ static int pt_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0
 static int pt_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *newp, size_t newlen) {
     if ((strcmp(name, "hw.machine") == 0) || (strcmp(name, "hw.product") == 0) || (strcmp(name, "hw.model") == 0)) {
         if (oldp == NULL) {
-            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-            // We don't want to accidentally decrease it because the real sysctl call will ENOMEM
-            // as model are much longer on Macs (eg. MacBookAir10,1)
-            if (*oldlenp < strlen(DEVICE_MODEL) + 1) {
-                *oldlenp = strlen(DEVICE_MODEL) + 1;
-            }
-            return ret;
+            *oldlenp = strlen(DEVICE_MODEL) + 1;
+            return 0;
         }
         else if (oldp != NULL) {
-            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-            const char *machine = DEVICE_MODEL;
-            strncpy((char *)oldp, machine, strlen(machine));
-            *oldlenp = strlen(machine) + 1;
-            return ret;
+            if (*oldlenp < strlen(DEVICE_MODEL) + 1) {
+                return ENOMEM;
+            }
+            strcpy((char *)oldp, DEVICE_MODEL);
+            *oldlenp = strlen(DEVICE_MODEL) + 1;
+            return 0;
         } else {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
             return ret;
         }
     } else if ((strcmp(name, "hw.target") == 0)) {
         if (oldp == NULL) {
-            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-            if (*oldlenp < strlen(OEM_ID) + 1) {
-                *oldlenp = strlen(OEM_ID) + 1;
-            }
-            return ret;
+            *oldlenp = strlen(OEM_ID) + 1;
+            return 0;
         } else if (oldp != NULL) {
-            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-            const char *machine = OEM_ID;
-            strncpy((char *)oldp, machine, strlen(machine));
-            *oldlenp = strlen(machine) + 1;
-            return ret;
+            if (*oldlenp < strlen(OEM_ID) + 1) {
+                return ENOMEM;
+            }
+            strcpy((char *)oldp, OEM_ID);
+            *oldlenp = strlen(OEM_ID) + 1;
+            return 0;
         } else {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
             return ret;
