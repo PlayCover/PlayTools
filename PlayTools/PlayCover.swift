@@ -60,9 +60,18 @@ public class PlayCover: NSObject {
                 // There is an expiration handler, but idk how to invoke it. Skip for now.
 
                 // Step 3: Terminate
+                for scene in UIApplication.shared.connectedScenes {
+                    scene.delegate?.sceneDidDisconnect?(scene)
+                    NotificationCenter.default.post(name: UIScene.didDisconnectNotification,
+                                                    object: scene)
+                }
                 UIApplication.shared.delegate?.applicationWillTerminate?(UIApplication.shared)
-                NotificationCenter.default.post(name: UIApplication.willTerminateNotification,
-                                                object: UIApplication.shared)
+                // Some apps will freeze or crash when click close button if we send willTerminateNotification.
+                // The developer documentation says this is a "may be called method", so it can be safely skipped.
+                // https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1623111-applicationwillterminate
+                // swiftlint:disable:previous line_length
+//                NotificationCenter.default.post(name: UIApplication.willTerminateNotification,
+//                                                object: UIApplication.shared)
                 DispatchQueue.main.async(execute: AKInterface.shared!.terminateApplication)
 
                 // Step 3.5: End BGTask
