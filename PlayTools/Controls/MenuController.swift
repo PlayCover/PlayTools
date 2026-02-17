@@ -12,8 +12,8 @@ class RotateViewController: UIViewController {
         .landscapeLeft, .portrait, .landscapeRight, .portraitUpsideDown]
     static var orientationTraverser = 0
 
-    static func rotate() {
-        orientationTraverser += 1
+    static func rotate(deviceOrientation: Int) {
+        orientationTraverser = deviceOrientation
     }
 
     override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
@@ -58,7 +58,10 @@ extension UIApplication {
             guard let windowScene = scene as? UIWindowScene else { continue }
             for window in windowScene.windows {
                 guard let rootViewController = window.rootViewController else { continue }
-                rootViewController.rotateView(sender)
+                if let dict = sender.propertyList as? [String: Any],
+                   let index = dict["rotationIndex"] as? Int {
+                    rootViewController.rotateView(sender, deviceOrientation: index)
+                }
             }
         }
 
@@ -114,8 +117,9 @@ extension UIApplication {
 
 extension UIViewController {
     @objc
-    func rotateView(_ sender: AnyObject) {
-        RotateViewController.rotate()
+    func rotateView(_ sender: AnyObject, deviceOrientation: Int) {
+        RotateViewController.rotate(deviceOrientation: deviceOrientation)
+        RotateViewController.orientationTraverser %= RotateViewController.orientationList.count
         let viewController = RotateViewController(nibName: nil, bundle: nil)
         self.present(viewController, animated: true)
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1, execute: {
@@ -137,8 +141,6 @@ var keymapping = [
                       value: "Upsize selected element", comment: ""),
     NSLocalizedString("menu.keymapping.downsizeElement", tableName: "Playtools",
                       value: "Downsize selected element", comment: ""),
-    NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
-                      value: "Rotate display area", comment: ""),
     NSLocalizedString("menu.keymapping.toggleDebug", tableName: "Playtools",
                       value: "Toggle Debug Overlay", comment: ""),
     NSLocalizedString("menu.keymapping.hide.pointer", tableName: "Playtools",
@@ -233,7 +235,6 @@ class MenuController {
             UIKeyCommand.inputDelete,       // Remove keymap element
             UIKeyCommand.inputUpArrow,      // Increase keymap element size
             UIKeyCommand.inputDownArrow,    // Decrease keymap element size
-            "R",                            // Rotate display
             "D",                            // Toggle debug overlay
             ".",                            // Hide cursor until move
             "[",                            // Previous keymap
@@ -250,11 +251,43 @@ class MenuController {
             )
         }
 
-        let arrowKeysGroup = UIMenu(title: "",
-                                    image: nil,
-                                    identifier: .keymappingOptionsMenu,
-                                    options: .displayInline,
-                                    children: arrowKeyChildrenCommands)
+        let rotationTitles = [
+            "Landscape Left (0°)",
+            "Portrait (90°)",
+            "Landscape Right (180°)",
+            "Portrait Upside Down (270°)"
+        ]
+        let rotationInputs = ["1", "2", "3", "4"]
+
+        // Every rotation item calls the *same selector*, passing its index in propertyList
+        let rotationMenuItems = rotationTitles.enumerated().map { (index, title) in
+            UIKeyCommand(
+                title: title,
+                image: nil,
+                action: #selector(UIApplication.rotateView(_:)),
+                input: rotationInputs[index],
+                modifierFlags: [.command, .shift], // ⌘⇧1–4
+                propertyList: ["rotationIndex": index]
+            )
+        }
+
+        let rotationMenu = UIMenu(
+            title: NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
+                              value: "Rotate display area", comment: ""),
+            image: nil,
+            identifier: .rotationOptionsMenu,
+            options: [],
+            children: rotationMenuItems
+        )
+
+        // Combine all menus
+        let arrowKeysGroup = UIMenu(
+            title: "",
+            image: nil,
+            identifier: .keymappingOptionsMenu,
+            options: .displayInline,
+            children: arrowKeyChildrenCommands + [rotationMenu]
+        )
 
         return UIMenu(title: NSLocalizedString("menu.keymapping", tableName: "Playtools",
                                                value: "Keymapping", comment: ""),
@@ -270,4 +303,5 @@ extension UIMenu.Identifier {
     static var keymappingOptionsMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.keymapping") }
     static var debuggingMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.debug") }
     static var debuggingOptionsMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.debugging") }
+    static var rotationOptionsMenu: UIMenu.Identifier { UIMenu.Identifier("io.playcover.PlayTools.menus.rotation") }
 }
