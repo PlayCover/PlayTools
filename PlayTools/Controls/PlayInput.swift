@@ -99,7 +99,14 @@ private final class HIDControllerBridge {
         case rightTrigger
     }
 
+    private enum HIDButtonProfile {
+        case undecided
+        case standard
+        case shifted
+    }
+
     private typealias AxisUsageMap = [Int: HIDAxisRole]
+    private typealias ButtonUsageMap = [Int: String]
     private static let axisUsageByProfile: [HIDAxisProfile: AxisUsageMap] = [
         .standard: [
             0x30: .leftStickX,
@@ -119,6 +126,38 @@ private final class HIDControllerBridge {
         ]
     ]
     private static let supportedAxisUsages = Set(axisUsageByProfile.values.flatMap { $0.keys })
+    private static let buttonUsageByProfile: [HIDButtonProfile: ButtonUsageMap] = [
+        .standard: [
+            1: GCInputButtonA,
+            2: GCInputButtonB,
+            3: GCInputButtonX,
+            4: GCInputButtonY,
+            5: GCInputLeftShoulder,
+            6: GCInputRightShoulder,
+            7: GCInputLeftTrigger,
+            8: GCInputRightTrigger,
+            9: GCInputLeftThumbstickButton,
+            10: GCInputRightThumbstickButton,
+            11: GCInputButtonMenu,
+            12: GCInputButtonOptions
+        ],
+        // Some HID gamepads expose face/shoulder/menu usages in a shifted layout.
+        // Keep this profile generic and infer it from observed usage patterns.
+        .shifted: [
+            1: GCInputButtonA,
+            2: GCInputButtonB,
+            4: GCInputButtonX,
+            5: GCInputButtonY,
+            7: GCInputLeftShoulder,
+            8: GCInputRightShoulder,
+            9: GCInputLeftThumbstickButton,
+            10: GCInputRightThumbstickButton,
+            11: GCInputButtonOptions,
+            12: GCInputButtonMenu,
+            14: GCInputLeftThumbstickButton,
+            15: GCInputRightThumbstickButton
+        ]
+    ]
 
     private var initialized = false
     private var virtualController: GCVirtualController?
@@ -131,7 +170,10 @@ private final class HIDControllerBridge {
     private var leftTrigger: CGFloat = 0
     private var rightTrigger: CGFloat = 0
     private var axisProfile: HIDAxisProfile = .undecided
+    private var buttonProfile: HIDButtonProfile = .undecided
     private var observedGenericAxes = Set<Int>()
+    private var observedButtonUsages = Set<Int>()
+    private var buttonUsagePressCount: [Int: Int] = [:]
     private var dpadButtonState: [String: Bool] = [
         HIDControllerBridge.dpadUpAlias: false,
         HIDControllerBridge.dpadDownAlias: false,
@@ -232,7 +274,10 @@ private final class HIDControllerBridge {
         leftTrigger = 0
         rightTrigger = 0
         axisProfile = .undecided
+        buttonProfile = .undecided
         observedGenericAxes.removeAll()
+        observedButtonUsages.removeAll()
+        buttonUsagePressCount.removeAll()
         dpadButtonState.keys.forEach { dpadButtonState[$0] = false }
         triggerPressedState.keys.forEach { triggerPressedState[$0] = false }
     }
@@ -277,15 +322,18 @@ private final class HIDControllerBridge {
     }
 
     private func shouldProcessHID() -> Bool {
-        if virtualConnected {
-            return true
-        }
-        return GCController.controllers().isEmpty
+        // Always process HID input. Launch paths can expose inconsistent GCController
+        // state; suppressing on that state causes the bridge to work only in some paths.
+        return true
     }
 
     private func onButton(usage: Int, pressed: Bool) {
         if !shouldProcessHID() {
             return
+        }
+
+        if pressed {
+            buttonUsagePressCount[usage, default: 0] += 1
         }
 
         if virtualConnected, #available(iOS 17.0, *), let virtualController,
@@ -442,39 +490,62 @@ private final class HIDControllerBridge {
     }
 
     private func virtualButtonElement(for usage: Int) -> String? {
-        switch usage {
-        case 1: return GCInputButtonA
-        case 2: return GCInputButtonB
-        case 3: return GCInputButtonX
-        case 4: return GCInputButtonY
-        case 5: return GCInputLeftShoulder
-        case 6: return GCInputRightShoulder
-        case 7: return GCInputLeftTrigger
-        case 8: return GCInputRightTrigger
-        case 9: return GCInputLeftThumbstickButton
-        case 10: return GCInputRightThumbstickButton
-        case 11: return GCInputButtonMenu
-        case 12: return GCInputButtonOptions
-        default: return nil
-        }
+        let profile = resolveButtonProfile(usage: usage)
+        return Self.buttonUsageByProfile[profile]?[usage]
     }
 
     private func fallbackButtonAlias(for usage: Int) -> String? {
-        switch usage {
-        case 1: return GCInputButtonA
-        case 2: return GCInputButtonB
-        case 3: return GCInputButtonX
-        case 4: return GCInputButtonY
-        case 5: return GCInputLeftShoulder
-        case 6: return GCInputRightShoulder
-        case 7: return GCInputLeftTrigger
-        case 8: return GCInputRightTrigger
-        case 9: return GCInputLeftThumbstickButton
-        case 10: return GCInputRightThumbstickButton
-        case 11: return GCInputButtonMenu
-        case 12: return GCInputButtonOptions
-        default: return nil
+        let profile = resolveButtonProfile(usage: usage)
+        return Self.buttonUsageByProfile[profile]?[usage]
+    }
+
+    private func resolveButtonProfile(usage: Int) -> HIDButtonProfile {
+        observedButtonUsages.insert(usage)
+
+        // Standard profile evidence:
+        // - X on usage 3
+        // - Right shoulder on usage 6
+        if observedButtonUsages.contains(3) || observedButtonUsages.contains(6) {
+            if buttonProfile != .standard {
+                buttonProfile = .standard
+            }
+            return .standard
         }
+
+        // Shifted profile evidence:
+        // - Stick clicks on usage 14/15
+        // - Face/shoulder cluster where usage 5 behaves as a face button and
+        //   shoulders appear on 7/8.
+        let shiftedEvidence =
+            observedButtonUsages.contains(14) ||
+            observedButtonUsages.contains(15) ||
+            (observedButtonUsages.contains(7) && !observedButtonUsages.contains(6)) ||
+            (observedButtonUsages.contains(8) && !observedButtonUsages.contains(6)) ||
+            (observedButtonUsages.contains(5) &&
+                (observedButtonUsages.contains(7) || observedButtonUsages.contains(8)) &&
+                !observedButtonUsages.contains(3) &&
+                !observedButtonUsages.contains(6))
+
+        let yLikeEvidence =
+            (buttonUsagePressCount[5] ?? 0) >= 2 &&
+            (buttonUsagePressCount[3] ?? 0) == 0 &&
+            (buttonUsagePressCount[6] ?? 0) == 0
+
+        if shiftedEvidence {
+            if buttonProfile != .shifted {
+                buttonProfile = .shifted
+            }
+            return .shifted
+        }
+
+        if yLikeEvidence {
+            if buttonProfile != .shifted {
+                buttonProfile = .shifted
+            }
+            return .shifted
+        }
+
+        return buttonProfile == .undecided ? .standard : buttonProfile
     }
 
     private func clamp01(_ value: CGFloat) -> CGFloat {

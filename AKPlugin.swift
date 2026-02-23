@@ -20,12 +20,6 @@ private struct AKAppSettingsData: Codable {
 }
 
 class AKPlugin: NSObject, Plugin {
-    private static let hidGenericGamepadMatches: [[String: Any]] = [
-        [kIOHIDDeviceUsagePageKey as String: 0x01, kIOHIDDeviceUsageKey as String: 0x04], // Joystick
-        [kIOHIDDeviceUsagePageKey as String: 0x01, kIOHIDDeviceUsageKey as String: 0x05], // Gamepad
-        // Some Bluetooth controllers expose top-level usage as consumer control.
-        [kIOHIDDeviceUsagePageKey as String: 0x0C, kIOHIDDeviceUsageKey as String: 0x01]
-    ]
     private static let hidAxisUsages: Set<Int> = [0x30, 0x31, 0x32, 0x33, 0x34, 0x35]
     private static let hidHatUsage = 0x39
 
@@ -337,7 +331,7 @@ class AKPlugin: NSObject, Plugin {
 
         let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
 
-        IOHIDManagerSetDeviceMatchingMultiple(manager, Self.hidGenericGamepadMatches as CFArray)
+        IOHIDManagerSetDeviceMatching(manager, nil)
 
         let context = Unmanaged.passUnretained(self).toOpaque()
         IOHIDManagerRegisterDeviceMatchingCallback(manager, Self.hidDeviceMatchingCallback, context)
@@ -351,6 +345,14 @@ class AKPlugin: NSObject, Plugin {
         }
 
         hidManager = manager
+
+        // Callbacks are not guaranteed to fire for devices that were already connected before
+        // manager registration in all launch paths. Seed initial state proactively.
+        if let devices = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> {
+            if let initialDevice = devices.first(where: { isSupportedControllerDevice($0) }) {
+                handleHIDDeviceConnected(initialDevice)
+            }
+        }
     }
 
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {
@@ -417,7 +419,10 @@ class AKPlugin: NSObject, Plugin {
     private func handleHIDInputValue(_ value: IOHIDValue) {
         let element = IOHIDValueGetElement(value)
         let device = IOHIDElementGetDevice(element)
-        if let primary = hidPrimaryDevice, !sameDevice(primary, device) {
+        guard let primary = hidPrimaryDevice else {
+            return
+        }
+        if !sameDevice(primary, device) {
             return
         }
 
