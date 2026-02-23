@@ -95,6 +95,9 @@ let settings = PlaySettings.shared
     @objc lazy var disableBuiltinMouse = settingsData.disableBuiltinMouse
 
     @objc lazy var blockSleepSpamming = settingsData.blockSleepSpamming
+
+    @objc lazy var experimentalHIDBridge = settingsData.experimentalHIDBridge
+        || bundleIdentifier == "com.gryphline.endfield.ios"
 }
 
 struct AppSettingsData: Codable {
@@ -128,4 +131,5 @@ struct AppSettingsData: Codable {
     var resizableAspectRatioWidth = 0
     var resizableAspectRatioHeight = 0
     var blockSleepSpamming = false
+    var experimentalHIDBridge = false
 }

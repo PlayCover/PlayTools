@@ -8,6 +8,7 @@
 import AppKit
 import CoreGraphics
 import Foundation
+import IOKit.hid
 
 // Add a lightweight struct so we can decode only the flag we care about
 private struct AKAppSettingsData: Codable {
@@ -19,6 +20,9 @@ private struct AKAppSettingsData: Codable {
 }
 
 class AKPlugin: NSObject, Plugin {
+    private static let hidGameSirVendorID = 0x3537
+    private static let hidGameSirProductID = 0x1022
+
     required override init() {
         super.init()
         if let window = NSApplication.shared.windows.first {
@@ -129,6 +133,37 @@ class AKPlugin: NSObject, Plugin {
     }
 
     private var modifierFlag: UInt = 0
+    private var hidManager: IOHIDManager?
+    private var hidPrimaryDevice: IOHIDDevice?
+    private var hidOnConnected: (() -> Void)?
+    private var hidOnDisconnected: (() -> Void)?
+    private var hidOnButton: ((Int, Bool) -> Void)?
+    private var hidOnAxis: ((Int, CGFloat) -> Void)?
+    private var hidOnHat: ((Int) -> Void)?
+
+    private static let hidDeviceMatchingCallback: IOHIDDeviceCallback = { context, _, _, device in
+        guard let context else {
+            return
+        }
+        let plugin = Unmanaged<AKPlugin>.fromOpaque(context).takeUnretainedValue()
+        plugin.handleHIDDeviceConnected(device)
+    }
+
+    private static let hidDeviceRemovalCallback: IOHIDDeviceCallback = { context, _, _, device in
+        guard let context else {
+            return
+        }
+        let plugin = Unmanaged<AKPlugin>.fromOpaque(context).takeUnretainedValue()
+        plugin.handleHIDDeviceRemoved(device)
+    }
+
+    private static let hidInputValueCallback: IOHIDValueCallback = { context, _, _, value in
+        guard let context else {
+            return
+        }
+        let plugin = Unmanaged<AKPlugin>.fromOpaque(context).takeUnretainedValue()
+        plugin.handleHIDInputValue(value)
+    }
 
     // swiftlint:disable:next function_body_length
     func setupKeyboard(keyboard: @escaping (UInt16, Bool, Bool, Bool) -> Bool,
@@ -279,6 +314,48 @@ class AKPlugin: NSObject, Plugin {
         })
     }
 
+    func setupHIDControllerInput(onConnected: @escaping () -> Void,
+                                 onDisconnected: @escaping () -> Void,
+                                 onButton: @escaping (Int, Bool) -> Void,
+                                 onAxis: @escaping (Int, CGFloat) -> Void,
+                                 onHat: @escaping (Int) -> Void) {
+        hidOnConnected = onConnected
+        hidOnDisconnected = onDisconnected
+        hidOnButton = onButton
+        hidOnAxis = onAxis
+        hidOnHat = onHat
+
+        if hidManager != nil {
+            return
+        }
+
+        let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
+
+        let matching: [[String: Any]] = [
+            [kIOHIDDeviceUsagePageKey as String: 0x01, kIOHIDDeviceUsageKey as String: 0x04], // Joystick
+            [kIOHIDDeviceUsagePageKey as String: 0x01, kIOHIDDeviceUsageKey as String: 0x05], // Gamepad
+            // Some Bluetooth gamepads (including G7 Pro) expose top-level usage as consumer control.
+            [kIOHIDDeviceUsagePageKey as String: 0x0C, kIOHIDDeviceUsageKey as String: 0x01],
+            // Vendor/product fallback for known G7 Pro in case usage filtering is insufficient.
+            [kIOHIDVendorIDKey as String: Self.hidGameSirVendorID,
+             kIOHIDProductIDKey as String: Self.hidGameSirProductID]
+        ]
+        IOHIDManagerSetDeviceMatchingMultiple(manager, matching as CFArray)
+
+        let context = Unmanaged.passUnretained(self).toOpaque()
+        IOHIDManagerRegisterDeviceMatchingCallback(manager, Self.hidDeviceMatchingCallback, context)
+        IOHIDManagerRegisterDeviceRemovalCallback(manager, Self.hidDeviceRemovalCallback, context)
+        IOHIDManagerRegisterInputValueCallback(manager, Self.hidInputValueCallback, context)
+
+        IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+        let status = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
+        if status != kIOReturnSuccess {
+            return
+        }
+
+        hidManager = manager
+    }
+
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: value)
     }
@@ -313,4 +390,109 @@ class AKPlugin: NSObject, Plugin {
         }
         return decoded
     }()
+
+    private func handleHIDDeviceConnected(_ device: IOHIDDevice) {
+        if !isSupportedControllerDevice(device) {
+            return
+        }
+
+        if hidPrimaryDevice == nil {
+            hidPrimaryDevice = device
+            hidOnConnected?()
+        }
+    }
+
+    private func handleHIDDeviceRemoved(_ device: IOHIDDevice) {
+        guard let primary = hidPrimaryDevice, sameDevice(primary, device) else {
+            return
+        }
+        hidPrimaryDevice = nil
+        hidOnDisconnected?()
+
+        if let manager = hidManager,
+           let devices = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice>,
+           let another = devices.first(where: { isSupportedControllerDevice($0) }) {
+            hidPrimaryDevice = another
+            hidOnConnected?()
+        }
+    }
+
+    private func handleHIDInputValue(_ value: IOHIDValue) {
+        let element = IOHIDValueGetElement(value)
+        let device = IOHIDElementGetDevice(element)
+        if let primary = hidPrimaryDevice, !sameDevice(primary, device) {
+            return
+        }
+
+        let usagePage = Int(IOHIDElementGetUsagePage(element))
+        let usage = Int(IOHIDElementGetUsage(element))
+        let rawValue = IOHIDValueGetIntegerValue(value)
+
+        switch usagePage {
+        case 0x09: // Button page
+            hidOnButton?(usage, rawValue != 0)
+        case 0x01: // Generic Desktop page
+            if usage == 0x39 {
+                hidOnHat?(Int(rawValue))
+                return
+            }
+            if [0x30, 0x31, 0x32, 0x33, 0x34, 0x35].contains(usage) {
+                let normalized = normalizeAxis(rawValue: rawValue, element: element)
+                hidOnAxis?(usage, normalized)
+            }
+        case 0x0C:
+            break
+        default:
+            break
+        }
+    }
+
+    private func normalizeAxis(rawValue: CFIndex, element: IOHIDElement) -> CGFloat {
+        let logicalMin = IOHIDElementGetLogicalMin(element)
+        let logicalMax = IOHIDElementGetLogicalMax(element)
+        if logicalMax <= logicalMin {
+            return 0
+        }
+
+        let clamped = min(max(rawValue, logicalMin), logicalMax)
+        let range = Double(logicalMax - logicalMin)
+        let shifted = Double(clamped - logicalMin)
+        let normalized = (shifted / range) * 2.0 - 1.0
+        return CGFloat(normalized)
+    }
+
+    private func sameDevice(_ lhs: IOHIDDevice, _ rhs: IOHIDDevice) -> Bool {
+        CFEqual(lhs, rhs)
+    }
+
+    private func hidDevicePropertyInt(_ device: IOHIDDevice, key: CFString) -> Int? {
+        if let number = IOHIDDeviceGetProperty(device, key) as? NSNumber {
+            return number.intValue
+        }
+        return nil
+    }
+
+    private func hidDevicePropertyString(_ device: IOHIDDevice, key: CFString) -> String? {
+        if let text = IOHIDDeviceGetProperty(device, key) as? String {
+            return text
+        }
+        return nil
+    }
+
+    private func isSupportedControllerDevice(_ device: IOHIDDevice) -> Bool {
+        let usagePage = hidDevicePropertyInt(device, key: kIOHIDPrimaryUsagePageKey as CFString) ?? -1
+        let usage = hidDevicePropertyInt(device, key: kIOHIDPrimaryUsageKey as CFString) ?? -1
+        let vendorID = hidDevicePropertyInt(device, key: kIOHIDVendorIDKey as CFString) ?? -1
+        let productID = hidDevicePropertyInt(device, key: kIOHIDProductIDKey as CFString) ?? -1
+
+        if vendorID == Self.hidGameSirVendorID && productID == Self.hidGameSirProductID {
+            return true
+        }
+
+        if usagePage == 0x01 && (usage == 0x04 || usage == 0x05) {
+            return true
+        }
+
+        return false
+    }
 }
