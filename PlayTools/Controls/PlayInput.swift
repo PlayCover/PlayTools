@@ -177,6 +177,7 @@ private final class HIDControllerBridge {
     private var axisProfile: HIDAxisProfile = .undecided
     private var buttonProfile: HIDButtonProfile = .undecided
     private var observedGenericAxes = Set<Int>()
+    private var hasSimulationTriggerAxes = false
     private var observedButtonUsages = Set<Int>()
     private var buttonUsagePressCount: [Int: Int] = [:]
     private var dpadButtonState: [String: Bool] = [
@@ -281,6 +282,7 @@ private final class HIDControllerBridge {
         axisProfile = .undecided
         buttonProfile = .undecided
         observedGenericAxes.removeAll()
+        hasSimulationTriggerAxes = false
         observedButtonUsages.removeAll()
         buttonUsagePressCount.removeAll()
         dpadButtonState.keys.forEach { dpadButtonState[$0] = false }
@@ -341,6 +343,28 @@ private final class HIDControllerBridge {
             buttonUsagePressCount[usage, default: 0] += 1
         }
 
+        // Some HID controllers emit digital trigger presses on button usages 9/10
+        // while exposing analog trigger values on simulation axes C4/C5.
+        // In that mode, usage 10 corresponds to LT and usage 9 corresponds to RT.
+        if hasSimulationTriggerAxes {
+            if usage == 10 {
+                if virtualConnected, #available(iOS 17.0, *), let virtualController {
+                    virtualController.setValue(pressed ? 1.0 : 0.0, forButtonElement: GCInputLeftTrigger)
+                } else if PlaySettings.shared.keymapping {
+                    _ = ActionDispatcher.dispatch(key: GCInputLeftTrigger, pressed: pressed)
+                }
+                return
+            }
+            if usage == 9 {
+                if virtualConnected, #available(iOS 17.0, *), let virtualController {
+                    virtualController.setValue(pressed ? 1.0 : 0.0, forButtonElement: GCInputRightTrigger)
+                } else if PlaySettings.shared.keymapping {
+                    _ = ActionDispatcher.dispatch(key: GCInputRightTrigger, pressed: pressed)
+                }
+                return
+            }
+        }
+
         if virtualConnected, #available(iOS 17.0, *), let virtualController,
            let elementName = virtualButtonElement(for: usage) {
             virtualController.setValue(pressed ? 1.0 : 0.0, forButtonElement: elementName)
@@ -359,6 +383,10 @@ private final class HIDControllerBridge {
     private func onAxis(usage: Int, value: CGFloat) {
         if !shouldProcessHID() {
             return
+        }
+
+        if usage == 0xC4 || usage == 0xC5 {
+            hasSimulationTriggerAxes = true
         }
 
         guard let axisRole = resolveAxisRole(usage: usage, value: value) else {
