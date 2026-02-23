@@ -81,7 +81,7 @@
 		B127172528817C040025112B /* DiscordIPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B127172428817C040025112B /* DiscordIPC.swift */; };
 		B1271729288284BE0025112B /* DiscordActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1271728288284BE0025112B /* DiscordActivity.swift */; };
 		B1E8CF8A28BBE2AB004340D3 /* Keymapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */; };
-		B444BB0D2F49C1D100ADCC5A /* BackgroundController.m in Sources */ = {isa = PBXBuildFile; fileRef = B444BB0B2F49C1D100ADCC5A /* BackgroundController.m */; };
+		B444BB0D2F49C1D100ADCC5A /* ControllerFocus.m in Sources */ = {isa = PBXBuildFile; fileRef = B444BB0B2F49C1D100ADCC5A /* ControllerFocus.m */; };
 		B46C02C72C634AB5007637AB /* BatteryLevel.m in Sources */ = {isa = PBXBuildFile; fileRef = B46C02C62C634AB5007637AB /* BatteryLevel.m */; };
 		B66E65002C936EA100E48FD0 /* PlayedAppleDBConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66E64FF2C936E9800E48FD0 /* PlayedAppleDBConstants.swift */; };
 		B6D774FF2ACFC3D900C0D9D8 /* SwordRPC in Frameworks */ = {isa = PBXBuildFile; productRef = B6D774FE2ACFC3D900C0D9D8 /* SwordRPC */; };
@@ -181,8 +181,7 @@
 		B127172428817C040025112B /* DiscordIPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordIPC.swift; sourceTree = "<group>"; };
 		B1271728288284BE0025112B /* DiscordActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscordActivity.swift; sourceTree = "<group>"; };
 		B1E8CF8928BBE2AB004340D3 /* Keymapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keymapping.swift; sourceTree = "<group>"; };
-		B444BB0B2F49C1D100ADCC5A /* BackgroundController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BackgroundController.m; sourceTree = "<group>"; };
-		B444BB0C2F49C1D100ADCC5A /* BackgroundController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BackgroundController.h; sourceTree = "<group>"; };
+		B444BB0B2F49C1D100ADCC5A /* ControllerFocus.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ControllerFocus.m; sourceTree = "<group>"; };
 		B46C02C62C634AB5007637AB /* BatteryLevel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BatteryLevel.m; sourceTree = "<group>"; };
 		B46C02C82C634C60007637AB /* BatteryLevel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BatteryLevel.h; sourceTree = "<group>"; };
 		B66E64FF2C936E9800E48FD0 /* PlayedAppleDBConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayedAppleDBConstants.swift; sourceTree = "<group>"; };
@@ -483,8 +482,7 @@
 				6E7663A428D0FEBE00DE4AF9 /* AKPluginLoader.swift */,
 				B46C02C62C634AB5007637AB /* BatteryLevel.m */,
 				B46C02C82C634C60007637AB /* BatteryLevel.h */,
-				B444BB0B2F49C1D100ADCC5A /* BackgroundController.m */,
-				B444BB0C2F49C1D100ADCC5A /* BackgroundController.h */,
+				B444BB0B2F49C1D100ADCC5A /* ControllerFocus.m */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -714,7 +712,7 @@
 			files = (
 				954389CA2B392D7800B063BB /* DraggableButton.swift in Sources */,
 				9562D16D2AB505D4002C329D /* ControllerEventAdapter.swift in Sources */,
-				B444BB0D2F49C1D100ADCC5A /* BackgroundController.m in Sources */,
+				B444BB0D2F49C1D100ADCC5A /* ControllerFocus.m in Sources */,
 				AA71975A287A480D00623C15 /* Toucher.swift in Sources */,
 				AA7197A1287A481500623C15 /* CircleMenuLoader.swift in Sources */,
 				6E76639B28D0FAE700DE4AF9 /* Plugin.swift in Sources */,
