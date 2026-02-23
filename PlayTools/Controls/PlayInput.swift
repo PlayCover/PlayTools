@@ -24,9 +24,7 @@ class PlayInput {
             simulateGCMouseDisconnect()
         }
 
-        if PlaySettings.shared.experimentalHIDBridge {
-            HIDControllerBridge.shared.initializeIfNeeded()
-        }
+        HIDControllerBridge.shared.initializeIfNeeded()
 
         if !PlaySettings.shared.keymapping {
             return
