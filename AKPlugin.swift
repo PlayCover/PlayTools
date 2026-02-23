@@ -20,8 +20,14 @@ private struct AKAppSettingsData: Codable {
 }
 
 class AKPlugin: NSObject, Plugin {
-    private static let hidGameSirVendorID = 0x3537
-    private static let hidGameSirProductID = 0x1022
+    private static let hidGenericGamepadMatches: [[String: Any]] = [
+        [kIOHIDDeviceUsagePageKey as String: 0x01, kIOHIDDeviceUsageKey as String: 0x04], // Joystick
+        [kIOHIDDeviceUsagePageKey as String: 0x01, kIOHIDDeviceUsageKey as String: 0x05], // Gamepad
+        // Some Bluetooth controllers expose top-level usage as consumer control.
+        [kIOHIDDeviceUsagePageKey as String: 0x0C, kIOHIDDeviceUsageKey as String: 0x01]
+    ]
+    private static let hidAxisUsages: Set<Int> = [0x30, 0x31, 0x32, 0x33, 0x34, 0x35]
+    private static let hidHatUsage = 0x39
 
     required override init() {
         super.init()
@@ -331,16 +337,7 @@ class AKPlugin: NSObject, Plugin {
 
         let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
 
-        let matching: [[String: Any]] = [
-            [kIOHIDDeviceUsagePageKey as String: 0x01, kIOHIDDeviceUsageKey as String: 0x04], // Joystick
-            [kIOHIDDeviceUsagePageKey as String: 0x01, kIOHIDDeviceUsageKey as String: 0x05], // Gamepad
-            // Some Bluetooth gamepads (including G7 Pro) expose top-level usage as consumer control.
-            [kIOHIDDeviceUsagePageKey as String: 0x0C, kIOHIDDeviceUsageKey as String: 0x01],
-            // Vendor/product fallback for known G7 Pro in case usage filtering is insufficient.
-            [kIOHIDVendorIDKey as String: Self.hidGameSirVendorID,
-             kIOHIDProductIDKey as String: Self.hidGameSirProductID]
-        ]
-        IOHIDManagerSetDeviceMatchingMultiple(manager, matching as CFArray)
+        IOHIDManagerSetDeviceMatchingMultiple(manager, Self.hidGenericGamepadMatches as CFArray)
 
         let context = Unmanaged.passUnretained(self).toOpaque()
         IOHIDManagerRegisterDeviceMatchingCallback(manager, Self.hidDeviceMatchingCallback, context)
@@ -472,27 +469,53 @@ class AKPlugin: NSObject, Plugin {
         return nil
     }
 
-    private func hidDevicePropertyString(_ device: IOHIDDevice, key: CFString) -> String? {
-        if let text = IOHIDDeviceGetProperty(device, key) as? String {
-            return text
-        }
-        return nil
-    }
-
     private func isSupportedControllerDevice(_ device: IOHIDDevice) -> Bool {
         let usagePage = hidDevicePropertyInt(device, key: kIOHIDPrimaryUsagePageKey as CFString) ?? -1
         let usage = hidDevicePropertyInt(device, key: kIOHIDPrimaryUsageKey as CFString) ?? -1
-        let vendorID = hidDevicePropertyInt(device, key: kIOHIDVendorIDKey as CFString) ?? -1
-        let productID = hidDevicePropertyInt(device, key: kIOHIDProductIDKey as CFString) ?? -1
-
-        if vendorID == Self.hidGameSirVendorID && productID == Self.hidGameSirProductID {
-            return true
-        }
 
         if usagePage == 0x01 && (usage == 0x04 || usage == 0x05) {
             return true
         }
 
-        return false
+        return hasGamepadLikeElements(device)
+    }
+
+    private func hasGamepadLikeElements(_ device: IOHIDDevice) -> Bool {
+        guard let elements = IOHIDDeviceCopyMatchingElements(device, nil, IOOptionBits(kIOHIDOptionsTypeNone))
+                as? [IOHIDElement] else {
+            return false
+        }
+
+        var buttonUsages = Set<Int>()
+        var axisUsages = Set<Int>()
+        var hasHat = false
+
+        for element in elements {
+            let type = IOHIDElementGetType(element)
+            switch type {
+            case kIOHIDElementTypeInput_Button:
+                let usagePage = Int(IOHIDElementGetUsagePage(element))
+                let usage = Int(IOHIDElementGetUsage(element))
+                if usagePage == 0x09 {
+                    buttonUsages.insert(usage)
+                }
+            case kIOHIDElementTypeInput_Misc, kIOHIDElementTypeInput_Axis:
+                let usagePage = Int(IOHIDElementGetUsagePage(element))
+                let usage = Int(IOHIDElementGetUsage(element))
+                if usagePage != 0x01 {
+                    continue
+                }
+                if usage == Self.hidHatUsage {
+                    hasHat = true
+                } else if Self.hidAxisUsages.contains(usage) {
+                    axisUsages.insert(usage)
+                }
+            default:
+                continue
+            }
+        }
+
+        // Reject non-controller HID devices (headsets, media keys, etc.).
+        return buttonUsages.count >= 4 && (axisUsages.count >= 2 || hasHat)
     }
 }

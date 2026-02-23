@@ -86,7 +86,7 @@ private final class HIDControllerBridge {
     private static let dpadLeftAlias = "Direction Pad Left"
     private static let dpadRightAlias = "Direction Pad Right"
 
-    private enum HIDAxisProfile: String {
+    private enum HIDAxisProfile {
         case undecided
         case standard
         case zAndRzRightStick
@@ -100,6 +100,27 @@ private final class HIDControllerBridge {
         case leftTrigger
         case rightTrigger
     }
+
+    private typealias AxisUsageMap = [Int: HIDAxisRole]
+    private static let axisUsageByProfile: [HIDAxisProfile: AxisUsageMap] = [
+        .standard: [
+            0x30: .leftStickX,
+            0x31: .leftStickY,
+            0x33: .rightStickX,
+            0x34: .rightStickY,
+            0x32: .leftTrigger,
+            0x35: .rightTrigger
+        ],
+        .zAndRzRightStick: [
+            0x30: .leftStickX,
+            0x31: .leftStickY,
+            0x32: .rightStickX,
+            0x35: .rightStickY,
+            0x33: .leftTrigger,
+            0x34: .rightTrigger
+        ]
+    ]
+    private static let supportedAxisUsages = Set(axisUsageByProfile.values.flatMap { $0.keys })
 
     private var initialized = false
     private var virtualController: GCVirtualController?
@@ -339,7 +360,7 @@ private final class HIDControllerBridge {
     }
 
     private func resolveAxisRole(usage: Int, value: CGFloat) -> HIDAxisRole? {
-        guard [0x30, 0x31, 0x32, 0x33, 0x34, 0x35].contains(usage) else {
+        guard Self.supportedAxisUsages.contains(usage) else {
             return nil
         }
 
@@ -353,28 +374,8 @@ private final class HIDControllerBridge {
             }
         }
 
-        switch axisProfile {
-        case .zAndRzRightStick:
-            switch usage {
-            case 0x30: return .leftStickX
-            case 0x31: return .leftStickY
-            case 0x32: return .rightStickX
-            case 0x35: return .rightStickY
-            case 0x33: return .leftTrigger
-            case 0x34: return .rightTrigger
-            default: return nil
-            }
-        case .undecided, .standard:
-            switch usage {
-            case 0x30: return .leftStickX
-            case 0x31: return .leftStickY
-            case 0x33: return .rightStickX
-            case 0x34: return .rightStickY
-            case 0x32: return .leftTrigger
-            case 0x35: return .rightTrigger
-            default: return nil
-            }
-        }
+        let profile = axisProfile == .undecided ? HIDAxisProfile.standard : axisProfile
+        return Self.axisUsageByProfile[profile]?[usage]
     }
 
     private func onHat(value: Int) {
