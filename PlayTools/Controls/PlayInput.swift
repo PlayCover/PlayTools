@@ -114,7 +114,10 @@ private final class HIDControllerBridge {
             0x33: .rightStickX,
             0x34: .rightStickY,
             0x32: .leftTrigger,
-            0x35: .rightTrigger
+            0x35: .rightTrigger,
+            // Some HID gamepads expose analog triggers on Simulation Controls.
+            0xC4: .leftTrigger, // Accelerator
+            0xC5: .rightTrigger // Brake
         ],
         .zAndRzRightStick: [
             0x30: .leftStickX,
@@ -122,7 +125,9 @@ private final class HIDControllerBridge {
             0x32: .rightStickX,
             0x35: .rightStickY,
             0x33: .leftTrigger,
-            0x34: .rightTrigger
+            0x34: .rightTrigger,
+            0xC4: .leftTrigger, // Accelerator
+            0xC5: .rightTrigger // Brake
         ]
     ]
     private static let supportedAxisUsages = Set(axisUsageByProfile.values.flatMap { $0.keys })
@@ -408,6 +413,14 @@ private final class HIDControllerBridge {
     private func resolveAxisRole(usage: Int, value: CGFloat) -> HIDAxisRole? {
         guard Self.supportedAxisUsages.contains(usage) else {
             return nil
+        }
+
+        // Simulation controls are unambiguous trigger axes across profiles.
+        if usage == 0xC4 {
+            return .leftTrigger
+        }
+        if usage == 0xC5 {
+            return .rightTrigger
         }
 
         observedGenericAxes.insert(usage)

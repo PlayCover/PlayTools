@@ -21,6 +21,8 @@ private struct AKAppSettingsData: Codable {
 
 class AKPlugin: NSObject, Plugin {
     private static let hidAxisUsages: Set<Int> = [0x30, 0x31, 0x32, 0x33, 0x34, 0x35]
+    // Simulation controls used by some HID gamepads for analog triggers.
+    private static let hidSimulationAxisUsages: Set<Int> = [0xC4, 0xC5] // Accelerator / Brake
     private static let hidHatUsage = 0x39
 
     required override init() {
@@ -442,6 +444,11 @@ class AKPlugin: NSObject, Plugin {
                 let normalized = normalizeAxis(rawValue: rawValue, element: element)
                 hidOnAxis?(usage, normalized)
             }
+        case 0x02: // Simulation Controls page (e.g. accelerator / brake triggers)
+            if Self.hidSimulationAxisUsages.contains(usage) {
+                let normalized = normalizeAxis(rawValue: rawValue, element: element)
+                hidOnAxis?(usage, normalized)
+            }
         case 0x0C:
             break
         default:
@@ -507,13 +514,19 @@ class AKPlugin: NSObject, Plugin {
             case kIOHIDElementTypeInput_Misc, kIOHIDElementTypeInput_Axis:
                 let usagePage = Int(IOHIDElementGetUsagePage(element))
                 let usage = Int(IOHIDElementGetUsage(element))
-                if usagePage != 0x01 {
+                switch usagePage {
+                case 0x01:
+                    if usage == Self.hidHatUsage {
+                        hasHat = true
+                    } else if Self.hidAxisUsages.contains(usage) {
+                        axisUsages.insert(usage)
+                    }
+                case 0x02:
+                    if Self.hidSimulationAxisUsages.contains(usage) {
+                        axisUsages.insert(usage)
+                    }
+                default:
                     continue
-                }
-                if usage == Self.hidHatUsage {
-                    hasHat = true
-                } else if Self.hidAxisUsages.contains(usage) {
-                    axisUsages.insert(usage)
                 }
             default:
                 continue
