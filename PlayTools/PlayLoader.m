@@ -11,12 +11,18 @@
 #import <PlayTools/PlayTools-Swift.h>
 #import <sys/utsname.h>
 #import "NSObject+Swizzle.h"
+#import <dlfcn.h>
+
+@import MachO;
 
 // Get device model from playcover .plist
 // With a null terminator
 #define DEVICE_MODEL [[[PlaySettings shared] deviceModel] cStringUsingEncoding:NSUTF8StringEncoding]
 #define OEM_ID [[[PlaySettings shared] oemID] cStringUsingEncoding:NSUTF8StringEncoding]
 #define PLATFORM_IOS 2
+
+// Original implementations of the functions we interpose so we can call them in our implementations
+uint32_t (*orig_dyld_image_count)(void) = _dyld_image_count;
 
 // Define dyld_get_active_platform function for interpose
 int dyld_get_active_platform(void);
@@ -170,10 +176,27 @@ static OSStatus pt_SecItemDelete(CFDictionaryRef query) {
     return retval;
 }
 
+static SecKeyRef pt_SecKeyCreateRandomKey(CFDictionaryRef parameters, CFErrorRef *error) {
+    SecKeyRef result;
+    if ([[PlaySettings shared] playChain]) {
+        result = [PlayKeychain keyCreateRandomKey:(__bridge NSDictionary * _Nonnull)(parameters) error:error];
+    } else {
+        result = SecKeyCreateRandomKey(parameters, (void *)error);
+    }
+    
+        if ([[PlaySettings shared] playChainDebugging]) {
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecKeyCreateRandomKey: %@", parameters]];
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecKeyCreateRandomKey result: %@", result]];
+        }
+    
+    return result;
+}
+
 DYLD_INTERPOSE(pt_SecItemCopyMatching, SecItemCopyMatching)
 DYLD_INTERPOSE(pt_SecItemAdd, SecItemAdd)
 DYLD_INTERPOSE(pt_SecItemUpdate, SecItemUpdate)
 DYLD_INTERPOSE(pt_SecItemDelete, SecItemDelete)
+DYLD_INTERPOSE(pt_SecKeyCreateRandomKey, SecKeyCreateRandomKey)
 
 static uint8_t ue_status = 0;
 
@@ -276,12 +299,18 @@ static int pt_usleep(useconds_t time) {
     return usleep(time);
 }
 
+static uint32_t pt_dyld_image_count(void) {
+    return orig_dyld_image_count() - 1; // No, PlayTools doesn't exist what are you talking about?
+}
+
+
 DYLD_INTERPOSE(pt_open, open)
 DYLD_INTERPOSE(pt_stat, stat)
 DYLD_INTERPOSE(pt_access, access)
 DYLD_INTERPOSE(pt_rename, rename)
 DYLD_INTERPOSE(pt_unlink, unlink)
 DYLD_INTERPOSE(pt_usleep, usleep)
+DYLD_INTERPOSE(pt_dyld_image_count, _dyld_image_count)   
 
 @implementation PlayLoader
 
