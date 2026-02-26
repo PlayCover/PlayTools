@@ -193,7 +193,7 @@ __attribute__((visibility("hidden")))
     // Block UIAlertController presentation to bypass Endfield jailbreak message
     NSString *bundleID = [[NSBundle mainBundle] bundleIdentifier];
     if ([bundleID isEqualToString:@"com.gryphline.endfield.ios"] || 
-    [bundleID isEqualToString:@"com.hypergryph.endfield"] || [bundleID isEqualToString:@"com.YostarJP.BlueArchive"]) {
+    [bundleID isEqualToString:@"com.hypergryph.endfield"]) {
         [self debugLogger:@"loading UIAlertController bypass"];
         [objc_getClass("UIViewController") swizzleInstanceMethod:@selector(presentViewController:animated:completion:) withMethod:@selector(pm_endfield_presentViewController:animated:completion:)];
     }
