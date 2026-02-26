@@ -192,11 +192,30 @@ static SecKeyRef pt_SecKeyCreateRandomKey(CFDictionaryRef parameters, CFErrorRef
     return result;
 }
 
+// Deprecated, but some apps might still use it.
+static OSStatus pt_SecKeyGeneratePair(CFDictionaryRef parameters, SecKeyRef *publicKey, SecKeyRef *privateKey) {
+    OSStatus retval;
+    if ([[PlaySettings shared] playChain]) {
+        retval = [PlayKeychain keyGeneratePair:(__bridge NSDictionary * _Nonnull)(parameters) publicKey:(void *)publicKey privateKey:(void *)privateKey];
+    } else {
+        retval = SecKeyGeneratePair(parameters, (void *)publicKey, (void *)privateKey);
+    }
+    
+    if ([[PlaySettings shared] playChainDebugging]) {
+        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecKeyGeneratePair: %@", parameters]];
+        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecKeyGeneratePair public key result: %@", publicKey != NULL ? *publicKey : nil]];
+        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecKeyGeneratePair private key result: %@", privateKey != NULL ? *privateKey : nil]];
+    }
+    
+    return retval;
+}
+
 DYLD_INTERPOSE(pt_SecItemCopyMatching, SecItemCopyMatching)
 DYLD_INTERPOSE(pt_SecItemAdd, SecItemAdd)
 DYLD_INTERPOSE(pt_SecItemUpdate, SecItemUpdate)
 DYLD_INTERPOSE(pt_SecItemDelete, SecItemDelete)
 DYLD_INTERPOSE(pt_SecKeyCreateRandomKey, SecKeyCreateRandomKey)
+DYLD_INTERPOSE(pt_SecKeyGeneratePair, SecKeyGeneratePair)
 
 static uint8_t ue_status = 0;
 
