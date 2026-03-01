@@ -22,6 +22,25 @@ public class PlayCover: NSObject {
             // Change the working directory to / just like iOS
             FileManager.default.changeCurrentDirectoryPath("/")
         }
+
+        if PlaySettings.shared.displayRotation != 0 {
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5, execute: {
+                let rotateCommand = UIKeyCommand(
+                    title: "Keep Rotation Command",
+                    image: nil,
+                    action: #selector(UIApplication.rotateView(_:)),
+                    input: "",
+                    modifierFlags: [],
+                    propertyList: ["rotationIndex": PlaySettings.shared.displayRotation]
+                )
+                UIApplication.shared.sendAction(
+                    #selector(UIApplication.rotateView(_:)),
+                    to: UIApplication.shared,
+                    from: rotateCommand,
+                    for: nil
+                )
+            })
+        }
     }
 
     @objc static public func initMenu(menu: NSObject) {

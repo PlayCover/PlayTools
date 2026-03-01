@@ -88,6 +88,8 @@ let settings = PlaySettings.shared
 
     @objc lazy var floatingWindow = settingsData.floatingWindow
 
+    @objc lazy var displayRotation = settingsData.displayRotation
+
     @objc lazy var checkMicPermissionSync = settingsData.checkMicPermissionSync
 
     @objc lazy var limitMotionUpdateFrequency = settingsData.limitMotionUpdateFrequency
@@ -108,6 +110,7 @@ struct AppSettingsData: Codable {
     var customScaler = 2.0
     var resolution = 2
     var aspectRatio = 1
+    var displayRotation = 0
     var notch = false
     var bypass = false
     var discordActivity = DiscordActivity()
