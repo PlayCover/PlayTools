@@ -21,9 +21,6 @@
 #define OEM_ID [[[PlaySettings shared] oemID] cStringUsingEncoding:NSUTF8StringEncoding]
 #define PLATFORM_IOS 2
 
-// Original implementations of the functions we interpose so we can call them in our implementations
-uint32_t (*orig_dyld_image_count)(void) = _dyld_image_count;
-
 // Define dyld_get_active_platform function for interpose
 int dyld_get_active_platform(void);
 int pt_dyld_get_active_platform(void) { return PLATFORM_IOS; }
@@ -318,10 +315,6 @@ static int pt_usleep(useconds_t time) {
     return usleep(time);
 }
 
-static uint32_t pt_dyld_image_count(void) {
-    return orig_dyld_image_count() - 1; // No, PlayTools doesn't exist what are you talking about?
-}
-
 
 DYLD_INTERPOSE(pt_open, open)
 DYLD_INTERPOSE(pt_stat, stat)
@@ -329,7 +322,6 @@ DYLD_INTERPOSE(pt_access, access)
 DYLD_INTERPOSE(pt_rename, rename)
 DYLD_INTERPOSE(pt_unlink, unlink)
 DYLD_INTERPOSE(pt_usleep, usleep)
-DYLD_INTERPOSE(pt_dyld_image_count, _dyld_image_count)   
 
 @implementation PlayLoader
 
