@@ -3,6 +3,7 @@
 //  PlayTools
 //
 
+#include <Foundation/Foundation.h>
 #include <errno.h>
 #include <sys/sysctl.h>
 
@@ -10,6 +11,9 @@
 #import <PlayTools/PlayTools-Swift.h>
 #import <sys/utsname.h>
 #import "NSObject+Swizzle.h"
+#import <dlfcn.h>
+
+@import MachO;
 
 // Get device model from playcover .plist
 // With a null terminator
@@ -24,7 +28,8 @@ int pt_dyld_get_active_platform(void) { return PLATFORM_IOS; }
 // Change the machine output by uname to match expected output on iOS
 static int pt_uname(struct utsname *uts) {
     uname(uts);
-    strncpy(uts->machine, DEVICE_MODEL, strlen(DEVICE_MODEL) + 1);
+    strncpy(uts->machine, DEVICE_MODEL, sizeof(uts->machine) - 1);
+    uts->machine[sizeof(uts->machine) - 1] = '\0';
     return 0;
 }
 
@@ -36,7 +41,7 @@ static int pt_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0
         if (NULL == buf) {
             *size = strlen(DEVICE_MODEL) + 1;
         } else {
-            if (*size > strlen(DEVICE_MODEL)) {
+            if (*size > strlen(DEVICE_MODEL) + 1) {
                 strcpy(buf, DEVICE_MODEL);
             } else {
                 return ENOMEM;
@@ -47,7 +52,7 @@ static int pt_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0
         if (NULL == buf) {
             *size = strlen(OEM_ID) + 1;
         } else {
-            if (*size > strlen(OEM_ID)) {
+            if (*size > strlen(OEM_ID) + 1) {
                 strcpy(buf, OEM_ID);
             } else {
                 return ENOMEM;
@@ -62,37 +67,31 @@ static int pt_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0
 static int pt_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *newp, size_t newlen) {
     if ((strcmp(name, "hw.machine") == 0) || (strcmp(name, "hw.product") == 0) || (strcmp(name, "hw.model") == 0)) {
         if (oldp == NULL) {
-            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-            // We don't want to accidentally decrease it because the real sysctl call will ENOMEM
-            // as model are much longer on Macs (eg. MacBookAir10,1)
-            if (*oldlenp < strlen(DEVICE_MODEL) + 1) {
-                *oldlenp = strlen(DEVICE_MODEL) + 1;
-            }
-            return ret;
+            *oldlenp = strlen(DEVICE_MODEL) + 1;
+            return 0;
         }
         else if (oldp != NULL) {
-            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-            const char *machine = DEVICE_MODEL;
-            strncpy((char *)oldp, machine, strlen(machine));
-            *oldlenp = strlen(machine) + 1;
-            return ret;
+            if (*oldlenp < strlen(DEVICE_MODEL) + 1) {
+                return ENOMEM;
+            }
+            strcpy((char *)oldp, DEVICE_MODEL);
+            *oldlenp = strlen(DEVICE_MODEL) + 1;
+            return 0;
         } else {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
             return ret;
         }
     } else if ((strcmp(name, "hw.target") == 0)) {
         if (oldp == NULL) {
-            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-            if (*oldlenp < strlen(OEM_ID) + 1) {
-                *oldlenp = strlen(OEM_ID) + 1;
-            }
-            return ret;
+            *oldlenp = strlen(OEM_ID) + 1;
+            return 0;
         } else if (oldp != NULL) {
-            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
-            const char *machine = OEM_ID;
-            strncpy((char *)oldp, machine, strlen(machine));
-            *oldlenp = strlen(machine) + 1;
-            return ret;
+            if (*oldlenp < strlen(OEM_ID) + 1) {
+                return ENOMEM;
+            }
+            strcpy((char *)oldp, OEM_ID);
+            *oldlenp = strlen(OEM_ID) + 1;
+            return 0;
         } else {
             int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
             return ret;
@@ -174,10 +173,46 @@ static OSStatus pt_SecItemDelete(CFDictionaryRef query) {
     return retval;
 }
 
+static SecKeyRef pt_SecKeyCreateRandomKey(CFDictionaryRef parameters, CFErrorRef *error) {
+    SecKeyRef result;
+    if ([[PlaySettings shared] playChain]) {
+        result = [PlayKeychain keyCreateRandomKey:(__bridge NSDictionary * _Nonnull)(parameters) error:error];
+    } else {
+        result = SecKeyCreateRandomKey(parameters, (void *)error);
+    }
+    
+        if ([[PlaySettings shared] playChainDebugging]) {
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecKeyCreateRandomKey: %@", parameters]];
+            [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecKeyCreateRandomKey result: %@", result]];
+        }
+    
+    return result;
+}
+
+// Deprecated, but some apps might still use it.
+static OSStatus pt_SecKeyGeneratePair(CFDictionaryRef parameters, SecKeyRef *publicKey, SecKeyRef *privateKey) {
+    OSStatus retval;
+    if ([[PlaySettings shared] playChain]) {
+        retval = [PlayKeychain keyGeneratePair:(__bridge NSDictionary * _Nonnull)(parameters) publicKey:(void *)publicKey privateKey:(void *)privateKey];
+    } else {
+        retval = SecKeyGeneratePair(parameters, (void *)publicKey, (void *)privateKey);
+    }
+    
+    if ([[PlaySettings shared] playChainDebugging]) {
+        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecKeyGeneratePair: %@", parameters]];
+        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecKeyGeneratePair public key result: %@", publicKey != NULL ? *publicKey : nil]];
+        [PlayKeychain debugLogger: [NSString stringWithFormat:@"SecKeyGeneratePair private key result: %@", privateKey != NULL ? *privateKey : nil]];
+    }
+    
+    return retval;
+}
+
 DYLD_INTERPOSE(pt_SecItemCopyMatching, SecItemCopyMatching)
 DYLD_INTERPOSE(pt_SecItemAdd, SecItemAdd)
 DYLD_INTERPOSE(pt_SecItemUpdate, SecItemUpdate)
 DYLD_INTERPOSE(pt_SecItemDelete, SecItemDelete)
+DYLD_INTERPOSE(pt_SecKeyCreateRandomKey, SecKeyCreateRandomKey)
+DYLD_INTERPOSE(pt_SecKeyGeneratePair, SecKeyGeneratePair)
 
 static uint8_t ue_status = 0;
 
@@ -230,11 +265,63 @@ static int pt_unlink(char const* path) {
     return unlink(ue_fix_filename(path));
 }
 
+static NSMutableDictionary *thread_sleep_counters = nil;
+static NSMutableDictionary *last_sleep_attempts = nil;
+static dispatch_once_t thread_sleep_once;
+static NSLock *thread_sleep_lock = nil;
+
+static int pt_usleep(useconds_t time) {
+    dispatch_once(&thread_sleep_once, ^{
+        thread_sleep_counters = [NSMutableDictionary dictionary];
+        last_sleep_attempts = [NSMutableDictionary dictionary];
+        thread_sleep_lock = [[NSLock alloc] init];
+        [thread_sleep_lock lock];
+    });
+    
+    if ([[PlaySettings shared] blockSleepSpamming]) {
+        int thread_id = pthread_mach_thread_np(pthread_self());
+        NSNumber *threadKey = @(thread_id);
+        
+        int thread_sleep_counter = [thread_sleep_counters[threadKey] intValue];
+        int last_sleep_attempt = [last_sleep_attempts[threadKey] intValue];
+        
+        if (time == 100000) {
+            int timestamp = (int)[[NSDate date] timeIntervalSince1970];
+            // If it sleeps too fast, increase counter
+            if (timestamp - last_sleep_attempt < 2) {
+                thread_sleep_counter++;
+            } else {
+                thread_sleep_counter = 1;
+            }
+            last_sleep_attempt = timestamp;
+            thread_sleep_counters[threadKey] = @(thread_sleep_counter);
+            last_sleep_attempts[threadKey] = @(last_sleep_attempt);
+            
+        }
+        
+        if (thread_sleep_counter > 100) {
+            // Stop this thread from spamming usleep calls
+            NSLog(@"[PC] Thread %i exceeded usleep limit. Seem sus, stopping this "
+                  @"thread FOREVER",
+                  thread_id);
+            
+            [thread_sleep_lock lock];
+            [thread_sleep_lock unlock];
+            
+            return 0;
+        }
+    }
+    
+    return usleep(time);
+}
+
+
 DYLD_INTERPOSE(pt_open, open)
 DYLD_INTERPOSE(pt_stat, stat)
 DYLD_INTERPOSE(pt_access, access)
 DYLD_INTERPOSE(pt_rename, rename)
 DYLD_INTERPOSE(pt_unlink, unlink)
+DYLD_INTERPOSE(pt_usleep, usleep)
 
 @implementation PlayLoader
 
@@ -249,6 +336,16 @@ static void __attribute__((constructor)) initialize(void) {
     
     if (ue_status == 2) {
         [PlayKeychain debugLogger: [NSString stringWithFormat:@"UnrealEngine Hooked"]];
+    }
+
+    if ([[PlaySettings shared] blockSleepSpamming]) {
+        // Add an observer so we can unlock threads on app termination
+        [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillTerminateNotification
+                                                          object:nil
+                                                           queue:[NSOperationQueue mainQueue]
+                                                      usingBlock:^(NSNotification * _Nonnull note) {
+            [thread_sleep_lock unlock];
+        }];
     }
 }
 
