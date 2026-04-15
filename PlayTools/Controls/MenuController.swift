@@ -230,8 +230,7 @@ class MenuController {
             "]"                             // Next keymap
         ]
         let arrowKeyChildrenCommands = zip(keyCommands, keymapping).map { (command, btn) in
-            UIKeyCommand(title: btn,
-                         image: nil,
+            UIKeyCommand(title: btn, image: nil,
                          action: keymappingSelectors[keymapping.firstIndex(of: btn)!],
                          input: command,
                          modifierFlags: .command,
@@ -239,21 +238,14 @@ class MenuController {
             )
         }
 
-        let rotationTitles = [
-            "Landscape Left (0°)",
-            "Portrait (90°)",
-            "Landscape Right (180°)",
-            "Portrait Upside Down (270°)"
-        ]
-        let rotationInputs = ["1", "2", "3", "4"]
-
         // Every rotation item calls the *same selector*, passing its index in propertyList
-        let rotationMenuItems = rotationTitles.enumerated().map { (index, title) in
+        let rotationMenuItems = [
+            "Landscape Left (0°)", "Portrait (90°)", "Landscape Right (180°)", "Portrait Upside Down (270°)"
+        ].enumerated().map { (index, title) in
             UIKeyCommand(
-                title: title,
-                image: nil,
+                title: title, image: nil,
                 action: #selector(UIApplication.rotateView(_:)),
-                input: rotationInputs[index],
+                input: "\(index + 1)",
                 modifierFlags: [.command, .shift], // ⌘⇧1–4
                 propertyList: ["rotationIndex": index]
             )
@@ -261,8 +253,7 @@ class MenuController {
 
         let rotationMenu = UIMenu(
             title: NSLocalizedString("menu.keymapping.rotateDisplay", tableName: "Playtools",
-                              value: "Rotate display area", comment: ""),
-            image: nil,
+                              value: "Rotate display area", comment: ""), image: nil,
             identifier: .rotationOptionsMenu,
             options: [],
             children: rotationMenuItems
@@ -270,16 +261,14 @@ class MenuController {
 
         // Combine all menus
         let arrowKeysGroup = UIMenu(
-            title: "",
-            image: nil,
+            title: "", image: nil,
             identifier: .keymappingOptionsMenu,
             options: .displayInline,
             children: arrowKeyChildrenCommands + [rotationMenu]
         )
 
         return UIMenu(title: NSLocalizedString("menu.keymapping", tableName: "Playtools",
-                                               value: "Keymapping", comment: ""),
-                      image: nil,
+                                               value: "Keymapping", comment: ""), image: nil,
                       identifier: .keymappingMenu,
                       options: [],
                       children: [arrowKeysGroup])
