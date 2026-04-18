@@ -30,22 +30,15 @@ class Keymapping {
 
     public var keymapConfig: KeymapConfig {
         get {
-            do {
-                let data = try Data(contentsOf: configURL)
-                return try PropertyListDecoder().decode(KeymapConfig.self, from: data)
-            } catch {
+            if let config = readConfig() {
+                return config
+            } else {
                 print("[PlayTools] Failed to decode config url.\n%@")
                 return resetConfig()
             }
         }
         set {
-            let encoder = PropertyListEncoder()
-            encoder.outputFormat = .xml
-
-            do {
-                let data = try encoder.encode(newValue)
-                try data.write(to: configURL)
-            } catch {
+            if !writeConfig(newValue) {
                 print("[PlayTools] Keymapping encode failed.\n%@")
             }
         }
@@ -75,6 +68,34 @@ class Keymapping {
         baseKeymapURL.appendingPathComponent(name).appendingPathExtension("plist")
     }
 
+    private func readConfig() -> KeymapConfig? {
+        do {
+            let data = try Data(contentsOf: configURL)
+            return try PropertyListDecoder().decode(KeymapConfig.self, from: data)
+        } catch {
+            return nil
+        }
+    }
+
+    @discardableResult
+    private func writeConfig(_ config: KeymapConfig) -> Bool {
+        let encoder = PropertyListEncoder()
+        encoder.outputFormat = .xml
+
+        do {
+            let data = try encoder.encode(config)
+            try data.write(to: configURL)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private func defaultConfig() -> KeymapConfig {
+        let defaultURL = constructKeymapPath(name: "default")
+        return KeymapConfig(defaultKm: defaultURL, keymapOrder: [defaultURL])
+    }
+
     private func loadKeymapData() {
         if !FileManager.default.fileExists(atPath: baseKeymapURL.path) {
             do {
@@ -101,33 +122,52 @@ class Keymapping {
         }
     }
 
-    private func getKeymap(path: URL) -> KeymappingData {
+    private func readKeymap(path: URL) -> KeymappingData? {
         do {
             let data = try Data(contentsOf: path)
-            let map = try PropertyListDecoder().decode(KeymappingData.self, from: data)
-            return map
+            return try PropertyListDecoder().decode(KeymappingData.self, from: data)
         } catch {
-            print("[PlayTools] Keymapping decode failed.\n%@")
+            return nil
         }
+    }
+
+    private func getKeymap(path: URL) -> KeymappingData {
+        if let map = readKeymap(path: path) {
+            return map
+        }
+
+        print("[PlayTools] Keymapping decode failed.\n%@")
 
         return resetKeymap(path: path)
     }
 
-    private func setKeymap(path: URL, map: KeymappingData) {
+    @discardableResult
+    private func writeKeymap(path: URL, map: KeymappingData) -> Bool {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .xml
 
         do {
             let data = try encoder.encode(map)
             try data.write(to: path)
-
-            if !keymapOrder.keys.contains(path) {
-                keymapConfig.keymapOrder.append(path)
-                keymapOrder[path] = getKeymap(path: path)
-            }
+            return true
         } catch {
-            print("[PlayTools] Keymapping encode failed.\n%@")
+            return false
         }
+    }
+
+    private func setKeymap(path: URL, map: KeymappingData) {
+        guard writeKeymap(path: path, map: map) else {
+            print("[PlayTools] Keymapping encode failed.\n%@")
+            return
+        }
+
+        if !keymapOrder.keys.contains(path) {
+            var config = keymapConfig
+            config.keymapOrder.append(path)
+            keymapConfig = config
+        }
+
+        keymapOrder[path] = map
     }
 
     public func nextKeymap() {
@@ -140,17 +180,16 @@ class Keymapping {
 
     @discardableResult
     public func resetKeymap(path: URL) -> KeymappingData {
-        setKeymap(path: path, map: KeymappingData(bundleIdentifier: bundleIdentifier))
-        return getKeymap(path: path)
+        let defaultMap = KeymappingData(bundleIdentifier: bundleIdentifier)
+        setKeymap(path: path, map: defaultMap)
+        return defaultMap
     }
 
     @discardableResult
     private func resetConfig() -> KeymapConfig {
-        let defaultURL = constructKeymapPath(name: "default")
-
-        keymapConfig = KeymapConfig(defaultKm: defaultURL, keymapOrder: [defaultURL])
-
-        return keymapConfig
+        let config = defaultConfig()
+        _ = writeConfig(config)
+        return config
     }
 
 }
