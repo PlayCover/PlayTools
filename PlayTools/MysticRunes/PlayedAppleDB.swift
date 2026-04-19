@@ -238,7 +238,7 @@ class PlayKeychainDB: NSObject {
     private func connectToDB() -> OpaquePointer? {
         var sqlite3DB: OpaquePointer?
         let bundleID = Bundle.main.infoDictionary?["CFBundleIdentifier"] as? String ?? "Shared"
-        let keychainDB = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
+        let keychainDB = playCoverContainerBaseURL()
             .appendingPathComponent("PlayChain")
             .appendingPathComponent("\(bundleID).db")
 
