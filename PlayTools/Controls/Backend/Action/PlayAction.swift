@@ -27,9 +27,13 @@ class ButtonAction: Action {
         self.keyName = keyName
         self.point = point
         let code = keyCode
-        let codeName = KeyCodeNames.keyCodes[code] ?? "Btn"
         // TODO: set both key names in draggable button, so as to depracate key code
-        ActionDispatcher.register(key: code == KeyCodeNames.defaultCode ? keyName: codeName, handler: self.update)
+        let keys = code == KeyCodeNames.defaultCode ?
+            [keyName] :
+            KeyCodeNames.dispatchNames(for: code, fallback: keyName)
+        for key in keys {
+            ActionDispatcher.register(key: key, handler: self.update)
+        }
     }
 
     convenience init(data: Button) {
@@ -66,18 +70,18 @@ class DraggableButtonAction: ButtonAction {
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id,
                              actionName: "DraggableButton", keyName: keyName)
             self.releasePoint = point
-            ActionDispatcher.register(key: KeyCodeNames.mouseMove,
+            ActionDispatcher.register(key: keyName,
                                       handler: self.onMouseMoved,
                                       priority: .DRAGGABLE)
-            if !mode.cursorHidden() {
+            if keyName == KeyCodeNames.mouseMove && !mode.cursorHidden() {
                 AKInterface.shared!.hideCursor()
             }
         } else {
             Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: &id,
                              actionName: "DraggableButton", keyName: keyName)
             if id == nil {
-                ActionDispatcher.unregister(key: KeyCodeNames.mouseMove)
-                if !mode.cursorHidden() {
+                ActionDispatcher.unregister(key: keyName)
+                if keyName == KeyCodeNames.mouseMove && !mode.cursorHidden() {
                     AKInterface.shared!.unhideCursor()
                 }
             }
@@ -85,7 +89,7 @@ class DraggableButtonAction: ButtonAction {
     }
 
     override func invalidate() {
-        ActionDispatcher.unregister(key: KeyCodeNames.mouseMove)
+        ActionDispatcher.unregister(key: keyName)
         super.invalidate()
     }
 
@@ -189,8 +193,10 @@ class JoystickAction: Action {
         self.mode = mode
         for index in 0..<keys.count {
             let key = keys[index]
-            ActionDispatcher.register(key: KeyCodeNames.keyCodes[key]!,
-                                     handler: self.getPressedHandler(index: index))
+            for keyName in KeyCodeNames.dispatchNames(for: key) {
+                ActionDispatcher.register(key: keyName,
+                                         handler: self.getPressedHandler(index: index))
+            }
         }
     }
 

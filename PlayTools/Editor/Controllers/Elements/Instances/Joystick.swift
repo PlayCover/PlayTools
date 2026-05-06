@@ -77,7 +77,7 @@ class JoystickModel: ControlModel<Joystick>, ParentElement {
             return
         }
         // `name` here may be "btn", "W", "RMB" etc.
-        if name.hasSuffix("tick") {
+        if KeyCodeNames.isThumbstick(name) {
             // Mapping a thumbstick joystick
             self.data.keyName = name
             btn.setKey(showChild: false, name: data.keyName)
@@ -115,6 +115,6 @@ class JoystickModel: ControlModel<Joystick>, ParentElement {
         // possible values are
         // ["Left Thumbstick", "Right Thumbstick", "Mouse", "Keyboard", "Dynamic"]
         // Where the former three are analog
-        data.keyName.contains(Character("u"))
+        data.keyName == KeyCodeNames.mouseMove || KeyCodeNames.isThumbstick(data.keyName)
     }
 }
