@@ -13,23 +13,38 @@ protocol Action {
 
 class ButtonAction: Action {
     func invalidate() {
+        isPressed = false
         Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: &id,
                          actionName: "Button", keyName: keyName)
     }
 
     let keyCode: Int
     let keyName: String
+    let modifierKeyCode: Int?
+    let modifierKeyName: String?
+    private let modifierKeys: [String]
     let point: CGPoint
     var id: Int?
+    private var isPressed = false
 
-    init(keyCode: Int, keyName: String, point: CGPoint) {
+    init(keyCode: Int,
+         keyName: String,
+         modifierKeyCode: Int? = nil,
+         modifierKeyName: String? = nil,
+         point: CGPoint) {
         self.keyCode = keyCode
         self.keyName = keyName
+        self.modifierKeyCode = modifierKeyCode
+        self.modifierKeyName = modifierKeyName
+        self.modifierKeys = Self.dispatchNames(code: modifierKeyCode, name: modifierKeyName)
         self.point = point
-        let code = keyCode
-        let codeName = KeyCodeNames.keyCodes[code] ?? "Btn"
         // TODO: set both key names in draggable button, so as to depracate key code
-        ActionDispatcher.register(key: code == KeyCodeNames.defaultCode ? keyName: codeName, handler: self.update)
+        for key in Self.dispatchNames(code: keyCode, name: keyName) {
+            ActionDispatcher.register(key: key, modifierKeys: modifierKeys, handler: self.update)
+        }
+        for key in modifierKeys {
+            ActionDispatcher.register(key: key, handler: self.updateModifier)
+        }
     }
 
     convenience init(data: Button) {
@@ -37,6 +52,8 @@ class ButtonAction: Action {
         self.init(
             keyCode: keyCode,
             keyName: data.keyName,
+            modifierKeyCode: data.modifierKeyCode,
+            modifierKeyName: data.modifierKeyName,
             point: CGPoint(
                 x: data.transform.xCoord.absoluteX,
                 y: data.transform.yCoord.absoluteY))
@@ -44,21 +61,58 @@ class ButtonAction: Action {
 
     func update(pressed: Bool) {
         if pressed {
+            guard !isPressed else {
+                return
+            }
+            isPressed = true
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id,
                              actionName: "Button", keyName: keyName)
         } else {
+            guard isPressed else {
+                return
+            }
+            isPressed = false
             Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: &id,
                              actionName: "Button", keyName: keyName)
         }
+    }
+
+    private func updateModifier(pressed: Bool) {
+        if !pressed && id != nil {
+            isPressed = false
+            Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: &id,
+                             actionName: "Button", keyName: keyName)
+        }
+    }
+
+    private static func dispatchNames(code: Int?, name: String?) -> [String] {
+        guard let name = name, !name.isEmpty else {
+            return []
+        }
+
+        let resolvedCode = KeyCodeNames.keyCodeByName[name] ?? code
+        if let resolvedCode = resolvedCode, resolvedCode != KeyCodeNames.defaultCode {
+            return KeyCodeNames.dispatchNames(for: resolvedCode, fallback: name)
+        }
+        return [name]
     }
 }
 
 class DraggableButtonAction: ButtonAction {
     var releasePoint: CGPoint
 
-    override init(keyCode: Int, keyName: String, point: CGPoint) {
+    override init(keyCode: Int,
+                  keyName: String,
+                  modifierKeyCode: Int? = nil,
+                  modifierKeyName: String? = nil,
+                  point: CGPoint) {
         self.releasePoint = point
-        super.init(keyCode: keyCode, keyName: keyName, point: point)
+        super.init(
+            keyCode: keyCode,
+            keyName: keyName,
+            modifierKeyCode: modifierKeyCode,
+            modifierKeyName: modifierKeyName,
+            point: point)
     }
 
     override func update(pressed: Bool) {
@@ -66,18 +120,18 @@ class DraggableButtonAction: ButtonAction {
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id,
                              actionName: "DraggableButton", keyName: keyName)
             self.releasePoint = point
-            ActionDispatcher.register(key: KeyCodeNames.mouseMove,
+            ActionDispatcher.register(key: keyName,
                                       handler: self.onMouseMoved,
                                       priority: .DRAGGABLE)
-            if !mode.cursorHidden() {
+            if keyName == KeyCodeNames.mouseMove && !mode.cursorHidden() {
                 AKInterface.shared!.hideCursor()
             }
         } else {
             Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: &id,
                              actionName: "DraggableButton", keyName: keyName)
             if id == nil {
-                ActionDispatcher.unregister(key: KeyCodeNames.mouseMove)
-                if !mode.cursorHidden() {
+                ActionDispatcher.unregister(key: keyName)
+                if keyName == KeyCodeNames.mouseMove && !mode.cursorHidden() {
                     AKInterface.shared!.unhideCursor()
                 }
             }
@@ -85,7 +139,7 @@ class DraggableButtonAction: ButtonAction {
     }
 
     override func invalidate() {
-        ActionDispatcher.unregister(key: KeyCodeNames.mouseMove)
+        ActionDispatcher.unregister(key: keyName)
         super.invalidate()
     }
 
@@ -189,8 +243,10 @@ class JoystickAction: Action {
         self.mode = mode
         for index in 0..<keys.count {
             let key = keys[index]
-            ActionDispatcher.register(key: KeyCodeNames.keyCodes[key]!,
-                                     handler: self.getPressedHandler(index: index))
+            for keyName in KeyCodeNames.dispatchNames(for: key) {
+                ActionDispatcher.register(key: keyName,
+                                         handler: self.getPressedHandler(index: index))
+            }
         }
     }
 

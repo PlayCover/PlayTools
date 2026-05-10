@@ -45,6 +45,16 @@ extension UIApplication {
         EditorController.shared.focusedControl?.resize(down: true)
     }
 
+    @objc
+    func captureElementModifierKey(_ sender: AnyObject) {
+        EditorController.shared.captureModifierKey()
+    }
+
+    @objc
+    func clearElementModifierKey(_ sender: AnyObject) {
+        EditorController.shared.clearModifierKey()
+    }
+
     // put a mark in the toucher log, so as to align with tester description
     @objc
     func markToucherLog(_ sender: AnyObject) {
@@ -141,6 +151,10 @@ var keymapping = [
                       value: "Upsize selected element", comment: ""),
     NSLocalizedString("menu.keymapping.downsizeElement", tableName: "Playtools",
                       value: "Downsize selected element", comment: ""),
+    NSLocalizedString("menu.keymapping.captureModifier", tableName: "Playtools",
+                      value: "Set selected button modifier", comment: ""),
+    NSLocalizedString("menu.keymapping.clearModifier", tableName: "Playtools",
+                      value: "Clear selected button modifier", comment: ""),
     NSLocalizedString("menu.keymapping.toggleDebug", tableName: "Playtools",
                       value: "Toggle Debug Overlay", comment: ""),
     NSLocalizedString("menu.keymapping.hide.pointer", tableName: "Playtools",
@@ -155,7 +169,8 @@ var iconsSelctor = [
     UIImage(systemName: "trash.fill"),
     UIImage(systemName: "square.resize.up"),
     UIImage(systemName: "square.resize.down"),
-    UIImage(systemName: "rectangle.landscape.rotate"),
+    UIImage(systemName: "command"),
+    UIImage(systemName: "command.circle"),
     UIImage(systemName: "wrench.and.screwdriver"),
     UIImage(systemName: "pointer.arrow.slash"),
     UIImage(systemName: "arrow.down.square"),
@@ -165,7 +180,8 @@ var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
-                           #selector(UIApplication.rotateView(_:)),
+                           #selector(UIApplication.captureElementModifierKey(_:)),
+                           #selector(UIApplication.clearElementModifierKey(_:)),
                            #selector(UIApplication.toggleDebugOverlay(_:)),
                            #selector(UIApplication.hideCursor(_:)),
                            #selector(UIApplication.previousKeymap(_:)),
@@ -235,17 +251,32 @@ class MenuController {
             UIKeyCommand.inputDelete,       // Remove keymap element
             UIKeyCommand.inputUpArrow,      // Increase keymap element size
             UIKeyCommand.inputDownArrow,    // Decrease keymap element size
+            "M",                            // Set button modifier
+            "M",                            // Clear button modifier
             "D",                            // Toggle debug overlay
             ".",                            // Hide cursor until move
             "[",                            // Previous keymap
             "]"                             // Next keymap
         ]
-        let arrowKeyChildrenCommands = zip(zip(keyCommands, keymapping), iconsSelctor).map { (arg0, image) in
-            let (command, btn) = arg0
+        let keyModifiers: [UIKeyModifierFlags] = [
+            .command,
+            .command,
+            .command,
+            .command,
+            .command,
+            [.command, .shift],
+            .command,
+            .command,
+            .command,
+            .command
+        ]
+        let arrowKeyChildrenCommands = zip(zip(zip(keyCommands, keymapping), iconsSelctor), keyModifiers)
+            .map { (arg0, modifierFlags) in
+            let ((command, btn), image) = arg0
             return UIKeyCommand(title: btn, image: image,
                          action: keymappingSelectors[keymapping.firstIndex(of: btn)!],
                          input: command,
-                         modifierFlags: .command,
+                         modifierFlags: modifierFlags,
                          propertyList: [CommandsList.KeymappingToolbox: btn]
             )
         }

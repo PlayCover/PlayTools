@@ -20,7 +20,8 @@ public enum ActionDispatchPriority: Int {
 public class ActionDispatcher {
     static private let keymapVersion = "2.0."
     static private var actions = [Action]()
-    static private var buttonHandlers: [String: [(Bool) -> Void]] = [:]
+    static private var buttonHandlers: [String: [ButtonPressHandler]] = [:]
+    static private var pressedKeys = Set<String>()
 
     static private let priorityCount = 3
     // You can't put more than 8 cameras or 8 joysticks in a keymap right?
@@ -35,6 +36,7 @@ public class ActionDispatcher {
         invalidateActions()
         actions = []
         buttonHandlers.removeAll(keepingCapacity: true)
+        pressedKeys.removeAll(keepingCapacity: true)
         directionPadHandlers.forEach({ handlers in
             handlers.forEach({ handler in
                 handler.store(.EMPTY, ordering: .relaxed)
@@ -96,11 +98,17 @@ public class ActionDispatcher {
     }
 
     static public func register(key: String, handler: @escaping (Bool) -> Void) {
+        register(key: key, modifierKeys: [], handler: handler)
+    }
+
+    static public func register(key: String,
+                                modifierKeys: [String],
+                                handler: @escaping (Bool) -> Void) {
         // this function is called when setting up `button` type of mapping
         if buttonHandlers[key] == nil {
             buttonHandlers[key] = []
         }
-        buttonHandlers[key]!.append(handler)
+        buttonHandlers[key]!.append(ButtonPressHandler(modifierKeys: modifierKeys, handle: handler))
     }
 
     static public func register(key: String,
@@ -188,18 +196,31 @@ public class ActionDispatcher {
     }
 
     static public func dispatch(key: String, pressed: Bool) -> Bool {
+        if pressed {
+            pressedKeys.insert(key)
+        } else {
+            pressedKeys.remove(key)
+        }
         guard let handlers = buttonHandlers[key] else {
             return false
         }
-        var mapped = false
-        for handler in handlers {
+        let modifiedHandlers = handlers.filter { handler in
+            !handler.modifierKeys.isEmpty && isPressed(anyOf: handler.modifierKeys)
+        }
+        let selectedHandlers = modifiedHandlers.isEmpty ?
+            handlers.filter { $0.modifierKeys.isEmpty } :
+            modifiedHandlers
+        for handler in selectedHandlers {
             PlayInput.touchQueue.async(qos: .userInteractive, execute: {
-                handler(pressed)
+                handler.handle(pressed)
             })
-            mapped = true
         }
         // return value matters. A false value makes a beep sound
-        return mapped
+        return !selectedHandlers.isEmpty
+    }
+
+    static public func isPressed(anyOf keys: [String]) -> Bool {
+        keys.contains { pressedKeys.contains($0) }
     }
 
     static public func dispatch(key: String, valueX: CGFloat, valueY: CGFloat) -> Bool {
@@ -215,6 +236,11 @@ public class ActionDispatcher {
         }
         return false
     }
+}
+
+private struct ButtonPressHandler {
+    let modifierKeys: [String]
+    let handle: (Bool) -> Void
 }
 
 private final class AtomicHandler: AtomicReference {

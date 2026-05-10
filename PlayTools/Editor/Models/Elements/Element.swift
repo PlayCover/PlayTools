@@ -17,6 +17,8 @@ protocol BaseElement: Codable {
 struct Button: BaseElement {
     var keyCode: Int
     var keyName: String
+    var modifierKeyCode: Int?
+    var modifierKeyName: String?
     var transform: KeyModelTransform
 }
 

@@ -7,9 +7,15 @@ class EditorController {
 
     static let shared = EditorController()
 
+    private enum KeyCaptureMode {
+        case primary
+        case modifier
+    }
+
     let lock = NSLock()
 
     var focusedControl: ControlElement?
+    private var keyCaptureMode = KeyCaptureMode.primary
 
     var editorWindow: UIWindow?
     weak var previousWindow: UIWindow?
@@ -38,6 +44,7 @@ class EditorController {
         if let mod = button.model {
             mod.focus(true)
             focusedControl = mod
+            keyCaptureMode = .primary
         }
     }
 
@@ -53,6 +60,7 @@ class EditorController {
             editorWindow = nil
             previousWindow?.makeKeyAndVisible()
             focusedControl = nil
+            keyCaptureMode = .primary
             Toast.showHint(title: NSLocalizedString("hint.keymapSaved",
                                                     tableName: "Playtools", value: "Keymap Saved", comment: ""))
         } else {
@@ -76,12 +84,22 @@ class EditorController {
 
     public func setKey(_ code: Int) {
         if editorMode {
-            focusedControl?.setKey(code: code)
+            if keyCaptureMode == .modifier {
+                focusedControl?.setModifierKey(code: code)
+                finishModifierCapture()
+            } else {
+                focusedControl?.setKey(code: code)
+            }
         }
     }
 
     public func setKey(_ name: String) {
         if editorMode {
+            if keyCaptureMode == .modifier {
+                focusedControl?.setModifierKey(name: name)
+                finishModifierCapture()
+                return
+            }
             if name != "Mouse" || focusedControl is MouseAreaModel
                 || focusedControl is JoystickModel
                 || focusedControl is DraggableButtonModel {
@@ -90,7 +108,71 @@ class EditorController {
         }
     }
 
+    public func captureModifierKey() {
+        guard editorMode, focusedControl is ButtonModel else {
+            Toast.showHint(
+                title: NSLocalizedString("hint.keymappingEditor.selectButton.title",
+                                         tableName: "Playtools",
+                                         value: "Select a button first",
+                                         comment: ""),
+                text: [NSLocalizedString("hint.keymappingEditor.selectButton.captureModifier.content",
+                                         tableName: "Playtools",
+                                         value: "Select a button mapping, then press ⌘M to set its modifier key.",
+                                         comment: "")]
+            )
+            return
+        }
+        keyCaptureMode = .modifier
+        Toast.showHint(
+            title: NSLocalizedString("hint.keymappingEditor.captureModifier.title",
+                                     tableName: "Playtools",
+                                     value: "Press modifier key",
+                                     comment: ""),
+            text: [NSLocalizedString("hint.keymappingEditor.captureModifier.content",
+                                     tableName: "Playtools",
+                                     value: "The next keyboard, mouse, or controller button will become the modifier.",
+                                     comment: "")]
+        )
+    }
+
+    public func clearModifierKey() {
+        guard editorMode, focusedControl is ButtonModel else {
+            Toast.showHint(
+                title: NSLocalizedString("hint.keymappingEditor.selectButton.title",
+                                         tableName: "Playtools",
+                                         value: "Select a button first",
+                                         comment: ""),
+                text: [NSLocalizedString("hint.keymappingEditor.selectButton.clearModifier.content",
+                                         tableName: "Playtools",
+                                         value: "Select a button mapping, then press ⌘⇧M to clear its modifier key.",
+                                         comment: "")]
+            )
+            return
+        }
+        focusedControl?.clearModifierKey()
+        keyCaptureMode = .primary
+        Toast.showHint(title: NSLocalizedString("hint.keymappingEditor.modifierCleared.title",
+                                                tableName: "Playtools",
+                                                value: "Modifier cleared",
+                                                comment: ""))
+    }
+
+    private func finishModifierCapture() {
+        keyCaptureMode = .primary
+        Toast.showHint(
+            title: NSLocalizedString("hint.keymappingEditor.modifierSet.title",
+                                     tableName: "Playtools",
+                                     value: "Modifier set",
+                                     comment: ""),
+            text: [NSLocalizedString("hint.keymappingEditor.modifierSet.content",
+                                     tableName: "Playtools",
+                                     value: "Press another key to change the button's main binding.",
+                                     comment: "")]
+        )
+    }
+
     public func removeControl() {
+        keyCaptureMode = .primary
         controls = controls.filter { $0 !== focusedControl }
         focusedControl?.remove()
     }
