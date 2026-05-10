@@ -7,9 +7,15 @@ class EditorController {
 
     static let shared = EditorController()
 
+    private enum KeyCaptureMode {
+        case primary
+        case modifier
+    }
+
     let lock = NSLock()
 
     var focusedControl: ControlElement?
+    private var keyCaptureMode = KeyCaptureMode.primary
 
     var editorWindow: UIWindow?
     weak var previousWindow: UIWindow?
@@ -38,6 +44,7 @@ class EditorController {
         if let mod = button.model {
             mod.focus(true)
             focusedControl = mod
+            keyCaptureMode = .primary
         }
     }
 
@@ -53,6 +60,7 @@ class EditorController {
             editorWindow = nil
             previousWindow?.makeKeyAndVisible()
             focusedControl = nil
+            keyCaptureMode = .primary
             Toast.showHint(title: NSLocalizedString("hint.keymapSaved",
                                                     tableName: "Playtools", value: "Keymap Saved", comment: ""))
         } else {
@@ -76,12 +84,22 @@ class EditorController {
 
     public func setKey(_ code: Int) {
         if editorMode {
-            focusedControl?.setKey(code: code)
+            if keyCaptureMode == .modifier {
+                focusedControl?.setModifierKey(code: code)
+                finishModifierCapture()
+            } else {
+                focusedControl?.setKey(code: code)
+            }
         }
     }
 
     public func setKey(_ name: String) {
         if editorMode {
+            if keyCaptureMode == .modifier {
+                focusedControl?.setModifierKey(name: name)
+                finishModifierCapture()
+                return
+            }
             if name != "Mouse" || focusedControl is MouseAreaModel
                 || focusedControl is JoystickModel
                 || focusedControl is DraggableButtonModel {
@@ -90,7 +108,36 @@ class EditorController {
         }
     }
 
+    public func captureModifierKey() {
+        guard editorMode, focusedControl is ButtonModel else {
+            Toast.showHint(title: "Select a button first",
+                           text: ["Select a button mapping, then press ⌘M to set its modifier key."])
+            return
+        }
+        keyCaptureMode = .modifier
+        Toast.showHint(title: "Press modifier key",
+                       text: ["The next keyboard, mouse, or controller button will become the modifier."])
+    }
+
+    public func clearModifierKey() {
+        guard editorMode, focusedControl is ButtonModel else {
+            Toast.showHint(title: "Select a button first",
+                           text: ["Select a button mapping, then press ⌘⇧M to clear its modifier key."])
+            return
+        }
+        focusedControl?.clearModifierKey()
+        keyCaptureMode = .primary
+        Toast.showHint(title: "Modifier cleared")
+    }
+
+    private func finishModifierCapture() {
+        keyCaptureMode = .primary
+        Toast.showHint(title: "Modifier set",
+                       text: ["Press another key to change the button's main binding."])
+    }
+
     public func removeControl() {
+        keyCaptureMode = .primary
         controls = controls.filter { $0 !== focusedControl }
         focusedControl?.remove()
     }
