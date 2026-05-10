@@ -9,10 +9,6 @@ import Foundation
 
 class ButtonModel: ControlModel<Button> {
     private static let shortKeyNames = [
-        "Button A": "A",
-        "Button B": "B",
-        "Button X": "X",
-        "Button Y": "Y",
         "Button Menu": "Menu",
         "Button Options": "Options",
         "Direction Pad Up": "D-Up",
