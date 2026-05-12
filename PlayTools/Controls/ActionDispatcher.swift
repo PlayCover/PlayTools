@@ -81,6 +81,10 @@ public class ActionDispatcher {
             actions.append(CameraAction(data: mouse))
         }
 
+        for swipe in keymap.currentKeymap.swipeModels {
+            actions.append(TriggeredSwipeAction(data: swipe))
+        }
+
         for joystick in keymap.currentKeymap.joystickModel {
             // Left Thumbstick, Right Thumbstick, Mouse
             if JoystickModel.isAnalog(joystick) {

@@ -8,7 +8,7 @@
 import Foundation
 
 class ButtonModel: ControlModel<Button> {
-    private static let shortKeyNames = [
+    fileprivate static let shortKeyNames = [
         "Button Menu": "Menu",
         "Button Options": "Options",
         "Direction Pad Up": "D-Up",
@@ -74,7 +74,95 @@ class ButtonModel: ControlModel<Button> {
         button.setTitle("\(modifierName)+\n\(keyName)", for: UIControl.State.normal)
     }
 
-    private static func displayName(for keyName: String) -> String {
+    fileprivate static func displayName(for keyName: String) -> String {
         shortKeyNames[keyName] ?? keyName
+    }
+}
+
+class SwipeModel: ControlModel<Swipe> {
+    private static let directions: [(name: String, angle: CGFloat)] = [
+        ("Right", 0),
+        ("Down", CGFloat.pi / 2),
+        ("Left", CGFloat.pi),
+        ("Up", CGFloat.pi * 3 / 2)
+    ]
+
+    override init(data: Swipe) {
+        super.init(data: data)
+        button.layer.cornerRadius = 0.25 * button.bounds.size.width
+        updateTitle()
+    }
+
+    func save() -> Swipe {
+        data
+    }
+
+    override func setKey(code: Int, name: String) {
+        var swipeData = data
+        swipeData.keyCode = code
+        swipeData.keyName = name
+        data = swipeData
+        updateTitle()
+    }
+
+    override func setModifierKey(code: Int) {
+        let name = KeyCodeNames.keyCodes[code] ?? "Btn"
+        setModifierKey(code: code, name: name)
+    }
+
+    override func setModifierKey(name: String) {
+        let code = KeyCodeNames.keyCodeByName[name] ?? KeyCodeNames.defaultCode
+        setModifierKey(code: code, name: name)
+    }
+
+    override func clearModifierKey() {
+        var swipeData = data
+        swipeData.modifierKeyCode = nil
+        swipeData.modifierKeyName = nil
+        data = swipeData
+        updateTitle()
+    }
+
+    override func cycleDirection() {
+        var swipeData = data
+        let currentIndex = Self.nearestDirectionIndex(for: swipeData.angle)
+        let nextIndex = (currentIndex + 1) % Self.directions.count
+        swipeData.angle = Self.directions[nextIndex].angle
+        data = swipeData
+        updateTitle()
+    }
+
+    private func setModifierKey(code: Int, name: String) {
+        var swipeData = data
+        swipeData.modifierKeyCode = code
+        swipeData.modifierKeyName = name
+        data = swipeData
+        updateTitle()
+    }
+
+    private func updateTitle() {
+        let keyName = ButtonModel.displayName(for: data.keyName)
+        let direction = Self.directions[Self.nearestDirectionIndex(for: data.angle)].name
+        let title = "\(direction)\n\(keyName)"
+        guard let modifierKeyName = data.modifierKeyName, !modifierKeyName.isEmpty else {
+            button.setTitle(title, for: UIControl.State.normal)
+            return
+        }
+        let modifierName = ButtonModel.displayName(for: modifierKeyName)
+        button.setTitle("\(modifierName)+\n\(keyName) \(direction)", for: UIControl.State.normal)
+    }
+
+    private static func nearestDirectionIndex(for angle: CGFloat) -> Int {
+        let twoPi = CGFloat.pi * 2
+        let normalized = angle.truncatingRemainder(dividingBy: twoPi) + (angle < 0 ? twoPi : 0)
+        return directions.enumerated().min { lhs, rhs in
+            angularDistance(lhs.element.angle, normalized) < angularDistance(rhs.element.angle, normalized)
+        }?.offset ?? 0
+    }
+
+    private static func angularDistance(_ lhs: CGFloat, _ rhs: CGFloat) -> CGFloat {
+        let twoPi = CGFloat.pi * 2
+        let distance = abs(lhs - rhs).truncatingRemainder(dividingBy: twoPi)
+        return min(distance, twoPi - distance)
     }
 }

@@ -109,7 +109,7 @@ class EditorController {
     }
 
     public func captureModifierKey() {
-        guard editorMode, focusedControl is ButtonModel else {
+        guard editorMode, focusedControl is ButtonModel || focusedControl is SwipeModel else {
             Toast.showHint(
                 title: NSLocalizedString("hint.keymappingEditor.selectButton.title",
                                          tableName: "Playtools",
@@ -117,7 +117,8 @@ class EditorController {
                                          comment: ""),
                 text: [NSLocalizedString("hint.keymappingEditor.selectButton.captureModifier.content",
                                          tableName: "Playtools",
-                                         value: "Select a button mapping, then press ⌘M to set its modifier key.",
+                                         value: "Select a button or swipe mapping, then press ⌘M "
+                                            + "to set its modifier key.",
                                          comment: "")]
             )
             return
@@ -136,7 +137,7 @@ class EditorController {
     }
 
     public func clearModifierKey() {
-        guard editorMode, focusedControl is ButtonModel else {
+        guard editorMode, focusedControl is ButtonModel || focusedControl is SwipeModel else {
             Toast.showHint(
                 title: NSLocalizedString("hint.keymappingEditor.selectButton.title",
                                          tableName: "Playtools",
@@ -144,7 +145,8 @@ class EditorController {
                                          comment: ""),
                 text: [NSLocalizedString("hint.keymappingEditor.selectButton.clearModifier.content",
                                          tableName: "Playtools",
-                                         value: "Select a button mapping, then press ⌘⇧M to clear its modifier key.",
+                                         value: "Select a button or swipe mapping, then press ⌘⇧M "
+                                            + "to clear its modifier key.",
                                          comment: "")]
             )
             return
@@ -177,6 +179,23 @@ class EditorController {
         focusedControl?.remove()
     }
 
+    public func cycleSwipeDirection() {
+        guard editorMode, focusedControl is SwipeModel else {
+            Toast.showHint(
+                title: NSLocalizedString("hint.keymappingEditor.selectSwipe.title",
+                                         tableName: "Playtools",
+                                         value: "Select a swipe first",
+                                         comment: ""),
+                text: [NSLocalizedString("hint.keymappingEditor.selectSwipe.cycleDirection.content",
+                                         tableName: "Playtools",
+                                         value: "Select a swipe mapping, then press ⌘R to change its direction.",
+                                         comment: "")]
+            )
+            return
+        }
+        focusedControl?.cycleDirection()
+    }
+
     func showButtons() {
         for button in keymap.currentKeymap.draggableButtonModels {
             let ctrl = DraggableButtonModel(data: button)
@@ -189,6 +208,10 @@ class EditorController {
         for mouse in keymap.currentKeymap.mouseAreaModel {
             let ctrl =
                 MouseAreaModel(data: mouse)
+            addControlToView(control: ctrl)
+        }
+        for swipe in keymap.currentKeymap.swipeModels {
+            let ctrl = SwipeModel(data: swipe)
             addControlToView(control: ctrl)
         }
         for button in keymap.currentKeymap.buttonModels {
@@ -208,6 +231,8 @@ class EditorController {
                 keymapData.draggableButtonModels.append(model.save())
             case let model as MouseAreaModel:
                 keymapData.mouseAreaModel.append(model.save())
+            case let model as SwipeModel:
+                keymapData.swipeModels.append(model.save())
             case let model as ButtonModel:
                 keymapData.buttonModels.append(model.save())
             default:
@@ -282,6 +307,19 @@ class EditorController {
                 transform: KeyModelTransform(
                     size: 25, xCoord: center.x.relativeX, yCoord: center.y.relativeY
                 )
+            )))
+        }
+    }
+
+    public func addSwipe(_ center: CGPoint) {
+        if editorMode {
+            addControlToView(control: SwipeModel(data: Swipe(
+                keyCode: -1,
+                keyName: KeyCodeNames.leftMouseButton,
+                transform: KeyModelTransform(
+                    size: 12, xCoord: center.x.relativeX, yCoord: center.y.relativeY
+                ),
+                angle: CGFloat.pi * 3 / 2
             )))
         }
     }

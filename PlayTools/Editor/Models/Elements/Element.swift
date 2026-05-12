@@ -57,7 +57,10 @@ struct MouseArea: BaseElement {
 // and move to a user-defined pos (polar coordinate system defined by size and angle)
 // and end.
 struct Swipe: BaseElement {
+    var keyCode: Int
     var keyName: String
+    var modifierKeyCode: Int?
+    var modifierKeyName: String?
     var transform: KeyModelTransform
     // [0, 2 * PI)
     var angle: CGFloat

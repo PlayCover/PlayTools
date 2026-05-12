@@ -160,6 +160,7 @@ struct KeymappingData: Codable {
     var draggableButtonModels: [Button] = []
     var joystickModel: [Joystick] = []
     var mouseAreaModel: [MouseArea] = []
+    var swipeModels: [Swipe] = []
     var bundleIdentifier: String
     var version = "2.0.0"
 }

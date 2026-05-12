@@ -85,7 +85,7 @@ class ButtonAction: Action {
         }
     }
 
-    private static func dispatchNames(code: Int?, name: String?) -> [String] {
+    fileprivate static func dispatchNames(code: Int?, name: String?) -> [String] {
         guard let name = name, !name.isEmpty else {
             return []
         }
@@ -95,6 +95,84 @@ class ButtonAction: Action {
             return KeyCodeNames.dispatchNames(for: resolvedCode, fallback: name)
         }
         return [name]
+    }
+}
+
+class TriggeredSwipeAction: Action {
+    private let keyName: String
+    private let modifierKeys: [String]
+    private let startPoint: CGPoint
+    private let endPoint: CGPoint
+    private var keyIsPressed = false
+    private var id: Int?
+
+    init(data: Swipe) {
+        self.keyName = data.keyName
+        self.modifierKeys = ButtonAction.dispatchNames(code: data.modifierKeyCode,
+                                                       name: data.modifierKeyName)
+        self.startPoint = CGPoint(
+            x: data.transform.xCoord.absoluteX,
+            y: data.transform.yCoord.absoluteY)
+        let length = data.transform.size.absoluteSize
+        self.endPoint = CGPoint(
+            x: startPoint.x + cos(data.angle) * length,
+            y: startPoint.y + sin(data.angle) * length)
+
+        for key in ButtonAction.dispatchNames(code: data.keyCode, name: data.keyName) {
+            ActionDispatcher.register(key: key, modifierKeys: modifierKeys, handler: self.update)
+        }
+        for key in modifierKeys {
+            ActionDispatcher.register(key: key, handler: self.updateModifier)
+        }
+    }
+
+    func update(pressed: Bool) {
+        if pressed {
+            guard !keyIsPressed else {
+                return
+            }
+            keyIsPressed = true
+            performSwipe()
+        } else {
+            keyIsPressed = false
+        }
+    }
+
+    private func updateModifier(pressed: Bool) {
+        if !pressed {
+            keyIsPressed = false
+        }
+    }
+
+    private func performSwipe() {
+        guard id == nil else {
+            return
+        }
+        let stepCount = 6
+        Toucher.touchcam(point: startPoint, phase: UITouch.Phase.began, tid: &id,
+                         actionName: "Swipe", keyName: keyName)
+        for step in 1...stepCount {
+            let progress = CGFloat(step) / CGFloat(stepCount)
+            let point = CGPoint(
+                x: startPoint.x + (endPoint.x - startPoint.x) * progress,
+                y: startPoint.y + (endPoint.y - startPoint.y) * progress)
+            PlayInput.touchQueue.asyncAfter(deadline: .now() + 0.012 * Double(step),
+                                            qos: .userInteractive) {
+                Toucher.touchcam(point: point, phase: UITouch.Phase.moved, tid: &self.id,
+                                 actionName: "Swipe", keyName: self.keyName)
+            }
+        }
+        PlayInput.touchQueue.asyncAfter(deadline: .now() + 0.012 * Double(stepCount + 1),
+                                        qos: .userInteractive) {
+            Toucher.touchcam(point: self.endPoint, phase: UITouch.Phase.ended, tid: &self.id,
+                             actionName: "Swipe", keyName: self.keyName)
+        }
+    }
+
+    func invalidate() {
+        keyIsPressed = false
+        Toucher.touchcam(point: endPoint, phase: UITouch.Phase.ended, tid: &id,
+                         actionName: "Swipe", keyName: keyName)
     }
 }
 

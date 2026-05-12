@@ -55,6 +55,11 @@ extension UIApplication {
         EditorController.shared.clearModifierKey()
     }
 
+    @objc
+    func cycleSwipeDirection(_ sender: AnyObject) {
+        EditorController.shared.cycleSwipeDirection()
+    }
+
     // put a mark in the toucher log, so as to align with tester description
     @objc
     func markToucherLog(_ sender: AnyObject) {
@@ -155,6 +160,8 @@ var keymapping = [
                       value: "Set selected button modifier", comment: ""),
     NSLocalizedString("menu.keymapping.clearModifier", tableName: "Playtools",
                       value: "Clear selected button modifier", comment: ""),
+    NSLocalizedString("menu.keymapping.cycleSwipeDirection", tableName: "Playtools",
+                      value: "Switch selected swipe direction", comment: ""),
     NSLocalizedString("menu.keymapping.toggleDebug", tableName: "Playtools",
                       value: "Toggle Debug Overlay", comment: ""),
     NSLocalizedString("menu.keymapping.hide.pointer", tableName: "Playtools",
@@ -171,6 +178,7 @@ var iconsSelctor = [
     UIImage(systemName: "square.resize.down"),
     UIImage(systemName: "command"),
     UIImage(systemName: "command.circle"),
+    UIImage(systemName: "arrow.triangle.2.circlepath"),
     UIImage(systemName: "wrench.and.screwdriver"),
     UIImage(systemName: "pointer.arrow.slash"),
     UIImage(systemName: "arrow.down.square"),
@@ -182,6 +190,7 @@ var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
                            #selector(UIApplication.captureElementModifierKey(_:)),
                            #selector(UIApplication.clearElementModifierKey(_:)),
+                           #selector(UIApplication.cycleSwipeDirection(_:)),
                            #selector(UIApplication.toggleDebugOverlay(_:)),
                            #selector(UIApplication.hideCursor(_:)),
                            #selector(UIApplication.previousKeymap(_:)),
@@ -253,6 +262,7 @@ class MenuController {
             UIKeyCommand.inputDownArrow,    // Decrease keymap element size
             "M",                            // Set button modifier
             "M",                            // Clear button modifier
+            "R",                            // Switch swipe direction
             "D",                            // Toggle debug overlay
             ".",                            // Hide cursor until move
             "[",                            // Previous keymap
@@ -265,6 +275,7 @@ class MenuController {
             .command,
             .command,
             [.command, .shift],
+            .command,
             .command,
             .command,
             .command,
