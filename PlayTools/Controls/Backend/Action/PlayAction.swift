@@ -148,25 +148,37 @@ class TriggeredSwipeAction: Action {
         guard id == nil else {
             return
         }
-        let stepCount = 6
+        let length = hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y)
+        let stepCount = 12
+        let totalDuration = Self.swipeDuration(for: length)
         Toucher.touchcam(point: startPoint, phase: UITouch.Phase.began, tid: &id,
                          actionName: "Swipe", keyName: keyName)
         for step in 1...stepCount {
             let progress = CGFloat(step) / CGFloat(stepCount)
+            let easedProgress = Self.easeInOut(progress)
             let point = CGPoint(
-                x: startPoint.x + (endPoint.x - startPoint.x) * progress,
-                y: startPoint.y + (endPoint.y - startPoint.y) * progress)
-            PlayInput.touchQueue.asyncAfter(deadline: .now() + 0.012 * Double(step),
+                x: startPoint.x + (endPoint.x - startPoint.x) * easedProgress,
+                y: startPoint.y + (endPoint.y - startPoint.y) * easedProgress)
+            PlayInput.touchQueue.asyncAfter(deadline: .now() + totalDuration * Double(progress),
                                             qos: .userInteractive) {
                 Toucher.touchcam(point: point, phase: UITouch.Phase.moved, tid: &self.id,
                                  actionName: "Swipe", keyName: self.keyName)
             }
         }
-        PlayInput.touchQueue.asyncAfter(deadline: .now() + 0.012 * Double(stepCount + 1),
+        PlayInput.touchQueue.asyncAfter(deadline: .now() + totalDuration,
                                         qos: .userInteractive) {
             Toucher.touchcam(point: self.endPoint, phase: UITouch.Phase.ended, tid: &self.id,
                              actionName: "Swipe", keyName: self.keyName)
         }
+    }
+
+    private static func swipeDuration(for length: CGFloat) -> Double {
+        let normalized = min(max(Double(length) / 420.0, 0.0), 1.0)
+        return 0.18 + normalized * 0.16
+    }
+
+    private static func easeInOut(_ progress: CGFloat) -> CGFloat {
+        progress * progress * (3 - 2 * progress)
     }
 
     func invalidate() {

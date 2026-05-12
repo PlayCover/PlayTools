@@ -89,7 +89,16 @@ class SwipeModel: ControlModel<Swipe> {
 
     override init(data: Swipe) {
         super.init(data: data)
-        button.layer.cornerRadius = 0.25 * button.bounds.size.width
+        button.removeFromSuperview()
+        button = SwipeElement(
+            frame: CGRect(
+                x: data.transform.xCoord.absoluteX - data.transform.size.absoluteSize / 2,
+                y: data.transform.yCoord.absoluteY - data.transform.size.absoluteSize / 2,
+                width: data.transform.size.absoluteSize,
+                height: data.transform.size.absoluteSize
+            )
+        )
+        button.model = self
         updateTitle()
     }
 
