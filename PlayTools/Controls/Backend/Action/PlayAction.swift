@@ -5,6 +5,7 @@
 
 // swiftlint:disable file_length
 import Foundation
+import UIKit
 
 protocol Action {
     func invalidate()
@@ -13,9 +14,12 @@ protocol Action {
 
 class ButtonAction: Action {
     func invalidate() {
-        isPressed = false
-        Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: &id,
-                         actionName: "Button", keyName: keyName)
+        keyIsPressed = false
+        cancelPendingHold()
+        if touchIsActive {
+            touchIsActive = false
+            releaseTouch()
+        }
     }
 
     let keyCode: Int
@@ -23,20 +27,25 @@ class ButtonAction: Action {
     let modifierKeyCode: Int?
     let modifierKeyName: String?
     private let modifierKeys: [String]
+    private let holdDuration: CGFloat?
     let point: CGPoint
     var id: Int?
-    private var isPressed = false
+    private var keyIsPressed = false
+    private var touchIsActive = false
+    private var pendingHold: DispatchWorkItem?
 
     init(keyCode: Int,
          keyName: String,
          modifierKeyCode: Int? = nil,
          modifierKeyName: String? = nil,
+         holdDuration: CGFloat? = nil,
          point: CGPoint) {
         self.keyCode = keyCode
         self.keyName = keyName
         self.modifierKeyCode = modifierKeyCode
         self.modifierKeyName = modifierKeyName
         self.modifierKeys = Self.dispatchNames(code: modifierKeyCode, name: modifierKeyName)
+        self.holdDuration = holdDuration
         self.point = point
         // TODO: set both key names in draggable button, so as to depracate key code
         for key in Self.dispatchNames(code: keyCode, name: keyName) {
@@ -54,6 +63,7 @@ class ButtonAction: Action {
             keyName: data.keyName,
             modifierKeyCode: data.modifierKeyCode,
             modifierKeyName: data.modifierKeyName,
+            holdDuration: data.holdDuration,
             point: CGPoint(
                 x: data.transform.xCoord.absoluteX,
                 y: data.transform.yCoord.absoluteY))
@@ -61,28 +71,67 @@ class ButtonAction: Action {
 
     func update(pressed: Bool) {
         if pressed {
-            guard !isPressed else {
+            guard !keyIsPressed else {
                 return
             }
-            isPressed = true
-            Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id,
-                             actionName: "Button", keyName: keyName)
+            keyIsPressed = true
+            beginAfterHoldIfNeeded()
         } else {
-            guard isPressed else {
+            guard keyIsPressed else {
                 return
             }
-            isPressed = false
-            Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: &id,
-                             actionName: "Button", keyName: keyName)
+            keyIsPressed = false
+            cancelPendingHold()
+            if touchIsActive {
+                touchIsActive = false
+                releaseTouch()
+            }
         }
     }
 
     private func updateModifier(pressed: Bool) {
-        if !pressed && id != nil {
-            isPressed = false
-            Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: &id,
-                             actionName: "Button", keyName: keyName)
+        if !pressed {
+            keyIsPressed = false
+            cancelPendingHold()
+            if touchIsActive {
+                touchIsActive = false
+                releaseTouch()
+            }
         }
+    }
+
+    private func beginAfterHoldIfNeeded() {
+        guard let holdDuration = holdDuration else {
+            touchIsActive = true
+            beginTouch()
+            return
+        }
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self = self, self.keyIsPressed else {
+                return
+            }
+            self.pendingHold = nil
+            self.touchIsActive = true
+            self.beginTouch()
+        }
+        pendingHold = workItem
+        PlayInput.touchQueue.asyncAfter(deadline: .now() + Double(holdDuration),
+                                        execute: workItem)
+    }
+
+    private func cancelPendingHold() {
+        pendingHold?.cancel()
+        pendingHold = nil
+    }
+
+    func beginTouch() {
+        Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id,
+                         actionName: "Button", keyName: keyName)
+    }
+
+    func releaseTouch() {
+        Toucher.touchcam(point: point, phase: UITouch.Phase.ended, tid: &id,
+                         actionName: "Button", keyName: keyName)
     }
 
     fileprivate static func dispatchNames(code: Int?, name: String?) -> [String] {
@@ -101,15 +150,18 @@ class ButtonAction: Action {
 class TriggeredSwipeAction: Action {
     private let keyName: String
     private let modifierKeys: [String]
+    private let holdDuration: CGFloat?
     private let startPoint: CGPoint
     private let endPoint: CGPoint
     private var keyIsPressed = false
+    private var pendingHold: DispatchWorkItem?
     private var id: Int?
 
     init(data: Swipe) {
         self.keyName = data.keyName
         self.modifierKeys = ButtonAction.dispatchNames(code: data.modifierKeyCode,
                                                        name: data.modifierKeyName)
+        self.holdDuration = data.holdDuration
         self.startPoint = CGPoint(
             x: data.transform.xCoord.absoluteX,
             y: data.transform.yCoord.absoluteY)
@@ -132,16 +184,40 @@ class TriggeredSwipeAction: Action {
                 return
             }
             keyIsPressed = true
-            performSwipe()
+            performAfterHoldIfNeeded()
         } else {
             keyIsPressed = false
+            cancelPendingHold()
         }
     }
 
     private func updateModifier(pressed: Bool) {
         if !pressed {
             keyIsPressed = false
+            cancelPendingHold()
         }
+    }
+
+    private func performAfterHoldIfNeeded() {
+        guard let holdDuration = holdDuration else {
+            performSwipe()
+            return
+        }
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self = self, self.keyIsPressed else {
+                return
+            }
+            self.pendingHold = nil
+            self.performSwipe()
+        }
+        pendingHold = workItem
+        PlayInput.touchQueue.asyncAfter(deadline: .now() + Double(holdDuration),
+                                        execute: workItem)
+    }
+
+    private func cancelPendingHold() {
+        pendingHold?.cancel()
+        pendingHold = nil
     }
 
     private func performSwipe() {
@@ -183,8 +259,412 @@ class TriggeredSwipeAction: Action {
 
     func invalidate() {
         keyIsPressed = false
+        cancelPendingHold()
         Toucher.touchcam(point: endPoint, phase: UITouch.Phase.ended, tid: &id,
                          actionName: "Swipe", keyName: keyName)
+    }
+}
+
+enum KeymapSwitchDirection {
+    case next
+    case previous
+}
+
+enum KeymapSwitcher {
+    @discardableResult
+    static func switchKeymap(_ direction: KeymapSwitchDirection) -> Bool {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async {
+                switchKeymap(direction)
+            }
+            return true
+        }
+
+        guard keymap.keymapCount > 1 else {
+            Toast.showHint(title: NSLocalizedString("hint.keymapping.onlyOneKeymap",
+                                                    tableName: "Playtools",
+                                                    value: "Only one keymap",
+                                                    comment: ""))
+            return false
+        }
+
+        switch direction {
+        case .next:
+            keymap.nextKeymap()
+        case .previous:
+            keymap.previousKeymap()
+        }
+
+        let format = NSLocalizedString("hint.keymapping.switchedKeymap",
+                                       tableName: "Playtools",
+                                       value: "Switched keymap: %@",
+                                       comment: "")
+        Toast.showHint(title: String(format: format, keymap.currentKeymapName))
+        ActionDispatcher.build()
+        EditorController.shared.refreshHUD()
+        return true
+    }
+}
+
+class ShoulderKeymapSwitchAction: Action {
+    static private let userDefaultsKey = "playtools.shoulderKeymapSwitchEnabled"
+    static private let defaultEnabled = true
+
+    static var isEnabled: Bool {
+        get {
+            guard UserDefaults.standard.object(forKey: userDefaultsKey) != nil else {
+                return defaultEnabled
+            }
+            return UserDefaults.standard.bool(forKey: userDefaultsKey)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: userDefaultsKey)
+        }
+    }
+
+    private let cooldown: TimeInterval = 0.3
+    private var lastSwitchDate = Date.distantPast
+
+    init() {
+        let leftShoulder = "Left Shoulder"
+        let rightShoulder = "Right Shoulder"
+        ActionDispatcher.register(key: rightShoulder,
+                                  modifierKeys: [leftShoulder],
+                                  handler: { [weak self] pressed in
+                                      self?.update(pressed: pressed, direction: .next)
+                                  })
+        ActionDispatcher.register(key: leftShoulder,
+                                  modifierKeys: [rightShoulder],
+                                  handler: { [weak self] pressed in
+                                      self?.update(pressed: pressed, direction: .previous)
+                                  })
+    }
+
+    func invalidate() {}
+
+    private func update(pressed: Bool, direction: KeymapSwitchDirection) {
+        guard pressed else {
+            return
+        }
+        guard Date().timeIntervalSince(lastSwitchDate) >= cooldown else {
+            return
+        }
+        lastSwitchDate = Date()
+
+        KeymapSwitcher.switchKeymap(direction)
+    }
+}
+
+private class RadialSelectorOverlay: UIView {
+    private let wheelSize: CGFloat = 192
+    private let labelSize: CGFloat = 44
+    private let selectorCenter: CGPoint
+    private let targetPoints: [CGPoint]
+    private let wheelContainer = UIView()
+    private let selectionLabel = UILabel()
+    private let labels = RadialSelectorModel.defaultSlots.map { slot -> UILabel in
+        let label = UILabel()
+        label.text = slot.title
+        label.textAlignment = .center
+        label.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        label.textColor = .white
+        label.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+        label.layer.cornerRadius = 16
+        label.clipsToBounds = true
+        return label
+    }
+    private let targetMarkers: [UILabel]
+
+    init(selectorCenter: CGPoint, targetPoints: [CGPoint]) {
+        self.selectorCenter = selectorCenter
+        self.targetPoints = targetPoints
+        self.targetMarkers = RadialSelectorModel.defaultSlots.enumerated().map { index, slot in
+            let label = UILabel()
+            label.text = slot.title
+            label.textAlignment = .center
+            label.font = UIFont.systemFont(ofSize: 30, weight: .bold)
+            label.textColor = .white
+            label.backgroundColor = UIColor.systemTeal.withAlphaComponent(0.8)
+            label.layer.cornerRadius = 28
+            label.clipsToBounds = true
+            label.layer.borderColor = UIColor.white.withAlphaComponent(0.5).cgColor
+            label.layer.borderWidth = 3
+            if !targetPoints.indices.contains(index) {
+                label.isHidden = true
+            }
+            return label
+        }
+        super.init(frame: screen.screenRect)
+        backgroundColor = UIColor.clear
+        isUserInteractionEnabled = false
+        wheelContainer.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        wheelContainer.layer.cornerRadius = wheelSize / 2
+        wheelContainer.layer.borderColor = UIColor.systemTeal.withAlphaComponent(0.9).cgColor
+        wheelContainer.layer.borderWidth = 3
+        wheelContainer.frame = CGRect(
+            x: selectorCenter.x - wheelSize / 2,
+            y: selectorCenter.y - wheelSize / 2,
+            width: wheelSize,
+            height: wheelSize
+        )
+        addSubview(wheelContainer)
+
+        selectionLabel.textAlignment = .center
+        selectionLabel.font = UIFont.systemFont(ofSize: 44, weight: .heavy)
+        selectionLabel.textColor = .white
+        selectionLabel.backgroundColor = UIColor.black.withAlphaComponent(0.55)
+        selectionLabel.layer.cornerRadius = 30
+        selectionLabel.clipsToBounds = true
+        wheelContainer.addSubview(selectionLabel)
+
+        labels.forEach(wheelContainer.addSubview)
+        targetMarkers.forEach(addSubview)
+        update(selectedIndex: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        wheelContainer.frame = CGRect(
+            x: selectorCenter.x - wheelSize / 2,
+            y: selectorCenter.y - wheelSize / 2,
+            width: wheelSize,
+            height: wheelSize
+        )
+        selectionLabel.frame = CGRect(x: 48, y: 66, width: 96, height: 60)
+
+        let center = CGPoint(x: wheelContainer.bounds.midX, y: wheelContainer.bounds.midY)
+        let radius: CGFloat = 66
+        for (index, label) in labels.enumerated() {
+            let angle = RadialSelectorModel.defaultSlots[index].angle
+            label.frame = CGRect(
+                x: center.x + cos(angle) * radius - labelSize / 2,
+                y: center.y + sin(angle) * radius - labelSize / 2,
+                width: labelSize,
+                height: labelSize
+            )
+            label.layer.cornerRadius = labelSize / 2
+        }
+
+        for (index, marker) in targetMarkers.enumerated() where targetPoints.indices.contains(index) {
+            let point = targetPoints[index]
+            marker.frame = CGRect(x: point.x - 28, y: point.y - 28, width: 56, height: 56)
+        }
+    }
+
+    func update(selectedIndex: Int?) {
+        for (index, label) in labels.enumerated() {
+            let selected = selectedIndex == index
+            label.backgroundColor = selected
+                ? UIColor.systemGreen.withAlphaComponent(0.92)
+                : UIColor.black.withAlphaComponent(0.7)
+            label.alpha = selected ? 1 : 0.28
+            label.transform = selected ? CGAffineTransform(scaleX: 1.35, y: 1.35) : .identity
+        }
+        for (index, marker) in targetMarkers.enumerated() {
+            let selected = selectedIndex == index
+            marker.backgroundColor = selected
+                ? UIColor.systemGreen.withAlphaComponent(0.92)
+                : UIColor.systemTeal.withAlphaComponent(0.8)
+            marker.alpha = selected ? 1 : 0.45
+            marker.transform = selected ? CGAffineTransform(scaleX: 1.35, y: 1.35) : .identity
+        }
+        selectionLabel.text = selectedIndex.flatMap { labels.indices.contains($0) ? labels[$0].text : nil } ?? "RS"
+        selectionLabel.backgroundColor = selectedIndex == nil
+            ? UIColor.black.withAlphaComponent(0.55)
+            : UIColor.systemGreen.withAlphaComponent(0.9)
+        wheelContainer.layer.borderColor = (selectedIndex == nil
+            ? UIColor.systemTeal.withAlphaComponent(0.9)
+            : UIColor.systemGreen.withAlphaComponent(0.95)).cgColor
+    }
+}
+
+class RadialSelectorAction: Action {
+    private let edgeTriggerThreshold: CGFloat = 0.92
+    private let keyName: String
+    private let modifierKeys: [String]
+    private let holdDuration: CGFloat?
+    private let threshold: CGFloat
+    private let points: [CGPoint]
+    private let selectorCenter: CGPoint
+    private var modifierKeyDown = false
+    private var modifierPressed = false
+    private var pendingHold: DispatchWorkItem?
+    private var lastEdgeTriggeredIndex: Int?
+    private var selectedIndex: Int?
+    private weak var overlay: RadialSelectorOverlay?
+
+    init(data: RadialSelector) {
+        self.keyName = data.keyName
+        self.modifierKeys = ButtonAction.dispatchNames(code: data.modifierKeyCode,
+                                                       name: data.modifierKeyName)
+        self.holdDuration = data.holdDuration
+        self.threshold = min(max(data.activationThreshold ?? 0.55, 0.2), 0.35)
+        self.selectorCenter = CGPoint(
+            x: data.transform.xCoord.absoluteX,
+            y: data.transform.yCoord.absoluteY
+        )
+        self.points = data.slots.map {
+            CGPoint(x: $0.target.xCoord.absoluteX, y: $0.target.yCoord.absoluteY)
+        }
+
+        ActionDispatcher.register(key: keyName,
+                                  modifierKeys: modifierKeys,
+                                  handler: self.thumbstickUpdated)
+        for modifierKey in modifierKeys {
+            ActionDispatcher.register(key: modifierKey, handler: self.modifierUpdated)
+        }
+    }
+
+    func invalidate() {
+        modifierKeyDown = false
+        modifierPressed = false
+        cancelPendingHold()
+        lastEdgeTriggeredIndex = nil
+        selectedIndex = nil
+        hideOverlay()
+    }
+
+    private func modifierUpdated(pressed: Bool) {
+        modifierKeyDown = pressed
+        if pressed {
+            startAfterHoldIfNeeded()
+        } else {
+            cancelPendingHold()
+            guard modifierPressed else {
+                return
+            }
+            modifierPressed = false
+            let alreadyTriggered = lastEdgeTriggeredIndex != nil
+            let selectedPoint = selectedIndex.flatMap { points.indices.contains($0) ? points[$0] : nil }
+            lastEdgeTriggeredIndex = nil
+            selectedIndex = nil
+            hideOverlay()
+            guard !alreadyTriggered else {
+                return
+            }
+            guard let selectedPoint = selectedPoint else {
+                return
+            }
+            triggerTap(at: selectedPoint)
+        }
+    }
+
+    private func startAfterHoldIfNeeded() {
+        guard let holdDuration = holdDuration else {
+            activate()
+            return
+        }
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.pendingHold = nil
+            self?.activate()
+        }
+        pendingHold = workItem
+        PlayInput.touchQueue.asyncAfter(deadline: .now() + Double(holdDuration),
+                                        execute: workItem)
+    }
+
+    private func activate() {
+        guard modifierKeyDown else {
+            return
+        }
+        guard !modifierPressed else {
+            return
+        }
+        modifierPressed = true
+        lastEdgeTriggeredIndex = nil
+        showOverlay()
+    }
+
+    private func cancelPendingHold() {
+        pendingHold?.cancel()
+        pendingHold = nil
+    }
+
+    private func thumbstickUpdated(_ valueX: CGFloat, _ valueY: CGFloat) {
+        guard modifierPressed else {
+            return
+        }
+        let magnitude = hypot(valueX, valueY)
+        guard magnitude >= threshold else {
+            selectedIndex = nil
+            lastEdgeTriggeredIndex = nil
+            DispatchQueue.main.async {
+                self.overlay?.update(selectedIndex: nil)
+            }
+            return
+        }
+        let angle = normalizedAngle(atan2(-valueY, valueX))
+        let newIndex = nearestSlotIndex(for: angle)
+        if newIndex != selectedIndex {
+            selectedIndex = newIndex
+            DispatchQueue.main.async {
+                self.overlay?.update(selectedIndex: newIndex)
+            }
+        }
+
+        if magnitude >= edgeTriggerThreshold,
+           lastEdgeTriggeredIndex != newIndex,
+           points.indices.contains(newIndex) {
+            lastEdgeTriggeredIndex = newIndex
+            triggerTap(at: points[newIndex])
+        } else if magnitude < edgeTriggerThreshold {
+            lastEdgeTriggeredIndex = nil
+        }
+    }
+
+    private func normalizedAngle(_ angle: CGFloat) -> CGFloat {
+        let twoPi = CGFloat.pi * 2
+        let remainder = angle.truncatingRemainder(dividingBy: twoPi)
+        return remainder >= 0 ? remainder : remainder + twoPi
+    }
+
+    private func nearestSlotIndex(for angle: CGFloat) -> Int {
+        RadialSelectorModel.defaultSlots.enumerated().min { lhs, rhs in
+            angularDistance(lhs.element.angle, angle) < angularDistance(rhs.element.angle, angle)
+        }?.offset ?? 0
+    }
+
+    private func angularDistance(_ lhs: CGFloat, _ rhs: CGFloat) -> CGFloat {
+        let twoPi = CGFloat.pi * 2
+        let distance = abs(lhs - rhs).truncatingRemainder(dividingBy: twoPi)
+        return min(distance, twoPi - distance)
+    }
+
+    private func triggerTap(at point: CGPoint) {
+        var touchId: Int?
+        Toucher.touchcam(point: point, phase: .began, tid: &touchId,
+                         actionName: "RadialSelector", keyName: keyName)
+        PlayInput.touchQueue.asyncAfter(deadline: .now() + 0.05, qos: .userInteractive) {
+            Toucher.touchcam(point: point, phase: .ended, tid: &touchId,
+                             actionName: "RadialSelector", keyName: self.keyName)
+        }
+    }
+
+    private func showOverlay() {
+        DispatchQueue.main.async {
+            if let overlay = self.overlay {
+                overlay.isHidden = false
+                overlay.center = self.selectorCenter
+                overlay.update(selectedIndex: self.selectedIndex)
+                return
+            }
+            let overlay = RadialSelectorOverlay(selectorCenter: self.selectorCenter,
+                                                targetPoints: self.points)
+            overlay.update(selectedIndex: self.selectedIndex)
+            screen.keyWindow?.addSubview(overlay)
+            self.overlay = overlay
+        }
+    }
+
+    private func hideOverlay() {
+        DispatchQueue.main.async {
+            self.overlay?.removeFromSuperview()
+            self.overlay = nil
+        }
     }
 }
 
@@ -195,6 +675,7 @@ class DraggableButtonAction: ButtonAction {
                   keyName: String,
                   modifierKeyCode: Int? = nil,
                   modifierKeyName: String? = nil,
+                  holdDuration: CGFloat? = nil,
                   point: CGPoint) {
         self.releasePoint = point
         super.init(
@@ -202,28 +683,41 @@ class DraggableButtonAction: ButtonAction {
             keyName: keyName,
             modifierKeyCode: modifierKeyCode,
             modifierKeyName: modifierKeyName,
+            holdDuration: holdDuration,
             point: point)
     }
 
-    override func update(pressed: Bool) {
-        if pressed {
-            Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id,
-                             actionName: "DraggableButton", keyName: keyName)
-            self.releasePoint = point
-            ActionDispatcher.register(key: keyName,
-                                      handler: self.onMouseMoved,
-                                      priority: .DRAGGABLE)
+    convenience init(data: Button) {
+        self.init(
+            keyCode: data.keyCode,
+            keyName: data.keyName,
+            modifierKeyCode: data.modifierKeyCode,
+            modifierKeyName: data.modifierKeyName,
+            holdDuration: data.holdDuration,
+            point: CGPoint(
+                x: data.transform.xCoord.absoluteX,
+                y: data.transform.yCoord.absoluteY))
+    }
+
+    override func beginTouch() {
+        Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id,
+                         actionName: "DraggableButton", keyName: keyName)
+        self.releasePoint = point
+        ActionDispatcher.register(key: keyName,
+                                  handler: self.onMouseMoved,
+                                  priority: .DRAGGABLE)
+        if keyName == KeyCodeNames.mouseMove && !mode.cursorHidden() {
+            AKInterface.shared!.hideCursor()
+        }
+    }
+
+    override func releaseTouch() {
+        Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: &id,
+                         actionName: "DraggableButton", keyName: keyName)
+        if id == nil {
+            ActionDispatcher.unregister(key: keyName)
             if keyName == KeyCodeNames.mouseMove && !mode.cursorHidden() {
-                AKInterface.shared!.hideCursor()
-            }
-        } else {
-            Toucher.touchcam(point: releasePoint, phase: UITouch.Phase.ended, tid: &id,
-                             actionName: "DraggableButton", keyName: keyName)
-            if id == nil {
-                ActionDispatcher.unregister(key: keyName)
-                if keyName == KeyCodeNames.mouseMove && !mode.cursorHidden() {
-                    AKInterface.shared!.unhideCursor()
-                }
+                AKInterface.shared!.unhideCursor()
             }
         }
     }

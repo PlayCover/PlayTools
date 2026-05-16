@@ -153,6 +153,83 @@ class SwipeElement: Element {
     }
 }
 
+class RadialSelectorElement: Element {
+    private let ringLayer = CAShapeLayer()
+    private let activeRingLayer = CAShapeLayer()
+    private var spokeLayers = [CAShapeLayer]()
+
+    override func commonInit() {
+        super.commonInit()
+        backgroundColor = UIColor.black.withAlphaComponent(0.8)
+
+        ringLayer.fillColor = UIColor.clear.cgColor
+        ringLayer.strokeColor = UIColor.systemTeal.withAlphaComponent(0.8).cgColor
+        ringLayer.lineWidth = 3
+
+        activeRingLayer.fillColor = UIColor.systemPink.withAlphaComponent(0.18).cgColor
+        activeRingLayer.strokeColor = UIColor.systemPink.cgColor
+        activeRingLayer.lineWidth = 3
+
+        layer.insertSublayer(activeRingLayer, at: 0)
+        layer.insertSublayer(ringLayer, at: 0)
+        (0..<RadialSelectorModel.defaultSlots.count).forEach { _ in
+            let spoke = CAShapeLayer()
+            spoke.fillColor = UIColor.clear.cgColor
+            spoke.strokeColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            spoke.lineWidth = 2
+            layer.insertSublayer(spoke, at: 0)
+            spokeLayers.append(spoke)
+        }
+        titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+        update()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        update()
+    }
+
+    override func update() {
+        super.update()
+        layer.cornerRadius = bounds.width / 2
+        let inset = max(bounds.width * 0.12, 4)
+        let ringRect = bounds.insetBy(dx: inset, dy: inset)
+        let ringPath = UIBezierPath(ovalIn: ringRect)
+        ringLayer.path = ringPath.cgPath
+        activeRingLayer.path = ringPath.cgPath
+
+        let center = CGPoint(x: bounds.midX, y: bounds.midY)
+        let radius = ringRect.width / 2
+        for (index, spoke) in spokeLayers.enumerated() {
+            let angle = RadialSelectorModel.defaultSlots[index].angle
+            let end = CGPoint(x: center.x + cos(angle) * radius, y: center.y + sin(angle) * radius)
+            let path = UIBezierPath()
+            path.move(to: center)
+            path.addLine(to: end)
+            spoke.path = path.cgPath
+        }
+    }
+
+    override func focus(_ focus: Bool) {
+        layer.borderWidth = 0
+        activeRingLayer.isHidden = !focus
+        ringLayer.strokeColor = (focus ? UIColor.systemYellow : UIColor.systemTeal.withAlphaComponent(0.8)).cgColor
+    }
+}
+
+class RadialSelectorSlotElement: Element {
+    override func commonInit() {
+        super.commonInit()
+        backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+    }
+
+    override func update() {
+        super.update()
+        layer.cornerRadius = bounds.width / 2
+    }
+}
+
 extension UIView {
     func setX(xCoord: CGFloat) {
         self.center = CGPoint(x: xCoord, y: self.center.y)

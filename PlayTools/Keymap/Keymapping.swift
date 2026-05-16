@@ -59,6 +59,10 @@ class Keymapping {
         currentKeymapURL.deletingPathExtension().lastPathComponent
     }
 
+    public var keymapCount: Int {
+        keymapOrder.count
+    }
+
     init() {
         baseKeymapURL = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("Keymapping")
@@ -161,6 +165,8 @@ struct KeymappingData: Codable {
     var joystickModel: [Joystick] = []
     var mouseAreaModel: [MouseArea] = []
     var swipeModels: [Swipe] = []
+    var radialSelectorModels: [RadialSelector] = []
+    var hudOpacity: CGFloat?
     var bundleIdentifier: String
     var version = "2.0.0"
 
@@ -169,6 +175,8 @@ struct KeymappingData: Codable {
          joystickModel: [Joystick] = [],
          mouseAreaModel: [MouseArea] = [],
          swipeModels: [Swipe] = [],
+         radialSelectorModels: [RadialSelector] = [],
+         hudOpacity: CGFloat? = nil,
          bundleIdentifier: String,
          version: String = "2.0.0") {
         self.buttonModels = buttonModels
@@ -176,6 +184,8 @@ struct KeymappingData: Codable {
         self.joystickModel = joystickModel
         self.mouseAreaModel = mouseAreaModel
         self.swipeModels = swipeModels
+        self.radialSelectorModels = radialSelectorModels
+        self.hudOpacity = hudOpacity
         self.bundleIdentifier = bundleIdentifier
         self.version = version
     }
@@ -188,6 +198,8 @@ struct KeymappingData: Codable {
             joystickModel: try container.decodeIfPresent([Joystick].self, forKey: .joystickModel) ?? [],
             mouseAreaModel: try container.decodeIfPresent([MouseArea].self, forKey: .mouseAreaModel) ?? [],
             swipeModels: try container.decodeIfPresent([Swipe].self, forKey: .swipeModels) ?? [],
+            radialSelectorModels: try container.decodeIfPresent([RadialSelector].self, forKey: .radialSelectorModels) ?? [],
+            hudOpacity: try container.decodeIfPresent(CGFloat.self, forKey: .hudOpacity),
             bundleIdentifier: try container.decode(String.self, forKey: .bundleIdentifier),
             version: try container.decodeIfPresent(String.self, forKey: .version) ?? "2.0.0"
         )

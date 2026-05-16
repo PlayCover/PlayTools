@@ -19,6 +19,7 @@ struct Button: BaseElement {
     var keyName: String
     var modifierKeyCode: Int?
     var modifierKeyName: String?
+    var holdDuration: CGFloat?
     var transform: KeyModelTransform
 }
 
@@ -61,7 +62,26 @@ struct Swipe: BaseElement {
     var keyName: String
     var modifierKeyCode: Int?
     var modifierKeyName: String?
+    var holdDuration: CGFloat?
     var transform: KeyModelTransform
     // [0, 2 * PI)
     var angle: CGFloat
+}
+
+struct RadialSelectorSlot: Codable {
+    var angle: CGFloat
+    var target: KeyModelTransform
+    var title: String?
+    var enabled: Bool
+}
+
+struct RadialSelector: BaseElement {
+    var keyCode: Int
+    var keyName: String
+    var modifierKeyCode: Int?
+    var modifierKeyName: String?
+    var holdDuration: CGFloat?
+    var transform: KeyModelTransform
+    var activationThreshold: CGFloat?
+    var slots: [RadialSelectorSlot]
 }
