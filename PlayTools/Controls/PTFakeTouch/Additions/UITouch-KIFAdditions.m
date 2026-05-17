@@ -95,6 +95,10 @@
     //DLog(@"setPhaseAndUpdateTimestamp : %ld",(long)phase);
     [self setTimestamp: [[NSProcessInfo processInfo] systemUptime]];
     [self setPhase:phase];
+    // Update the IOHIDEvent to match the new phase.
+    // Some games validate IOHIDEvent.eventMask against UITouch.phase,
+    // so keeping them in sync is critical for fake touch acceptance.
+    [self kif_setHidEvent];
 }
 
 - (void)kif_setHidEvent {

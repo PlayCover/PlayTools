@@ -142,45 +142,73 @@ IOHIDEventRef kif_IOHIDEventWithTouches(NSArray *touches) {
     AbsoluteTime timeStamp;
     timeStamp.hi = (UInt32)(abTime >> 32);
     timeStamp.lo = (UInt32)(abTime);
-    IOHIDEventRef handEvent = IOHIDEventCreateDigitizerEvent(kCFAllocatorDefault, // allocator 内存分配器
-                                                             timeStamp, // timestamp 时间戳
-                                                             kIOHIDDigitizerTransducerTypeHand, // type
-                                                             0, // index
-                                                             0, // identity
-                                                             kIOHIDDigitizerEventTouch, // eventMask
-                                                             0, // buttonMask
-                                                             0, // x
-                                                             0, // y
-                                                             0, // z
-                                                             0, // tipPressure
-                                                             0, // barrelPressure
-                                                             0, // range
-                                                             true, // touch
-                                                             0); // options
+    IOHIDEventRef handEvent = IOHIDEventCreateDigitizerEvent(kCFAllocatorDefault,
+                                                             timeStamp,
+                                                             kIOHIDDigitizerTransducerTypeHand,
+                                                             0,
+                                                             0,
+                                                             kIOHIDDigitizerEventTouch,
+                                                             0,
+                                                             0,
+                                                             0,
+                                                             0,
+                                                             0,
+                                                             0,
+                                                             0,
+                                                             true,
+                                                             0);
     IOHIDEventSetIntegerValue(handEvent, kIOHIDEventFieldDigitizerIsDisplayIntegrated, true);
 
     for (UITouch *touch in touches) {
-        uint32_t eventMask = (touch.phase == UITouchPhaseMoved) ? kIOHIDDigitizerEventPosition : (kIOHIDDigitizerEventRange | kIOHIDDigitizerEventTouch);
-        uint32_t isTouching = (touch.phase == UITouchPhaseEnded) ? 0 : 1;
+        // Set eventMask and touch/range state based on actual touch phase.
+        // These must accurately reflect the UITouch.phase so that game-side
+        // validation (e.g. Tencent anti-automation) does not flag the IO HID
+        // event as inconsistent with the UIKit touch state.
+        uint32_t eventMask;
+        uint32_t isTouching;
+        switch (touch.phase) {
+            case UITouchPhaseMoved:
+                eventMask = kIOHIDDigitizerEventPosition;
+                isTouching = 1;
+                break;
+            case UITouchPhaseEnded:
+            case UITouchPhaseCancelled:
+                eventMask = kIOHIDDigitizerEventTouch;
+                isTouching = 0;
+                break;
+            default: // Began / Stationary
+                eventMask = kIOHIDDigitizerEventRange | kIOHIDDigitizerEventTouch;
+                isTouching = 1;
+                break;
+        }
+
         CGPoint touchLocation = [touch locationInView:touch.window];
-        IOHIDEventRef fingerEvent = IOHIDEventCreateDigitizerFingerEventWithQuality(kCFAllocatorDefault, // allocator
-                                                                                    timeStamp, // timestamp
-                                                                                    (UInt32)[touches indexOfObject:touch] + 1, //index
-                                                                                    2, // identity
-                                                                                    eventMask, // eventMask
-                                                                                    (IOHIDFloat)touchLocation.x, // x
-                                                                                    (IOHIDFloat)touchLocation.y, // y
-                                                                                    0.0, // z
-                                                                                    0, // tipPressure
-                                                                                    0, // twist
-                                                                                    5.0, // minor radius
-                                                                                    5.0, // major radius
-                                                                                    1.0, // quality
-                                                                                    1.0, // density
-                                                                                    1.0, // irregularity
-                                                                                    (IOHIDFloat)isTouching, // range
-                                                                                    (IOHIDFloat)isTouching, // touch
-                                                                                    0); // options
+
+        // Each finger gets its own timestamp for more realistic HID events.
+        // Real multi-touch hardware fires independent events per finger.
+        uint64_t fingerTime = mach_absolute_time();
+        AbsoluteTime fingerTimestamp;
+        fingerTimestamp.hi = (UInt32)(fingerTime >> 32);
+        fingerTimestamp.lo = (UInt32)(fingerTime);
+
+        IOHIDEventRef fingerEvent = IOHIDEventCreateDigitizerFingerEventWithQuality(kCFAllocatorDefault,
+                                                                                    fingerTimestamp,
+                                                                                    (UInt32)[touches indexOfObject:touch] + 1,
+                                                                                    2,
+                                                                                    eventMask,
+                                                                                    (IOHIDFloat)touchLocation.x,
+                                                                                    (IOHIDFloat)touchLocation.y,
+                                                                                    0.0,
+                                                                                    0,
+                                                                                    0,
+                                                                                    5.0,
+                                                                                    5.0,
+                                                                                    1.0,
+                                                                                    1.0,
+                                                                                    1.0,
+                                                                                    (IOHIDFloat)isTouching,
+                                                                                    (IOHIDFloat)isTouching,
+                                                                                    0);
         IOHIDEventSetIntegerValue(fingerEvent, kIOHIDEventFieldDigitizerIsDisplayIntegrated, 1);
         IOHIDEventAppendEvent(handEvent, fingerEvent);
         CFRelease(fingerEvent);
