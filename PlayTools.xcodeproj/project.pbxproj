@@ -22,6 +22,7 @@
 		954389CA2B392D7800B063BB /* DraggableButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389C92B392D7800B063BB /* DraggableButton.swift */; };
 		954389CC2B39F03D00B063BB /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389CB2B39F03D00B063BB /* EditorView.swift */; };
 		954389CE2B39F26600B063BB /* ElementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389CD2B39F26600B063BB /* ElementView.swift */; };
+		954389D42B3A6CD000B063BB /* KeymapHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389D52B3A6CD000B063BB /* KeymapHUDView.swift */; };
 		954389D22B3A5AE100B063BB /* ElementController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954389D12B3A5AE100B063BB /* ElementController.swift */; };
 		9555ED2F2C058E08006E469C /* DebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED2E2C058E08006E469C /* DebugView.swift */; };
 		9555ED312C058E28006E469C /* DebugModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9555ED302C058E28006E469C /* DebugModel.swift */; };
@@ -118,6 +119,7 @@
 		954389C72B392D5300B063BB /* Button.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Button.swift; sourceTree = "<group>"; };
 		954389C92B392D7800B063BB /* DraggableButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableButton.swift; sourceTree = "<group>"; };
 		954389CB2B39F03D00B063BB /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
+		954389D52B3A6CD000B063BB /* KeymapHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapHUDView.swift; sourceTree = "<group>"; };
 		954389CD2B39F26600B063BB /* ElementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElementView.swift; sourceTree = "<group>"; };
 		954389D12B3A5AE100B063BB /* ElementController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElementController.swift; sourceTree = "<group>"; };
 		9555ED2E2C058E08006E469C /* DebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugView.swift; sourceTree = "<group>"; };
@@ -237,6 +239,7 @@
 				AA71978C287A481500623C15 /* CircleMenu */,
 				AA71979D287A481500623C15 /* EditorCircleMenu.swift */,
 				954389CB2B39F03D00B063BB /* EditorView.swift */,
+				954389D52B3A6CD000B063BB /* KeymapHUDView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -727,6 +730,7 @@
 				954389C22B38922400B063BB /* MouseArea.swift in Sources */,
 				AA7197AB287A481500623C15 /* Element.swift in Sources */,
 				AA7197AE287A481500623C15 /* EditorCircleMenu.swift in Sources */,
+				954389D42B3A6CD000B063BB /* KeymapHUDView.swift in Sources */,
 				954389D22B3A5AE100B063BB /* ElementController.swift in Sources */,
 				95D474FF2C0BDAB20072797F /* DraggableButtonElement.swift in Sources */,
 				9562D1622AB4FE73002C329D /* CameraControlMouseEventAdapter.swift in Sources */,

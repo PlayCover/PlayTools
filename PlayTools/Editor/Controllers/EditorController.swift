@@ -3,6 +3,7 @@ import SwiftUI
 
 let editor = EditorController.shared
 
+// swiftlint:disable type_body_length
 class EditorController {
 
     static let shared = EditorController()
@@ -18,6 +19,7 @@ class EditorController {
     private var keyCaptureMode = KeyCaptureMode.primary
 
     var editorWindow: UIWindow?
+    private var hudWindow: KeymapHUDWindow?
     weak var previousWindow: UIWindow?
     var controls: [ControlElement] = []
     var view: EditorView! {editorWindow?.rootViewController?.view as? EditorView}
@@ -31,6 +33,9 @@ class EditorController {
     private func addControlToView(control: ControlElement) {
         controls.append(control)
         view.addSubview(control.button)
+        if let radialSelector = control as? RadialSelectorModel {
+            radialSelector.slotControls.forEach { view.addSubview($0.button) }
+        }
         updateFocus(button: control.button)
     }
 
@@ -81,6 +86,47 @@ class EditorController {
     }
 
     var editorMode: Bool { !(editorWindow?.isHidden ?? true)}
+    var hudVisible: Bool { !(hudWindow?.isHidden ?? true)}
+
+    public func toggleHUD() {
+        if hudVisible {
+            hideHUD()
+        } else {
+            showHUD()
+        }
+    }
+
+    public func refreshHUD() {
+        guard hudVisible else {
+            return
+        }
+        hudWindow?.rootViewController?.view = KeymapHUDView(map: keymap.currentKeymap)
+    }
+
+    private func showHUD() {
+        guard let windowScene = screen.windowScene else {
+            return
+        }
+        let window = KeymapHUDWindow(windowScene: windowScene)
+        window.rootViewController?.view = KeymapHUDView(map: keymap.currentKeymap)
+        window.isHidden = false
+        hudWindow = window
+        Toast.showHint(title: NSLocalizedString("hint.keymappingHUD.shown",
+                                                tableName: "Playtools",
+                                                value: "Keymap HUD shown",
+                                                comment: ""))
+    }
+
+    private func hideHUD() {
+        hudWindow?.isHidden = true
+        hudWindow?.windowScene = nil
+        hudWindow?.rootViewController = nil
+        hudWindow = nil
+        Toast.showHint(title: NSLocalizedString("hint.keymappingHUD.hidden",
+                                                tableName: "Playtools",
+                                                value: "Keymap HUD hidden",
+                                                comment: ""))
+    }
 
     public func setKey(_ code: Int) {
         if editorMode {
@@ -102,14 +148,20 @@ class EditorController {
             }
             if name != "Mouse" || focusedControl is MouseAreaModel
                 || focusedControl is JoystickModel
-                || focusedControl is DraggableButtonModel {
+                || focusedControl is DraggableButtonModel
+                || focusedControl is RadialSelectorModel
+                || focusedControl is RadialSelectorSlotControl {
                 focusedControl?.setKey(name: name)
             }
         }
     }
 
     public func captureModifierKey() {
-        guard editorMode, focusedControl is ButtonModel else {
+        guard editorMode,
+              focusedControl is ButtonModel
+                || focusedControl is SwipeModel
+                || focusedControl is RadialSelectorModel
+                || focusedControl is RadialSelectorSlotControl else {
             Toast.showHint(
                 title: NSLocalizedString("hint.keymappingEditor.selectButton.title",
                                          tableName: "Playtools",
@@ -117,7 +169,8 @@ class EditorController {
                                          comment: ""),
                 text: [NSLocalizedString("hint.keymappingEditor.selectButton.captureModifier.content",
                                          tableName: "Playtools",
-                                         value: "Select a button mapping, then press ⌘M to set its modifier key.",
+                                         value: "Select a button or swipe mapping, then press ⌘M "
+                                            + "to set its modifier key.",
                                          comment: "")]
             )
             return
@@ -136,7 +189,12 @@ class EditorController {
     }
 
     public func clearModifierKey() {
-        guard editorMode, focusedControl is ButtonModel else {
+        guard editorMode,
+              focusedControl is ButtonModel
+                || focusedControl is DraggableButtonModel
+                || focusedControl is SwipeModel
+                || focusedControl is RadialSelectorModel
+                || focusedControl is RadialSelectorSlotControl else {
             Toast.showHint(
                 title: NSLocalizedString("hint.keymappingEditor.selectButton.title",
                                          tableName: "Playtools",
@@ -144,7 +202,8 @@ class EditorController {
                                          comment: ""),
                 text: [NSLocalizedString("hint.keymappingEditor.selectButton.clearModifier.content",
                                          tableName: "Playtools",
-                                         value: "Select a button mapping, then press ⌘⇧M to clear its modifier key.",
+                                         value: "Select a button or swipe mapping, then press ⌘⇧M "
+                                            + "to clear its modifier key.",
                                          comment: "")]
             )
             return
@@ -154,6 +213,27 @@ class EditorController {
         Toast.showHint(title: NSLocalizedString("hint.keymappingEditor.modifierCleared.title",
                                                 tableName: "Playtools",
                                                 value: "Modifier cleared",
+                                                comment: ""))
+    }
+
+    public func toggleHoldTrigger() {
+        guard editorMode,
+              focusedControl is ButtonModel
+                || focusedControl is DraggableButtonModel
+                || focusedControl is SwipeModel
+                || focusedControl is RadialSelectorModel
+                || focusedControl is RadialSelectorSlotControl else {
+            Toast.showHint(title: NSLocalizedString("hint.keymappingEditor.selectHoldTrigger.title",
+                                                    tableName: "Playtools",
+                                                    value: "Select a button, swipe, or radial selector first",
+                                                    comment: ""))
+            return
+        }
+        focusedControl?.toggleHoldTrigger()
+        keyCaptureMode = .primary
+        Toast.showHint(title: NSLocalizedString("hint.keymappingEditor.holdTriggerToggled.title",
+                                                tableName: "Playtools",
+                                                value: "Long-press trigger toggled",
                                                 comment: ""))
     }
 
@@ -173,8 +253,31 @@ class EditorController {
 
     public func removeControl() {
         keyCaptureMode = .primary
+        if let radialSlot = focusedControl as? RadialSelectorSlotControl {
+            controls = controls.filter { $0 !== radialSlot.parent }
+            radialSlot.parent.remove()
+            focusedControl = nil
+            return
+        }
         controls = controls.filter { $0 !== focusedControl }
         focusedControl?.remove()
+    }
+
+    public func cycleSwipeDirection() {
+        guard editorMode, focusedControl is SwipeModel else {
+            Toast.showHint(
+                title: NSLocalizedString("hint.keymappingEditor.selectSwipe.title",
+                                         tableName: "Playtools",
+                                         value: "Select a swipe first",
+                                         comment: ""),
+                text: [NSLocalizedString("hint.keymappingEditor.selectSwipe.cycleDirection.content",
+                                         tableName: "Playtools",
+                                         value: "Select a swipe mapping, then press ⌘R to change its direction.",
+                                         comment: "")]
+            )
+            return
+        }
+        focusedControl?.cycleDirection()
     }
 
     func showButtons() {
@@ -189,6 +292,14 @@ class EditorController {
         for mouse in keymap.currentKeymap.mouseAreaModel {
             let ctrl =
                 MouseAreaModel(data: mouse)
+            addControlToView(control: ctrl)
+        }
+        for swipe in keymap.currentKeymap.swipeModels {
+            let ctrl = SwipeModel(data: swipe)
+            addControlToView(control: ctrl)
+        }
+        for radialSelector in keymap.currentKeymap.radialSelectorModels {
+            let ctrl = RadialSelectorModel(data: radialSelector)
             addControlToView(control: ctrl)
         }
         for button in keymap.currentKeymap.buttonModels {
@@ -208,6 +319,10 @@ class EditorController {
                 keymapData.draggableButtonModels.append(model.save())
             case let model as MouseAreaModel:
                 keymapData.mouseAreaModel.append(model.save())
+            case let model as SwipeModel:
+                keymapData.swipeModels.append(model.save())
+            case let model as RadialSelectorModel:
+                keymapData.radialSelectorModels.append(model.save())
             case let model as ButtonModel:
                 keymapData.buttonModels.append(model.save())
             default:
@@ -286,6 +401,36 @@ class EditorController {
         }
     }
 
+    public func addSwipe(_ center: CGPoint) {
+        if editorMode {
+            addControlToView(control: SwipeModel(data: Swipe(
+                keyCode: -1,
+                keyName: KeyCodeNames.leftMouseButton,
+                transform: KeyModelTransform(
+                    size: 12, xCoord: center.x.relativeX, yCoord: center.y.relativeY
+                ),
+                angle: CGFloat.pi * 3 / 2
+            )))
+        }
+    }
+
+    public func addRadialSelector(_ center: CGPoint) {
+        if editorMode {
+            let size = CGFloat(12)
+            addControlToView(control: RadialSelectorModel(data: RadialSelector(
+                keyCode: KeyCodeNames.defaultCode,
+                keyName: "Right Thumbstick",
+                modifierKeyCode: -12,
+                modifierKeyName: "Left Shoulder",
+                transform: KeyModelTransform(
+                    size: size, xCoord: center.x.relativeX, yCoord: center.y.relativeY
+                ),
+                activationThreshold: 0.35,
+                slots: RadialSelectorModel.makeDefaultSlots(center: center, size: size.absoluteSize)
+            )))
+        }
+    }
+
     public func addDraggableButton(_ center: CGPoint, _ keyCode: Int) {
         if editorMode {
             addControlToView(control: DraggableButtonModel(data: Button(
@@ -302,3 +447,4 @@ class EditorController {
         view.label?.text = str
     }
 }
+// swiftlint:enable type_body_length

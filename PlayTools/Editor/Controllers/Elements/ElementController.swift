@@ -16,6 +16,8 @@ protocol ControlElement: AnyObject {
     func setModifierKey(code: Int)
     func setModifierKey(name: String)
     func clearModifierKey()
+    func cycleDirection()
+    func toggleHoldTrigger()
     func resize(down: Bool)
     func remove()
 }
@@ -80,4 +82,8 @@ class ControlModel<ElementType: BaseElement>: ControlElement {
     func setModifierKey(name: String) {}
 
     func clearModifierKey() {}
+
+    func cycleDirection() {}
+
+    func toggleHoldTrigger() {}
 }

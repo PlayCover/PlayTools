@@ -31,6 +31,11 @@ extension UIApplication {
     }
 
     @objc
+    func toggleKeymapHUD(_ sender: AnyObject) {
+        EditorController.shared.toggleHUD()
+    }
+
+    @objc
     func removeElement(_ sender: AnyObject) {
         EditorController.shared.removeControl()
     }
@@ -53,6 +58,32 @@ extension UIApplication {
     @objc
     func clearElementModifierKey(_ sender: AnyObject) {
         EditorController.shared.clearModifierKey()
+    }
+
+    @objc
+    func cycleSwipeDirection(_ sender: AnyObject) {
+        EditorController.shared.cycleSwipeDirection()
+    }
+
+    @objc
+    func toggleElementHoldTrigger(_ sender: AnyObject) {
+        EditorController.shared.toggleHoldTrigger()
+    }
+
+    @objc
+    func toggleShoulderKeymapSwitch(_ sender: AnyObject) {
+        ShoulderKeymapSwitchAction.isEnabled.toggle()
+        let titleKey = ShoulderKeymapSwitchAction.isEnabled
+            ? "hint.keymapping.shoulderSwitch.enabled"
+            : "hint.keymapping.shoulderSwitch.disabled"
+        let fallback = ShoulderKeymapSwitchAction.isEnabled
+            ? "Shoulder keymap switch enabled"
+            : "Shoulder keymap switch disabled"
+        Toast.showHint(title: NSLocalizedString(titleKey,
+                                                tableName: "Playtools",
+                                                value: fallback,
+                                                comment: ""))
+        ActionDispatcher.build()
     }
 
     // put a mark in the toucher log, so as to align with tester description
@@ -98,9 +129,7 @@ extension UIApplication {
             ModeAutomaton.onCmdK()
         }
 
-        keymap.nextKeymap()
-        Toast.showHint(title: "Switched to next keymap: \(keymap.currentKeymapName)")
-        ActionDispatcher.build()
+        KeymapSwitcher.switchKeymap(.next)
 
         if isCmdK {
             ModeAutomaton.onCmdK()
@@ -115,9 +144,7 @@ extension UIApplication {
             ModeAutomaton.onCmdK()
         }
 
-        keymap.previousKeymap()
-        Toast.showHint(title: "Switched to previous keymap: \(keymap.currentKeymapName)")
-        ActionDispatcher.build()
+        KeymapSwitcher.switchKeymap(.previous)
 
         if isCmdK {
             ModeAutomaton.onCmdK()
@@ -145,6 +172,8 @@ struct CommandsList {
 var keymapping = [
     NSLocalizedString("menu.keymapping.toggleEditor", tableName: "Playtools",
                       value: "Open/Close Keymapping Editor", comment: ""),
+    NSLocalizedString("menu.keymapping.toggleHUD", tableName: "Playtools",
+                      value: "Show/Hide Keymap HUD", comment: ""),
     NSLocalizedString("menu.keymapping.deleteElement", tableName: "Playtools",
                       value: "Delete selected element", comment: ""),
     NSLocalizedString("menu.keymapping.upsizeElement", tableName: "Playtools",
@@ -155,6 +184,12 @@ var keymapping = [
                       value: "Set selected button modifier", comment: ""),
     NSLocalizedString("menu.keymapping.clearModifier", tableName: "Playtools",
                       value: "Clear selected button modifier", comment: ""),
+    NSLocalizedString("menu.keymapping.cycleSwipeDirection", tableName: "Playtools",
+                      value: "Switch selected swipe direction", comment: ""),
+    NSLocalizedString("menu.keymapping.toggleHoldTrigger", tableName: "Playtools",
+                      value: "Toggle selected long-press trigger", comment: ""),
+    NSLocalizedString("menu.keymapping.toggleShoulderKeymapSwitch", tableName: "Playtools",
+                      value: "Toggle shoulder keymap switch", comment: ""),
     NSLocalizedString("menu.keymapping.toggleDebug", tableName: "Playtools",
                       value: "Toggle Debug Overlay", comment: ""),
     NSLocalizedString("menu.keymapping.hide.pointer", tableName: "Playtools",
@@ -166,22 +201,30 @@ var keymapping = [
   ]
 var iconsSelctor = [
     UIImage(systemName: "pencil"),
+    UIImage(systemName: "eye"),
     UIImage(systemName: "trash.fill"),
     UIImage(systemName: "square.resize.up"),
     UIImage(systemName: "square.resize.down"),
     UIImage(systemName: "command"),
     UIImage(systemName: "command.circle"),
+    UIImage(systemName: "arrow.triangle.2.circlepath"),
+    UIImage(systemName: "timer"),
+    UIImage(systemName: "gamecontroller"),
     UIImage(systemName: "wrench.and.screwdriver"),
     UIImage(systemName: "pointer.arrow.slash"),
     UIImage(systemName: "arrow.down.square"),
     UIImage(systemName: "arrow.up.square")
   ]
 var keymappingSelectors = [#selector(UIApplication.switchEditorMode(_:)),
+                           #selector(UIApplication.toggleKeymapHUD(_:)),
                            #selector(UIApplication.removeElement(_:)),
                            #selector(UIApplication.upscaleElement(_:)),
                            #selector(UIApplication.downscaleElement(_:)),
                            #selector(UIApplication.captureElementModifierKey(_:)),
                            #selector(UIApplication.clearElementModifierKey(_:)),
+                           #selector(UIApplication.cycleSwipeDirection(_:)),
+                           #selector(UIApplication.toggleElementHoldTrigger(_:)),
+                           #selector(UIApplication.toggleShoulderKeymapSwitch(_:)),
                            #selector(UIApplication.toggleDebugOverlay(_:)),
                            #selector(UIApplication.hideCursor(_:)),
                            #selector(UIApplication.previousKeymap(_:)),
@@ -248,11 +291,15 @@ class MenuController {
     class func keymappingMenu() -> UIMenu {
         let keyCommands = [
             "K",                            // Toggle keymap editor
+            "K",                            // Toggle keymap HUD
             UIKeyCommand.inputDelete,       // Remove keymap element
             UIKeyCommand.inputUpArrow,      // Increase keymap element size
             UIKeyCommand.inputDownArrow,    // Decrease keymap element size
             "M",                            // Set button modifier
             "M",                            // Clear button modifier
+            "R",                            // Switch swipe direction
+            "L",                            // Toggle long-press trigger
+            "B",                            // Toggle shoulder keymap switch
             "D",                            // Toggle debug overlay
             ".",                            // Hide cursor until move
             "[",                            // Previous keymap
@@ -260,8 +307,12 @@ class MenuController {
         ]
         let keyModifiers: [UIKeyModifierFlags] = [
             .command,
+            [.command, .shift],
             .command,
             .command,
+            .command,
+            .command,
+            [.command, .shift],
             .command,
             .command,
             [.command, .shift],
