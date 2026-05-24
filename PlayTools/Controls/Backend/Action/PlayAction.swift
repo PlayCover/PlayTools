@@ -513,7 +513,8 @@ class RadialSelectorAction: Action {
 
         ActionDispatcher.register(key: keyName,
                                   modifierKeys: modifierKeys,
-                                  handler: self.thumbstickUpdated)
+                                  handler: self.thumbstickUpdated,
+                                  priority: .DRAGGABLE)
         for modifierKey in modifierKeys {
             ActionDispatcher.register(key: modifierKey, handler: self.modifierUpdated)
         }

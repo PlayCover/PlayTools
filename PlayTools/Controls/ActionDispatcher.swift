@@ -149,10 +149,13 @@ public class ActionDispatcher {
         atomicHandler?.store(AtomicHandler(key, modifierKeys, handler), ordering: .releasing)
     }
 
-    static public func unregister(key: String) {
+    static public func unregister(key: String,
+                                  modifierKeys: [String] = [],
+                                  priority: ActionDispatchPriority = .DRAGGABLE) {
         // Only draggable can be unregistered
-        let atomicHandler = directionPadHandlers[ActionDispatchPriority.DRAGGABLE.rawValue].first(where: { handler in
-            handler.load(ordering: .relaxed).key == key
+        let atomicHandler = directionPadHandlers[priority.rawValue].first(where: { handler in
+            let handlerValue = handler.load(ordering: .relaxed)
+            return handlerValue.key == key && handlerValue.modifierKeys == modifierKeys
         })
 //        DispatchQueue.main.async {
 //            if screen.keyWindow == nil {
