@@ -5,6 +5,8 @@
 
 #include <Foundation/Foundation.h>
 #include <errno.h>
+#include <limits.h>
+#include <stdatomic.h>
 #include <sys/sysctl.h>
 
 #import "PlayLoader.h"
@@ -216,14 +218,75 @@ DYLD_INTERPOSE(pt_SecKeyGeneratePair, SecKeyGeneratePair)
 
 static uint8_t ue_status = 0;
 
+static void pt_copyCurrentUserHomeDirectory(char *buffer, size_t bufferSize) {
+    if (bufferSize == 0) {
+        return;
+    }
+
+    buffer[0] = '\0';
+
+    char executablePath[PATH_MAX];
+    uint32_t executablePathSize = sizeof(executablePath);
+    if (_NSGetExecutablePath(executablePath, &executablePathSize) == 0) {
+        static char const containerMarker[] = "/Library/Containers/io.playcover.PlayCover/";
+        char *marker = strstr(executablePath, containerMarker);
+        if (marker != NULL) {
+            size_t homePathLength = (size_t)(marker - executablePath);
+            if (homePathLength > 0 && homePathLength < bufferSize) {
+                memcpy(buffer, executablePath, homePathLength);
+                buffer[homePathLength] = '\0';
+                return;
+            }
+        }
+    }
+
+    char const *homeDirectory = getenv("HOME");
+    if (homeDirectory != NULL && homeDirectory[0] != '\0') {
+        static char const containerSuffix[] = "/Library/Containers/io.playcover.PlayCover";
+        char const *suffix = strstr(homeDirectory, containerSuffix);
+        if (suffix != NULL) {
+            size_t homePathLength = (size_t)(suffix - homeDirectory);
+            if (homePathLength > 0 && homePathLength < bufferSize) {
+                memcpy(buffer, homeDirectory, homePathLength);
+                buffer[homePathLength] = '\0';
+                return;
+            }
+        }
+
+        snprintf(buffer, bufferSize, "%s", homeDirectory);
+        return;
+    }
+
+    char userName[256];
+    if (getlogin_r(userName, sizeof(userName)) == 0) {
+        snprintf(buffer, bufferSize, "/Users/%s", userName);
+    }
+}
+
 static char const* ue_fix_filename(char const* filename) {
-    static char UE_PATTERN[1024] = "//Users/";
-    getlogin_r(UE_PATTERN + 8, sizeof(UE_PATTERN) - 8);
+    static char uePattern[PATH_MAX];
+    static atomic_int uePatternState = 0; // 0 = uninitialized, 1 = initializing, 2 = ready, 3 = unavailable
+    int expectedState = 0;
+    if (atomic_compare_exchange_strong(&uePatternState, &expectedState, 1)) {
+        char homePath[PATH_MAX];
+        pt_copyCurrentUserHomeDirectory(homePath, sizeof(homePath));
+        if (homePath[0] != '\0') {
+            snprintf(uePattern, sizeof(uePattern), "/%s", homePath);
+            atomic_store(&uePatternState, 2);
+        } else {
+            atomic_store(&uePatternState, 3);
+        }
+    }
+
+    int patternState = atomic_load(&uePatternState);
+    if (patternState != 2 || uePattern[0] == '\0') {
+        return filename;
+    }
     
     char const* p = filename;
     if (ue_status == 2) {
         char const* last_p = p;
-        while ((p = strstr(p, UE_PATTERN))) {
+        while ((p = strstr(p, uePattern))) {
             last_p = ++p;
         }
         

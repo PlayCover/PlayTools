@@ -18,6 +18,23 @@ private struct AKAppSettingsData: Codable {
     var resizableAspectRatioHeight: Int?
 }
 
+private func akCurrentUserHomeDirectoryPath() -> String {
+    let userName = NSUserName()
+    if let homeDirectory = NSHomeDirectoryForUser(userName) {
+        return homeDirectory
+    }
+    return NSString(string: "~\(userName)").expandingTildeInPath
+}
+
+private func akSettingsURLForBundleIdentifier(_ bundleIdentifier: String) -> URL {
+    return URL(fileURLWithPath: akCurrentUserHomeDirectoryPath(), isDirectory: true)
+        .appendingPathComponent("Library", isDirectory: true)
+        .appendingPathComponent("Containers", isDirectory: true)
+        .appendingPathComponent("io.playcover.PlayCover", isDirectory: true)
+        .appendingPathComponent("App Settings")
+        .appendingPathComponent("\(bundleIdentifier).plist")
+}
+
 class AKPlugin: NSObject, Plugin {
     required override init() {
         super.init()
@@ -304,9 +321,7 @@ class AKPlugin: NSObject, Plugin {
 
     fileprivate static var akAppSettingsData: AKAppSettingsData? = {
         let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
-        let settingsURL = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
-            .appendingPathComponent("App Settings")
-            .appendingPathComponent("\(bundleIdentifier).plist")
+        let settingsURL = akSettingsURLForBundleIdentifier(bundleIdentifier)
         guard let data = try? Data(contentsOf: settingsURL),
               let decoded = try? PropertyListDecoder().decode(AKAppSettingsData.self, from: data) else {
             return nil
