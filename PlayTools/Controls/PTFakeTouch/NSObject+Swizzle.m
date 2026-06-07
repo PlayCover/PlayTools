@@ -201,6 +201,15 @@ __attribute__((visibility("hidden")))
     return @[];
 }
 
++ (void)hook_Unity_KeyboardDelegate_Initialize {
+    @try {
+        [self hook_Unity_KeyboardDelegate_Initialize];
+    }
+    @catch (NSException *exception) {
+        NSLog(@"Caught exception: %@, reason: %@", exception.name, exception.reason);
+    }
+}
+
 // Hook for UIUserInterfaceIdiom
 
 // - (long long) hook_userInterfaceIdiom {
@@ -353,6 +362,13 @@ bool menuWasCreated = false;
         [objc_getClass("GCMouse") swizzleClassMethod:@selector(current) withMethod:@selector(hook_GCMouse_current)];
         [objc_getClass("GCMouse") swizzleClassMethod:@selector(mice) withMethod:@selector(hook_GCMouse_mice)];
     }
+
+    // Delay a frame to wait for some frameworks (such as UnityFramework) to load
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.01 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        if ([[PlaySettings shared] ignoreUnityKeyboardInitializationError]) {
+            [objc_getClass("KeyboardDelegate") swizzleClassMethod:NSSelectorFromString(@"Initialize") withMethod:@selector(hook_Unity_KeyboardDelegate_Initialize)];
+        }
+    });
 }
 
 @end
