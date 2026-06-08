@@ -192,7 +192,7 @@ IOHIDEventRef kif_IOHIDEventWithTouches(NSArray *touches) {
         fingerTimestamp.lo = (UInt32)(fingerTime);
 
         IOHIDEventRef fingerEvent = IOHIDEventCreateDigitizerFingerEventWithQuality(kCFAllocatorDefault, // allocator
-                                                                                    timeStamp, // timestamp
+                                                                                    fingerTimestamp, // finger timestamp
                                                                                     (UInt32)[touches indexOfObject:touch] + 1, //index
                                                                                     2, // identity
                                                                                     eventMask, // eventMask
