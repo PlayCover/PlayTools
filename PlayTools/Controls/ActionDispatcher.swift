@@ -20,11 +20,12 @@ public enum ActionDispatchPriority: Int {
 public class ActionDispatcher {
     static private let keymapVersion = "2.0."
     static private var actions = [Action]()
-    static private var buttonHandlers: [String: [(Bool) -> Void]] = [:]
+    static private var buttonHandlers: [String: [ButtonPressHandler]] = [:]
+    static private var pressedKeys = Set<String>()
 
     static private let priorityCount = 3
     // You can't put more than 8 cameras or 8 joysticks in a keymap right?
-    static private let mappingCountPerPriority = 8
+    static private let mappingCountPerPriority = 16
     static private let directionPadHandlers: [[ManagedAtomic<AtomicHandler>]] = Array(
         (0..<priorityCount).map({_ in
             (0..<mappingCountPerPriority).map({_ in ManagedAtomic<AtomicHandler>(.EMPTY)})
@@ -35,6 +36,7 @@ public class ActionDispatcher {
         invalidateActions()
         actions = []
         buttonHandlers.removeAll(keepingCapacity: true)
+        pressedKeys.removeAll(keepingCapacity: true)
         directionPadHandlers.forEach({ handlers in
             handlers.forEach({ handler in
                 handler.store(.EMPTY, ordering: .relaxed)
@@ -49,6 +51,9 @@ public class ActionDispatcher {
         clear()
 
         actions.append(FakeMouseAction())
+        if ShoulderKeymapSwitchAction.isEnabled {
+            actions.append(ShoulderKeymapSwitchAction())
+        }
 
         // current keymap version is 2.0.x.
         // in future, keymap format will be upgraded.
@@ -79,6 +84,14 @@ public class ActionDispatcher {
             actions.append(CameraAction(data: mouse))
         }
 
+        for swipe in keymap.currentKeymap.swipeModels {
+            actions.append(TriggeredSwipeAction(data: swipe))
+        }
+
+        for radialSelector in keymap.currentKeymap.radialSelectorModels {
+            actions.append(RadialSelectorAction(data: radialSelector))
+        }
+
         for joystick in keymap.currentKeymap.joystickModel {
             // Left Thumbstick, Right Thumbstick, Mouse
             if JoystickModel.isAnalog(joystick) {
@@ -96,18 +109,32 @@ public class ActionDispatcher {
     }
 
     static public func register(key: String, handler: @escaping (Bool) -> Void) {
+        register(key: key, modifierKeys: [], handler: handler)
+    }
+
+    static public func register(key: String,
+                                modifierKeys: [String],
+                                handler: @escaping (Bool) -> Void) {
         // this function is called when setting up `button` type of mapping
         if buttonHandlers[key] == nil {
             buttonHandlers[key] = []
         }
-        buttonHandlers[key]!.append(handler)
+        buttonHandlers[key]!.append(ButtonPressHandler(modifierKeys: modifierKeys, handle: handler))
     }
 
     static public func register(key: String,
                                 handler: @escaping (CGFloat, CGFloat) -> Void,
                                 priority: ActionDispatchPriority = .DEFAULT) {
-        let atomicHandler = directionPadHandlers[priority.rawValue].first(where: { handler in
-            handler.load(ordering: .relaxed).key == key
+        register(key: key, modifierKeys: [], handler: handler, priority: priority)
+    }
+
+    static public func register(key: String,
+                                modifierKeys: [String],
+                                handler: @escaping (CGFloat, CGFloat) -> Void,
+                                priority: ActionDispatchPriority = .DEFAULT) {
+        let atomicHandler = directionPadHandlers[priority.rawValue].first(where: { storedHandler in
+            let handlerValue = storedHandler.load(ordering: .relaxed)
+            return handlerValue.key == key && handlerValue.modifierKeys == modifierKeys
         }) ??
         directionPadHandlers[priority.rawValue].first(where: { handler in
             handler.load(ordering: .relaxed).key.isEmpty
@@ -119,13 +146,16 @@ public class ActionDispatcher {
 //            Toast.showHint(title: "register",
 //               text: ["key: \(key), atomicHandler: \(String(describing: atomicHandler))"])
 //        }
-        atomicHandler?.store(AtomicHandler(key, handler), ordering: .releasing)
+        atomicHandler?.store(AtomicHandler(key, modifierKeys, handler), ordering: .releasing)
     }
 
-    static public func unregister(key: String) {
+    static public func unregister(key: String,
+                                  modifierKeys: [String] = [],
+                                  priority: ActionDispatchPriority = .DRAGGABLE) {
         // Only draggable can be unregistered
-        let atomicHandler = directionPadHandlers[ActionDispatchPriority.DRAGGABLE.rawValue].first(where: { handler in
-            handler.load(ordering: .relaxed).key == key
+        let atomicHandler = directionPadHandlers[priority.rawValue].first(where: { handler in
+            let handlerValue = handler.load(ordering: .relaxed)
+            return handlerValue.key == key && handlerValue.modifierKeys == modifierKeys
         })
 //        DispatchQueue.main.async {
 //            if screen.keyWindow == nil {
@@ -172,57 +202,100 @@ public class ActionDispatcher {
     }
 
     static public func getDispatchPriority(key: String) -> ActionDispatchPriority? {
-        if let priority = directionPadHandlers.firstIndex(where: { handlers in
-            handlers.contains(where: { handler in
-                handler.load(ordering: .acquiring).key == key
-            })
-        }) {
-//            Toast.showHint(title: "\(key) priority", text: ["\(priority)"])
-            return ActionDispatchPriority(rawValue: priority)
+        for priority in 0..<priorityCount {
+            let handlers = directionPadHandlers[priority]
+                .map { $0.load(ordering: .acquiring) }
+                .filter { $0.key == key }
+            guard !handlers.isEmpty else {
+                continue
+            }
+
+            let modifiedHandlers = handlers.filter { handler in
+                !handler.modifierKeys.isEmpty && isPressed(anyOf: handler.modifierKeys)
+            }
+            if !modifiedHandlers.isEmpty || handlers.contains(where: { $0.modifierKeys.isEmpty }) {
+                return ActionDispatchPriority(rawValue: priority)
+            }
         }
 
-        if buttonHandlers[key] != nil {
+        if let handlers = buttonHandlers[key],
+           handlers.contains(where: { handler in
+               handler.modifierKeys.isEmpty || isPressed(anyOf: handler.modifierKeys)
+           }) {
             return .DEFAULT
         }
         return nil
     }
 
     static public func dispatch(key: String, pressed: Bool) -> Bool {
+        if pressed {
+            pressedKeys.insert(key)
+        } else {
+            pressedKeys.remove(key)
+        }
         guard let handlers = buttonHandlers[key] else {
             return false
         }
-        var mapped = false
-        for handler in handlers {
+        let modifiedHandlers = handlers.filter { handler in
+            !handler.modifierKeys.isEmpty && isPressed(anyOf: handler.modifierKeys)
+        }
+        let selectedHandlers = modifiedHandlers.isEmpty ?
+            handlers.filter { $0.modifierKeys.isEmpty } :
+            modifiedHandlers
+        for handler in selectedHandlers {
             PlayInput.touchQueue.async(qos: .userInteractive, execute: {
-                handler(pressed)
+                handler.handle(pressed)
             })
-            mapped = true
         }
         // return value matters. A false value makes a beep sound
-        return mapped
+        return !selectedHandlers.isEmpty
+    }
+
+    static public func isPressed(anyOf keys: [String]) -> Bool {
+        keys.contains { pressedKeys.contains($0) }
     }
 
     static public func dispatch(key: String, valueX: CGFloat, valueY: CGFloat) -> Bool {
         for priority in 0..<priorityCount {
-            if let handler = directionPadHandlers[priority].first(where: { handler in
-                handler.load(ordering: .acquiring).key == key
-            }) {
-                PlayInput.touchQueue.async(qos: .userInteractive, execute: {
-                    handler.load(ordering: .relaxed).handle(valueX, valueY)
-                })
-                return true
+            let handlers = directionPadHandlers[priority]
+                .map { $0.load(ordering: .acquiring) }
+                .filter { $0.key == key }
+            guard !handlers.isEmpty else {
+                continue
             }
+            let modifiedHandlers = handlers.filter { handler in
+                !handler.modifierKeys.isEmpty && isPressed(anyOf: handler.modifierKeys)
+            }
+            let selectedHandlers = modifiedHandlers.isEmpty
+                ? handlers.filter { $0.modifierKeys.isEmpty }
+                : modifiedHandlers
+            guard !selectedHandlers.isEmpty else {
+                continue
+            }
+            for handler in selectedHandlers {
+                PlayInput.touchQueue.async(qos: .userInteractive, execute: {
+                    handler.handle(valueX, valueY)
+                })
+            }
+            return true
         }
         return false
     }
 }
 
+private struct ButtonPressHandler {
+    let modifierKeys: [String]
+    let handle: (Bool) -> Void
+}
+
 private final class AtomicHandler: AtomicReference {
-    static fileprivate let EMPTY = AtomicHandler("", {_, _ in })
+    static fileprivate let EMPTY = AtomicHandler("", [], {_, _ in })
     let key: String
+    let modifierKeys: [String]
     let handle: (CGFloat, CGFloat) -> Void
-    init(_ key: String, _ handle: @escaping (CGFloat, CGFloat) -> Void) {
+    init(_ key: String, _ modifierKeys: [String], _ handle: @escaping (CGFloat, CGFloat) -> Void) {
         self.key = key
+        self.modifierKeys = modifierKeys
         self.handle = handle
     }
 }
