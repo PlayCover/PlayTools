@@ -325,7 +325,9 @@ DYLD_INTERPOSE(pt_usleep, usleep)
 
 @implementation PlayLoader
 
-static void __attribute__((constructor)) initialize(void) {
+static void pt_bootstrap_playcover(void) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
     [PlayCover launch];
     
     if (ue_status == 0) {
@@ -347,6 +349,15 @@ static void __attribute__((constructor)) initialize(void) {
             [thread_sleep_lock unlock];
         }];
     }
+    });
+}
+
+static void __attribute__((constructor)) initialize(void) {
+    pt_bootstrap_playcover();
+}
+
++ (void)load {
+    pt_bootstrap_playcover();
 }
 
 @end
