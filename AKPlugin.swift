@@ -21,6 +21,7 @@ private struct AKAppSettingsData: Codable {
 class AKPlugin: NSObject, Plugin {
     required override init() {
         super.init()
+        Self.hookTermination()
         if let window = NSApplication.shared.windows.first {
             window.styleMask.insert([.resizable])
             window.collectionBehavior = [.fullScreenPrimary, .managed, .participatesInCycle]
@@ -285,6 +286,25 @@ class AKPlugin: NSObject, Plugin {
 
     func setMenuBarVisible(_ visible: Bool) {
         NSMenu.setMenuBarVisible(visible)
+    }
+
+    // All quit paths (Cmd+Q, menu, Dock, the close-button handler in
+    // PlayTools) funnel through NSApplication.terminate. Announce the
+    // termination so the background keep-alive in PlayTools can stand down
+    // and let the shutdown lifecycle reach the app again. Posting the
+    // notification is a no-op when nobody listens.
+    private static func hookTermination() {
+        let selector = #selector(NSApplication.terminate(_:))
+        guard let method = class_getInstanceMethod(NSApplication.self, selector) else { return }
+        typealias TerminateFn = @convention(c) (NSApplication, Selector, AnyObject?) -> Void
+        let original = unsafeBitCast(method_getImplementation(method), to: TerminateFn.self)
+        let block: @convention(block) (NSApplication, AnyObject?) -> Void = { app, sender in
+            NotificationCenter.default.post(
+                name: Notification.Name("io.playcover.PlayTools.applicationWillTerminate"),
+                object: nil)
+            original(app, selector, sender)
+        }
+        method_setImplementation(method, imp_implementationWithBlock(block))
     }
 
     /// Convenience instance property that exposes the cached static preference.
