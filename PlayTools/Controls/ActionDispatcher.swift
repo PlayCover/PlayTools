@@ -22,6 +22,7 @@ public class ActionDispatcher {
     static private var actions = [Action]()
     static private var buttonHandlers: [String: [ButtonPressHandler]] = [:]
     static private var pressedKeys = Set<String>()
+    static private let pressedKeysLock = NSLock()
 
     static private let priorityCount = 3
     // You can't put more than 8 cameras or 8 joysticks in a keymap right?
@@ -36,7 +37,9 @@ public class ActionDispatcher {
         invalidateActions()
         actions = []
         buttonHandlers.removeAll(keepingCapacity: true)
+        pressedKeysLock.lock()
         pressedKeys.removeAll(keepingCapacity: true)
+        pressedKeysLock.unlock()
         directionPadHandlers.forEach({ handlers in
             handlers.forEach({ handler in
                 handler.store(.EMPTY, ordering: .relaxed)
@@ -228,11 +231,13 @@ public class ActionDispatcher {
     }
 
     static public func dispatch(key: String, pressed: Bool) -> Bool {
+        pressedKeysLock.lock()
         if pressed {
             pressedKeys.insert(key)
         } else {
             pressedKeys.remove(key)
         }
+        pressedKeysLock.unlock()
         guard let handlers = buttonHandlers[key] else {
             return false
         }
@@ -252,7 +257,10 @@ public class ActionDispatcher {
     }
 
     static public func isPressed(anyOf keys: [String]) -> Bool {
-        keys.contains { pressedKeys.contains($0) }
+        pressedKeysLock.lock()
+        let result = keys.contains { pressedKeys.contains($0) }
+        pressedKeysLock.unlock()
+        return result
     }
 
     static public func dispatch(key: String, valueX: CGFloat, valueY: CGFloat) -> Bool {

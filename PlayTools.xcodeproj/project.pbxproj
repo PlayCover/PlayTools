@@ -33,6 +33,7 @@
 		9562D15A2AB4FBBB002C329D /* TransparentKeyboardEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1592AB4FBBB002C329D /* TransparentKeyboardEventAdapter.swift */; };
 		9562D15C2AB4FC79002C329D /* TransparentMouseEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D15B2AB4FC79002C329D /* TransparentMouseEventAdapter.swift */; };
 		9562D15E2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D15D2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift */; };
+		A10000012C00000100000001 /* VirtualCursorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000002C00000100000001 /* VirtualCursorController.swift */; };
 		9562D1602AB4FD46002C329D /* TransparentControllerEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D15F2AB4FD46002C329D /* TransparentControllerEventAdapter.swift */; };
 		9562D1622AB4FE73002C329D /* CameraControlMouseEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1612AB4FE73002C329D /* CameraControlMouseEventAdapter.swift */; };
 		9562D1642AB4FEB4002C329D /* TouchscreenMouseEventAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9562D1632AB4FEB4002C329D /* TouchscreenMouseEventAdapter.swift */; };
@@ -131,6 +132,7 @@
 		9562D1592AB4FBBB002C329D /* TransparentKeyboardEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransparentKeyboardEventAdapter.swift; sourceTree = "<group>"; };
 		9562D15B2AB4FC79002C329D /* TransparentMouseEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransparentMouseEventAdapter.swift; sourceTree = "<group>"; };
 		9562D15D2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchscreenControllerEventAdapter.swift; sourceTree = "<group>"; };
+		A10000002C00000100000001 /* VirtualCursorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualCursorController.swift; sourceTree = "<group>"; };
 		9562D15F2AB4FD46002C329D /* TransparentControllerEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransparentControllerEventAdapter.swift; sourceTree = "<group>"; };
 		9562D1612AB4FE73002C329D /* CameraControlMouseEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraControlMouseEventAdapter.swift; sourceTree = "<group>"; };
 		9562D1632AB4FEB4002C329D /* TouchscreenMouseEventAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchscreenMouseEventAdapter.swift; sourceTree = "<group>"; };
@@ -384,6 +386,7 @@
 			isa = PBXGroup;
 			children = (
 				9562D14F2AB4849C002C329D /* EventAdapter */,
+				A10000002C00000100000001 /* VirtualCursorController.swift */,
 				9562D1782AB64458002C329D /* ModeAutomaton.swift */,
 				AA719756287A480C00623C15 /* ControlMode.swift */,
 			);
@@ -773,6 +776,7 @@
 				AA7197A9287A481500623C15 /* PlayInfo.swift in Sources */,
 				AA71986A287A81A000623C15 /* PTFakeMetaTouch.m in Sources */,
 				9562D15E2AB4FCB8002C329D /* TouchscreenControllerEventAdapter.swift in Sources */,
+				A10000012C00000100000001 /* VirtualCursorController.swift in Sources */,
 				954389C62B3896E600B063BB /* ChildButton.swift in Sources */,
 				ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */,
 				AA71986C287A81A000623C15 /* NSObject+Swizzle.m in Sources */,
