@@ -179,10 +179,16 @@ class MenuController {
             // Delay to avoid error
             // Cannot set a main menu system configuration while the main menu system is building.
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                PTPreserveMetalHUDMenuItem()
                 let configuration = UIMainMenuSystem.Configuration()
                 configuration.sidebarPreference = .included
                 UIMainMenuSystem.shared.setBuildConfiguration(configuration) { builder in
+                    PTPreserveMetalHUDMenuItem()
                     self.setupMenu(with: builder)
+                    // Defer restoration until AppKit has installed the rebuilt main menu.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        PTRestoreMetalHUDMenuItem()
+                    }
                 }
             }
         } else {
