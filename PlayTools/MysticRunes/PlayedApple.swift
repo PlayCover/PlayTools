@@ -235,30 +235,41 @@ public class PlayKeychain: NSObject {
         return Unmanaged.passRetained(key)
     }
 
+    // swiftlint:disable:next function_body_length
     @objc static public func keyGeneratePair(_ parameters: NSDictionary,
                                              publicKey: UnsafeMutablePointer<Unmanaged<SecKey>?>?,
                                              privateKey: UnsafeMutablePointer<Unmanaged<SecKey>?>?) -> OSStatus {
         // Same as above but we need to disable kSecAttrIsPermanent for both the public and private key.
+        var isPermanent = parameters[kSecAttrIsPermanent as String] as? Bool ?? false
         var privateKeyAttrs = parameters[kSecPrivateKeyAttrs as String] as? [String: Any] ?? [:]
         let isPrivatePermanent = privateKeyAttrs[kSecAttrIsPermanent as String] as? Bool ?? false
         if isPrivatePermanent {
             privateKeyAttrs[kSecAttrIsPermanent as String] = false
+            isPermanent = true
         }
         var publicKeyAttrs = parameters[kSecPublicKeyAttrs as String] as? [String: Any] ?? [:]
         let isPublicPermanent = (publicKeyAttrs[kSecAttrIsPermanent as String] as? Bool) ?? false
         if isPublicPermanent {
             publicKeyAttrs[kSecAttrIsPermanent as String] = false
+            isPermanent = true
         }
         var parametersCopy = parameters as! [String: Any] // swiftlint:disable:this force_cast
+        parametersCopy.removeValue(forKey: kSecAttrIsPermanent as String)
         parametersCopy[kSecPrivateKeyAttrs as String] = privateKeyAttrs
         parametersCopy[kSecPublicKeyAttrs as String] = publicKeyAttrs
         var newPublicKey: SecKey?
         var newPrivateKey: SecKey?
-        guard SecKeyGeneratePair(parametersCopy as CFDictionary, &newPublicKey, &newPrivateKey) != 0 else {
+        guard SecKeyGeneratePair(parametersCopy as CFDictionary, &newPublicKey, &newPrivateKey) == 0 else {
             debugLogger("Failed to generate key pair.")
             return errSecMissingEntitlement
         }
-        if isPrivatePermanent {
+        if let newPublicKey = newPublicKey {
+            publicKey?.pointee = Unmanaged.passRetained(newPublicKey)
+        }
+        if let newPrivateKey = newPrivateKey {
+            privateKey?.pointee = Unmanaged.passRetained(newPrivateKey)
+        }
+        if isPermanent {
             // Add the keys to the keychain db with the original attributes
             let publicKeyRef = newPublicKey
             let privateKeyRef = newPrivateKey
