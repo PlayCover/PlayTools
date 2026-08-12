@@ -160,11 +160,39 @@ IOHIDEventRef kif_IOHIDEventWithTouches(NSArray *touches) {
     IOHIDEventSetIntegerValue(handEvent, kIOHIDEventFieldDigitizerIsDisplayIntegrated, true);
 
     for (UITouch *touch in touches) {
-        uint32_t eventMask = (touch.phase == UITouchPhaseMoved) ? kIOHIDDigitizerEventPosition : (kIOHIDDigitizerEventRange | kIOHIDDigitizerEventTouch);
-        uint32_t isTouching = (touch.phase == UITouchPhaseEnded) ? 0 : 1;
+        // Set eventMask and touch/range state based on actual touch phase.
+        // These must accurately reflect the UITouch.phase so that game-side
+        // validation (e.g. Tencent anti-automation) does not flag the IO HID
+        // event as inconsistent with the UIKit touch state.
+        uint32_t eventMask;
+        uint32_t isTouching;
+        switch (touch.phase) {
+            case UITouchPhaseMoved:
+                eventMask = kIOHIDDigitizerEventPosition;
+                isTouching = 1;
+                break;
+            case UITouchPhaseEnded:
+            case UITouchPhaseCancelled:
+                eventMask = kIOHIDDigitizerEventTouch;
+                isTouching = 0;
+                break;
+            default: // Began / Stationary
+                eventMask = kIOHIDDigitizerEventRange | kIOHIDDigitizerEventTouch;
+                isTouching = 1;
+                break;
+        }
+
         CGPoint touchLocation = [touch locationInView:touch.window];
+
+        // Each finger gets its own timestamp for more realistic HID events.
+        // Real multi-touch hardware fires independent events per finger.
+        uint64_t fingerTime = mach_absolute_time();
+        AbsoluteTime fingerTimestamp;
+        fingerTimestamp.hi = (UInt32)(fingerTime >> 32);
+        fingerTimestamp.lo = (UInt32)(fingerTime);
+
         IOHIDEventRef fingerEvent = IOHIDEventCreateDigitizerFingerEventWithQuality(kCFAllocatorDefault, // allocator
-                                                                                    timeStamp, // timestamp
+                                                                                    fingerTimestamp, // finger timestamp
                                                                                     (UInt32)[touches indexOfObject:touch] + 1, //index
                                                                                     2, // identity
                                                                                     eventMask, // eventMask
