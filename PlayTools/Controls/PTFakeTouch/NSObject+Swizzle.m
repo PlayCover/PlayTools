@@ -13,6 +13,7 @@
 #import "PTFakeMetaTouch.h"
 #import <VideoSubscriberAccount/VideoSubscriberAccount.h>
 #import <AVFoundation/AVFoundation.h>
+#import <AVFAudio/AVAudioApplication.h>
 #import <CoreMotion/CoreMotion.h>
 #import <GameController/GameController.h>
 
@@ -176,11 +177,37 @@ __attribute__((visibility("hidden")))
 }
 
 - (void)hook_requestRecordPermission:(void (^)(BOOL))response {
-    BOOL granted = [[AVAudioSession sharedInstance] recordPermission] == AVAudioSessionRecordPermissionGranted;
-    if (granted) {
-        response(granted);
+    if (@available(iOS 17.0, macOS 14.0, *)) {
+        AVAudioApplicationRecordPermission permission = [AVAudioApplication sharedInstance].recordPermission;
+        if (permission == AVAudioApplicationRecordPermissionGranted) {
+            response(YES);
+        } else if (permission == AVAudioApplicationRecordPermissionDenied) {
+            response(NO);
+        } else {
+            [AVAudioApplication requestRecordPermissionWithCompletionHandler:response];
+        }
     } else {
-        [self hook_requestRecordPermission:response];
+        BOOL granted = [[AVAudioSession sharedInstance] recordPermission] == AVAudioSessionRecordPermissionGranted;
+        if (granted) {
+            response(YES);
+        } else {
+            [self hook_requestRecordPermission:response];
+        }
+    }
+}
+
++ (void)hook_requestRecordPermissionWithCompletionHandler:(void (^)(BOOL))response {
+    if (@available(iOS 17.0, macOS 14.0, *)) {
+        AVAudioApplicationRecordPermission permission = [AVAudioApplication sharedInstance].recordPermission;
+        if (permission == AVAudioApplicationRecordPermissionGranted) {
+            response(YES);
+        } else if (permission == AVAudioApplicationRecordPermissionDenied) {
+            response(NO);
+        } else {
+            [self hook_requestRecordPermissionWithCompletionHandler:response];
+        }
+    } else {
+        response(NO);
     }
 }
 
@@ -351,7 +378,19 @@ bool menuWasCreated = false;
     }
 
     if ([[PlaySettings shared] checkMicPermissionSync]) {
-        [objc_getClass("AVAudioSession") swizzleInstanceMethod:@selector(requestRecordPermission:) withMethod:@selector(hook_requestRecordPermission:)];
+        Class audioSession = objc_getClass("AVAudioSession");
+        SEL legacyRequestSelector = @selector(requestRecordPermission:);
+        if (audioSession && class_getInstanceMethod(audioSession, legacyRequestSelector)) {
+            [audioSession swizzleInstanceMethod:legacyRequestSelector
+                                      withMethod:@selector(hook_requestRecordPermission:)];
+        }
+
+        Class audioApplication = objc_getClass("AVAudioApplication");
+        SEL applicationRequestSelector = @selector(requestRecordPermissionWithCompletionHandler:);
+        if (audioApplication && class_getClassMethod(audioApplication, applicationRequestSelector)) {
+            [audioApplication swizzleClassMethod:applicationRequestSelector
+                                       withMethod:@selector(hook_requestRecordPermissionWithCompletionHandler:)];
+        }
     }
 
     if ([[PlaySettings shared] limitMotionUpdateFrequency]) {

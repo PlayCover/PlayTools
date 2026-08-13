@@ -4,6 +4,12 @@ import UIKit
 let settings = PlaySettings.shared
 
 func playCoverUserHomeDirectoryPath() -> String {
+    let bundlePath = Bundle.main.bundlePath
+    let containerMarker = "/Library/Containers/io.playcover.PlayCover/"
+    if let markerRange = bundlePath.range(of: containerMarker) {
+        return String(bundlePath[..<markerRange.lowerBound])
+    }
+
     let userName = NSUserName()
     if let homeDirectory = NSHomeDirectoryForUser(userName) {
         return homeDirectory
