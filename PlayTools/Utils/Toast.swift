@@ -66,6 +66,13 @@ class Toast {
 
     public static func showHint(title: String, text: [String] = [], timeout: Double = -3,
                                 notification: NSNotification.Name? = nil) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async {
+                showHint(title: title, text: text, timeout: timeout, notification: notification)
+            }
+            return
+        }
+
         let parent = screen.keyWindow!
 
         // Width and height here serve as an upper limit.

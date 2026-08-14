@@ -14,11 +14,32 @@ public class TouchscreenControllerEventAdapter: ControllerEventAdapter {
 
     private var directionPadXValue: Float = 0,
                 directionPadYValue: Float = 0
-    static private var thumbstickCursorControl: [String: (CGFloat, CGFloat) -> Void] = [:]
+    static private var thumbstickCursorControl: [String: ThumbstickCursorControl] = [:]
 
     public func handleValueChanged(_ profile: GCExtendedGamepad, _ element: GCControllerElement) {
         let name: String = element.aliases.first!
         if let buttonElement = element as? GCControllerButtonInput {
+            if element === profile.rightThumbstickButton {
+                if buttonElement.isPressed {
+                    if !VirtualCursorController.shared.isActive {
+                        TouchscreenControllerEventAdapter.stopThumbstickMotion(named: "Right Thumbstick")
+                    }
+                    VirtualCursorController.shared.toggle()
+                }
+                return
+            }
+            if VirtualCursorController.shared.isActive {
+                if element === profile.leftTrigger {
+                    VirtualCursorController.shared.handleTrigger(pressed: buttonElement.isPressed)
+                    return
+                }
+                if name == "Direction Pad Up" || name == "Direction Pad Down" ||
+                    name == "Direction Pad Left" || name == "Direction Pad Right" {
+                    VirtualCursorController.shared.handleDirectionalDrag(key: name,
+                                                                          pressed: buttonElement.isPressed)
+                    return
+                }
+            }
             _ = ActionDispatcher.dispatch(key: name, pressed: buttonElement.isPressed)
         } else if let dpadElement = element as? GCControllerDirectionPad {
             handleDirectionPad(profile, dpadElement)
@@ -50,16 +71,39 @@ public class TouchscreenControllerEventAdapter: ControllerEventAdapter {
         let deltaX = xAxis.value, deltaY = yAxis.value
         let cgDx = CGFloat(deltaX)
         let cgDy = CGFloat(deltaY)
+        if name == "Right Thumbstick", VirtualCursorController.shared.isActive {
+            VirtualCursorController.shared.update(velocityX: cgDx, velocityY: cgDy)
+            return
+        }
         let dispatchType = ActionDispatcher.getDispatchPriority(key: name)
         if dispatchType == nil {
             return
         } else if dispatchType == .DEFAULT {
-            _ = ActionDispatcher.dispatch(key: name, valueX: cgDx, valueY: cgDy)
+            if name == "Right Thumbstick" {
+                _ = ActionDispatcher.dispatch(key: name,
+                                              valueX: acceleratedViewAxis(cgDx),
+                                              valueY: acceleratedViewAxis(cgDy))
+            } else {
+                _ = ActionDispatcher.dispatch(key: name, valueX: cgDx, valueY: cgDy)
+            }
         } else {
             if TouchscreenControllerEventAdapter.thumbstickCursorControl[name] == nil {
-                TouchscreenControllerEventAdapter.thumbstickCursorControl[name] = ThumbstickCursorControl(name).update
+                TouchscreenControllerEventAdapter.thumbstickCursorControl[name] = ThumbstickCursorControl(name)
             }
-            TouchscreenControllerEventAdapter.thumbstickCursorControl[name]!(cgDx * 6, cgDy * 6)
+            TouchscreenControllerEventAdapter.thumbstickCursorControl[name]!.update(velocityX: cgDx, velocityY: cgDy)
+        }
+    }
+
+    private func acceleratedViewAxis(_ value: CGFloat) -> CGFloat {
+        let magnitude = pow(abs(value), 0.75) * 1.35
+        return value < 0 ? -magnitude : magnitude
+    }
+
+    private static func stopThumbstickMotion(named key: String) {
+        if let control = thumbstickCursorControl[key] {
+            control.stop()
+        } else {
+            _ = ActionDispatcher.dispatch(key: key, valueX: 0, valueY: 0)
         }
     }
 
@@ -87,13 +131,24 @@ class ThumbstickCursorControl {
         }
     }
 
+    public func stop() {
+        thumbstickVelocity = .zero
+        _ = ActionDispatcher.dispatch(key: key, valueX: 0, valueY: 0)
+    }
+
     private func thumbstickPoll() {
         if !ThumbstickCursorControl.isVectorSignificant(self.thumbstickVelocity) {
+            _ = ActionDispatcher.dispatch(key: key, valueX: 0, valueY: 0)
             self.thumbstickPolling = false
             return
         }
-        _ = ActionDispatcher.dispatch(key: key, valueX: thumbstickVelocity.dx, valueY: thumbstickVelocity.dy)
+        let cameraMapping = ActionDispatcher.getDispatchPriority(key: key) == .CAMERA
+        let multiplier: CGFloat = cameraMapping ? 3.8 : 6
+        _ = ActionDispatcher.dispatch(key: key,
+                                      valueX: thumbstickVelocity.dx * multiplier,
+                                      valueY: thumbstickVelocity.dy * multiplier)
         PlayInput.touchQueue.asyncAfter(
-            deadline: DispatchTime.now() + 0.017, execute: self.thumbstickPoll)
+            deadline: DispatchTime.now() + (cameraMapping ? 1.0 / 165.0 : 0.017),
+            execute: self.thumbstickPoll)
     }
 }

@@ -13,6 +13,11 @@ protocol ControlElement: AnyObject {
     func focus(_ focus: Bool)
     func setKey(code: Int)
     func setKey(name: String)
+    func setModifierKey(code: Int)
+    func setModifierKey(name: String)
+    func clearModifierKey()
+    func cycleDirection()
+    func toggleHoldTrigger()
     func resize(down: Bool)
     func remove()
 }
@@ -71,4 +76,14 @@ class ControlModel<ElementType: BaseElement>: ControlElement {
     func setKey(name: String) {
         self.setKey(code: KeyCodeNames.defaultCode, name: name)
     }
+
+    func setModifierKey(code: Int) {}
+
+    func setModifierKey(name: String) {}
+
+    func clearModifierKey() {}
+
+    func cycleDirection() {}
+
+    func toggleHoldTrigger() {}
 }
