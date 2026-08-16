@@ -41,6 +41,9 @@ class DiscordIPC {
             if custom.details.count == 1 { custom.details += " " }
             activity.details = custom.details
         }
+        activity.detailsUrl = "https://github.com/PlayCover/PlayCover/releases"
+
+        activity.statusDisplayType = .details
 
         let poweredStr = "Powered by PlayCover"
         if custom.state.isEmpty {
@@ -51,6 +54,7 @@ class DiscordIPC {
             activity.assets.smallText = poweredStr
             activity.assets.largeText = poweredStr
         }
+        activity.stateUrl = "https://github.com/PlayCover/PlayCover/releases"
 
         let logo = "https://raw.githubusercontent.com/PlayCover/PlaySite/master/src/assets/square-logo.png"
         if custom.image.isEmpty {
@@ -69,11 +73,6 @@ class DiscordIPC {
         }
 
         activity.timestamps.start = Date()
-
-        activity.buttons = [
-            RichPresence.Button(label: "Download PlayCover",
-                                url: "https://github.com/PlayCover/PlayCover/releases")
-        ]
 
         return activity
     }
