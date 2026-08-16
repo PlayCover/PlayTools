@@ -80,6 +80,10 @@ func playCoverContainerBaseURL() -> URL {
             return "A2849"
         case "iPhone17,2":
             return "A3084"
+        case "iPad17,1":
+            return "J817AP"
+        case "iPad17,3":
+            return "J820AP"
         default:
             return "J320xAP"
         }
