@@ -157,7 +157,7 @@ __attribute__((visibility("hidden")))
     return NO;
 }
 
-- (void) hook_setCurrentSubscription:(VSSubscription *)currentSubscription {
+- (void) hook_setCurrentSubscription:(id)currentSubscription {
     // do nothing
 }
 
