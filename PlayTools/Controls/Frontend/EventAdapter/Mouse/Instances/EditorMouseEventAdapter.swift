@@ -36,8 +36,21 @@ public class EditorMouseEventAdapter: MouseEventAdapter {
         return true
     }
 
+    private static var lastScrollTime: TimeInterval = 0
+
     public func handleScrollWheel(deltaX: CGFloat, deltaY: CGFloat) -> Bool {
-        false
+        let currentTime = ProcessInfo.processInfo.systemUptime
+        // 阈值判断：deltaY 绝对值需大于 0.2 以防极小干扰，且 0.3s 内不重复触发
+        if abs(deltaY) > 0.2 && (currentTime - EditorMouseEventAdapter.lastScrollTime) > 0.3 {
+            EditorMouseEventAdapter.lastScrollTime = currentTime
+            let keyCode = deltaY > 0 ? -100 : -101
+            DispatchQueue.main.async(qos: .userInteractive, execute: {
+                EditorController.shared.setKey(keyCode)
+                Toucher.writeLog(logMessage: "mouse wheel editor set: \(keyCode)")
+            })
+            return true
+        }
+        return false
     }
 
     public func handleMove(deltaX: CGFloat, deltaY: CGFloat) -> Bool {
