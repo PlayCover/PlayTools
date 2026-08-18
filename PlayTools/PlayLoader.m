@@ -6,6 +6,7 @@
 #include <Foundation/Foundation.h>
 #include <errno.h>
 #include <limits.h>
+#include <pwd.h>
 #include <stdatomic.h>
 #include <sys/sysctl.h>
 
@@ -219,48 +220,33 @@ DYLD_INTERPOSE(pt_SecKeyGeneratePair, SecKeyGeneratePair)
 static uint8_t ue_status = 0;
 
 static void pt_copyCurrentUserHomeDirectory(char *buffer, size_t bufferSize) {
-    if (bufferSize == 0) {
+    if (buffer == NULL || bufferSize == 0) {
         return;
     }
-
     buffer[0] = '\0';
 
-    char executablePath[PATH_MAX];
-    uint32_t executablePathSize = sizeof(executablePath);
-    if (_NSGetExecutablePath(executablePath, &executablePathSize) == 0) {
-        static char const containerMarker[] = "/Library/Containers/io.playcover.PlayCover/";
-        char *marker = strstr(executablePath, containerMarker);
-        if (marker != NULL) {
-            size_t homePathLength = (size_t)(marker - executablePath);
-            if (homePathLength > 0 && homePathLength < bufferSize) {
-                memcpy(buffer, executablePath, homePathLength);
-                buffer[homePathLength] = '\0';
-                return;
+    long configuredBufferSize = sysconf(_SC_GETPW_R_SIZE_MAX);
+    size_t accountBufferSize = configuredBufferSize > 0 ? (size_t)configuredBufferSize : 1024;
+    char *accountBuffer = malloc(accountBufferSize);
+    while (accountBuffer != NULL) {
+        struct passwd password;
+        struct passwd *result = NULL;
+        int status = getpwuid_r(getuid(), &password, accountBuffer, accountBufferSize, &result);
+        if (status != ERANGE) {
+            if (status == 0 && result != NULL && password.pw_dir != NULL) {
+                snprintf(buffer, bufferSize, "%s", password.pw_dir);
             }
-        }
-    }
-
-    char const *homeDirectory = getenv("HOME");
-    if (homeDirectory != NULL && homeDirectory[0] != '\0') {
-        static char const containerSuffix[] = "/Library/Containers/io.playcover.PlayCover";
-        char const *suffix = strstr(homeDirectory, containerSuffix);
-        if (suffix != NULL) {
-            size_t homePathLength = (size_t)(suffix - homeDirectory);
-            if (homePathLength > 0 && homePathLength < bufferSize) {
-                memcpy(buffer, homeDirectory, homePathLength);
-                buffer[homePathLength] = '\0';
-                return;
-            }
+            break;
         }
 
-        snprintf(buffer, bufferSize, "%s", homeDirectory);
-        return;
+        accountBufferSize *= 2;
+        char *resizedBuffer = realloc(accountBuffer, accountBufferSize);
+        if (resizedBuffer == NULL) {
+            break;
+        }
+        accountBuffer = resizedBuffer;
     }
-
-    char userName[256];
-    if (getlogin_r(userName, sizeof(userName)) == 0) {
-        snprintf(buffer, bufferSize, "/Users/%s", userName);
-    }
+    free(accountBuffer);
 }
 
 static char const* ue_fix_filename(char const* filename) {
