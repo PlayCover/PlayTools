@@ -331,14 +331,11 @@ static int pt_unlink(char const* path) {
 static NSMutableDictionary *thread_sleep_counters = nil;
 static NSMutableDictionary *last_sleep_attempts = nil;
 static dispatch_once_t thread_sleep_once;
-static NSLock *thread_sleep_lock = nil;
 
 static int pt_usleep(useconds_t time) {
     dispatch_once(&thread_sleep_once, ^{
         thread_sleep_counters = [NSMutableDictionary dictionary];
         last_sleep_attempts = [NSMutableDictionary dictionary];
-        thread_sleep_lock = [[NSLock alloc] init];
-        [thread_sleep_lock lock];
     });
     
     if ([[PlaySettings shared] blockSleepSpamming]) {
@@ -367,14 +364,10 @@ static int pt_usleep(useconds_t time) {
         }
 
         if (exceeded_sleep_limit) {
-            // Stop this thread from spamming usleep calls
-            NSLog(@"[PC] Thread %i exceeded usleep limit. Seem sus, stopping this "
-                  @"thread FOREVER",
-                  thread_id);
-            
-            [thread_sleep_lock lock];
-            [thread_sleep_lock unlock];
-            
+            // Stop this thread from spamming usleep calls by skipping the sleep.
+            // Do NOT block/hang the thread: hanging a render/GPU thread here is what
+            // caused os_unfair_lock corruption and crashes in Unity games (e.g. Endfield).
+            NSLog(@"[PC] Thread %i exceeded usleep limit. Skipping its sleeps.", thread_id);
             return 0;
         }
     }
@@ -403,16 +396,6 @@ static void __attribute__((constructor)) initialize(void) {
     
     if (ue_status == 2) {
         [PlayKeychain debugLogger: [NSString stringWithFormat:@"UnrealEngine Hooked"]];
-    }
-
-    if ([[PlaySettings shared] blockSleepSpamming]) {
-        // Add an observer so we can unlock threads on app termination
-        [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillTerminateNotification
-                                                          object:nil
-                                                           queue:[NSOperationQueue mainQueue]
-                                                      usingBlock:^(NSNotification * _Nonnull note) {
-            [thread_sleep_lock unlock];
-        }];
     }
 }
 
