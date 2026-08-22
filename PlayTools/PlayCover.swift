@@ -5,6 +5,8 @@
 
 import Foundation
 import UIKit
+import AVFoundation
+import os
 
 public class PlayCover: NSObject {
 
@@ -17,6 +19,11 @@ public class PlayCover: NSObject {
         PlayScreen.shared.initialize()
         PlayInput.shared.initialize()
         DiscordIPC.shared.initialize()
+
+        // runningboardd only freezes invisible scenes since macOS 15 (= iOS 18).
+        if #available(iOS 18.0, *) {
+            BackgroundKeepAlive.shared.start()
+        }
 
         if PlaySettings.shared.rootWorkDir {
             // Change the working directory to / just like iOS
@@ -55,6 +62,11 @@ public class PlayCover: NSObject {
             queue: OperationQueue.main
         ) { notif in
             if PlayScreen.shared.nsWindow?.isEqual(notif.object) ?? false {
+                // The steps below replay exactly the lifecycle events the
+                // background keep-alive suppresses; let them through again
+                // so the app can save its state before terminating.
+                BackgroundKeepAlive.shared.prepareForTermination()
+
                 // Step 1: Resign active
                 for scene in UIApplication.shared.connectedScenes {
                     scene.delegate?.sceneWillResignActive?(scene)
