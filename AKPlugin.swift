@@ -23,27 +23,10 @@ class AKPlugin: NSObject, Plugin {
         super.init()
         Self.hookTermination()
         if let window = NSApplication.shared.windows.first {
-            window.styleMask.insert([.resizable])
             window.collectionBehavior = [.fullScreenPrimary, .managed, .participatesInCycle]
             window.isMovable = true
             window.isMovableByWindowBackground = true
-
-            if self.hideTitleBarSetting == true {
-                window.styleMask.insert([.fullSizeContentView])
-                window.titlebarAppearsTransparent = true
-                window.titleVisibility = .hidden
-                window.toolbar = nil
-                window.title = ""
-            }
-
-            if self.floatingWindowSetting == true {
-                window.level = .floating
-            }
-
-            if let aspectRatio = self.aspectRatioSetting {
-                window.contentAspectRatio = aspectRatio
-            }
-
+            applyWindowSettings(to: window)
             NSWindow.allowsAutomaticWindowTabbing = true
         }
 
@@ -53,23 +36,7 @@ class AKPlugin: NSObject, Plugin {
             object: nil,
             queue: .main) { notif in
                 guard let win = notif.object as? NSWindow else { return }
-                win.styleMask.insert([.resizable])
-
-                if self.hideTitleBarSetting == true {
-                    win.styleMask.insert([.fullSizeContentView])
-                    win.titlebarAppearsTransparent = true
-                    win.titleVisibility = .hidden
-                    win.toolbar = nil
-                    win.title = ""
-                }
-
-                if self.floatingWindowSetting == true {
-                    win.level = .floating
-                }
-
-                if let aspectRatio = self.aspectRatioSetting {
-                    win.contentAspectRatio = aspectRatio
-                }
+                self.applyWindowSettings(to: win)
         }
     }
 
@@ -99,6 +66,8 @@ class AKPlugin: NSObject, Plugin {
 
     var cmdPressed: Bool = false
     var cursorHideLevel = 0
+    fileprivate var modifierFlag: UInt = 0
+
     func hideCursor() {
         NSCursor.hide()
         cursorHideLevel += 1
@@ -129,8 +98,61 @@ class AKPlugin: NSObject, Plugin {
         NSApplication.shared.terminate(self)
     }
 
-    private var modifierFlag: UInt = 0
+    func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: value)
+    }
 
+    func setMenuBarVisible(_ visible: Bool) {
+        NSMenu.setMenuBarVisible(visible)
+    }
+
+    // All quit paths (Cmd+Q, menu, Dock, the close-button handler in
+    // PlayTools) funnel through NSApplication.terminate. Announce the
+    // termination so the background keep-alive in PlayTools can stand down
+    // and let the shutdown lifecycle reach the app again. Posting the
+    // notification is a no-op when nobody listens.
+    private static func hookTermination() {
+        let selector = #selector(NSApplication.terminate(_:))
+        guard let method = class_getInstanceMethod(NSApplication.self, selector) else { return }
+        typealias TerminateFn = @convention(c) (NSApplication, Selector, AnyObject?) -> Void
+        let original = unsafeBitCast(method_getImplementation(method), to: TerminateFn.self)
+        let block: @convention(block) (NSApplication, AnyObject?) -> Void = { app, sender in
+            NotificationCenter.default.post(
+                name: Notification.Name("io.playcover.PlayTools.applicationWillTerminate"),
+                object: nil)
+            original(app, selector, sender)
+        }
+        method_setImplementation(method, imp_implementationWithBlock(block))
+    }
+}
+
+// MARK: - Window appearance
+
+extension AKPlugin {
+    fileprivate func applyWindowSettings(to window: NSWindow) {
+        window.styleMask.insert([.resizable])
+
+        if hideTitleBarSetting {
+            window.styleMask.insert([.fullSizeContentView])
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.toolbar = nil
+            window.title = ""
+        }
+
+        if floatingWindowSetting {
+            window.level = .floating
+        }
+
+        if let aspectRatio = aspectRatioSetting {
+            window.contentAspectRatio = aspectRatio
+        }
+    }
+}
+
+// MARK: - Input events
+
+extension AKPlugin {
     // swiftlint:disable:next function_body_length
     func setupKeyboard(keyboard: @escaping (UInt16, Bool, Bool, Bool) -> Bool,
                        swapMode: @escaping () -> Bool) {
@@ -210,7 +232,7 @@ class AKPlugin: NSObject, Plugin {
 
         // Helper to detect whether the event is inside any of the window "traffic-light" buttons
         func isInTrafficLightArea(_ event: NSEvent) -> Bool {
-            if self.hideTitleBarSetting == false {
+            if !self.hideTitleBarSetting {
                 return false
             }
             guard let win = event.window else { return false }
@@ -279,38 +301,14 @@ class AKPlugin: NSObject, Plugin {
             return event
         })
     }
+}
 
-    func urlForApplicationWithBundleIdentifier(_ value: String) -> URL? {
-        NSWorkspace.shared.urlForApplication(withBundleIdentifier: value)
-    }
+// MARK: - App settings
 
-    func setMenuBarVisible(_ visible: Bool) {
-        NSMenu.setMenuBarVisible(visible)
-    }
-
-    // All quit paths (Cmd+Q, menu, Dock, the close-button handler in
-    // PlayTools) funnel through NSApplication.terminate. Announce the
-    // termination so the background keep-alive in PlayTools can stand down
-    // and let the shutdown lifecycle reach the app again. Posting the
-    // notification is a no-op when nobody listens.
-    private static func hookTermination() {
-        let selector = #selector(NSApplication.terminate(_:))
-        guard let method = class_getInstanceMethod(NSApplication.self, selector) else { return }
-        typealias TerminateFn = @convention(c) (NSApplication, Selector, AnyObject?) -> Void
-        let original = unsafeBitCast(method_getImplementation(method), to: TerminateFn.self)
-        let block: @convention(block) (NSApplication, AnyObject?) -> Void = { app, sender in
-            NotificationCenter.default.post(
-                name: Notification.Name("io.playcover.PlayTools.applicationWillTerminate"),
-                object: nil)
-            original(app, selector, sender)
-        }
-        method_setImplementation(method, imp_implementationWithBlock(block))
-    }
-
-    /// Convenience instance property that exposes the cached static preference.
-    private var hideTitleBarSetting: Bool { Self.akAppSettingsData?.hideTitleBar ?? false }
-    private var floatingWindowSetting: Bool { Self.akAppSettingsData?.floatingWindow ?? false }
-    private var aspectRatioSetting: NSSize? {
+extension AKPlugin {
+    fileprivate var hideTitleBarSetting: Bool { Self.akAppSettingsData?.hideTitleBar ?? false }
+    fileprivate var floatingWindowSetting: Bool { Self.akAppSettingsData?.floatingWindow ?? false }
+    fileprivate var aspectRatioSetting: NSSize? {
         guard Self.akAppSettingsData?.resolution == 6 else {
             return nil
         }
