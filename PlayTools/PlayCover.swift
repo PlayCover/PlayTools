@@ -20,9 +20,8 @@ public class PlayCover: NSObject {
         PlayInput.shared.initialize()
         DiscordIPC.shared.initialize()
 
-        // runningboardd only freezes invisible scenes since macOS 15.
-        if ProcessInfo.processInfo.isOperatingSystemAtLeast(
-            OperatingSystemVersion(majorVersion: 15, minorVersion: 0, patchVersion: 0)) {
+        // runningboardd only freezes invisible scenes since macOS 15 (= iOS 18).
+        if #available(iOS 18.0, *) {
             BackgroundKeepAlive.shared.start()
         }
 
