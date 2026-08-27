@@ -12,6 +12,7 @@
 		6E76639C28D0FAE700DE4AF9 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76639A28D0FAE700DE4AF9 /* Plugin.swift */; };
 		6E7663A128D0FB5300DE4AF9 /* AKPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7663A028D0FB5300DE4AF9 /* AKPlugin.swift */; };
 		6E7663A528D0FEBE00DE4AF9 /* AKPluginLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7663A428D0FEBE00DE4AF9 /* AKPluginLoader.swift */; };
+		955A3F48AFD07B6583BFEFC3 /* UserPluginLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F0487A0C752EE4930AF0AB /* UserPluginLoader.swift */; };
 		6E84A14528D0F94E00BF7495 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA818CBA287ABFD5000BEE9D /* UIKit.framework */; };
 		6E84A15028D0F97500BF7495 /* AKInterface.bundle in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		951D8275299D097C00D35B20 /* Playtools.strings in Resources */ = {isa = PBXBuildFile; fileRef = 951D8277299D097C00D35B20 /* Playtools.strings */; };
@@ -109,6 +110,7 @@
 		6E76639A28D0FAE700DE4AF9 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
 		6E7663A028D0FB5300DE4AF9 /* AKPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AKPlugin.swift; sourceTree = "<group>"; };
 		6E7663A428D0FEBE00DE4AF9 /* AKPluginLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AKPluginLoader.swift; sourceTree = "<group>"; };
+		65F0487A0C752EE4930AF0AB /* UserPluginLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPluginLoader.swift; sourceTree = "<group>"; };
 		6E84A14C28D0F96D00BF7495 /* AKInterface.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AKInterface.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		951D8276299D097C00D35B20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Playtools.strings; sourceTree = "<group>"; };
 		951D8278299D098000D35B20 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Playtools.strings"; sourceTree = "<group>"; };
@@ -483,6 +485,7 @@
 				AA719797287A481500623C15 /* PlayInfo.swift */,
 				AA719798287A481500623C15 /* Toast.swift */,
 				6E7663A428D0FEBE00DE4AF9 /* AKPluginLoader.swift */,
+				65F0487A0C752EE4930AF0AB /* UserPluginLoader.swift */,
 				B46C02C62C634AB5007637AB /* BatteryLevel.m */,
 				B46C02C82C634C60007637AB /* BatteryLevel.h */,
 				B444BB0B2F49C1D100ADCC5A /* ControllerFocus.m */,
@@ -741,6 +744,7 @@
 				D04B12CA2EF6F3DD008FEC14 /* MediaVolume.m in Sources */,
 				954389C82B392D5300B063BB /* Button.swift in Sources */,
 				6E7663A528D0FEBE00DE4AF9 /* AKPluginLoader.swift in Sources */,
+				955A3F48AFD07B6583BFEFC3 /* UserPluginLoader.swift in Sources */,
 				9562D16F2AB50D34002C329D /* ActionDispatcher.swift in Sources */,
 				2847AE48298EFC0F00B0F983 /* PlayScreen.swift in Sources */,
 				9562D1532AB484FD002C329D /* EventAdapter.swift in Sources */,
