@@ -3,16 +3,34 @@ import UIKit
 
 let settings = PlaySettings.shared
 
-func playCoverUserHomeDirectoryPath() -> String {
-    let userName = NSUserName()
-    if let homeDirectory = NSHomeDirectoryForUser(userName) {
-        return homeDirectory
+private func currentAccountHomeDirectoryURL() -> URL {
+    let configuredBufferSize = sysconf(_SC_GETPW_R_SIZE_MAX)
+    var bufferSize = configuredBufferSize > 0 ? Int(configuredBufferSize) : 1_024
+
+    while true {
+        var password = passwd()
+        var result: UnsafeMutablePointer<passwd>?
+        var buffer = [CChar](repeating: 0, count: bufferSize)
+        let lookup = buffer.withUnsafeMutableBufferPointer { bufferPointer -> (Int32, String?) in
+            let status = getpwuid_r(getuid(), &password, bufferPointer.baseAddress, bufferPointer.count, &result)
+            guard status == 0, result != nil, let path = password.pw_dir else {
+                return (status, nil)
+            }
+            return (status, String(cString: path))
+        }
+        if lookup.0 == ERANGE {
+            bufferSize *= 2
+            continue
+        }
+        guard let homeDirectoryPath = lookup.1 else {
+            fatalError("Unable to locate the current account home directory")
+        }
+        return URL(fileURLWithPath: homeDirectoryPath, isDirectory: true)
     }
-    return NSString(string: "~\(userName)").expandingTildeInPath
 }
 
 func playCoverContainerBaseURL() -> URL {
-    URL(fileURLWithPath: playCoverUserHomeDirectoryPath(), isDirectory: true)
+    currentAccountHomeDirectoryURL()
         .appendingPathComponent("Library", isDirectory: true)
         .appendingPathComponent("Containers", isDirectory: true)
         .appendingPathComponent("io.playcover.PlayCover", isDirectory: true)

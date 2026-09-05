@@ -60,7 +60,7 @@ class Keymapping {
     }
 
     init() {
-        baseKeymapURL = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
+        baseKeymapURL = playCoverContainerBaseURL()
             .appendingPathComponent("Keymapping")
             .appendingPathComponent(bundleIdentifier)
 
