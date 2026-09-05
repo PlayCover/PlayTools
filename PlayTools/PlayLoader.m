@@ -332,16 +332,17 @@ static NSMutableDictionary *thread_sleep_counters = nil;
 static NSMutableDictionary *last_sleep_attempts = nil;
 static dispatch_once_t thread_sleep_once;
 static NSLock *thread_sleep_lock = nil;
+static BOOL block_sleep_spamming_enabled = NO;
 
 static int pt_usleep(useconds_t time) {
-    dispatch_once(&thread_sleep_once, ^{
-        thread_sleep_counters = [NSMutableDictionary dictionary];
-        last_sleep_attempts = [NSMutableDictionary dictionary];
-        thread_sleep_lock = [[NSLock alloc] init];
-        [thread_sleep_lock lock];
-    });
-    
-    if ([[PlaySettings shared] blockSleepSpamming]) {
+    if (block_sleep_spamming_enabled) {
+        dispatch_once(&thread_sleep_once, ^{
+            thread_sleep_counters = [[NSMutableDictionary alloc] init];
+            last_sleep_attempts = [[NSMutableDictionary alloc] init];
+            thread_sleep_lock = [[NSLock alloc] init];
+            [thread_sleep_lock lock];
+        });
+
         int thread_id = pthread_mach_thread_np(pthread_self());
         NSNumber *threadKey = @(thread_id);
 
@@ -393,6 +394,8 @@ DYLD_INTERPOSE(pt_usleep, usleep)
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
+    block_sleep_spamming_enabled = [[PlaySettings shared] blockSleepSpamming];
+
     [PlayCover launch];
     
     if (ue_status == 0) {
@@ -405,7 +408,7 @@ static void __attribute__((constructor)) initialize(void) {
         [PlayKeychain debugLogger: [NSString stringWithFormat:@"UnrealEngine Hooked"]];
     }
 
-    if ([[PlaySettings shared] blockSleepSpamming]) {
+    if (block_sleep_spamming_enabled) {
         // Add an observer so we can unlock threads on app termination
         [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillTerminateNotification
                                                           object:nil

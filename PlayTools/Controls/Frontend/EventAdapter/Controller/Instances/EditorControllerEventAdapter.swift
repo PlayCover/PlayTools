@@ -14,6 +14,9 @@ public class EditorControllerEventAdapter: ControllerEventAdapter {
     public func handleValueChanged(_ profile: GCExtendedGamepad, _ element: GCControllerElement) {
         // This is the index of controller buttons, which is String, not Int
         var alias: String = element.aliases.first!
+        if let buttonElement = element as? GCControllerButtonInput, !buttonElement.isPressed {
+            return
+        }
         if alias == "Direction Pad" {
             guard let dpadElement = element as? GCControllerDirectionPad else {
                 Toast.showOver(msg: "cannot map direction pad: element type not recognizable")
