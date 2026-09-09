@@ -97,7 +97,8 @@ func playCoverContainerBaseURL() -> URL {
 
     @objc lazy var noKMOnInput = settingsData.noKMOnInput
 
-    @objc lazy var enableScrollWheel = settingsData.enableScrollWheel
+    @objc lazy var enableScrollWheelZoom = settingsData.enableScrollWheelZoom
+    @objc lazy var enableScrollWheelMapping = settingsData.enableScrollWheelMapping
 
     @objc lazy var hideTitleBar = settingsData.hideTitleBar
 
@@ -138,7 +139,8 @@ struct AppSettingsData: Codable {
     var windowFixMethod = 0
     var rootWorkDir = true
     var noKMOnInput = false
-    var enableScrollWheel = true
+    var enableScrollWheelZoom = true // Original zoom logic
+    var enableScrollWheelMapping = false // New keymapping logic
     var hideTitleBar = false
     var floatingWindow = false
     var checkMicPermissionSync = false

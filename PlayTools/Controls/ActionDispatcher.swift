@@ -202,6 +202,18 @@ public class ActionDispatcher {
         return mapped
     }
 
+    static public func dispatchClick(key: String) -> Bool {
+        guard buttonHandlers[key] != nil else {
+            return false
+        }
+        _ = dispatch(key: key, pressed: true)
+        // 延迟 30ms 自动释放，模拟一次物理点击
+        PlayInput.touchQueue.asyncAfter(deadline: .now() + 0.03, qos: .userInteractive, execute: {
+            _ = dispatch(key: key, pressed: false)
+        })
+        return true
+    }
+
     static public func dispatch(key: String, valueX: CGFloat, valueY: CGFloat) -> Bool {
         for priority in 0..<priorityCount {
             if let handler = directionPadHandlers[priority].first(where: { handler in
