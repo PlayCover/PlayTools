@@ -3,21 +3,6 @@ import UIKit
 
 let settings = PlaySettings.shared
 
-func playCoverUserHomeDirectoryPath() -> String {
-    let userName = NSUserName()
-    if let homeDirectory = NSHomeDirectoryForUser(userName) {
-        return homeDirectory
-    }
-    return NSString(string: "~\(userName)").expandingTildeInPath
-}
-
-func playCoverContainerBaseURL() -> URL {
-    URL(fileURLWithPath: playCoverUserHomeDirectoryPath(), isDirectory: true)
-        .appendingPathComponent("Library", isDirectory: true)
-        .appendingPathComponent("Containers", isDirectory: true)
-        .appendingPathComponent("io.playcover.PlayCover", isDirectory: true)
-}
-
 @objc public final class PlaySettings: NSObject {
     @objc public static let shared = PlaySettings()
 
@@ -26,7 +11,7 @@ func playCoverContainerBaseURL() -> URL {
     var settingsData: AppSettingsData
 
     override init() {
-        settingsUrl = playCoverContainerBaseURL()
+        settingsUrl = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("App Settings")
             .appendingPathComponent("\(bundleIdentifier).plist")
         do {
