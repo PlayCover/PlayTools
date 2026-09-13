@@ -181,7 +181,7 @@ __attribute__((visibility("hidden")))
     if ([[NSProcessInfo processInfo].environment[@"USE_EXTRA_ANTIJB"] isEqualToString:@"1"]) {
         [self loadJailbreakBypass];
     }
-    // if ([[PlaySettings shared] bypass]) [self loadEnvironmentBypass]; # disabled as it might be too powerful
+    if ([[PlaySettings shared] bypass]) [self loadEnvironmentBypass];
 
     // Swizzle ATTrackingManager
     [objc_getClass("ATTrackingManager") swizzleClassMethod:@selector(requestTrackingAuthorizationWithCompletionHandler:) withMethod:@selector(pm_return_2_with_completion_handler:)];
@@ -338,6 +338,7 @@ __attribute__((visibility("hidden")))
     [self debugLogger:@"Environment bypass loading"];
     // Completely nuke everything in the environment variables
     [objc_getClass("NSProcessInfo") swizzleInstanceMethod:@selector(environment) withMethod:@selector(pm_return_empty_dictionary)];
+    [objc_getClass("NSProcessInfo") swizzleInstanceMethod:@selector(isiOSAppOnMac) withMethod:@selector(pm_return_false)];
 }
 
 + (void) debugLogger: (NSString *) message {
