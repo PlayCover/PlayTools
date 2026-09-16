@@ -342,7 +342,9 @@ class CameraAction: Action {
     }
 
     static func dragUpdated(_ deltaX: CGFloat, _ deltaY: CGFloat) {
-        swipeDrag.move(from: TouchscreenMouseEventAdapter.cursorPos, deltaX: deltaX * 4, deltaY: -deltaY * 4)
+        let speed = PlaySettings.shared.scrollWheelSpeed
+        swipeDrag.move(from: TouchscreenMouseEventAdapter.cursorPos,
+                       deltaX: deltaX * speed, deltaY: -deltaY * speed)
     }
 
     func invalidate() {

@@ -87,6 +87,14 @@ public class ActionDispatcher {
                 actions.append(JoystickAction(data: joystick))
             }
         }
+        // Scroll wheel should drag-scroll in-app scroll views even without a MouseArea mapping.
+        // `CameraAction` normally registers this handler, but it is only constructed when the
+        // keymap contains a MouseArea. Register it here so the scroll wheel works globally,
+        // using the live cursor position, without affecting clicks, drags or cursor visibility.
+        if keymap.currentKeymap.mouseAreaModel.isEmpty {
+            register(key: KeyCodeNames.scrollWheelDrag, handler: CameraAction.dragUpdated)
+        }
+
         // `cursorHideNecessary` is used to disable `option` toggle when there is no mouse mapping
         // but in the case this new feature disabled, `option` should always function.
         // this variable is set here to be checked for mouse mapping later.
