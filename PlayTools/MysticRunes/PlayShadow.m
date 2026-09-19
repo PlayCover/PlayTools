@@ -186,7 +186,8 @@ __attribute__((visibility("hidden")))
     // Swizzle ATTrackingManager
     [objc_getClass("ATTrackingManager") swizzleClassMethod:@selector(requestTrackingAuthorizationWithCompletionHandler:) withMethod:@selector(pm_return_2_with_completion_handler:)];
     [objc_getClass("ATTrackingManager") swizzleClassMethod:@selector(trackingAuthorizationStatus) withMethod:@selector(pm_return_2)];
-
+    
+    
     // canResizeToFitContent
     // [objc_getClass("UIWindow") swizzleInstanceMethod:@selector(canResizeToFitContent) withMethod:@selector(pm_return_true)];
     
@@ -197,6 +198,11 @@ __attribute__((visibility("hidden")))
         [self debugLogger:@"loading UIAlertController bypass"];
         [objc_getClass("UIViewController") swizzleInstanceMethod:@selector(presentViewController:animated:completion:) withMethod:@selector(pm_endfield_presentViewController:animated:completion:)];
     }
+    
+    if ([bundleID isEqualToString:@"com.kurogame.wutheringwaves.global"] || [bundleID isEqualToString:@"com.kurogame.mingchao"]) {
+        [objc_getClass("KRDeclaredAgeRangeService") swizzleInstanceMethod:@selector(isAgeRangeRequestAvailable) withMethod:@selector(pm_return_false)];
+    }
+   
 }
 
 + (void) loadJailbreakBypass {
