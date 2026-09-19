@@ -27,8 +27,18 @@ class ChildButtonModel: ControlModel<Button> {
 
     override func setKey(code: Int, name: String) {
         var buttonData = data
-        buttonData.keyCode = code
-        buttonData.keyName = name
+
+        if code != KeyCodeNames.defaultCode {
+            buttonData.keyCode = code
+            buttonData.keyName = KeyCodeNames.keyCodes[code] ?? name
+        } else if let resolvedCode = KeyCodeNames.keyCodeByName[name] {
+            buttonData.keyCode = resolvedCode
+            buttonData.keyName = name
+        } else {
+            buttonData.keyCode = code
+            buttonData.keyName = name
+        }
+
         data = buttonData
         button.setTitle(data.keyName, for: UIControl.State.normal)
     }

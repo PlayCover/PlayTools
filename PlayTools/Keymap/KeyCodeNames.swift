@@ -14,19 +14,22 @@ class KeyCodeNames {
     public static let fakeMouse = "FakeMouse"
 
     private static let gcKeyCodeLiteral = [
-    -4: "cA",
-    -5: "cX",
-    -6: "cB",
-    -7: "cY",
-    -8: "dU",
-    -9: "dD",
-//    -10: "dR",
+    -4: "Button A",
+    -5: "Button X",
+    -6: "Button B",
+    -7: "Button Y",
+    -8: "Direction Pad Up",
+    -9: "Direction Pad Down",
+//    -10: "Direction Pad Right",
     -10: "Controller",
-    -11: "dL",
-    -12: "L1",
-    -13: "L2",
-    -14: "R1",
-    -15: "R2",
+    -11: "Direction Pad Left",
+    -12: "Left Shoulder",
+    -13: "Left Trigger",
+    -14: "Right Shoulder",
+    -15: "Right Trigger",
+    -16: "Direction Pad Right",
+    -17: "Button Menu",
+    -18: "Button Options",
     -1: "LMB",
     -2: "RMB",
     -3: "MMB",
@@ -153,6 +156,55 @@ class KeyCodeNames {
         gcCode[GCKeyCode.pageDown.rawValue] = "Page Down"
         return gcCode
     }()
+
+    private static let controllerKeyAliases: [Int: [String]] = [
+        -4: ["Button A", "cA"],
+        -5: ["Button X", "cX"],
+        -6: ["Button B", "cB"],
+        -7: ["Button Y", "cY"],
+        -8: ["Direction Pad Up", "dU"],
+        -9: ["Direction Pad Down", "dD"],
+        -11: ["Direction Pad Left", "dL"],
+        -12: ["Left Shoulder", "L1"],
+        -13: ["Left Trigger", "L2"],
+        -14: ["Right Shoulder", "R1"],
+        -15: ["Right Trigger", "R2"],
+        -16: ["Direction Pad Right", "dR"],
+        -17: ["Button Menu"],
+        -18: ["Button Options"]
+    ]
+
+    public static let keyCodeByName: [String: Int] = {
+        var names = [String: Int]()
+        for (code, name) in keyCodes {
+            names[name] = code
+        }
+        for (code, aliases) in controllerKeyAliases {
+            for alias in aliases {
+                names[alias] = code
+            }
+        }
+        return names
+    }()
+
+    public static func dispatchNames(for code: Int, fallback: String? = nil) -> [String] {
+        var names = [String]()
+        if let name = keyCodes[code] {
+            names.append(name)
+        }
+        if let aliases = controllerKeyAliases[code] {
+            names.append(contentsOf: aliases)
+        }
+        if let fallback = fallback {
+            names.append(fallback)
+        }
+        var seen = Set<String>()
+        return names.filter { seen.insert($0).inserted }
+    }
+
+    public static func isThumbstick(_ name: String) -> Bool {
+        name == "Left Thumbstick" || name == "Right Thumbstick"
+    }
 }
 // Swift lint said the class was too long, so split into two parts
 extension KeyCodeNames {
@@ -281,7 +333,7 @@ extension KeyCodeNames {
         mapVirtualToGc[117] = GCKeyCode.deleteForward.rawValue
         mapVirtualToGc[119] = GCKeyCode.end.rawValue
         mapVirtualToGc[121] = GCKeyCode.pageDown.rawValue
-        assert(keyCodes.count - 15 == mapVirtualToGc.count)
+        assert(keyCodes.count - 18 == mapVirtualToGc.count)
         return mapVirtualToGc
     }()
 }// Swift lint said the file was too long so removing the unused reverse mapping
