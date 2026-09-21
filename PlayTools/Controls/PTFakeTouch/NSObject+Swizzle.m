@@ -7,6 +7,7 @@
 
 #import "NSObject+Swizzle.h"
 #import <objc/runtime.h>
+#import <objc/message.h>
 #import "CoreGraphics/CoreGraphics.h"
 #import "UIKit/UIKit.h"
 #import <PlayTools/PlayTools-Swift.h>
@@ -19,6 +20,66 @@
 __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
 @end
+
+static id preservedMetalHUDMenuItem = nil;
+
+static id PTMessageObject(id object, SEL selector) {
+    if (object == nil || ![object respondsToSelector:selector]) {
+        return nil;
+    }
+    return ((id (*)(id, SEL))objc_msgSend)(object, selector);
+}
+
+static id PTMainMenu(void) {
+    Class applicationClass = NSClassFromString(@"NSApplication");
+    id application = PTMessageObject(applicationClass, NSSelectorFromString(@"sharedApplication"));
+    return PTMessageObject(application, NSSelectorFromString(@"mainMenu"));
+}
+
+static id PTMetalHUDMenuItem(id mainMenu) {
+    NSArray *items = PTMessageObject(mainMenu, NSSelectorFromString(@"itemArray"));
+    for (id item in items) {
+        NSString *title = PTMessageObject(item, NSSelectorFromString(@"title"));
+        if ([title isEqualToString:@"Metal HUD"]) {
+            return item;
+        }
+    }
+    return nil;
+}
+
+void PTPreserveMetalHUDMenuItem(void) {
+    id item = PTMetalHUDMenuItem(PTMainMenu());
+    if (item != nil) {
+        preservedMetalHUDMenuItem = item;
+    }
+}
+
+void PTRestoreMetalHUDMenuItem(void) {
+    id mainMenu = PTMainMenu();
+    if (mainMenu == nil || preservedMetalHUDMenuItem == nil) {
+        return;
+    }
+
+    id currentItem = PTMetalHUDMenuItem(mainMenu);
+    if (currentItem != nil) {
+        preservedMetalHUDMenuItem = currentItem;
+        return;
+    }
+
+    id previousMenu = PTMessageObject(preservedMetalHUDMenuItem, NSSelectorFromString(@"menu"));
+    if (previousMenu != nil) {
+        ((void (*)(id, SEL, id))objc_msgSend)(
+            previousMenu,
+            NSSelectorFromString(@"removeItem:"),
+            preservedMetalHUDMenuItem
+        );
+    }
+    ((void (*)(id, SEL, id))objc_msgSend)(
+        mainMenu,
+        NSSelectorFromString(@"addItem:"),
+        preservedMetalHUDMenuItem
+    );
+}
 
 @implementation NSObject (Swizzle)
 
