@@ -5,6 +5,7 @@
 
 #include <Foundation/Foundation.h>
 #include <errno.h>
+#include <stdatomic.h>
 #include <sys/sysctl.h>
 
 #import "PlayLoader.h"
@@ -106,6 +107,104 @@ DYLD_INTERPOSE(pt_dyld_get_active_platform, dyld_get_active_platform)
 DYLD_INTERPOSE(pt_uname, uname)
 DYLD_INTERPOSE(pt_sysctlbyname, sysctlbyname)
 DYLD_INTERPOSE(pt_sysctl, sysctl)
+
+// MarketplaceKit only exists as an empty stub for Mac Catalyst, but on macOS 27 the
+// `#available(iOS 17.4, *)` checks guarding it pass. Images that weak-link it (such as
+// MarketplaceKitHelper) then call NULL AppDistributor symbols and crash. Tell those
+// images that iOS 17.4+ is unavailable so they take their fallback path instead.
+#define MARKETPLACEKIT_PATH "/System/Library/Frameworks/MarketplaceKit.framework/MarketplaceKit"
+#define MARKETPLACEKIT_MIN_IOS_VERSION 0x00110400 // 17.4.0, encoded as major << 16 | minor << 8 | patch
+#define MAX_MARKETPLACEKIT_CLIENTS 8
+
+typedef struct {
+    uint32_t platform;
+    uint32_t version;
+} pt_build_version_t;
+
+bool _availability_version_check(uint32_t count, pt_build_version_t versions[]);
+
+static struct {
+    uintptr_t start;
+    uintptr_t end;
+} marketplacekit_clients[MAX_MARKETPLACEKIT_CLIENTS];
+static _Atomic uint32_t marketplacekit_client_count = 0;
+
+static bool image_weak_links_marketplacekit(const struct mach_header_64 *header) {
+    const struct load_command *cmd = (const struct load_command *)(header + 1);
+    for (uint32_t i = 0; i < header->ncmds; i++) {
+        if (cmd->cmd == LC_LOAD_WEAK_DYLIB) {
+            const struct dylib_command *dylib = (const struct dylib_command *)cmd;
+            const char *name = (const char *)cmd + dylib->dylib.name.offset;
+            if (strcmp(name, MARKETPLACEKIT_PATH) == 0) {
+                return true;
+            }
+        }
+        cmd = (const struct load_command *)((const char *)cmd + cmd->cmdsize);
+    }
+    return false;
+}
+
+// Called by dyld for every image, including those loaded before registration
+static void track_marketplacekit_client(const struct mach_header *mh, intptr_t slide) {
+    const struct mach_header_64 *header = (const struct mach_header_64 *)mh;
+    if (!image_weak_links_marketplacekit(header)) {
+        return;
+    }
+
+    uint32_t index = atomic_load(&marketplacekit_client_count);
+    unsigned long size = 0;
+    uint8_t *text = getsegmentdata(header, "__TEXT", &size);
+    if (index >= MAX_MARKETPLACEKIT_CLIENTS || text == NULL) {
+        return;
+    }
+
+    marketplacekit_clients[index].start = (uintptr_t)text;
+    marketplacekit_clients[index].end = (uintptr_t)text + size;
+    atomic_store(&marketplacekit_client_count, index + 1);
+}
+
+static bool is_marketplacekit_client(uintptr_t address) {
+    uint32_t count = atomic_load(&marketplacekit_client_count);
+    for (uint32_t i = 0; i < count; i++) {
+        if (address >= marketplacekit_clients[i].start && address < marketplacekit_clients[i].end) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool is_marketplacekit_loaded(void) {
+    static bool loaded = false;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        void *handle = dlopen(MARKETPLACEKIT_PATH, RTLD_LAZY | RTLD_NOLOAD);
+        loaded = handle != NULL;
+        if (handle != NULL) {
+            dlclose(handle);
+        }
+    });
+    return loaded;
+}
+
+static bool requires_marketplacekit_ios_version(uint32_t count, pt_build_version_t versions[]) {
+    for (uint32_t i = 0; i < count; i++) {
+        if (versions[i].platform == PLATFORM_IOS && versions[i].version >= MARKETPLACEKIT_MIN_IOS_VERSION) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool pt_availability_version_check(uint32_t count, pt_build_version_t versions[]) {
+    if (is_marketplacekit_client((uintptr_t)__builtin_return_address(0))
+        && requires_marketplacekit_ios_version(count, versions)
+        && !is_marketplacekit_loaded()) {
+        return false;
+    }
+    return _availability_version_check(count, versions);
+}
+
+DYLD_INTERPOSE(pt_availability_version_check, _availability_version_check)
 
 // Interpose Apple Keychain functions (SecItemCopyMatching, SecItemAdd, SecItemUpdate, SecItemDelete)
 // This allows us to intercept keychain requests and return our own data
@@ -330,6 +429,7 @@ DYLD_INTERPOSE(pt_usleep, usleep)
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
+    _dyld_register_func_for_add_image(track_marketplacekit_client);
     [PlayCover launch];
     
     if (ue_status == 0) {
