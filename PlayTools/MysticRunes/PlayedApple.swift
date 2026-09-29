@@ -21,6 +21,17 @@ public class PlayKeychain: NSObject {
             NSLog("PC-DEBUG: \(logContent)")
         }
     }
+
+    private static func flag(_ dictionary: NSDictionary, _ key: CFString) -> Bool {
+        let value = dictionary[key as String]
+        if let value = value as? Bool {
+            return value
+        }
+        if let value = value as? NSNumber {
+            return value.boolValue
+        }
+        return false
+    }
     // Emulates SecItemAdd, SecItemUpdate, SecItemDelete and SecItemCopyMatching
     // Store the entire dictionary as a plist
     // SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
@@ -31,6 +42,17 @@ public class PlayKeychain: NSObject {
             return errSecIO
         }
         debugLogger("Wrote keychain item to db")
+
+        let wantsReturn =
+            flag(attributes, kSecReturnAttributes) ||
+            flag(attributes, kSecReturnData) ||
+            flag(attributes, kSecReturnRef) ||
+            flag(attributes, kSecReturnPersistentRef)
+
+        guard wantsReturn, result != nil else {
+            return errSecSuccess
+        }
+
         // Place v_Data in the result
         guard let vData = attributes["v_Data"] as? CFTypeRef else {
             return errSecSuccess
@@ -45,6 +67,13 @@ public class PlayKeychain: NSObject {
                 dummyDict.removeObject(forKey: kSecValuePersistentRef)
             }
             result?.pointee = Unmanaged.passRetained(dummyDict)
+            return errSecSuccess
+        }
+
+        if flag(attributes, kSecReturnData) &&
+            !flag(attributes, kSecReturnRef) &&
+            !flag(attributes, kSecReturnPersistentRef) {
+            result?.pointee = Unmanaged.passRetained(vData)
             return errSecSuccess
         }
 
@@ -121,9 +150,25 @@ public class PlayKeychain: NSObject {
             return errSecItemNotFound
         }
 
+        let wantsAttributes = flag(query, kSecReturnAttributes)
+        let wantsData = flag(query, kSecReturnData)
+        let wantsRef = flag(query, kSecReturnRef)
+        let wantsPersistentRef = flag(query, kSecReturnPersistentRef)
+
         if query[kSecMatchLimit as String] as? String ==  kSecMatchLimitAll as String {
+            if wantsData && !wantsAttributes && !wantsRef && !wantsPersistentRef {
+                let values = keychainDicts.compactMap({ $0[kSecValueData] })
+                guard values.count == keychainDicts.count else {
+                    return errSecItemNotFound
+                }
+                result?.pointee = Unmanaged.passRetained(values as CFTypeRef)
+                return errSecSuccess
+            }
+
             result?.pointee = Unmanaged.passRetained(keychainDicts.map({
-                $0.removeObject(forKey: kSecValueData)
+                if !wantsData {
+                    $0.removeObject(forKey: kSecValueData)
+                }
                 $0.removeObject(forKey: kSecValueRef)
                 $0.removeObject(forKey: kSecValuePersistentRef)
                 return $0
@@ -133,10 +178,10 @@ public class PlayKeychain: NSObject {
         // Check the `r_Attributes` key. If it is set to 1 in the query
         let classType = query[kSecClass as String] as? String ?? ""
 
-        if query["r_Attributes"] as? Int == 1 {
+        if wantsAttributes {
             // Create a dummy dictionary and return it
             let dummyDict = keychainDict
-            if query["r_Data"] as? Int != 1 {
+            if !wantsData {
                 dummyDict.removeObject(forKey: kSecValueData)
                 dummyDict.removeObject(forKey: kSecValueRef)
                 dummyDict.removeObject(forKey: kSecValuePersistentRef)
@@ -145,8 +190,22 @@ public class PlayKeychain: NSObject {
             return errSecSuccess
         }
 
+        // kSecReturnData asks for the stored bytes, even for kSecClassKey.
+        if wantsData && !wantsRef && !wantsPersistentRef {
+            guard let vData = keychainDict[kSecValueData] else {
+                return errSecItemNotFound
+            }
+            result?.pointee = Unmanaged.passRetained(vData as CFTypeRef)
+            return errSecSuccess
+        }
+
+        // A query without return flags is an existence check.
+        if !wantsAttributes && !wantsData && !wantsRef && !wantsPersistentRef {
+            return errSecSuccess
+        }
+
         // Check for r_Ref
-        if query["r_Ref"] as? Int == 1 {
+        if wantsRef {
             // Return the data on v_PersistentRef or v_Data if they exist
             var key: CFTypeRef?
             if let vData = keychainDict[kSecValueData] {
