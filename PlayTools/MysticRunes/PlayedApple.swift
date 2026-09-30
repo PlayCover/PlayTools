@@ -21,6 +21,17 @@ public class PlayKeychain: NSObject {
             NSLog("PC-DEBUG: \(logContent)")
         }
     }
+
+    private static func flag(_ dictionary: NSDictionary, _ key: CFString) -> Bool {
+        let value = dictionary[key as String]
+        if let value = value as? Bool {
+            return value
+        }
+        if let value = value as? NSNumber {
+            return value.boolValue
+        }
+        return false
+    }
     // Emulates SecItemAdd, SecItemUpdate, SecItemDelete and SecItemCopyMatching
     // Store the entire dictionary as a plist
     // SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
@@ -31,6 +42,23 @@ public class PlayKeychain: NSObject {
             return errSecIO
         }
         debugLogger("Wrote keychain item to db")
+
+        let wantsReturn =
+            flag(attributes, kSecReturnAttributes) ||
+            flag(attributes, kSecReturnData) ||
+            flag(attributes, kSecReturnRef) ||
+            flag(attributes, kSecReturnPersistentRef)
+
+        guard wantsReturn, result != nil else {
+            return errSecSuccess
+        }
+
+        return addResult(attributes, keychainDict: keychainDict, result: result)
+    }
+
+    private static func addResult(_ attributes: NSDictionary,
+                                  keychainDict: NSMutableDictionary,
+                                  result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
         // Place v_Data in the result
         guard let vData = attributes["v_Data"] as? CFTypeRef else {
             return errSecSuccess
@@ -45,6 +73,13 @@ public class PlayKeychain: NSObject {
                 dummyDict.removeObject(forKey: kSecValuePersistentRef)
             }
             result?.pointee = Unmanaged.passRetained(dummyDict)
+            return errSecSuccess
+        }
+
+        if flag(attributes, kSecReturnData) &&
+            !flag(attributes, kSecReturnRef) &&
+            !flag(attributes, kSecReturnPersistentRef) {
+            result?.pointee = Unmanaged.passRetained(vData)
             return errSecSuccess
         }
 
@@ -111,99 +146,11 @@ public class PlayKeychain: NSObject {
         return errSecSuccess
     }
 
-    // SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
-    // swiftlint:disable:next function_body_length
-    @objc static public func copyMatching(_ query: NSDictionary,
-                                          result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
-        guard let keychainDicts = playChainDB.query(query),
-              let keychainDict = keychainDicts.first else {
-            debugLogger("Keychain item not found in db")
-            return errSecItemNotFound
-        }
-
-        if query[kSecMatchLimit as String] as? String ==  kSecMatchLimitAll as String {
-            result?.pointee = Unmanaged.passRetained(keychainDicts.map({
-                $0.removeObject(forKey: kSecValueData)
-                $0.removeObject(forKey: kSecValueRef)
-                $0.removeObject(forKey: kSecValuePersistentRef)
-                return $0
-            }) as CFTypeRef)
-            return errSecSuccess
-        }
-        // Check the `r_Attributes` key. If it is set to 1 in the query
-        let classType = query[kSecClass as String] as? String ?? ""
-
-        if query["r_Attributes"] as? Int == 1 {
-            // Create a dummy dictionary and return it
-            let dummyDict = keychainDict
-            if query["r_Data"] as? Int != 1 {
-                dummyDict.removeObject(forKey: kSecValueData)
-                dummyDict.removeObject(forKey: kSecValueRef)
-                dummyDict.removeObject(forKey: kSecValuePersistentRef)
-            }
-            result?.pointee = Unmanaged.passRetained(dummyDict)
-            return errSecSuccess
-        }
-
-        // Check for r_Ref
-        if query["r_Ref"] as? Int == 1 {
-            // Return the data on v_PersistentRef or v_Data if they exist
-            var key: CFTypeRef?
-            if let vData = keychainDict[kSecValueData] {
-                NSLog("found v_Data")
-                debugLogger("Read keychain item from db")
-                key = vData as CFTypeRef
-            }
-            if let vPersistentRef = keychainDict[kSecValuePersistentRef] {
-                NSLog("found persistent ref")
-                debugLogger("Read keychain item from db")
-                key = vPersistentRef as CFTypeRef
-            }
-
-            if key == nil {
-                debugLogger("Keychain item not found in db")
-                return errSecItemNotFound
-            }
-
-            let dummyKeyAttrs = [
-                kSecAttrKeyType: keychainDict[kSecAttrKeyType] ?? kSecAttrKeyTypeRSA,
-                kSecAttrKeyClass: keychainDict[kSecAttrKeyClass] ?? kSecAttrKeyClassPublic
-            ] as CFDictionary
-
-            let secKey = SecKeyCreateWithData(key as! CFData, dummyKeyAttrs, nil) // swiftlint:disable:this force_cast
-            result?.pointee = Unmanaged.passRetained(secKey!)
-            return errSecSuccess
-        }
-
-        // Return v_Data if it exists
-        if let vData = keychainDict[kSecValueData] {
-            debugLogger("Read keychain file from db")
-            // Check the class type, if it is a key we need to return the data
-            // as SecKeyRef, otherwise we can return it as a CFTypeRef
-            if classType == "keys" {
-                // kSecAttrKeyType is stored as `type` in the dictionary
-                // kSecAttrKeyClass is stored as `kcls` in the dictionary
-                let keyAttributes = [
-                    kSecAttrKeyType: keychainDict[kSecAttrKeyType] as! CFString, // swiftlint:disable:this force_cast
-                    kSecAttrKeyClass: keychainDict[kSecAttrKeyClass] as! CFString // swiftlint:disable:this force_cast
-                ]
-                let keyData = vData as! Data // swiftlint:disable:this force_cast
-                let key = SecKeyCreateWithData(keyData as CFData, keyAttributes as CFDictionary, nil)
-                result?.pointee = Unmanaged.passRetained(key!)
-                return errSecSuccess
-            }
-            result?.pointee = Unmanaged.passRetained(vData as CFTypeRef)
-            return errSecSuccess
-        }
-
-        return errSecItemNotFound
-    }
-
     @objc static public func keyCreateRandomKey(_ parameters: NSDictionary,
                                                 error: UnsafeMutablePointer<Unmanaged<CFError>?>?)
     -> Unmanaged<SecKey>? {
         // Check if kSecAttrIsPermanent is set to 1 in kSecPrivateKeyAttrs.
-        // If it is, set it to 0 before fowarding the call to SecKeyCreateRandomKey, 
+        // If it is, set it to 0 before fowarding the call to SecKeyCreateRandomKey,
         // and then add the key to the keychain db with the original attributes (with kSecAttrIsPermanent set to 1)
         var privateKeyAttrs = parameters[kSecPrivateKeyAttrs as String] as? [String: Any] ?? [:]
         let isPermanent = privateKeyAttrs[kSecAttrIsPermanent as String] as? Bool ?? false
@@ -298,6 +245,139 @@ public class PlayKeychain: NSObject {
                 return errSecMissingEntitlement
             }
         }
+        return errSecSuccess
+    }
+}
+
+extension PlayKeychain {
+    // SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
+    // swiftlint:disable:next function_body_length
+    @objc static public func copyMatching(_ query: NSDictionary,
+                                          result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
+        guard let keychainDicts = playChainDB.query(query),
+              let keychainDict = keychainDicts.first else {
+            debugLogger("Keychain item not found in db")
+            return errSecItemNotFound
+        }
+
+        let wantsAttributes = flag(query, kSecReturnAttributes)
+        let wantsData = flag(query, kSecReturnData)
+        let wantsRef = flag(query, kSecReturnRef)
+        let wantsPersistentRef = flag(query, kSecReturnPersistentRef)
+
+        if query[kSecMatchLimit as String] as? String == kSecMatchLimitAll as String {
+            return copyAllMatches(keychainDicts, query: query, result: result)
+        }
+        // Check the `r_Attributes` key. If it is set to 1 in the query
+        let classType = query[kSecClass as String] as? String ?? ""
+
+        if wantsAttributes {
+            // Create a dummy dictionary and return it
+            let dummyDict = keychainDict
+            if !wantsData {
+                dummyDict.removeObject(forKey: kSecValueData)
+                dummyDict.removeObject(forKey: kSecValueRef)
+                dummyDict.removeObject(forKey: kSecValuePersistentRef)
+            }
+            result?.pointee = Unmanaged.passRetained(dummyDict)
+            return errSecSuccess
+        }
+
+        // kSecReturnData asks for the stored bytes, even for kSecClassKey.
+        if wantsData && !wantsRef && !wantsPersistentRef {
+            guard let vData = keychainDict[kSecValueData] else {
+                return errSecItemNotFound
+            }
+            result?.pointee = Unmanaged.passRetained(vData as CFTypeRef)
+            return errSecSuccess
+        }
+
+        // A query without return flags is an existence check.
+        if !wantsAttributes && !wantsData && !wantsRef && !wantsPersistentRef {
+            return errSecSuccess
+        }
+
+        if wantsRef {
+            return copyReference(keychainDict, result: result)
+        }
+
+        // Return v_Data if it exists
+        if let vData = keychainDict[kSecValueData] {
+            debugLogger("Read keychain file from db")
+            // Check the class type, if it is a key we need to return the data
+            // as SecKeyRef, otherwise we can return it as a CFTypeRef
+            if classType == "keys" {
+                // kSecAttrKeyType is stored as `type` in the dictionary
+                // kSecAttrKeyClass is stored as `kcls` in the dictionary
+                let keyAttributes = [
+                    kSecAttrKeyType: keychainDict[kSecAttrKeyType] as! CFString, // swiftlint:disable:this force_cast
+                    kSecAttrKeyClass: keychainDict[kSecAttrKeyClass] as! CFString // swiftlint:disable:this force_cast
+                ]
+                let keyData = vData as! Data // swiftlint:disable:this force_cast
+                let key = SecKeyCreateWithData(keyData as CFData, keyAttributes as CFDictionary, nil)
+                result?.pointee = Unmanaged.passRetained(key!)
+                return errSecSuccess
+            }
+            result?.pointee = Unmanaged.passRetained(vData as CFTypeRef)
+            return errSecSuccess
+        }
+
+        return errSecItemNotFound
+    }
+
+    private static func copyAllMatches(_ keychainDicts: [NSMutableDictionary], query: NSDictionary,
+                                       result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
+        let wantsData = flag(query, kSecReturnData)
+        let wantsAttributes = flag(query, kSecReturnAttributes)
+        let wantsRef = flag(query, kSecReturnRef)
+        let wantsPersistentRef = flag(query, kSecReturnPersistentRef)
+        if wantsData && !wantsAttributes && !wantsRef && !wantsPersistentRef {
+            let values = keychainDicts.compactMap({ $0[kSecValueData] })
+            guard values.count == keychainDicts.count else {
+                return errSecItemNotFound
+            }
+            result?.pointee = Unmanaged.passRetained(values as CFTypeRef)
+            return errSecSuccess
+        }
+
+        result?.pointee = Unmanaged.passRetained(keychainDicts.map({
+            if !wantsData {
+                $0.removeObject(forKey: kSecValueData)
+            }
+            $0.removeObject(forKey: kSecValueRef)
+            $0.removeObject(forKey: kSecValuePersistentRef)
+            return $0
+        }) as CFTypeRef)
+        return errSecSuccess
+    }
+
+    private static func copyReference(_ keychainDict: NSMutableDictionary,
+                                      result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
+        // Return the data on v_PersistentRef or v_Data if they exist
+        var key: CFTypeRef?
+        if let vData = keychainDict[kSecValueData] {
+            NSLog("found v_Data")
+            debugLogger("Read keychain item from db")
+            key = vData as CFTypeRef
+        }
+        if let vPersistentRef = keychainDict[kSecValuePersistentRef] {
+            NSLog("found persistent ref")
+            debugLogger("Read keychain item from db")
+            key = vPersistentRef as CFTypeRef
+        }
+
+        if key == nil {
+            debugLogger("Keychain item not found in db")
+            return errSecItemNotFound
+        }
+
+        let dummyKeyAttrs = [
+            kSecAttrKeyType: keychainDict[kSecAttrKeyType] ?? kSecAttrKeyTypeRSA,
+            kSecAttrKeyClass: keychainDict[kSecAttrKeyClass] ?? kSecAttrKeyClassPublic
+        ] as CFDictionary
+
+        let secKey = SecKeyCreateWithData(key as! CFData, dummyKeyAttrs, nil) // swiftlint:disable:this force_cast
+        result?.pointee = Unmanaged.passRetained(secKey!)
         return errSecSuccess
     }
 }
