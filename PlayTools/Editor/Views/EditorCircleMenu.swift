@@ -20,7 +20,7 @@ class EditorCircleMenu: CircleMenuDelegate {
             frame: CGRect(x: 0, y: 0, width: 50, height: 50),
             normalIcon: "xmark.circle.fill",
             selectedIcon: "xmark.circle.fill",
-            buttonsCount: 3,
+            buttonsCount: 5,
             duration: 0.25,
             distance: 80)
         menu?.delegate = self
@@ -56,6 +56,10 @@ class EditorCircleMenu: CircleMenuDelegate {
             EditorController.shared.addJoystick(globalPoint!)
         case 2:
             EditorController.shared.addMouseArea(globalPoint!)
+        case 3:
+            EditorController.shared.addSwipe(globalPoint!)
+        case 4:
+            EditorController.shared.addRadialSelector(globalPoint!)
         default:
             Toast.showHint(title: "item \(atIndex) is not recognizable")
 //            EditorController.shared.addMouseJoystick(globalPoint!)
@@ -77,6 +81,8 @@ class EditorCircleMenu: CircleMenuDelegate {
 //          "arrow.up.and.down.and.arrow.left.and.right",
 //          "rb.rectangle.roundedbottom.fill",
 //          "lb.rectangle.roundedbottom",
-          "computermouse"
+          "computermouse",
+          "hand.draw",
+          "scope"
       ]
 }

@@ -22,7 +22,7 @@ class MouseAreaModel: ControlModel<MouseArea> {
 
     override func setKey(code: Int, name: String) {
         if code < 0 {
-            if name.hasSuffix("tick") {
+            if KeyCodeNames.isThumbstick(name) {
                 self.data.keyName = name
             } else {
                 self.data.keyName = "Mouse"
