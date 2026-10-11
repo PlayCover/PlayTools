@@ -21,3 +21,7 @@ FOUNDATION_EXPORT const unsigned char PlayToolsVersionString[];
 // This is the function that CFRunLoop calls to serve main dispatch queue
 // Used by PlayInput to manually drain the queue
 extern void _dispatch_main_queue_callback_4CF(void *);
+
+// Preserve the Metal HUD menu across UIKit main-menu rebuilds on macOS.
+void PTPreserveMetalHUDMenuItem(void);
+void PTRestoreMetalHUDMenuItem(void);
