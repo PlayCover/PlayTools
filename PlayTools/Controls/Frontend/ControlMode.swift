@@ -41,7 +41,8 @@ public class ControlMode: Equatable {
 
         setupGameController()
         setupKeyboard()
-        if PlaySettings.shared.enableScrollWheel {
+        // Initialize scroll wheel if either zoom or keymapping is enabled
+        if PlaySettings.shared.enableScrollWheelZoom || PlaySettings.shared.enableScrollWheelMapping {
             setupScrollWheel()
         }
 
