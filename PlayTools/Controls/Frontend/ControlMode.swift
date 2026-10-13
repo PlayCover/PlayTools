@@ -110,7 +110,10 @@ public class ControlMode: Equatable {
 
     private func setupMouseButtons() {
         AKInterface.shared!.setupMouseButton(left: true, right: false, { _, pressed in
-            self.mouseAdapter.handleLeftButton(pressed: pressed)
+            if pressed, let clickPosition = TouchscreenMouseEventAdapter.cursorPos() {
+                VirtualCursorController.shared.deactivate(at: clickPosition)
+            }
+            return self.mouseAdapter.handleLeftButton(pressed: pressed)
         })
 
         AKInterface.shared!.setupMouseButton(left: false, right: false, { id, pressed in

@@ -42,11 +42,21 @@ class DraggableButtonModel: ControlModel<Button>, ParentElement {
         if code == KeyCodeNames.defaultCode {
             // set the parent key
             self.data.keyName = name
-            button.setTitle(data.keyName, for: UIControl.State.normal)
+            updateTitle()
         } else {
             // set the child key
             childButton!.setKey(code: code)
         }
+    }
+
+    override func toggleHoldTrigger() {
+        data.holdDuration = data.holdDuration == nil ? ButtonModel.defaultHoldDuration : nil
+        updateTitle()
+    }
+
+    private func updateTitle() {
+        let holdPrefix = data.holdDuration == nil ? "" : "Hold\n"
+        button.setTitle("\(holdPrefix)\(ButtonModel.displayName(for: data.keyName))", for: .normal)
     }
 
     override func focus(_ focus: Bool) {
