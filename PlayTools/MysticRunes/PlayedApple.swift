@@ -12,18 +12,6 @@ import Security
 // World's Most Advanced Keychain Replacement Solution:tm:
 // This is a joke, don't take it seriously
 
-// kSecMatchLimitAll and a CFNumber limit greater than 1 both make SecItemCopyMatching
-// return a CFArray (e.g. FirebaseAuth queries with a limit of 2). Returns nil for single-item queries.
-private func multiMatchLimit(_ limit: Any?) -> Int? {
-    if limit as? String == kSecMatchLimitAll as String {
-        return Int.max
-    }
-    if let number = limit as? NSNumber, number.intValue > 1 {
-        return number.intValue
-    }
-    return nil
-}
-
 public class PlayKeychain: NSObject {
     static let shared = PlayKeychain()
     private static let playChainDB = PlayKeychainDB.shared
@@ -262,6 +250,18 @@ public class PlayKeychain: NSObject {
 }
 
 extension PlayKeychain {
+    // kSecMatchLimitAll and a CFNumber limit greater than 1 both make SecItemCopyMatching
+    // return a CFArray (e.g. FirebaseAuth queries with a limit of 2). Returns nil for single-item queries.
+    private static func multiMatchLimit(_ limit: Any?) -> Int? {
+        if limit as? String == kSecMatchLimitAll as String {
+            return Int.max
+        }
+        if let number = limit as? NSNumber, number.intValue > 1 {
+            return number.intValue
+        }
+        return nil
+    }
+
     // SecItemCopyMatching(CFDictionaryRef query, CFTypeRef *result)
     // swiftlint:disable:next function_body_length
     @objc static public func copyMatching(_ query: NSDictionary,
@@ -277,7 +277,7 @@ extension PlayKeychain {
         let wantsRef = flag(query, kSecReturnRef)
         let wantsPersistentRef = flag(query, kSecReturnPersistentRef)
 
-        if let limit = multiMatchLimit(query[kSecMatchLimit as String]) {
+        if let limit = Self.multiMatchLimit(query[kSecMatchLimit as String]) {
             return copyAllMatches(Array(keychainDicts.prefix(limit)), query: query, result: result)
         }
         // Check the `r_Attributes` key. If it is set to 1 in the query
