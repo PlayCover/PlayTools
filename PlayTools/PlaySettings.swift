@@ -100,38 +100,3 @@ let settings = PlaySettings.shared
 
     @objc lazy var ignoreUnityKeyboardInitializationError = settingsData.ignoreUnityKeyboardInitializationError
 }
-
-struct AppSettingsData: Codable {
-    var keymapping = true
-    var sensitivity: Float = 50
-
-    var disableTimeout = false
-    var iosDeviceModel = "iPad13,8"
-    var windowWidth = 1920
-    var windowHeight = 1080
-    var customScaler = 2.0
-    var resolution = 2
-    var aspectRatio = 1
-    var displayRotation = 0
-    var notch = false
-    var bypass = false
-    var discordActivity = DiscordActivity()
-    var version = "2.0.0"
-    var playChain = false
-    var playChainDebugging = false
-    var inverseScreenValues = false
-    var windowFixMethod = 0
-    var rootWorkDir = true
-    var noKMOnInput = false
-    var enableScrollWheel = true
-    var hideTitleBar = false
-    var floatingWindow = false
-    var checkMicPermissionSync = false
-    var limitMotionUpdateFrequency = false
-    var disableBuiltinMouse = false
-    var resizableAspectRatioType = 0
-    var resizableAspectRatioWidth = 0
-    var resizableAspectRatioHeight = 0
-    var blockSleepSpamming = false
-    var ignoreUnityKeyboardInitializationError = false
-}
