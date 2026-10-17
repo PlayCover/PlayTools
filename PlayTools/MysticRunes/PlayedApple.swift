@@ -5,6 +5,7 @@
 //  Created by Venti on 16/01/2023.
 //
 
+// swiftlint:disable file_length
 import Foundation
 import Security
 
@@ -277,6 +278,11 @@ extension PlayKeychain {
         let wantsRef = flag(query, kSecReturnRef)
         let wantsPersistentRef = flag(query, kSecReturnPersistentRef)
 
+        // A query without return flags is an existence check.
+        if !wantsAttributes && !wantsData && !wantsRef && !wantsPersistentRef {
+            return errSecSuccess
+        }
+
         if let limit = Self.multiMatchLimit(query[kSecMatchLimit as String]) {
             return copyAllMatches(Array(keychainDicts.prefix(limit)), query: query, result: result)
         }
@@ -301,11 +307,6 @@ extension PlayKeychain {
                 return errSecItemNotFound
             }
             result?.pointee = Unmanaged.passRetained(vData as CFTypeRef)
-            return errSecSuccess
-        }
-
-        // A query without return flags is an existence check.
-        if !wantsAttributes && !wantsData && !wantsRef && !wantsPersistentRef {
             return errSecSuccess
         }
 
@@ -349,6 +350,19 @@ extension PlayKeychain {
                 return errSecItemNotFound
             }
             result?.pointee = Unmanaged.passRetained(values as CFTypeRef)
+            return errSecSuccess
+        }
+        // Same precedence as the single-item path: attributes win over a reference.
+        if wantsRef && !wantsAttributes {
+            let references = keychainDicts.compactMap({ keychainDict -> CFTypeRef? in
+                var reference: Unmanaged<CFTypeRef>?
+                return copyReference(keychainDict, result: &reference) == errSecSuccess
+                    ? reference?.takeRetainedValue() : nil
+            })
+            guard references.count == keychainDicts.count else {
+                return errSecItemNotFound
+            }
+            result?.pointee = Unmanaged.passRetained(references as CFTypeRef)
             return errSecSuccess
         }
 
