@@ -216,6 +216,16 @@ DYLD_INTERPOSE(pt_SecKeyGeneratePair, SecKeyGeneratePair)
 
 static uint8_t ue_status = 0;
 
+// Keep the original entry points in ordinary data, outside the indirect symbol
+// pointers that app resource loaders can rebind. Otherwise a loader can save our
+// wrapper as its original, then rebind the wrapper's own call back to itself.
+// Volatile prevents the compiler from turning these calls back into symbol stubs.
+static int (*volatile pt_original_open)(const char *, int, ...) = open;
+static int (*volatile pt_original_stat)(const char *, struct stat *) = stat;
+static int (*volatile pt_original_access)(const char *, int) = access;
+static int (*volatile pt_original_rename)(const char *, const char *) = rename;
+static int (*volatile pt_original_unlink)(const char *) = unlink;
+
 static char const* ue_fix_filename(char const* filename) {
     static char UE_PATTERN[1024] = "//Users/";
     getlogin_r(UE_PATTERN + 8, sizeof(UE_PATTERN) - 8);
@@ -243,26 +253,26 @@ static int pt_open(char const* restrict filename, int oflag, ... ) {
         mod = va_arg(ap, int);
         va_end(ap);
 
-        return open(filename, O_CREAT, mod);
+        return pt_original_open(filename, O_CREAT, mod);
     }
 
-    return open(filename, oflag);
+    return pt_original_open(filename, oflag);
 }
 
 static int pt_stat(char const* restrict path, struct stat* restrict buf) {
-    return stat(ue_fix_filename(path), buf);
+    return pt_original_stat(ue_fix_filename(path), buf);
 }
 
 static int pt_access(char const* path, int mode) {
-    return access(ue_fix_filename(path), mode);
+    return pt_original_access(ue_fix_filename(path), mode);
 }
 
 static int pt_rename(char const* restrict old_name, char const* restrict new_name) {
-    return rename(ue_fix_filename(old_name), ue_fix_filename(new_name));
+    return pt_original_rename(ue_fix_filename(old_name), ue_fix_filename(new_name));
 }
 
 static int pt_unlink(char const* path) {
-    return unlink(ue_fix_filename(path));
+    return pt_original_unlink(ue_fix_filename(path));
 }
 
 static NSMutableDictionary *thread_sleep_counters = nil;
