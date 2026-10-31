@@ -157,8 +157,8 @@ __attribute__((visibility("hidden")))
     return NO;
 }
 
-- (void) hook_setCurrentSubscription:(VSSubscription *)currentSubscription {
-    // do nothing
+- (void) hook_setCurrentSubscription:(id)currentSubscription {
+    // do nothing. VSSubscription is unavailable on Mac Catalyst.
 }
 
 - (NSString *)hook_stringByReplacingOccurrencesOfRegularExpressionPattern:(NSString *)pattern
