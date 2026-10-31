@@ -37,6 +37,10 @@ public class PlayKeychain: NSObject {
     // SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
     @objc static public func add(_ attributes: NSDictionary,
                                  result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
+        if playChainDB.hasDuplicate(of: attributes) {
+            debugLogger("Keychain item already exists in db")
+            return errSecDuplicateItem
+        }
         guard let keychainDict = playChainDB.insert(attributes) else {
             debugLogger("Failed to write keychain file")
             return errSecIO
@@ -265,7 +269,8 @@ extension PlayKeychain {
         let wantsRef = flag(query, kSecReturnRef)
         let wantsPersistentRef = flag(query, kSecReturnPersistentRef)
 
-        if query[kSecMatchLimit as String] as? String == kSecMatchLimitAll as String {
+        // kSecMatchLimitAll, or a numeric limit above one, asks for an array of matches.
+        if PlayKeychainDB.matchLimit(query) > 1 {
             return copyAllMatches(keychainDicts, query: query, result: result)
         }
         // Check the `r_Attributes` key. If it is set to 1 in the query
