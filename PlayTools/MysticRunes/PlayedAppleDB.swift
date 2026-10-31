@@ -13,7 +13,7 @@ class PlayKeychainDB: NSObject {
     public static let shared = PlayKeychainDB()
 
     private var dbLock: DispatchSemaphore = .init(value: 1)
-    private var dbVersion: Int = 1
+    private var dbVersion: Int = 2
 
     func query(_ attributes: NSDictionary) -> [NSMutableDictionary]? {
         guard let tableName = attributes[kSecClass] as? String,
@@ -30,7 +30,7 @@ class PlayKeychainDB: NSObject {
             return "\($0) = '\(attr)'"
         }).joined(separator: " AND ")
         guard selectWhere.count > 0 else { return nil }
-        let selectLimit = attributes[kSecMatchLimit] as? String == kSecMatchLimitOne as String ? 1 : Int.max
+        let selectLimit = PlayKeychainDB.matchLimit(attributes)
 
         let selectQuery = "SELECT * FROM \(tableName) WHERE \(selectWhere) LIMIT \(selectLimit)"
         var stmt: OpaquePointer?
@@ -220,6 +220,10 @@ class PlayKeychainDB: NSObject {
             }
         }
 
+        if userVersion(sqlite3DB) < 2 && !removeDuplicatePasswordItems(sqlite3DB) {
+            return false
+        }
+
         sqlite3_exec(sqlite3DB, "PRAGMA user_version = \(dbVersion)", nil, nil, nil)
 
         return true
@@ -304,5 +308,71 @@ class PlayKeychainDB: NSObject {
             PlayKeychain.debugLogger("Cannot decode this data \(sqlite3_column_type(stmt, index))")
             return nil
         }
+    }
+}
+
+extension PlayKeychainDB {
+    /// kSecMatchLimit as SecItemCopyMatching reads it: kSecMatchLimitOne or no limit is 1,
+    /// kSecMatchLimitAll is unlimited, and a number n is n (an array is returned when n > 1).
+    static func matchLimit(_ attributes: NSDictionary) -> Int {
+        switch attributes[kSecMatchLimit] {
+        case let limit as String:
+            return limit == kSecMatchLimitAll as String ? Int.max : 1
+        case let limit as NSNumber:
+            return max(limit.intValue, 1)
+        default:
+            return 1
+        }
+    }
+
+    /// Whether a stored item already has the primary attributes of `attributes`. The table's PRIMARY KEY
+    /// cannot catch this: items added without kSecAttrAccessGroup store NULL in agrp, and SQLite treats
+    /// NULLs in a primary key as distinct.
+    func hasDuplicate(of attributes: NSDictionary) -> Bool {
+        let probe = NSMutableDictionary(dictionary: attributes)
+        probe[kSecMatchLimit as String] = kSecMatchLimitAll as String
+        guard let matches = query(probe), !matches.isEmpty else {
+            return false
+        }
+
+        let tableName = attributes[kSecClass] as? String
+        if tableName == kSecClassGenericPassword as String || tableName == kSecClassInternetPassword as String {
+            return true
+        }
+        // Apple derives part of the primary key of keys, certificates and identities from the item
+        // itself, which PlayChain does not store, so those only match when the data is the same too.
+        guard let data = attributes[kSecValueData] as? Data else {
+            return false
+        }
+        return matches.contains(where: { ($0[kSecValueData] as? Data) == data })
+    }
+
+    private func userVersion(_ sqlite3DB: OpaquePointer) -> Int32 {
+        var stmt: OpaquePointer?
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_prepare(sqlite3DB, "PRAGMA user_version", -1, &stmt, nil) == SQLITE_OK,
+              sqlite3_step(stmt) == SQLITE_ROW else {
+            return 0
+        }
+        return sqlite3_column_int(stmt, 0)
+    }
+
+    /// Version 1 databases can hold several rows per password item (see hasDuplicate(of:)). Keep the
+    /// newest of each. Keys, certificates and identities are left alone: their stored primary columns
+    /// are not unique.
+    private func removeDuplicatePasswordItems(_ sqlite3DB: OpaquePointer) -> Bool {
+        for tableName in [kSecClassGenericPassword, kSecClassInternetPassword] {
+            let primaryKeys = PlayedAppleDBConstants.primaries[tableName]!.map({ "\($0)" }).joined(separator: ", ")
+            let dedupeQuery = "DELETE FROM \(tableName) WHERE rowid NOT IN " +
+                "(SELECT MAX(rowid) FROM \(tableName) GROUP BY \(primaryKeys))"
+            guard sqlite3_exec(sqlite3DB, dedupeQuery, nil, nil, nil) == SQLITE_OK else {
+                let errorMessage = String(cString: sqlite3_errmsg(sqlite3DB))
+                PlayKeychain.debugLogger("Failed query \(dedupeQuery)")
+                PlayKeychain.debugLogger("Failed to remove duplicate items from db table: \(errorMessage)")
+                return false
+            }
+        }
+
+        return true
     }
 }
