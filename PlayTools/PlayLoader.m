@@ -216,6 +216,28 @@ DYLD_INTERPOSE(pt_SecKeyGeneratePair, SecKeyGeneratePair)
 
 static uint8_t ue_status = 0;
 
+// Reach the real implementations through raw syscalls.
+//
+// Do NOT call `open(...)` / `stat(...)` here: that loads a __DATA symbol-pointer
+// slot in this image, and an in-app SDK that rebinds symbols fishhook-style will
+// have overwritten it with its own hook, whose "call the original" lands back in
+// us and recurses until the stack guard. dlsym() is no better: it can return the
+// interposer itself, and it runs during libSystem init where dispatch_once
+// re-enters. A syscall depends on neither.
+#include <sys/syscall.h>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+static inline int real_open(const char *p, int f, int m) { return (int)syscall(SYS_open, p, f, m); }
+static inline int real_stat(const char *p, struct stat *b) { return (int)syscall(SYS_stat64, p, b); }
+static inline int real_access(const char *p, int m) { return (int)syscall(SYS_access, p, m); }
+static inline int real_rename(const char *o, const char *n) { return (int)syscall(SYS_rename, o, n); }
+static inline int real_unlink(const char *p) { return (int)syscall(SYS_unlink, p); }
+#pragma clang diagnostic pop
+
+// ue_fix_filename() only rewrites anything when we detected UnrealEngine, so
+// every other app can skip it entirely.
+static inline BOOL pt_fs_passthrough(void) { return ue_status != 2; }
+
 static char const* ue_fix_filename(char const* filename) {
     static char UE_PATTERN[1024] = "//Users/";
     getlogin_r(UE_PATTERN + 8, sizeof(UE_PATTERN) - 8);
@@ -234,35 +256,42 @@ static char const* ue_fix_filename(char const* filename) {
 }
 
 static int pt_open(char const* restrict filename, int oflag, ... ) {
-    filename = ue_fix_filename(filename);
+    if (!pt_fs_passthrough()) {
+        filename = ue_fix_filename(filename);
+    }
 
-    if (oflag == O_CREAT) {
+    if (oflag & O_CREAT) {
         int mod;
         va_list ap;
         va_start(ap, oflag);
         mod = va_arg(ap, int);
         va_end(ap);
 
-        return open(filename, O_CREAT, mod);
+        return real_open(filename, oflag, mod);
     }
 
-    return open(filename, oflag);
+    return real_open(filename, oflag, 0);
 }
 
 static int pt_stat(char const* restrict path, struct stat* restrict buf) {
-    return stat(ue_fix_filename(path), buf);
+    char const* p = pt_fs_passthrough() ? path : ue_fix_filename(path);
+    return real_stat(p, buf);
 }
 
 static int pt_access(char const* path, int mode) {
-    return access(ue_fix_filename(path), mode);
+    char const* p = pt_fs_passthrough() ? path : ue_fix_filename(path);
+    return real_access(p, mode);
 }
 
 static int pt_rename(char const* restrict old_name, char const* restrict new_name) {
-    return rename(ue_fix_filename(old_name), ue_fix_filename(new_name));
+    char const* o = pt_fs_passthrough() ? old_name : ue_fix_filename(old_name);
+    char const* n = pt_fs_passthrough() ? new_name : ue_fix_filename(new_name);
+    return real_rename(o, n);
 }
 
 static int pt_unlink(char const* path) {
-    return unlink(ue_fix_filename(path));
+    char const* p = pt_fs_passthrough() ? path : ue_fix_filename(path);
+    return real_unlink(p);
 }
 
 static NSMutableDictionary *thread_sleep_counters = nil;
