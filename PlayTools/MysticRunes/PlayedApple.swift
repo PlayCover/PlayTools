@@ -158,6 +158,11 @@ public class PlayKeychain: NSObject {
             privateKeyAttrs[kSecAttrIsPermanent as String] = false
         }
         var parametersCopy = parameters as! [String: Any] // swiftlint:disable:this force_cast
+        if isPermanent {
+            // Secure Enclave keys cannot be exported to the db, so create a software key instead
+            parametersCopy.removeValue(forKey: kSecAttrTokenID as String)
+            privateKeyAttrs.removeValue(forKey: kSecAttrAccessControl as String)
+        }
         parametersCopy[kSecPrivateKeyAttrs as String] = privateKeyAttrs
         var error: Unmanaged<CFError>?
         guard let key = SecKeyCreateRandomKey(parametersCopy as CFDictionary, &error) else {
@@ -166,12 +171,10 @@ public class PlayKeychain: NSObject {
         }
         if isPermanent {
             // Add the key to the keychain db with the original attributes
-            var keychainDict = [String: Any]()
+            var keychainDict = lookupAttributes(parameters, keyAttrs: kSecPrivateKeyAttrs)
             keychainDict[kSecClass as String] = kSecClassKey
             keychainDict[kSecAttrKeyType as String] = parameters[kSecAttrKeyType as String]
-            keychainDict[kSecAttrKeyClass as String] = parameters[kSecAttrKeyClass as String]
-            keychainDict["type"] = parameters[kSecAttrKeyType as String]
-            keychainDict["kcls"] = parameters[kSecAttrKeyClass as String]
+            keychainDict[kSecAttrKeyClass as String] = kSecAttrKeyClassPrivate
             keychainDict["v_Data"] = SecKeyCopyExternalRepresentation(key, nil) as? Data
             keychainDict["r_Attributes"] = 1
             guard playChainDB.insert(keychainDict as NSDictionary) != nil else {
@@ -180,6 +183,20 @@ public class PlayKeychain: NSObject {
             }
         }
         return Unmanaged.passRetained(key)
+    }
+
+    // Attributes apps use to find a generated key again, from the top level or the per-key dict
+    private static func lookupAttributes(_ parameters: NSDictionary, keyAttrs: CFString) -> [String: Any] {
+        let perKeyAttrs = parameters[keyAttrs as String] as? NSDictionary
+        let keys = [kSecAttrApplicationTag, kSecAttrApplicationLabel, kSecAttrLabel,
+                    kSecAttrAccessGroup, kSecAttrAccessible].map { $0 as String }
+        var attributes = [String: Any]()
+        for key in keys {
+            if let value = perKeyAttrs?[key] ?? parameters[key] {
+                attributes[key] = value
+            }
+        }
+        return attributes
     }
 
     // swiftlint:disable:next function_body_length
@@ -220,7 +237,7 @@ public class PlayKeychain: NSObject {
             // Add the keys to the keychain db with the original attributes
             let publicKeyRef = newPublicKey
             let privateKeyRef = newPrivateKey
-            var publicKeyDict = [String: Any]()
+            var publicKeyDict = lookupAttributes(parameters, keyAttrs: kSecPublicKeyAttrs)
             publicKeyDict[kSecClass as String] = kSecClassKey
             publicKeyDict[kSecAttrKeyType as String] = parameters[kSecAttrKeyType as String]
             publicKeyDict[kSecAttrKeyClass as String] = kSecAttrKeyClassPublic
@@ -232,7 +249,7 @@ public class PlayKeychain: NSObject {
                 debugLogger("Failed to write public key to keychain db")
                 return errSecMissingEntitlement
             }
-            var privateKeyDict = [String: Any]()
+            var privateKeyDict = lookupAttributes(parameters, keyAttrs: kSecPrivateKeyAttrs)
             privateKeyDict[kSecClass as String] = kSecClassKey
             privateKeyDict[kSecAttrKeyType as String] = parameters[kSecAttrKeyType as String]
             privateKeyDict[kSecAttrKeyClass as String] = kSecAttrKeyClassPrivate
