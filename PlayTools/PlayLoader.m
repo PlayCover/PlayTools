@@ -12,8 +12,36 @@
 #import <sys/utsname.h>
 #import "NSObject+Swizzle.h"
 #import <dlfcn.h>
+#import <objc/runtime.h>
 
 @import MachO;
+
+static BOOL pt_cloudGameIsIOSAppOnMac(__unused id self, __unused SEL selector) {
+    return NO;
+}
+
+static void pt_preserveCloudGameCatalystIdentity(void) {
+    if (![NSBundle.mainBundle.bundleIdentifier isEqualToString:@"com.miHoYo.cloudgames.hkrpg"]) {
+        return;
+    }
+
+    NSProcessInfo *info = NSProcessInfo.processInfo;
+    if (!info.isMacCatalystApp) {
+        return;
+    }
+
+    // CloudGame selects client_type=12 when this flag is true. Its dispatcher
+    // rejects that request with -110002; native Catalyst identity selects 1.
+    // ProcessInfo has a concrete runtime subclass, so replace its getter rather
+    // than the method on the abstract NSProcessInfo class.
+    Class concreteClass = object_getClass(info);
+    SEL selector = @selector(isiOSAppOnMac);
+    Method method = class_getInstanceMethod(concreteClass, selector);
+    if (method != NULL) {
+        class_replaceMethod(concreteClass, selector, (IMP)pt_cloudGameIsIOSAppOnMac,
+                            method_getTypeEncoding(method));
+    }
+}
 
 // Get device model from playcover .plist
 // With a null terminator
@@ -331,6 +359,7 @@ DYLD_INTERPOSE(pt_usleep, usleep)
 
 static void __attribute__((constructor)) initialize(void) {
     [PlayCover launch];
+    pt_preserveCloudGameCatalystIdentity();
     
     if (ue_status == 0) {
         if (PlayInfo.isUnrealEngine) {
