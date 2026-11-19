@@ -327,9 +327,29 @@ DYLD_INTERPOSE(pt_rename, rename)
 DYLD_INTERPOSE(pt_unlink, unlink)
 DYLD_INTERPOSE(pt_usleep, usleep)
 
+static void pt_applyUIScaleFactor(void) {
+    double uiScale = [[PlaySettings shared] uiScale];
+    if (uiScale <= 0.0) {
+        uiScale = 0.77;
+    }
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if (uiScale >= 0.76 && uiScale <= 0.78) {
+        [defaults removeObjectForKey:@"iOSMacScaleFactor"];
+        [defaults removeObjectForKey:@"UINSLastUsedWindowScaleFactor"];
+    } else if (uiScale >= 0.5 && uiScale <= 3.0) {
+        [defaults setDouble:uiScale forKey:@"iOSMacScaleFactor"];
+        [defaults removeObjectForKey:@"UINSLastUsedWindowScaleFactor"];
+    } else {
+        [defaults setDouble:1.0 forKey:@"iOSMacScaleFactor"];
+        [defaults removeObjectForKey:@"UINSLastUsedWindowScaleFactor"];
+    }
+    [defaults synchronize];
+}
+
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
+    pt_applyUIScaleFactor();
     [PlayCover launch];
     
     if (ue_status == 0) {
