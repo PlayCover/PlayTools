@@ -14,6 +14,7 @@ private struct AKAppSettingsData: Codable {
     var hideTitleBar: Bool?
     var floatingWindow: Bool?
     var resolution: Int?
+    var resizableAspectRatioType: Int?
     var resizableAspectRatioWidth: Int?
     var resizableAspectRatioHeight: Int?
 }
@@ -291,15 +292,12 @@ class AKPlugin: NSObject, Plugin {
     private var hideTitleBarSetting: Bool { Self.akAppSettingsData?.hideTitleBar ?? false }
     private var floatingWindowSetting: Bool { Self.akAppSettingsData?.floatingWindow ?? false }
     private var aspectRatioSetting: NSSize? {
-        guard Self.akAppSettingsData?.resolution == 6 else {
-            return nil
-        }
-        let width = Self.akAppSettingsData?.resizableAspectRatioWidth ?? 0
-        let height = Self.akAppSettingsData?.resizableAspectRatioHeight ?? 0
-        guard width > 0 && height > 0 else {
-            return nil
-        }
-        return NSSize(width: width, height: height)
+        guard let data = Self.akAppSettingsData,
+              data.resolution == 6,
+              data.resizableAspectRatioType != 0 else { return nil }
+        let width = data.resizableAspectRatioWidth ?? 0
+        let height = data.resizableAspectRatioHeight ?? 0
+        return (width > 0 && height > 0) ? NSSize(width: width, height: height) : nil
     }
 
     fileprivate static var akAppSettingsData: AKAppSettingsData? = {
