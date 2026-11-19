@@ -25,9 +25,15 @@ __attribute__((visibility("hidden")))
 - (void) swizzleInstanceMethod:(SEL)origSelector withMethod:(SEL)newSelector
 {
     Class cls = [self class];
+    if (!cls) {
+        return;
+    }
     // If current class doesn't exist selector, then get super
     Method originalMethod = class_getInstanceMethod(cls, origSelector);
     Method swizzledMethod = class_getInstanceMethod(cls, newSelector);
+    if (!originalMethod || !swizzledMethod) {
+        return;
+    }
     
     // Add selector if it doesn't exist, implement append with method
     if (class_addMethod(cls,
@@ -56,17 +62,29 @@ __attribute__((visibility("hidden")))
 - (void) swizzleExchangeMethod:(SEL)origSelector withMethod:(SEL)newSelector
 {
     Class cls = [self class];
+    if (!cls) {
+        return;
+    }
     // If current class doesn't exist selector, then get super
     Method originalMethod = class_getInstanceMethod(cls, origSelector);
     Method swizzledMethod = class_getInstanceMethod(cls, newSelector);
+    if (!originalMethod || !swizzledMethod) {
+        return;
+    }
     
     method_exchangeImplementations(originalMethod, swizzledMethod);
 }
 
 + (void) swizzleClassMethod:(SEL)origSelector withMethod:(SEL)newSelector {
     Class cls = object_getClass((id)self);
+    if (!cls) {
+        return;
+    }
     Method originalMethod = class_getClassMethod(cls, origSelector);
     Method swizzledMethod = class_getClassMethod(cls, newSelector);
+    if (!originalMethod || !swizzledMethod) {
+        return;
+    }
 
     if (class_addMethod(cls,
                         origSelector,

@@ -12,6 +12,7 @@
 #import <sys/utsname.h>
 #import "NSObject+Swizzle.h"
 #import <dlfcn.h>
+#import <objc/runtime.h>
 
 @import MachO;
 
@@ -64,7 +65,10 @@ static int pt_sysctl(int *name, u_int types, void *buf, size_t *size, void *arg0
     return sysctl(name, types, buf, size, arg0, arg1);
 }
 
+static int (* volatile pt_orig_sysctlbyname)(const char *, void *, size_t *, void *, size_t) = NULL;
+
 static int pt_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *newp, size_t newlen) {
+    int (*orig_fn)(const char *, void *, size_t *, void *, size_t) = pt_orig_sysctlbyname ? pt_orig_sysctlbyname : &sysctlbyname;
     if ((strcmp(name, "hw.machine") == 0) || (strcmp(name, "hw.product") == 0) || (strcmp(name, "hw.model") == 0)) {
         if (oldp == NULL) {
             *oldlenp = strlen(DEVICE_MODEL) + 1;
@@ -78,7 +82,7 @@ static int pt_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
             *oldlenp = strlen(DEVICE_MODEL) + 1;
             return 0;
         } else {
-            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
+            int ret = orig_fn(name, oldp, oldlenp, newp, newlen);
             return ret;
         }
     } else if ((strcmp(name, "hw.target") == 0)) {
@@ -93,11 +97,11 @@ static int pt_sysctlbyname(const char *name, void *oldp, size_t *oldlenp, void *
             *oldlenp = strlen(OEM_ID) + 1;
             return 0;
         } else {
-            int ret = sysctlbyname(name, oldp, oldlenp, newp, newlen);
+            int ret = orig_fn(name, oldp, oldlenp, newp, newlen);
             return ret;
         }
     } else {
-        return sysctlbyname(name, oldp, oldlenp, newp, newlen);
+        return orig_fn(name, oldp, oldlenp, newp, newlen);
     }
 }
 
@@ -215,54 +219,87 @@ DYLD_INTERPOSE(pt_SecKeyCreateRandomKey, SecKeyCreateRandomKey)
 DYLD_INTERPOSE(pt_SecKeyGeneratePair, SecKeyGeneratePair)
 
 static uint8_t ue_status = 0;
+static char UE_PATTERN[1024] = "//Users/";
+static BOOL ue_pattern_ready = NO;
+
+static void init_ue_pattern(void) {
+    if (ue_pattern_ready) {
+        return;
+    }
+    if (getlogin_r(UE_PATTERN + 8, sizeof(UE_PATTERN) - 8) == 0 && UE_PATTERN[8] != '\0') {
+        ue_pattern_ready = YES;
+    }
+}
 
 static char const* ue_fix_filename(char const* filename) {
-    static char UE_PATTERN[1024] = "//Users/";
-    getlogin_r(UE_PATTERN + 8, sizeof(UE_PATTERN) - 8);
-    
-    char const* p = filename;
-    if (ue_status == 2) {
-        char const* last_p = p;
-        while ((p = strstr(p, UE_PATTERN))) {
-            last_p = ++p;
-        }
-        
-        return last_p;
+    // Cache getlogin_r once instead of querying libsystem_c on hot I/O paths where crash
+    // reporters may suspend threads while invoking open/rename, preventing mutex deadlocks.
+    if (ue_status != 2 || !ue_pattern_ready || !filename) {
+        return filename;
     }
 
-    return p;
+    char const* p = filename;
+    char const* last_p = p;
+    while ((p = strstr(p, UE_PATTERN))) {
+        last_p = ++p;
+    }
+    return last_p;
+}
+
+// Snapshot libc pointers at constructor time into writable globals so runtime fishhook /
+// rebind_symbols hooks installed by third-party SDKs cannot cause mutual recursion cycles.
+static int (* volatile pt_orig_open)(char const* restrict, int, ...) = NULL;
+static int (* volatile pt_orig_stat)(char const* restrict, struct stat* restrict) = NULL;
+static int (* volatile pt_orig_access)(char const*, int) = NULL;
+static int (* volatile pt_orig_rename)(char const* restrict, char const* restrict) = NULL;
+static int (* volatile pt_orig_unlink)(char const*) = NULL;
+static int (* volatile pt_orig_usleep)(useconds_t) = NULL;
+
+__attribute__((constructor(101))) static void pt_snapshot_libc_originals(void) {
+    pt_orig_sysctlbyname = &sysctlbyname;
+    pt_orig_open = &open;
+    pt_orig_stat = &stat;
+    pt_orig_access = &access;
+    pt_orig_rename = &rename;
+    pt_orig_unlink = &unlink;
+    pt_orig_usleep = &usleep;
 }
 
 static int pt_open(char const* restrict filename, int oflag, ... ) {
     filename = ue_fix_filename(filename);
+    int (*orig_fn)(char const* restrict, int, ...) = pt_orig_open ? pt_orig_open : &open;
 
-    if (oflag == O_CREAT) {
+    if (oflag & O_CREAT) {
         int mod;
         va_list ap;
         va_start(ap, oflag);
         mod = va_arg(ap, int);
         va_end(ap);
 
-        return open(filename, O_CREAT, mod);
+        return orig_fn(filename, oflag, mod);
     }
 
-    return open(filename, oflag);
+    return orig_fn(filename, oflag);
 }
 
 static int pt_stat(char const* restrict path, struct stat* restrict buf) {
-    return stat(ue_fix_filename(path), buf);
+    int (*orig_fn)(char const* restrict, struct stat* restrict) = pt_orig_stat ? pt_orig_stat : &stat;
+    return orig_fn(ue_fix_filename(path), buf);
 }
 
 static int pt_access(char const* path, int mode) {
-    return access(ue_fix_filename(path), mode);
+    int (*orig_fn)(char const*, int) = pt_orig_access ? pt_orig_access : &access;
+    return orig_fn(ue_fix_filename(path), mode);
 }
 
 static int pt_rename(char const* restrict old_name, char const* restrict new_name) {
-    return rename(ue_fix_filename(old_name), ue_fix_filename(new_name));
+    int (*orig_fn)(char const* restrict, char const* restrict) = pt_orig_rename ? pt_orig_rename : &rename;
+    return orig_fn(ue_fix_filename(old_name), ue_fix_filename(new_name));
 }
 
 static int pt_unlink(char const* path) {
-    return unlink(ue_fix_filename(path));
+    int (*orig_fn)(char const*) = pt_orig_unlink ? pt_orig_unlink : &unlink;
+    return orig_fn(ue_fix_filename(path));
 }
 
 static NSMutableDictionary *thread_sleep_counters = nil;
@@ -316,7 +353,8 @@ static int pt_usleep(useconds_t time) {
         }
     }
     
-    return usleep(time);
+    int (*orig_fn)(useconds_t) = pt_orig_usleep ? pt_orig_usleep : &usleep;
+    return orig_fn(time);
 }
 
 
@@ -327,9 +365,56 @@ DYLD_INTERPOSE(pt_rename, rename)
 DYLD_INTERPOSE(pt_unlink, unlink)
 DYLD_INTERPOSE(pt_usleep, usleep)
 
+static void (*pt_origLetBackgroundTasksCompleteWithTimeout)(id, SEL, double) = NULL;
+static BOOL pt_terminationHookInstalled = NO;
+
+static void pt_letBackgroundTasksCompleteWithTimeout(id self, SEL _cmd, double timeout) {
+    // Cap UIKitMacHelper's post-Cmd+Q background-task grace window (default 35s) so SDK
+    // tasks opened during applicationDidEnterBackground cannot leave exited apps in a
+    // zombie state.
+    double cappedTimeout = (timeout > 0.35) ? 0.35 : timeout;
+    if (pt_origLetBackgroundTasksCompleteWithTimeout) {
+        pt_origLetBackgroundTasksCompleteWithTimeout(self, _cmd, cappedTimeout);
+    }
+}
+
+static void pt_tryInstallTerminationTimeoutHookNow(void) {
+    if (pt_terminationHookInstalled) {
+        return;
+    }
+    Class termCtrl = objc_getClass("UINSUIKitTerminationController");
+    if (!termCtrl) {
+        return;
+    }
+    SEL sel = sel_registerName("letBackgroundTasksCompleteWithTimeout:");
+    Method m = class_getInstanceMethod(termCtrl, sel);
+    if (m) {
+        pt_origLetBackgroundTasksCompleteWithTimeout = (void (*)(id, SEL, double))method_getImplementation(m);
+        class_replaceMethod(termCtrl, sel, (IMP)pt_letBackgroundTasksCompleteWithTimeout, method_getTypeEncoding(m));
+        pt_terminationHookInstalled = YES;
+    }
+}
+
+static void pt_installTerminationTimeoutHooks(void) {
+    pt_tryInstallTerminationTimeoutHookNow();
+    if (!pt_terminationHookInstalled) {
+        [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationDidFinishLaunchingNotification
+                                                          object:nil
+                                                           queue:nil
+                                                      usingBlock:^(NSNotification * _Nonnull note) {
+            pt_tryInstallTerminationTimeoutHookNow();
+        }];
+    }
+}
+
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
+    // Prevent AppKit's "unexpectedly quit while reopening windows" modal from blocking Catalyst launch.
+    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"ApplePersistenceIgnoreState"];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        pt_installTerminationTimeoutHooks();
+    });
     [PlayCover launch];
     
     if (ue_status == 0) {
@@ -339,6 +424,7 @@ static void __attribute__((constructor)) initialize(void) {
     }
     
     if (ue_status == 2) {
+        init_ue_pattern();
         [PlayKeychain debugLogger: [NSString stringWithFormat:@"UnrealEngine Hooked"]];
     }
 
