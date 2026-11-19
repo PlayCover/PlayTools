@@ -12,41 +12,72 @@ import Foundation
 public class TouchscreenMouseEventAdapter: MouseEventAdapter {
 
     static public func cursorPos() -> CGPoint? {
-        // IMPROVE: this is expensive (maybe?)
-        var point = AKInterface.shared!.mousePoint
-        let rect = AKInterface.shared!.windowFrame
-        if rect.width < 1 || rect.height < 1 {
+        guard let akInterface = AKInterface.shared else { return nil }
+        var point = akInterface.mousePoint
+        let winFrame = akInterface.windowFrame
+        let rawContent = akInterface.contentLayoutRect
+        let contentRect = (rawContent.width >= 1 && rawContent.height >= 1)
+            ? rawContent
+            : CGRect(origin: .zero, size: winFrame.size)
+
+        if contentRect.width < 1 || contentRect.height < 1 || winFrame.width < 1 || winFrame.height < 1 {
             return nil
         }
-        if screen.resizable && !screen.fullscreen {
-            // Allow user to resize window by dragging edges
-            let margin = CGFloat(10)
-            if point.x < margin || point.x > rect.width - margin ||
-                point.y < margin || point.y > rect.height - margin {
-                return nil
-            }
+        if screen.resizable && !screen.fullscreen && isOnResizeEdge(point, winFrame: winFrame) {
+            return nil
         }
+        if PlaySettings.shared.dynamicWindowMode {
+            return dynamicCursorPos(point: point, winFrame: winFrame, contentRect: contentRect)
+        }
+
+        let rect = contentRect
         let viewRect: CGRect = screen.screenRect
         let widthRate = viewRect.width / rect.width
         var rate = viewRect.height / rect.height
         if widthRate > rate {
-            // Keep aspect ratio
             rate = widthRate
         }
+        point.x -= rect.minX
+        point.y -= rect.minY
         if screen.fullscreen {
-            // Vertically in center
-            point.y -= (rect.height - viewRect.height / rate)/2
+            point.y -= (rect.height - viewRect.height / rate) / 2
         }
-        point.y *= rate
-        point.y = viewRect.height - point.y
-        // For traffic light buttons when not fullscreen
+        point.y = viewRect.height - point.y * rate
         if point.y < 0 {
             return nil
         }
-        // Horizontally in center
-        point.x -= (rect.width - viewRect.width / rate)/2
-        point.x *= rate
+        point.x = (point.x - (rect.width - viewRect.width / rate) / 2) * rate
         return point
+    }
+
+    private static func isOnResizeEdge(_ point: CGPoint, winFrame: CGRect) -> Bool {
+        let margin = CGFloat(10)
+        return point.x < margin || point.x > winFrame.width - margin
+            || point.y < margin || point.y > winFrame.height - margin
+    }
+
+    private static func dynamicCursorPos(
+        point: CGPoint,
+        winFrame: CGRect,
+        contentRect: CGRect
+    ) -> CGPoint? {
+        let targetRect = screen.primaryWindowBounds ?? screen.screenRect
+        guard targetRect.width >= 1, targetRect.height >= 1 else { return nil }
+        let useFullFrame = PlaySettings.shared.hideTitleBar
+            && abs(targetRect.height - winFrame.height) < 2
+        if useFullFrame && point.y > contentRect.maxY {
+            return nil
+        }
+        let refRect = useFullFrame ? CGRect(origin: .zero, size: winFrame.size) : contentRect
+        let localX = point.x - refRect.minX
+        let localY = refRect.maxY - point.y
+        guard localX >= 0, localX <= refRect.width, localY >= 0, localY <= refRect.height else {
+            return nil
+        }
+        return screen.windowPoint(
+            forNormalizedContentX: localX / refRect.width,
+            y: localY / refRect.height
+        )
     }
 
     public func handleScrollWheel(deltaX: CGFloat, deltaY: CGFloat) -> Bool {

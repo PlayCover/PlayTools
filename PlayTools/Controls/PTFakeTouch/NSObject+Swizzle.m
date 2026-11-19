@@ -153,6 +153,77 @@ __attribute__((visibility("hidden")))
     return [PlayScreen boundsResizable:[self hook_boundsResizable]];
 }
 
+- (CGRect) hook_nativeBoundsResizable {
+    return [PlayScreen nativeBoundsResizable:[self hook_nativeBoundsResizable]];
+}
+
+- (void) hook_uiwindow_layoutSubviews {
+    [self hook_uiwindow_layoutSubviews];
+    if ([self isKindOfClass:[UIWindow class]]) {
+        [PlayScreen onWindowLayoutSubviews:(UIWindow *)self];
+    }
+}
+
+- (void) hook_uiwindow_setFrame:(CGRect)frame {
+    if ([self isKindOfClass:[UIWindow class]]
+        && [PlayScreen interceptWindowSetFrame:(UIWindow *)self frame:frame]) {
+        return;
+    }
+    [self hook_uiwindow_setFrame:frame];
+}
+
+- (void) hook_uiwindow_setBounds:(CGRect)bounds {
+    if ([self isKindOfClass:[UIWindow class]]
+        && [PlayScreen interceptWindowSetBounds:(UIWindow *)self bounds:bounds]) {
+        return;
+    }
+    [self hook_uiwindow_setBounds:bounds];
+}
+
+- (void) hook_uiwindow_setRootViewController:(UIViewController *)rootViewController {
+    if ([self isKindOfClass:[UIWindow class]]) {
+        [PlayScreen onWindowWillSetRootViewController:(UIWindow *)self];
+    }
+    [self hook_uiwindow_setRootViewController:rootViewController];
+}
+
+- (void) hook_uiwindow_didAddSubview:(UIView *)subview {
+    [self hook_uiwindow_didAddSubview:subview];
+    if ([self isKindOfClass:[UIWindow class]] && subview) {
+        [PlayScreen onWindow:(UIWindow *)self didAddSubview:subview];
+    }
+}
+
+- (id) hook_nsbundle_objectForInfoDictionaryKey:(NSString *)key {
+    id orig = [self hook_nsbundle_objectForInfoDictionaryKey:key];
+    if (key && [self isEqual:[NSBundle mainBundle]]) {
+        return [PlayScreen resolvedMainBundleInfoValue:orig forKey:key];
+    }
+    return orig;
+}
+
+- (NSDictionary<NSString *, id> *) hook_nsbundle_infoDictionary {
+    NSDictionary<NSString *, id> *orig = [self hook_nsbundle_infoDictionary];
+    if ([self isEqual:[NSBundle mainBundle]]) {
+        return [PlayScreen resolvedMainBundleInfoDictionary:orig];
+    }
+    return orig;
+}
+
+- (void) hook_vc_viewWillLayoutSubviews {
+    [self hook_vc_viewWillLayoutSubviews];
+    if ([self isKindOfClass:[UIViewController class]]) {
+        [PlayScreen onViewControllerLayout:(UIViewController *)self];
+    }
+}
+
+- (void) hook_vc_viewDidAppear:(BOOL)animated {
+    [self hook_vc_viewDidAppear:animated];
+    if ([self isKindOfClass:[UIViewController class]]) {
+        [PlayScreen onViewControllerLayout:(UIViewController *)self];
+    }
+}
+
 - (BOOL) hook_requiresFullScreen {
     return NO;
 }
@@ -257,11 +328,27 @@ bool menuWasCreated = false;
 + (void)load {
     // This might need refactor soon
     if(@available(iOS 16.3, *)) {
-        if ([[PlaySettings shared] resizableWindow]) {
+        if ([[PlaySettings shared] dynamicWindowMode]) {
             [objc_getClass("_UIApplicationInfoParser") swizzleInstanceMethod:NSSelectorFromString(@"requiresFullScreen") withMethod:@selector(hook_requiresFullScreen)];
             [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(bounds) withMethod:@selector(hook_boundsResizable)];
+            [objc_getClass("UIScreen") swizzleInstanceMethod:NSSelectorFromString(@"applicationFrame") withMethod:@selector(hook_boundsResizable)];
+            [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeBounds) withMethod:@selector(hook_nativeBoundsResizable)];
             [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(nativeScale) withMethod:@selector(hook_nativeScale)];
             [objc_getClass("UIScreen") swizzleInstanceMethod:@selector(scale) withMethod:@selector(hook_scale)];
+            [objc_getClass("UIWindow") swizzleInstanceMethod:@selector(layoutSubviews) withMethod:@selector(hook_uiwindow_layoutSubviews)];
+            [objc_getClass("UIWindow") swizzleInstanceMethod:@selector(setFrame:) withMethod:@selector(hook_uiwindow_setFrame:)];
+            [objc_getClass("UIWindow") swizzleInstanceMethod:@selector(setBounds:) withMethod:@selector(hook_uiwindow_setBounds:)];
+            [objc_getClass("UIWindow") swizzleInstanceMethod:@selector(setRootViewController:) withMethod:@selector(hook_uiwindow_setRootViewController:)];
+            [objc_getClass("UIWindow") swizzleInstanceMethod:@selector(didAddSubview:) withMethod:@selector(hook_uiwindow_didAddSubview:)];
+            if ([[PlaySettings shared] sdkShift]) {
+                Class bundleCls = [NSBundle class];
+                [bundleCls swizzleInstanceMethod:@selector(objectForInfoDictionaryKey:)
+                                      withMethod:@selector(hook_nsbundle_objectForInfoDictionaryKey:)];
+                [bundleCls swizzleInstanceMethod:@selector(infoDictionary)
+                                      withMethod:@selector(hook_nsbundle_infoDictionary)];
+            }
+            [objc_getClass("UIViewController") swizzleInstanceMethod:@selector(viewWillLayoutSubviews) withMethod:@selector(hook_vc_viewWillLayoutSubviews)];
+            [objc_getClass("UIViewController") swizzleInstanceMethod:@selector(viewDidAppear:) withMethod:@selector(hook_vc_viewDidAppear:)];
         }
         else if ([[PlaySettings shared] adaptiveDisplay]) {
             // This is an experimental fix
