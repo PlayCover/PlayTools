@@ -27,8 +27,15 @@ class Toucher {
                 return
             }
             tid = -1
-            keyWindow = screen.keyWindow
-            keyView = keyWindow!.hitTest(point, with: nil)
+            // A click can arrive while the app has no key window yet (scene still
+            // attaching, or the window is transiently ordered out). Force-unwrapping
+            // it crashed the whole app, so bail out instead.
+            guard let currentWindow = screen.keyWindow else {
+                tid = nil
+                return
+            }
+            keyWindow = currentWindow
+            keyView = currentWindow.hitTest(point, with: nil)
         } else if tid == nil {
             return
         }
