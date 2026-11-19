@@ -12,6 +12,7 @@
 #import <sys/utsname.h>
 #import "NSObject+Swizzle.h"
 #import <dlfcn.h>
+#import <objc/runtime.h>
 
 @import MachO;
 
@@ -327,9 +328,340 @@ DYLD_INTERPOSE(pt_rename, rename)
 DYLD_INTERPOSE(pt_unlink, unlink)
 DYLD_INTERPOSE(pt_usleep, usleep)
 
+#pragma mark - CloudKit Compatibility Guard
+
+static Class pt_CKContainerClass = Nil;
+static Class pt_CKDatabaseClass = Nil;
+static id (*pt_origCKDefaultContainer)(id, SEL) = NULL;
+static id (*pt_origCKContainerWithIdentifier)(id, SEL, NSString *) = NULL;
+static BOOL pt_cloudKitHooksInstalled = NO;
+
+static NSError *pt_cloudKitMissingEntitlementError(void) {
+    return [NSError errorWithDomain:@"CKErrorDomain"
+                               code:8 /* CKErrorMissingEntitlement */
+                           userInfo:@{NSLocalizedDescriptionKey: @"Missing CloudKit entitlement"}];
+}
+
+@interface PTStubCKDatabase : NSObject
+@property (nonatomic, assign) NSInteger databaseScope;
+@end
+
+@implementation PTStubCKDatabase
+
+- (BOOL)isKindOfClass:(Class)aClass {
+    return [super isKindOfClass:aClass] || (pt_CKDatabaseClass && [pt_CKDatabaseClass isSubclassOfClass:aClass]);
+}
+
+- (void)pt_failCompletion:(void (^)(id _Nullable, NSError * _Nullable))completion {
+    if (!completion) {
+        return;
+    }
+    NSError *err = pt_cloudKitMissingEntitlementError();
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        completion(nil, err);
+    });
+}
+
+- (void)fetchRecordWithID:(id)recordID completionHandler:(void (^)(id _Nullable, NSError * _Nullable))completionHandler {
+    [self pt_failCompletion:completionHandler];
+}
+
+- (void)saveRecord:(id)record completionHandler:(void (^)(id _Nullable, NSError * _Nullable))completionHandler {
+    [self pt_failCompletion:completionHandler];
+}
+
+- (void)deleteRecordWithID:(id)recordID completionHandler:(void (^)(id _Nullable, NSError * _Nullable))completionHandler {
+    [self pt_failCompletion:completionHandler];
+}
+
+- (void)performQuery:(id)query inZoneWithID:(id)zoneID completionHandler:(void (^)(NSArray * _Nullable, NSError * _Nullable))completionHandler {
+    [self pt_failCompletion:(void (^)(id, NSError *))completionHandler];
+}
+
+- (void)fetchAllRecordZonesWithCompletionHandler:(void (^)(NSArray * _Nullable, NSError * _Nullable))completionHandler {
+    [self pt_failCompletion:(void (^)(id, NSError *))completionHandler];
+}
+
+- (void)fetchRecordZoneWithID:(id)zoneID completionHandler:(void (^)(id _Nullable, NSError * _Nullable))completionHandler {
+    [self pt_failCompletion:completionHandler];
+}
+
+- (void)saveRecordZone:(id)zone completionHandler:(void (^)(id _Nullable, NSError * _Nullable))completionHandler {
+    [self pt_failCompletion:completionHandler];
+}
+
+- (void)deleteRecordZoneWithID:(id)zoneID completionHandler:(void (^)(id _Nullable, NSError * _Nullable))completionHandler {
+    [self pt_failCompletion:completionHandler];
+}
+
+- (void)fetchAllSubscriptionsWithCompletionHandler:(void (^)(NSArray * _Nullable, NSError * _Nullable))completionHandler {
+    [self pt_failCompletion:(void (^)(id, NSError *))completionHandler];
+}
+
+- (void)addOperation:(id)operation {
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {
+    NSMethodSignature *sig = [super methodSignatureForSelector:aSelector];
+    if (!sig && pt_CKDatabaseClass) {
+        sig = [pt_CKDatabaseClass instanceMethodSignatureForSelector:aSelector];
+    }
+    return sig ?: [NSMethodSignature signatureWithObjCTypes:"v@:"];
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation {
+    // Zero-initialize any return buffer so callers receive nil/0/NO cleanly.
+    NSUInteger retLen = anInvocation.methodSignature.methodReturnLength;
+    if (retLen > 0) {
+        uint8_t *zeroBuf = calloc(1, retLen);
+        if (zeroBuf) {
+            [anInvocation setReturnValue:zeroBuf];
+            free(zeroBuf);
+        }
+    }
+}
+
+@end
+
+@interface PTStubCKContainer : NSObject
+@property (nonatomic, copy) NSString *containerIdentifier;
+@property (nonatomic, strong) PTStubCKDatabase *privateCloudDatabase;
+@property (nonatomic, strong) PTStubCKDatabase *publicCloudDatabase;
+@property (nonatomic, strong) PTStubCKDatabase *sharedCloudDatabase;
+@end
+
+@implementation PTStubCKContainer
+
+- (instancetype)initWithIdentifier:(NSString *)identifier {
+    self = [super init];
+    if (self) {
+        _containerIdentifier = [identifier copy];
+        _privateCloudDatabase = [[PTStubCKDatabase alloc] init];
+        _privateCloudDatabase.databaseScope = 2;
+        _publicCloudDatabase = [[PTStubCKDatabase alloc] init];
+        _publicCloudDatabase.databaseScope = 1;
+        _sharedCloudDatabase = [[PTStubCKDatabase alloc] init];
+        _sharedCloudDatabase.databaseScope = 3;
+    }
+    return self;
+}
+
+- (BOOL)isKindOfClass:(Class)aClass {
+    return [super isKindOfClass:aClass] || (pt_CKContainerClass && [pt_CKContainerClass isSubclassOfClass:aClass]);
+}
+
+- (id)databaseWithDatabaseScope:(NSInteger)scope {
+    if (scope == 1) {
+        return self.publicCloudDatabase;
+    }
+    if (scope == 3) {
+        return self.sharedCloudDatabase;
+    }
+    return self.privateCloudDatabase;
+}
+
+- (void)accountStatusWithCompletionHandler:(void (^)(NSInteger, NSError * _Nullable))completionHandler {
+    if (!completionHandler) {
+        return;
+    }
+    NSError *err = pt_cloudKitMissingEntitlementError();
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        completionHandler(0 /* CKAccountStatusCouldNotDetermine */, err);
+    });
+}
+
+- (void)fetchUserRecordIDWithCompletionHandler:(void (^)(id _Nullable, NSError * _Nullable))completionHandler {
+    if (!completionHandler) {
+        return;
+    }
+    NSError *err = pt_cloudKitMissingEntitlementError();
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        completionHandler(nil, err);
+    });
+}
+
+- (void)requestApplicationPermission:(NSUInteger)applicationPermission
+                   completionHandler:(void (^)(NSInteger, NSError * _Nullable))completionHandler {
+    if (!completionHandler) {
+        return;
+    }
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        completionHandler(2 /* CKApplicationPermissionStatusDenied */, nil);
+    });
+}
+
+- (void)statusForApplicationPermission:(NSUInteger)applicationPermission
+                     completionHandler:(void (^)(NSInteger, NSError * _Nullable))completionHandler {
+    if (!completionHandler) {
+        return;
+    }
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        completionHandler(2 /* CKApplicationPermissionStatusDenied */, nil);
+    });
+}
+
+- (void)addOperation:(id)operation {
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {
+    NSMethodSignature *sig = [super methodSignatureForSelector:aSelector];
+    if (!sig && pt_CKContainerClass) {
+        sig = [pt_CKContainerClass instanceMethodSignatureForSelector:aSelector];
+    }
+    return sig ?: [NSMethodSignature signatureWithObjCTypes:"v@:"];
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation {
+    NSUInteger retLen = anInvocation.methodSignature.methodReturnLength;
+    if (retLen > 0) {
+        uint8_t *zeroBuf = calloc(1, retLen);
+        if (zeroBuf) {
+            [anInvocation setReturnValue:zeroBuf];
+            free(zeroBuf);
+        }
+    }
+}
+
+@end
+
+static BOOL pt_hasCloudKitEntitlementForContainer(NSString * _Nullable containerID) {
+    typedef CFTypeRef (*SecTaskCreateFromSelfFn)(CFAllocatorRef);
+    typedef CFTypeRef (*SecTaskCopyValueForEntitlementFn)(CFTypeRef, CFStringRef, CFErrorRef *);
+    static SecTaskCreateFromSelfFn createSelfFn = NULL;
+    static SecTaskCopyValueForEntitlementFn copyEntitlementFn = NULL;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        createSelfFn = (SecTaskCreateFromSelfFn)dlsym(RTLD_DEFAULT, "SecTaskCreateFromSelf");
+        copyEntitlementFn = (SecTaskCopyValueForEntitlementFn)dlsym(RTLD_DEFAULT, "SecTaskCopyValueForEntitlement");
+    });
+    if (!createSelfFn || !copyEntitlementFn) {
+        return NO;
+    }
+    CFTypeRef task = createSelfFn(kCFAllocatorDefault);
+    if (!task) {
+        return NO;
+    }
+
+    BOOL hasService = NO;
+    CFTypeRef services = copyEntitlementFn(task, CFSTR("com.apple.developer.icloud-services"), NULL);
+    if (services) {
+        if (CFGetTypeID(services) == CFArrayGetTypeID()) {
+            for (id entry in (__bridge NSArray *)services) {
+                if ([entry isKindOfClass:[NSString class]] &&
+                    [(NSString *)entry caseInsensitiveCompare:@"CloudKit"] == NSOrderedSame) {
+                    hasService = YES;
+                    break;
+                }
+            }
+        }
+        CFRelease(services);
+    }
+
+    BOOL hasContainer = NO;
+    if (hasService) {
+        CFTypeRef containers = copyEntitlementFn(task, CFSTR("com.apple.developer.icloud-container-identifiers"), NULL);
+        if (containers) {
+            if (CFGetTypeID(containers) == CFArrayGetTypeID()) {
+                NSArray *arr = (__bridge NSArray *)containers;
+                if (containerID.length > 0) {
+                    hasContainer = [arr containsObject:containerID] || [arr containsObject:@"*"];
+                } else {
+                    hasContainer = arr.count > 0;
+                }
+            }
+            CFRelease(containers);
+        }
+    }
+
+    CFRelease(task);
+    return hasService && hasContainer;
+}
+
+static id pt_stubContainerForIdentifier(NSString * _Nullable identifier) {
+    static NSMutableDictionary<NSString *, PTStubCKContainer *> *stubCache = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        stubCache = [NSMutableDictionary dictionary];
+    });
+    NSString *key = identifier.length > 0
+        ? identifier
+        : ([[NSBundle mainBundle] bundleIdentifier] ?: @"iCloud.playcover.stub");
+    @synchronized (stubCache) {
+        PTStubCKContainer *stub = stubCache[key];
+        if (!stub) {
+            NSLog(@"[PC] Using CloudKit missing-entitlement stub container for %@", key);
+            stub = [[PTStubCKContainer alloc] initWithIdentifier:key];
+            stubCache[key] = stub;
+        }
+        return stub;
+    }
+}
+
+static id pt_ckDefaultContainer(id self, SEL _cmd) {
+    if (pt_hasCloudKitEntitlementForContainer(nil) && pt_origCKDefaultContainer) {
+        return pt_origCKDefaultContainer(self, _cmd);
+    }
+    NSString *bid = [[NSBundle mainBundle] bundleIdentifier];
+    NSString *fallbackID = bid.length > 0 ? [@"iCloud." stringByAppendingString:bid] : @"iCloud.playcover.stub";
+    return pt_stubContainerForIdentifier(fallbackID);
+}
+
+static id pt_ckContainerWithIdentifier(id self, SEL _cmd, NSString *identifier) {
+    if (identifier.length > 0 && pt_hasCloudKitEntitlementForContainer(identifier) && pt_origCKContainerWithIdentifier) {
+        return pt_origCKContainerWithIdentifier(self, _cmd, identifier);
+    }
+    return pt_stubContainerForIdentifier(identifier);
+}
+
+static void pt_tryInstallCloudKitHooksNow(void) {
+    if (pt_cloudKitHooksInstalled) {
+        return;
+    }
+    Class ckContainer = objc_getClass("CKContainer");
+    if (!ckContainer) {
+        return;
+    }
+    pt_CKContainerClass = ckContainer;
+    pt_CKDatabaseClass = objc_getClass("CKDatabase");
+    Class ckMeta = object_getClass(ckContainer);
+    if (!ckMeta) {
+        return;
+    }
+
+    SEL defaultSel = sel_registerName("defaultContainer");
+    Method defaultM = class_getClassMethod(ckContainer, defaultSel);
+    if (defaultM) {
+        pt_origCKDefaultContainer = (id (*)(id, SEL))method_getImplementation(defaultM);
+        class_replaceMethod(ckMeta, defaultSel, (IMP)pt_ckDefaultContainer, method_getTypeEncoding(defaultM));
+    }
+
+    SEL withIdSel = sel_registerName("containerWithIdentifier:");
+    Method withIdM = class_getClassMethod(ckContainer, withIdSel);
+    if (withIdM) {
+        pt_origCKContainerWithIdentifier = (id (*)(id, SEL, NSString *))method_getImplementation(withIdM);
+        class_replaceMethod(ckMeta, withIdSel, (IMP)pt_ckContainerWithIdentifier, method_getTypeEncoding(withIdM));
+    }
+
+    pt_cloudKitHooksInstalled = YES;
+}
+
+static void pt_installCloudKitCompatibilityHooks(void) {
+    pt_tryInstallCloudKitHooksNow();
+    if (!pt_cloudKitHooksInstalled) {
+        [[NSNotificationCenter defaultCenter] addObserverForName:NSBundleDidLoadNotification
+                                                          object:nil
+                                                           queue:nil
+                                                      usingBlock:^(NSNotification * _Nonnull note) {
+            pt_tryInstallCloudKitHooksNow();
+        }];
+    }
+}
+
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
+    // Install CloudKit entitlement guard synchronously before any background startup queue runs.
+    pt_installCloudKitCompatibilityHooks();
     [PlayCover launch];
     
     if (ue_status == 0) {
