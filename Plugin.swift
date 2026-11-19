@@ -14,6 +14,7 @@ public protocol Plugin: NSObjectProtocol {
     var screenCount: Int { get }
     var mousePoint: CGPoint { get }
     var windowFrame: CGRect { get }
+    var contentLayoutRect: CGRect { get }
     var mainScreenFrame: CGRect { get }
     var isMainScreenEqualToFirst: Bool { get }
     var isFullscreen: Bool { get }
@@ -31,4 +32,6 @@ public protocol Plugin: NSObjectProtocol {
     func setupScrollWheel(_ onMoved: @escaping (CGFloat, CGFloat) -> Bool)
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
     func setMenuBarVisible(_ value: Bool)
+    func applyWindowAspectLock(width: CGFloat, height: CGFloat, minWidth: CGFloat, minHeight: CGFloat)
+    func clearWindowAspectLock(minWidth: CGFloat, minHeight: CGFloat)
 }
