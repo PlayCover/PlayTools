@@ -37,42 +37,43 @@ public class PlayKeychain: NSObject {
     // SecItemAdd(CFDictionaryRef attributes, CFTypeRef *result)
     @objc static public func add(_ attributes: NSDictionary,
                                  result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
-        guard let keychainDict = playChainDB.insert(attributes) else {
+        let normalizedAttributes = normalizedAccessGroupDict(attributes)
+        guard let keychainDict = playChainDB.insert(normalizedAttributes) else {
             debugLogger("Failed to write keychain file")
             return errSecIO
         }
         debugLogger("Wrote keychain item to db")
 
         let wantsReturn =
-            flag(attributes, kSecReturnAttributes) ||
-            flag(attributes, kSecReturnData) ||
-            flag(attributes, kSecReturnRef) ||
-            flag(attributes, kSecReturnPersistentRef)
+            flag(normalizedAttributes, kSecReturnAttributes) ||
+            flag(normalizedAttributes, kSecReturnData) ||
+            flag(normalizedAttributes, kSecReturnRef) ||
+            flag(normalizedAttributes, kSecReturnPersistentRef)
 
         guard wantsReturn, result != nil else {
             return errSecSuccess
         }
 
-        return addResult(attributes, keychainDict: keychainDict, result: result)
+        return addResult(normalizedAttributes, keychainDict: keychainDict, result: result)
     }
 
     private static func addResult(_ attributes: NSDictionary,
                                   keychainDict: NSMutableDictionary,
                                   result: UnsafeMutablePointer<Unmanaged<CFTypeRef>?>?) -> OSStatus {
-        // Place v_Data in the result
-        guard let vData = attributes["v_Data"] as? CFTypeRef else {
-            return errSecSuccess
-        }
-
-        if attributes["r_Attributes"] as? Int == 1 {
-            // Create a dummy dictionary and return it
-            let dummyDict = keychainDict
-            if attributes["r_Data"] as? Int != 1 {
+        if flag(attributes, kSecReturnAttributes) {
+            let dummyDict = NSMutableDictionary(dictionary: keychainDict)
+            ensureAccessGroupIfApplicable(dummyDict)
+            if !flag(attributes, kSecReturnData) {
                 dummyDict.removeObject(forKey: kSecValueData)
                 dummyDict.removeObject(forKey: kSecValueRef)
                 dummyDict.removeObject(forKey: kSecValuePersistentRef)
             }
             result?.pointee = Unmanaged.passRetained(dummyDict)
+            return errSecSuccess
+        }
+
+        // Place v_Data in the result
+        guard let vData = attributes["v_Data"] as? CFTypeRef else {
             return errSecSuccess
         }
 
@@ -273,7 +274,8 @@ extension PlayKeychain {
 
         if wantsAttributes {
             // Create a dummy dictionary and return it
-            let dummyDict = keychainDict
+            let dummyDict = NSMutableDictionary(dictionary: keychainDict)
+            ensureAccessGroupIfApplicable(dummyDict)
             if !wantsData {
                 dummyDict.removeObject(forKey: kSecValueData)
                 dummyDict.removeObject(forKey: kSecValueRef)
@@ -341,6 +343,7 @@ extension PlayKeychain {
         }
 
         result?.pointee = Unmanaged.passRetained(keychainDicts.map({
+            ensureAccessGroupIfApplicable($0)
             if !wantsData {
                 $0.removeObject(forKey: kSecValueData)
             }
