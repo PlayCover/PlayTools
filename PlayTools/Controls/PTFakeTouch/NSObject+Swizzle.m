@@ -20,6 +20,72 @@ __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
 @end
 
+@protocol PTWKUserScriptProtocol <NSObject>
+- (instancetype)initWithSource:(NSString *)source
+                 injectionTime:(NSInteger)injectionTime
+              forMainFrameOnly:(BOOL)forMainFrameOnly;
+@end
+
+@protocol PTWKUserContentControllerProtocol <NSObject>
+- (void)addUserScript:(id)userScript;
+- (void)removeAllUserScripts;
+@end
+
+@protocol PTWKWebViewConfigurationProtocol <NSObject>
+@property (nonatomic, strong) id<PTWKUserContentControllerProtocol> userContentController;
+@end
+
+@protocol PTWKWebViewProtocol <NSObject>
+@property (nonatomic, readonly, copy) id<PTWKWebViewConfigurationProtocol> configuration;
+@end
+
+static const void *kPTWebViewCompatInjectedKey = &kPTWebViewCompatInjectedKey;
+
+static void PTInjectWebViewCompatScript(id userContentController) {
+    if (!userContentController) {
+        return;
+    }
+    if (objc_getAssociatedObject(userContentController, kPTWebViewCompatInjectedKey)) {
+        return;
+    }
+    Class userScriptClass = objc_getClass("WKUserScript");
+    if (!userScriptClass || ![userContentController respondsToSelector:@selector(addUserScript:)]) {
+        return;
+    }
+
+    NSString *deviceModel = (NSString *)[[PlaySettings shared] deviceModel];
+    BOOL isIPhone = [deviceModel hasPrefix:@"iPhone"];
+    NSString *source = isIPhone
+        ? @"(function(){try{"
+           "if(navigator.maxTouchPoints===0){"
+           "Object.defineProperty(Navigator.prototype,'maxTouchPoints',{get:function(){return 5;},configurable:true});"
+           "}"
+           "if(navigator.platform==='MacIntel'){"
+           "Object.defineProperty(Navigator.prototype,'platform',{get:function(){return 'iPhone';},configurable:true});"
+           "}"
+           "}catch(e){}})();"
+        : @"(function(){try{"
+           "if(navigator.maxTouchPoints===0){"
+           "Object.defineProperty(Navigator.prototype,'maxTouchPoints',{get:function(){return 5;},configurable:true});"
+           "}"
+           "}catch(e){}})();";
+
+    // WKUserScriptInjectionTimeAtDocumentStart == 0
+    id userScript = [(id<PTWKUserScriptProtocol>)[userScriptClass alloc]
+        initWithSource:source
+         injectionTime:0
+      forMainFrameOnly:NO];
+    if (!userScript) {
+        return;
+    }
+
+    [(id<PTWKUserContentControllerProtocol>)userContentController addUserScript:userScript];
+    objc_setAssociatedObject(userContentController,
+                             kPTWebViewCompatInjectedKey,
+                             @YES,
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
 @implementation NSObject (Swizzle)
 
 - (void) swizzleInstanceMethod:(SEL)origSelector withMethod:(SEL)newSelector
@@ -226,6 +292,43 @@ bool menuWasCreated = false;
     return self;
 }
 
+- (instancetype)initPlayToolsWKWebViewWithFrame:(CGRect)frame configuration:(id)configuration {
+    if (configuration && [configuration respondsToSelector:@selector(userContentController)]) {
+        id ucc = [(id<PTWKWebViewConfigurationProtocol>)configuration userContentController];
+        PTInjectWebViewCompatScript(ucc);
+    }
+    self = [self initPlayToolsWKWebViewWithFrame:frame configuration:configuration];
+    if (self && [self respondsToSelector:@selector(configuration)]) {
+        id cfg = [(id<PTWKWebViewProtocol>)self configuration];
+        if (cfg && [cfg respondsToSelector:@selector(userContentController)]) {
+            id ucc = [(id<PTWKWebViewConfigurationProtocol>)cfg userContentController];
+            PTInjectWebViewCompatScript(ucc);
+        }
+    }
+    return self;
+}
+
+- (instancetype)initPlayToolsWKWebViewWithCoder:(NSCoder *)coder {
+    self = [self initPlayToolsWKWebViewWithCoder:coder];
+    if (self && [self respondsToSelector:@selector(configuration)]) {
+        id cfg = [(id<PTWKWebViewProtocol>)self configuration];
+        if (cfg && [cfg respondsToSelector:@selector(userContentController)]) {
+            id ucc = [(id<PTWKWebViewConfigurationProtocol>)cfg userContentController];
+            PTInjectWebViewCompatScript(ucc);
+        }
+    }
+    return self;
+}
+
+- (void)hook_WKUserContentController_removeAllUserScripts {
+    BOOL wasInjected = objc_getAssociatedObject(self, kPTWebViewCompatInjectedKey) != nil;
+    [self hook_WKUserContentController_removeAllUserScripts];
+    if (wasInjected) {
+        objc_setAssociatedObject(self, kPTWebViewCompatInjectedKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        PTInjectWebViewCompatScript(self);
+    }
+}
+
 @end
 
 /*
@@ -339,6 +442,20 @@ bool menuWasCreated = false;
     // [objc_getClass("UITraitCollection") swizzleInstanceMethod:@selector(userInterfaceIdiom) withMethod:@selector(hook_userInterfaceIdiom)];
 
     [objc_getClass("VSSubscriptionRegistrationCenter") swizzleInstanceMethod:@selector(setCurrentSubscription:) withMethod:@selector(hook_setCurrentSubscription:)];
+
+    Class wkWebViewClass = objc_getClass("WKWebView");
+    if (wkWebViewClass) {
+        [wkWebViewClass swizzleInstanceMethod:NSSelectorFromString(@"initWithFrame:configuration:")
+                                   withMethod:@selector(initPlayToolsWKWebViewWithFrame:configuration:)];
+        [wkWebViewClass swizzleInstanceMethod:@selector(initWithCoder:)
+                                   withMethod:@selector(initPlayToolsWKWebViewWithCoder:)];
+        Class wkUCCClass = objc_getClass("WKUserContentController");
+        if (wkUCCClass) {
+            [wkUCCClass swizzleInstanceMethod:@selector(removeAllUserScripts)
+                                   withMethod:@selector(hook_WKUserContentController_removeAllUserScripts)];
+        }
+        NSLog(@"[PlayTools] Installed WKWebView iOS compatibility hook");
+    }
 
     if (PlayInfo.isUnrealEngine) {
         // Fix NSRegularExpression crash when system language is set to Chinese
