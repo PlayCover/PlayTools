@@ -99,6 +99,12 @@ let settings = PlaySettings.shared
     @objc lazy var blockSleepSpamming = settingsData.blockSleepSpamming
 
     @objc lazy var ignoreUnityKeyboardInitializationError = settingsData.ignoreUnityKeyboardInitializationError
+
+    @objc lazy var mockLocationEnabled = settingsData.mockLocationEnabled
+
+    @objc lazy var mockLocationLatitude = settingsData.mockLocationLatitude
+
+    @objc lazy var mockLocationLongitude = settingsData.mockLocationLongitude
 }
 
 struct AppSettingsData: Codable {
@@ -134,4 +140,50 @@ struct AppSettingsData: Codable {
     var resizableAspectRatioHeight = 0
     var blockSleepSpamming = false
     var ignoreUnityKeyboardInitializationError = false
+    var mockLocationEnabled = false
+    var mockLocationLatitude: Double = 39.9042
+    var mockLocationLongitude: Double = 116.4074
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        keymapping = try container.decodeIfPresent(Bool.self, forKey: .keymapping) ?? true
+        sensitivity = try container.decodeIfPresent(Float.self, forKey: .sensitivity) ?? 50
+        disableTimeout = try container.decodeIfPresent(Bool.self, forKey: .disableTimeout) ?? false
+        iosDeviceModel = try container.decodeIfPresent(String.self, forKey: .iosDeviceModel) ?? "iPad13,8"
+        windowWidth = try container.decodeIfPresent(Int.self, forKey: .windowWidth) ?? 1920
+        windowHeight = try container.decodeIfPresent(Int.self, forKey: .windowHeight) ?? 1080
+        customScaler = try container.decodeIfPresent(Double.self, forKey: .customScaler) ?? 2.0
+        resolution = try container.decodeIfPresent(Int.self, forKey: .resolution) ?? 2
+        aspectRatio = try container.decodeIfPresent(Int.self, forKey: .aspectRatio) ?? 1
+        displayRotation = try container.decodeIfPresent(Int.self, forKey: .displayRotation) ?? 0
+        notch = try container.decodeIfPresent(Bool.self, forKey: .notch) ?? false
+        bypass = try container.decodeIfPresent(Bool.self, forKey: .bypass) ?? false
+        discordActivity = try container.decodeIfPresent(
+            DiscordActivity.self, forKey: .discordActivity) ?? DiscordActivity()
+        version = try container.decodeIfPresent(String.self, forKey: .version) ?? "2.0.0"
+        playChain = try container.decodeIfPresent(Bool.self, forKey: .playChain) ?? false
+        playChainDebugging = try container.decodeIfPresent(Bool.self, forKey: .playChainDebugging) ?? false
+        inverseScreenValues = try container.decodeIfPresent(Bool.self, forKey: .inverseScreenValues) ?? false
+        windowFixMethod = try container.decodeIfPresent(Int.self, forKey: .windowFixMethod) ?? 0
+        rootWorkDir = try container.decodeIfPresent(Bool.self, forKey: .rootWorkDir) ?? true
+        noKMOnInput = try container.decodeIfPresent(Bool.self, forKey: .noKMOnInput) ?? false
+        enableScrollWheel = try container.decodeIfPresent(Bool.self, forKey: .enableScrollWheel) ?? true
+        hideTitleBar = try container.decodeIfPresent(Bool.self, forKey: .hideTitleBar) ?? false
+        floatingWindow = try container.decodeIfPresent(Bool.self, forKey: .floatingWindow) ?? false
+        checkMicPermissionSync = try container.decodeIfPresent(Bool.self, forKey: .checkMicPermissionSync) ?? false
+        limitMotionUpdateFrequency = try container.decodeIfPresent(
+            Bool.self, forKey: .limitMotionUpdateFrequency) ?? false
+        disableBuiltinMouse = try container.decodeIfPresent(Bool.self, forKey: .disableBuiltinMouse) ?? false
+        resizableAspectRatioType = try container.decodeIfPresent(Int.self, forKey: .resizableAspectRatioType) ?? 0
+        resizableAspectRatioWidth = try container.decodeIfPresent(Int.self, forKey: .resizableAspectRatioWidth) ?? 0
+        resizableAspectRatioHeight = try container.decodeIfPresent(Int.self, forKey: .resizableAspectRatioHeight) ?? 0
+        blockSleepSpamming = try container.decodeIfPresent(Bool.self, forKey: .blockSleepSpamming) ?? false
+        ignoreUnityKeyboardInitializationError = try container.decodeIfPresent(
+            Bool.self, forKey: .ignoreUnityKeyboardInitializationError) ?? false
+        mockLocationEnabled = try container.decodeIfPresent(Bool.self, forKey: .mockLocationEnabled) ?? false
+        mockLocationLatitude = try container.decodeIfPresent(Double.self, forKey: .mockLocationLatitude) ?? 39.9042
+        mockLocationLongitude = try container.decodeIfPresent(Double.self, forKey: .mockLocationLongitude) ?? 116.4074
+    }
 }
