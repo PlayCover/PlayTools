@@ -16,33 +16,20 @@ private struct AKAppSettingsData: Codable {
     var resolution: Int?
     var resizableAspectRatioWidth: Int?
     var resizableAspectRatioHeight: Int?
+    var appearanceStyle: Int?
 }
 
 class AKPlugin: NSObject, Plugin {
+    fileprivate static let windowVisibilityDidChangeNotification =
+        Notification.Name("PTWindowVisibilityDidChangeNotification")
+
     required override init() {
         super.init()
         if let window = NSApplication.shared.windows.first {
-            window.styleMask.insert([.resizable])
-            window.collectionBehavior = [.fullScreenPrimary, .managed, .participatesInCycle]
-            window.isMovable = true
-            window.isMovableByWindowBackground = true
-
-            if self.hideTitleBarSetting == true {
-                window.styleMask.insert([.fullSizeContentView])
-                window.titlebarAppearsTransparent = true
-                window.titleVisibility = .hidden
-                window.toolbar = nil
-                window.title = ""
-            }
-
-            if self.floatingWindowSetting == true {
-                window.level = .floating
-            }
-
+            configureAppearance(for: window, initial: true)
             if let aspectRatio = self.aspectRatioSetting {
                 window.contentAspectRatio = aspectRatio
             }
-
             NSWindow.allowsAutomaticWindowTabbing = true
         }
 
@@ -52,24 +39,13 @@ class AKPlugin: NSObject, Plugin {
             object: nil,
             queue: .main) { notif in
                 guard let win = notif.object as? NSWindow else { return }
-                win.styleMask.insert([.resizable])
-
-                if self.hideTitleBarSetting == true {
-                    win.styleMask.insert([.fullSizeContentView])
-                    win.titlebarAppearsTransparent = true
-                    win.titleVisibility = .hidden
-                    win.toolbar = nil
-                    win.title = ""
-                }
-
-                if self.floatingWindowSetting == true {
-                    win.level = .floating
-                }
-
+                self.configureAppearance(for: win, initial: false)
                 if let aspectRatio = self.aspectRatioSetting {
                     win.contentAspectRatio = aspectRatio
                 }
         }
+
+        installVisibilityObservers()
     }
 
     var screenCount: Int {
@@ -94,6 +70,18 @@ class AKPlugin: NSObject, Plugin {
 
     var isFullscreen: Bool {
         NSApplication.shared.windows.first!.styleMask.contains(.fullScreen)
+    }
+
+    var isApplicationActive: Bool { NSApplication.shared.isActive }
+
+    var hasVisibleUnminiaturizedWindow: Bool {
+        NSApplication.shared.windows.contains { $0.isVisible && !$0.isMiniaturized }
+    }
+
+    var hasUnoccludedVisibleWindow: Bool {
+        NSApplication.shared.windows.contains {
+            $0.isVisible && !$0.isMiniaturized && $0.occlusionState.contains(.visible)
+        }
     }
 
     var cmdPressed: Bool = false
@@ -290,6 +278,7 @@ class AKPlugin: NSObject, Plugin {
     /// Convenience instance property that exposes the cached static preference.
     private var hideTitleBarSetting: Bool { Self.akAppSettingsData?.hideTitleBar ?? false }
     private var floatingWindowSetting: Bool { Self.akAppSettingsData?.floatingWindow ?? false }
+    fileprivate var appearanceStyleSetting: Int { Self.akAppSettingsData?.appearanceStyle ?? 0 }
     private var aspectRatioSetting: NSSize? {
         guard Self.akAppSettingsData?.resolution == 6 else {
             return nil
@@ -313,4 +302,45 @@ class AKPlugin: NSObject, Plugin {
         }
         return decoded
     }()
+}
+
+private extension AKPlugin {
+    func configureAppearance(for window: NSWindow, initial: Bool) {
+        if appearanceStyleSetting == 1 {
+            window.appearance = NSAppearance(named: .aqua)
+        } else if appearanceStyleSetting == 2 {
+            window.appearance = NSAppearance(named: .darkAqua)
+        }
+        window.styleMask.insert([.resizable])
+        if initial {
+            window.collectionBehavior = [.fullScreenPrimary, .managed, .participatesInCycle]
+            window.isMovable = true
+            window.isMovableByWindowBackground = true
+        }
+        if hideTitleBarSetting {
+            window.styleMask.insert([.fullSizeContentView])
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.toolbar = nil
+            window.title = ""
+        }
+        if floatingWindowSetting {
+            window.level = .floating
+        }
+    }
+
+    func installVisibilityObservers() {
+        for name: Notification.Name in [
+            NSWindow.didChangeOcclusionStateNotification,
+            NSWindow.didMiniaturizeNotification,
+            NSWindow.didDeminiaturizeNotification,
+            NSApplication.didHideNotification,
+            NSApplication.didUnhideNotification
+        ] {
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                guard let self else { return }
+                NotificationCenter.default.post(name: Self.windowVisibilityDidChangeNotification, object: self)
+            }
+        }
+    }
 }
