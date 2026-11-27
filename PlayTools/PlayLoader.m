@@ -327,9 +327,16 @@ DYLD_INTERPOSE(pt_rename, rename)
 DYLD_INTERPOSE(pt_unlink, unlink)
 DYLD_INTERPOSE(pt_usleep, usleep)
 
+#if TARGET_OS_MACCATALYST
+__attribute__((visibility("hidden"))) void pt_installLocationCompatibility(void);
+#endif
+
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
+#if TARGET_OS_MACCATALYST
+    pt_installLocationCompatibility();
+#endif
     [PlayCover launch];
     
     if (ue_status == 0) {
