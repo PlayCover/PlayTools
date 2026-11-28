@@ -31,4 +31,13 @@ public protocol Plugin: NSObjectProtocol {
     func setupScrollWheel(_ onMoved: @escaping (CGFloat, CGFloat) -> Bool)
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
     func setMenuBarVisible(_ value: Bool)
+    @objc optional func setupGlobalBackIntegration(
+        queryState: @escaping (Bool) -> Int,
+        performBack: @escaping (Bool) -> Bool
+    )
+    @objc optional func setupGlobalHomeIntegration(
+        queryHome: @escaping () -> Bool,
+        performHome: @escaping () -> Bool
+    )
+    @objc optional func refreshGlobalBackUI()
 }

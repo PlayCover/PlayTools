@@ -86,6 +86,8 @@ let settings = PlaySettings.shared
 
     @objc lazy var hideTitleBar = settingsData.hideTitleBar
 
+    @objc lazy var duoVerticalBar = settingsData.duoVerticalBar ?? false
+
     @objc lazy var floatingWindow = settingsData.floatingWindow
 
     @objc lazy var displayRotation = settingsData.displayRotation
@@ -134,4 +136,5 @@ struct AppSettingsData: Codable {
     var resizableAspectRatioHeight = 0
     var blockSleepSpamming = false
     var ignoreUnityKeyboardInitializationError = false
+    var duoVerticalBar: Bool?
 }
