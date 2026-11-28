@@ -12,6 +12,8 @@
 #import <sys/utsname.h>
 #import "NSObject+Swizzle.h"
 #import <dlfcn.h>
+#import <objc/message.h>
+#import <objc/runtime.h>
 
 @import MachO;
 
@@ -327,9 +329,218 @@ DYLD_INTERPOSE(pt_rename, rename)
 DYLD_INTERPOSE(pt_unlink, unlink)
 DYLD_INTERPOSE(pt_usleep, usleep)
 
+#if TARGET_OS_MACCATALYST
+typedef id (*pt_msc_load_html_fn)(id, SEL, NSString *, NSURL *);
+static pt_msc_load_html_fn pt_origMSCLoadHTML = NULL;
+static NSString *const kPTMSCMouseTouchMarker = @"__ptMscMouseTouchBridgeInstalled";
+
+static NSString *pt_mscMouseTouchBridgeSource(void) {
+    return
+        @"(function(){\n"
+        @"  if (window.top !== window || location.protocol !== 'mscfile:' || window.__ptMscMouseTouchBridgeInstalled) return;\n"
+        @"  window.__ptMscMouseTouchBridgeInstalled = true;\n"
+        @"  var active = null;\n"
+        @"  var pendingDedup = null;\n"
+        @"  var nextId = 1;\n"
+        @"  function clearPendingDedup() {\n"
+        @"    if (!pendingDedup) return;\n"
+        @"    clearTimeout(pendingDedup.timer);\n"
+        @"    pendingDedup = null;\n"
+        @"  }\n"
+        @"  function isMatchingMouseClick(e, dedup) {\n"
+        @"    if (!e || !e.isTrusted || !dedup) return false;\n"
+        @"    if (e.button !== 0 || !(e.detail > 0)) return false;\n"
+        @"    if (e.pointerType !== 'mouse') return false;\n"
+        @"    if (typeof e.pointerId !== 'number' || e.pointerId !== dedup.pointerId) return false;\n"
+        @"    var dt = dedup.target;\n"
+        @"    var et = e.target;\n"
+        @"    return et === dt || (dt && dt.contains && dt.contains(et)) || (et && et.contains && et.contains(dt));\n"
+        @"  }\n"
+        @"  function makeTouch(target, id, src) {\n"
+        @"    try {\n"
+        @"      return new Touch({\n"
+        @"        identifier: id,\n"
+        @"        target: target,\n"
+        @"        clientX: src.clientX,\n"
+        @"        clientY: src.clientY,\n"
+        @"        pageX: src.pageX,\n"
+        @"        pageY: src.pageY,\n"
+        @"        screenX: src.screenX,\n"
+        @"        screenY: src.screenY,\n"
+        @"        radiusX: 1,\n"
+        @"        radiusY: 1,\n"
+        @"        force: 1\n"
+        @"      });\n"
+        @"    } catch (err) {\n"
+        @"      return null;\n"
+        @"    }\n"
+        @"  }\n"
+        @"  function dispatchTouch(type, target, activeList, changedTouch) {\n"
+        @"    if (!target || !changedTouch) return true;\n"
+        @"    try {\n"
+        @"      var te = new TouchEvent(type, {\n"
+        @"        bubbles: true,\n"
+        @"        cancelable: type !== 'touchcancel',\n"
+        @"        composed: true,\n"
+        @"        view: window,\n"
+        @"        touches: activeList,\n"
+        @"        targetTouches: activeList,\n"
+        @"        changedTouches: [changedTouch]\n"
+        @"      });\n"
+        @"      return target.dispatchEvent(te);\n"
+        @"    } catch (err) {\n"
+        @"      return true;\n"
+        @"    }\n"
+        @"  }\n"
+        @"  function cancelActive() {\n"
+        @"    clearPendingDedup();\n"
+        @"    if (!active) return;\n"
+        @"    var cur = active;\n"
+        @"    active = null;\n"
+        @"    var t = makeTouch(cur.target, cur.identifier, cur);\n"
+        @"    dispatchTouch('touchcancel', cur.target, [], t);\n"
+        @"  }\n"
+        @"  window.addEventListener('pointerdown', function(e) {\n"
+        @"    if (!e.isTrusted || e.pointerType !== 'mouse' || e.button !== 0 || (e.buttons & 1) === 0) return;\n"
+        @"    cancelActive();\n"
+        @"    var target = (e.target && e.target.nodeType === 1) ? e.target : (e.target && e.target.parentElement ? e.target.parentElement : document.body);\n"
+        @"    if (!target) return;\n"
+        @"    var id = nextId++;\n"
+        @"    var t = makeTouch(target, id, e);\n"
+        @"    if (!t) return;\n"
+        @"    active = {\n"
+        @"      pointerId: e.pointerId,\n"
+        @"      target: target,\n"
+        @"      identifier: id,\n"
+        @"      clientX: e.clientX,\n"
+        @"      clientY: e.clientY,\n"
+        @"      pageX: e.pageX,\n"
+        @"      pageY: e.pageY,\n"
+        @"      screenX: e.screenX,\n"
+        @"      screenY: e.screenY,\n"
+        @"      prevented: false\n"
+        @"    };\n"
+        @"    var allowed = dispatchTouch('touchstart', target, [t], t);\n"
+        @"    if (active && active.pointerId === e.pointerId) {\n"
+        @"      active.prevented = !allowed;\n"
+        @"    }\n"
+        @"  }, true);\n"
+        @"  window.addEventListener('pointermove', function(e) {\n"
+        @"    if (!active || !e.isTrusted || e.pointerType !== 'mouse' || e.pointerId !== active.pointerId) return;\n"
+        @"    if ((e.buttons & 1) === 0) { cancelActive(); return; }\n"
+        @"    active.clientX = e.clientX; active.clientY = e.clientY;\n"
+        @"    active.pageX = e.pageX; active.pageY = e.pageY;\n"
+        @"    active.screenX = e.screenX; active.screenY = e.screenY;\n"
+        @"    var t = makeTouch(active.target, active.identifier, active);\n"
+        @"    dispatchTouch('touchmove', active.target, t ? [t] : [], t);\n"
+        @"  }, true);\n"
+        @"  window.addEventListener('pointerup', function(e) {\n"
+        @"    if (!active || !e.isTrusted || e.pointerType !== 'mouse' || e.pointerId !== active.pointerId) return;\n"
+        @"    var cur = active;\n"
+        @"    active = null;\n"
+        @"    cur.clientX = e.clientX; cur.clientY = e.clientY;\n"
+        @"    cur.pageX = e.pageX; cur.pageY = e.pageY;\n"
+        @"    cur.screenX = e.screenX; cur.screenY = e.screenY;\n"
+        @"    var t = makeTouch(cur.target, cur.identifier, cur);\n"
+        @"    var endAllowed = dispatchTouch('touchend', cur.target, [], t);\n"
+        @"    if (cur.prevented || !endAllowed) {\n"
+        @"      clearPendingDedup();\n"
+        @"      pendingDedup = { pointerId: cur.pointerId, target: cur.target, timer: setTimeout(clearPendingDedup, 0) };\n"
+        @"    }\n"
+        @"  }, true);\n"
+        @"  window.addEventListener('click', function(e) {\n"
+        @"    if (!isMatchingMouseClick(e, pendingDedup)) return;\n"
+        @"    e.preventDefault();\n"
+        @"    e.stopPropagation();\n"
+        @"    clearPendingDedup();\n"
+        @"  }, true);\n"
+        @"  window.addEventListener('keydown', clearPendingDedup, true);\n"
+        @"  window.addEventListener('pointercancel', function(e) {\n"
+        @"    if (active && e.isTrusted && e.pointerType === 'mouse' && e.pointerId === active.pointerId) {\n"
+        @"      cancelActive();\n"
+        @"    }\n"
+        @"  }, true);\n"
+        @"  window.addEventListener('blur', cancelActive);\n"
+        @"  document.addEventListener('visibilitychange', function() {\n"
+        @"    if (document.hidden) cancelActive();\n"
+        @"  });\n"
+        @"})();";
+}
+
+static id pt_mscWebViewLoadHTMLString(id self, SEL _cmd, NSString *html, NSURL *baseURL) {
+    if ([baseURL.scheme isEqualToString:@"mscfile"]) {
+        Class userScriptCls = NSClassFromString(@"WKUserScript");
+        SEL cfgSel = NSSelectorFromString(@"configuration");
+        SEL uccSel = NSSelectorFromString(@"userContentController");
+        SEL scriptsSel = NSSelectorFromString(@"userScripts");
+        SEL sourceSel = NSSelectorFromString(@"source");
+        SEL initScriptSel = NSSelectorFromString(@"initWithSource:injectionTime:forMainFrameOnly:");
+        SEL addScriptSel = NSSelectorFromString(@"addUserScript:");
+        if (userScriptCls && [self respondsToSelector:cfgSel]) {
+            id cfg = ((id (*)(id, SEL))objc_msgSend)(self, cfgSel);
+            id ucc = (cfg && [cfg respondsToSelector:uccSel]) ? ((id (*)(id, SEL))objc_msgSend)(cfg, uccSel) : nil;
+            if (ucc && [ucc respondsToSelector:addScriptSel]) {
+                BOOL alreadyInstalled = NO;
+                if ([ucc respondsToSelector:scriptsSel]) {
+                    NSArray *existing = ((id (*)(id, SEL))objc_msgSend)(ucc, scriptsSel);
+                    for (id s in existing) {
+                        if ([s respondsToSelector:sourceSel]) {
+                            NSString *src = ((id (*)(id, SEL))objc_msgSend)(s, sourceSel);
+                            if ([src isKindOfClass:[NSString class]] && [src containsString:kPTMSCMouseTouchMarker]) {
+                                alreadyInstalled = YES;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!alreadyInstalled) {
+                    id script = ((id (*)(id, SEL, NSString *, NSInteger, BOOL))objc_msgSend)(
+                        [userScriptCls alloc],
+                        initScriptSel,
+                        pt_mscMouseTouchBridgeSource(),
+                        (NSInteger)0,
+                        YES);
+                    if (script) {
+                        ((void (*)(id, SEL, id))objc_msgSend)(ucc, addScriptSel, script);
+                    }
+                }
+            }
+        }
+    }
+    return pt_origMSCLoadHTML ? pt_origMSCLoadHTML(self, _cmd, html, baseURL) : nil;
+}
+
+static void pt_installMSCMouseTouchCompatibility(void) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Class mscCls = NSClassFromString(@"MSCWebView");
+        Class userScriptCls = NSClassFromString(@"WKUserScript");
+        if (!mscCls || !userScriptCls) {
+            return;
+        }
+        SEL sel = NSSelectorFromString(@"loadHTMLString:baseURL:");
+        Method m = class_getInstanceMethod(mscCls, sel);
+        if (!m) {
+            return;
+        }
+        IMP origImp = method_getImplementation(m);
+        if (origImp == (IMP)pt_mscWebViewLoadHTMLString) {
+            return;
+        }
+        pt_origMSCLoadHTML = (pt_msc_load_html_fn)origImp;
+        if (!class_addMethod(mscCls, sel, (IMP)pt_mscWebViewLoadHTMLString, method_getTypeEncoding(m))) {
+            pt_origMSCLoadHTML = (pt_msc_load_html_fn)method_setImplementation(m, (IMP)pt_mscWebViewLoadHTMLString);
+        }
+    });
+}
+#endif
+
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
+#if TARGET_OS_MACCATALYST
+    pt_installMSCMouseTouchCompatibility();
+#endif
     [PlayCover launch];
     
     if (ue_status == 0) {
