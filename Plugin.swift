@@ -17,6 +17,7 @@ public protocol Plugin: NSObjectProtocol {
     var mainScreenFrame: CGRect { get }
     var isMainScreenEqualToFirst: Bool { get }
     var isFullscreen: Bool { get }
+    @objc optional var isApplicationActive: Bool { get }
     var cmdPressed: Bool { get }
 
     func hideCursor()

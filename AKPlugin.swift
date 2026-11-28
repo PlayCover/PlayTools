@@ -96,6 +96,10 @@ class AKPlugin: NSObject, Plugin {
         NSApplication.shared.windows.first!.styleMask.contains(.fullScreen)
     }
 
+    @objc var isApplicationActive: Bool {
+        NSApplication.shared.isActive
+    }
+
     var cmdPressed: Bool = false
     var cursorHideLevel = 0
     func hideCursor() {
@@ -286,11 +290,13 @@ class AKPlugin: NSObject, Plugin {
     func setMenuBarVisible(_ visible: Bool) {
         NSMenu.setMenuBarVisible(visible)
     }
+}
 
+private extension AKPlugin {
     /// Convenience instance property that exposes the cached static preference.
-    private var hideTitleBarSetting: Bool { Self.akAppSettingsData?.hideTitleBar ?? false }
-    private var floatingWindowSetting: Bool { Self.akAppSettingsData?.floatingWindow ?? false }
-    private var aspectRatioSetting: NSSize? {
+    var hideTitleBarSetting: Bool { Self.akAppSettingsData?.hideTitleBar ?? false }
+    var floatingWindowSetting: Bool { Self.akAppSettingsData?.floatingWindow ?? false }
+    var aspectRatioSetting: NSSize? {
         guard Self.akAppSettingsData?.resolution == 6 else {
             return nil
         }
@@ -302,7 +308,7 @@ class AKPlugin: NSObject, Plugin {
         return NSSize(width: width, height: height)
     }
 
-    fileprivate static var akAppSettingsData: AKAppSettingsData? = {
+    static var akAppSettingsData: AKAppSettingsData? = {
         let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
         let settingsURL = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
             .appendingPathComponent("App Settings")

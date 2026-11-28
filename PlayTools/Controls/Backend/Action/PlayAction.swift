@@ -355,19 +355,31 @@ class CameraAction: Action {
 class SwipeAction: Action {
     var location: CGPoint = CGPoint.zero
     private var id: Int?
-    let timer = DispatchSource.makeTimerSource(flags: [], queue: PlayInput.touchQueue)
+    private var timer: DispatchSourceTimer?
     private let actionName: String, keyName: String
     init(actionName: String, keyName: String) {
         self.actionName = actionName
         self.keyName = keyName
-        timer.schedule(deadline: DispatchTime.now() + 1, repeating: 0.1, leeway: DispatchTimeInterval.milliseconds(50))
-        timer.setEventHandler(qos: .userInteractive, handler: self.checkEnded)
-        timer.activate()
-        timer.suspend()
     }
 
     deinit {
-        timer.cancel()
+        timer?.cancel()
+    }
+
+    private func startTimer() {
+        guard timer == nil, id != nil else { return }
+        let source = DispatchSource.makeTimerSource(queue: PlayInput.touchQueue)
+        source.schedule(deadline: .now() + .milliseconds(100), repeating: .milliseconds(100),
+                        leeway: .milliseconds(50))
+        source.setEventHandler(qos: .userInteractive) { [weak self] in self?.checkEnded() }
+        timer = source
+        source.activate()
+    }
+
+    private func stopTimer() {
+        // Every source is activated exactly once. Never release a suspended source.
+        timer?.cancel()
+        timer = nil
     }
 
     func delay(_ delay: Double, closure: @escaping () -> Void) {
@@ -430,7 +442,7 @@ class SwipeAction: Action {
             counter = 0
             Toucher.touchcam(point: location, phase: UITouch.Phase.began, tid: &id,
                              actionName: actionName, keyName: keyName)
-            timer.resume()
+            startTimer()
         } else {
             if shouldEdgeReset {
                 doLiftOff()
@@ -474,13 +486,14 @@ class SwipeAction: Action {
 
     public func doLiftOff() {
         if id == nil {
+            stopTimer()
             return
         }
         Toucher.touchcam(point: self.location, phase: UITouch.Phase.ended, tid: &id,
                          actionName: actionName, keyName: keyName)
         // Touch might somehow fail to end
         if id == nil {
-            timer.suspend()
+            stopTimer()
             delay(0.02) {
                 self.cooldown = false
             }
