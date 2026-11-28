@@ -80,12 +80,17 @@ public class ControlMode: Equatable {
     private func setupGameController() {
         let centre = NotificationCenter.default
         let main = OperationQueue.main
-        centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect, object: nil, queue: main) { _ in
-            GCController.shouldMonitorBackgroundEvents = true
-            GCController.current?.extendedGamepad?.valueChangedHandler = { profile, element in
-                self.controllerAdapter.handleValueChanged(profile, element)
+        let configure: (GCController) -> Void = { [weak self] controller in
+            controller.extendedGamepad?.valueChangedHandler = { [weak self] profile, element in
+                guard PlayInput.shared.acceptsControllerInput else { return }
+                self?.controllerAdapter.handleValueChanged(profile, element)
             }
         }
+        centre.addObserver(forName: NSNotification.Name.GCControllerDidConnect,
+                           object: nil, queue: main) { notification in
+            if let controller = notification.object as? GCController { configure(controller) }
+        }
+        GCController.controllers().forEach(configure)
     }
 
     private func setupKeyboard() {

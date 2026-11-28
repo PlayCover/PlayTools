@@ -79,16 +79,22 @@ class ThumbstickCursorControl {
     }
 
     public func update(velocityX: CGFloat, velocityY: CGFloat) {
-        self.thumbstickVelocity.dx = velocityX
-        self.thumbstickVelocity.dy = velocityY
-        if !thumbstickPolling {
-            PlayInput.touchQueue.async(execute: self.thumbstickPoll)
-            self.thumbstickPolling = true
+        // Controller callbacks and the polling worker may run on different queues.
+        // Keep velocity and worker ownership on one queue, including focus changes.
+        PlayInput.touchQueue.async {
+            self.thumbstickVelocity.dx = velocityX
+            self.thumbstickVelocity.dy = velocityY
+            if !self.thumbstickPolling {
+                self.thumbstickPolling = true
+                self.thumbstickPoll()
+            }
         }
     }
 
     private func thumbstickPoll() {
-        if !ThumbstickCursorControl.isVectorSignificant(self.thumbstickVelocity) {
+        if !PlayInput.shared.acceptsControllerInput
+            || !ThumbstickCursorControl.isVectorSignificant(self.thumbstickVelocity) {
+            self.thumbstickVelocity = .zero
             self.thumbstickPolling = false
             return
         }

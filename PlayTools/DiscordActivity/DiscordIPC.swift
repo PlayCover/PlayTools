@@ -5,29 +5,86 @@
 //  Created by 이승윤 on 2022/07/15.
 //
 
+import Darwin
 import Foundation
 import SwordRPC
+import UIKit
 
 class DiscordIPC {
     public static let shared = DiscordIPC()
+    private var activeRPC: SwordRPC?
+    private var terminationObserver: NSObjectProtocol?
 
     func initialize() {
-        if PlaySettings.shared.discordActivity.enable {
-            let ipc: SwordRPC
-            let custom = PlaySettings.shared.discordActivity
+        let custom = PlaySettings.shared.discordActivity
+        let rawAppID = custom.applicationID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard custom.enable else {
+            return
+        }
+        let appID = rawAppID.isEmpty ? "996108521680678993" : rawAppID
+        // Only spin up SwordRPC / iTunes artwork lookup when a Discord IPC socket
+        // actually exists; otherwise SwordRPC leaks 10 SwiftNIO EventLoopGroup threads.
+        guard Self.hasReachableDiscordIPCSocket() else {
+            return
+        }
 
-            if custom.applicationID.isEmpty {
-                ipc = SwordRPC(appId: "996108521680678993")
-            } else {
-                ipc = SwordRPC(appId: custom.applicationID)
-            }
+        let ipc = SwordRPC(appId: appID)
+        activeRPC = ipc
 
-            Task(priority: .background) {
-                let activity = await createActivity(from: custom)
-                ipc.connect()
-                ipc.setPresence(activity)
+        if terminationObserver == nil {
+            terminationObserver = NotificationCenter.default.addObserver(
+                forName: UIApplication.willTerminateNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.activeRPC?.disconnect()
+                self?.activeRPC = nil
             }
         }
+
+        Task(priority: .background) { [weak self] in
+            guard let self = self else { return }
+            let activity = await self.createActivity(from: custom)
+            ipc.connect()
+            ipc.setPresence(activity)
+        }
+    }
+
+    private static func hasReachableDiscordIPCSocket() -> Bool {
+        var candidateDirs: [String] = []
+        let tempDir = FileManager.default.temporaryDirectory.path
+        candidateDirs.append(tempDir)
+        let nsTemp = (NSTemporaryDirectory() as NSString).standardizingPath
+        if !candidateDirs.contains(nsTemp) {
+            candidateDirs.append(nsTemp)
+        }
+        if let xdg = ProcessInfo.processInfo.environment["XDG_RUNTIME_DIR"],
+           !xdg.isEmpty,
+           !candidateDirs.contains(xdg) {
+            candidateDirs.append(xdg)
+        }
+        if !candidateDirs.contains("/tmp") {
+            candidateDirs.append("/tmp")
+        }
+
+        var foundAnySocket = false
+        var foundInSwordRPCDir = false
+        for dir in candidateDirs {
+            let trimmed = dir.hasSuffix("/") ? String(dir.dropLast()) : dir
+            for ipcPort in 0..<10 {
+                let path = "\(trimmed)/discord-ipc-\(ipcPort)"
+                if access(path, F_OK) == 0 {
+                    foundAnySocket = true
+                    if trimmed == tempDir || trimmed == nsTemp {
+                        foundInSwordRPCDir = true
+                    }
+                    break
+                }
+            }
+        }
+        // SwordRPC.connect() only opens sockets in FileManager.default.temporaryDirectory,
+        // so require a socket there to prevent 10 failed MultiThreadedEventLoopGroup leaks.
+        return foundAnySocket && foundInSwordRPCDir
     }
 
     func createActivity(from custom: DiscordActivity) async -> RichPresence {
