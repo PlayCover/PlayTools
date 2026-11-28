@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E8A19B022EE41A7C0041C201 /* OneNoteSceneCompatibility.m in Sources */ = {isa = PBXBuildFile; fileRef = E8A19B012EE41A7C0041C201 /* OneNoteSceneCompatibility.m */; };
+		F72BBCB236C44A1EA6A48D44 /* CTPocketOutputCompatibility.mm in Sources */ = {isa = PBXBuildFile; fileRef = F72BBCB136C44A1EA6A48D44 /* CTPocketOutputCompatibility.mm */; };
 		2847AE48298EFC0F00B0F983 /* PlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2847AE47298EFC0F00B0F983 /* PlayScreen.swift */; };
 		6E76639B28D0FAE700DE4AF9 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76639A28D0FAE700DE4AF9 /* Plugin.swift */; };
 		6E76639C28D0FAE700DE4AF9 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76639A28D0FAE700DE4AF9 /* Plugin.swift */; };
@@ -105,6 +107,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E8A19B012EE41A7C0041C201 /* OneNoteSceneCompatibility.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OneNoteSceneCompatibility.m; sourceTree = "<group>"; };
+		F72BBCB136C44A1EA6A48D44 /* CTPocketOutputCompatibility.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CTPocketOutputCompatibility.mm; sourceTree = "<group>"; };
 		2847AE47298EFC0F00B0F983 /* PlayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayScreen.swift; sourceTree = "<group>"; };
 		6E76639628D0FA6200DE4AF9 /* AKInterface-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AKInterface-Bridging-Header.h"; sourceTree = "<group>"; };
 		6E76639A28D0FAE700DE4AF9 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
@@ -450,6 +454,8 @@
 				AA719706287A44D200623C15 /* PlayCover.swift */,
 				AA719705287A44D200623C15 /* PlayLoader.h */,
 				AA719702287A44D200623C15 /* PlayLoader.m */,
+				E8A19B012EE41A7C0041C201 /* OneNoteSceneCompatibility.m */,
+				F72BBCB136C44A1EA6A48D44 /* CTPocketOutputCompatibility.mm */,
 				AA719708287A44D200623C15 /* PlayTools.h */,
 				2847AE47298EFC0F00B0F983 /* PlayScreen.swift */,
 			);
@@ -758,6 +764,8 @@
 				AA7197AA287A481500623C15 /* Toast.swift in Sources */,
 				AA719789287A480D00623C15 /* PlayInput.swift in Sources */,
 				AA71970B287A44D200623C15 /* PlayLoader.m in Sources */,
+				E8A19B022EE41A7C0041C201 /* OneNoteSceneCompatibility.m in Sources */,
+				F72BBCB236C44A1EA6A48D44 /* CTPocketOutputCompatibility.mm in Sources */,
 				9555ED332C058E36006E469C /* DebugController.swift in Sources */,
 				9562D1512AB484C7002C329D /* EventAdapters.swift in Sources */,
 				AA7197AF287A481500623C15 /* KeyCodeNames.swift in Sources */,
