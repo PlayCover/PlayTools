@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 //
 //  MacPlugin.swift
 //  AKInterface
@@ -11,6 +12,7 @@ import Foundation
 
 // Add a lightweight struct so we can decode only the flag we care about
 private struct AKAppSettingsData: Codable {
+    var optionScrollZoom: Bool?
     var hideTitleBar: Bool?
     var floatingWindow: Bool?
     var resolution: Int?
@@ -129,6 +131,9 @@ class AKPlugin: NSObject, Plugin {
     }
 
     private var modifierFlag: UInt = 0
+    private var optionScrollZoomEndHandler: (() -> Void)?
+    private var optionScrollZoomActive = false
+    private var optionScrollZoomInstalled = false
 
     // swiftlint:disable:next function_body_length
     func setupKeyboard(keyboard: @escaping (UInt16, Bool, Bool, Bool) -> Bool,
@@ -287,21 +292,6 @@ class AKPlugin: NSObject, Plugin {
         NSMenu.setMenuBarVisible(visible)
     }
 
-    /// Convenience instance property that exposes the cached static preference.
-    private var hideTitleBarSetting: Bool { Self.akAppSettingsData?.hideTitleBar ?? false }
-    private var floatingWindowSetting: Bool { Self.akAppSettingsData?.floatingWindow ?? false }
-    private var aspectRatioSetting: NSSize? {
-        guard Self.akAppSettingsData?.resolution == 6 else {
-            return nil
-        }
-        let width = Self.akAppSettingsData?.resizableAspectRatioWidth ?? 0
-        let height = Self.akAppSettingsData?.resizableAspectRatioHeight ?? 0
-        guard width > 0 && height > 0 else {
-            return nil
-        }
-        return NSSize(width: width, height: height)
-    }
-
     fileprivate static var akAppSettingsData: AKAppSettingsData? = {
         let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
         let settingsURL = URL(fileURLWithPath: "/Users/\(NSUserName())/Library/Containers/io.playcover.PlayCover")
@@ -313,4 +303,158 @@ class AKPlugin: NSObject, Plugin {
         }
         return decoded
     }()
+}
+
+private extension AKPlugin {
+    var optionScrollZoomSetting: Bool { Self.akAppSettingsData?.optionScrollZoom ?? true }
+    var hideTitleBarSetting: Bool { Self.akAppSettingsData?.hideTitleBar ?? false }
+    var floatingWindowSetting: Bool { Self.akAppSettingsData?.floatingWindow ?? false }
+    var aspectRatioSetting: NSSize? {
+        guard Self.akAppSettingsData?.resolution == 6 else {
+            return nil
+        }
+        let width = Self.akAppSettingsData?.resizableAspectRatioWidth ?? 0
+        let height = Self.akAppSettingsData?.resizableAspectRatioHeight ?? 0
+        guard width > 0 && height > 0 else {
+            return nil
+        }
+        return NSSize(width: width, height: height)
+    }
+}
+
+extension AKPlugin {
+    @objc func setupOptionScrollZoom(
+        _ onZoom: @escaping (CGFloat, CGFloat, CGFloat, Bool) -> Bool,
+        onEnd: @escaping () -> Void
+    ) {
+        guard !optionScrollZoomInstalled, optionScrollZoomSetting else { return }
+        optionScrollZoomInstalled = true
+        optionScrollZoomEndHandler = onEnd
+
+        NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+            guard let self else { return event }
+            return self.handleOptionScrollWheelEvent(event, onZoom: onZoom)
+        }
+        NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            if let self, self.optionScrollZoomActive, !event.modifierFlags.contains(.option) {
+                self.endOptionScrollZoomIfActive()
+            }
+            return event
+        }
+        installOptionScrollZoomLifecycleObservers()
+    }
+}
+
+private extension AKPlugin {
+    var primaryWindow: NSWindow? {
+        NSApplication.shared.windows.first(where: { $0.canBecomeMain && !$0.isSheet })
+            ?? NSApplication.shared.windows.first
+    }
+
+    func handleOptionScrollWheelEvent(
+        _ event: NSEvent,
+        onZoom: (CGFloat, CGFloat, CGFloat, Bool) -> Bool
+    ) -> NSEvent? {
+        let relevantFlags = event.modifierFlags.intersection([.option, .command, .control])
+        guard relevantFlags == .option else {
+            endOptionScrollZoomIfActive()
+            return event
+        }
+        if !event.momentumPhase.isEmpty || event.phase == .ended || event.phase == .cancelled {
+            if optionScrollZoomActive {
+                endOptionScrollZoomIfActive()
+                return nil
+            }
+            return event
+        }
+        guard let normalizedPoint = normalizedPrimaryContentPoint(for: event) else {
+            return event
+        }
+
+        var deltaY = event.scrollingDeltaY
+        let isPrecise = event.hasPreciseScrollingDeltas
+        if !isPrecise && event.isDirectionInvertedFromDevice {
+            deltaY = -deltaY
+        }
+        if abs(deltaY) < 0.0001 {
+            return optionScrollZoomActive ? nil : event
+        }
+
+        if onZoom(normalizedPoint.x, normalizedPoint.y, deltaY, isPrecise) {
+            optionScrollZoomActive = true
+            return nil
+        }
+        return event
+    }
+
+    func normalizedPrimaryContentPoint(for event: NSEvent) -> CGPoint? {
+        guard let primary = primaryWindow, primary.isVisible, !primary.isMiniaturized else {
+            return nil
+        }
+        let pointInWindow: NSPoint
+        if let eventWindow = event.window {
+            guard eventWindow === primary else { return nil }
+            pointInWindow = event.locationInWindow
+        } else {
+            pointInWindow = primary.convertPoint(fromScreen: event.locationInWindow)
+        }
+        if isPointInTrafficLightArea(pointInWindow, window: primary) {
+            return nil
+        }
+
+        let refRect: NSRect
+        if let contentView = primary.contentView,
+           contentView.frame.width >= 1,
+           contentView.frame.height >= 1 {
+            refRect = contentView.frame
+        } else if primary.contentLayoutRect.width >= 1 && primary.contentLayoutRect.height >= 1 {
+            refRect = primary.contentLayoutRect
+        } else {
+            refRect = NSRect(origin: .zero, size: primary.frame.size)
+        }
+        guard refRect.width >= 1, refRect.height >= 1, refRect.contains(pointInWindow) else {
+            return nil
+        }
+        let normalizedX = (pointInWindow.x - refRect.minX) / refRect.width
+        let normalizedY = (refRect.maxY - pointInWindow.y) / refRect.height
+        return CGPoint(x: normalizedX, y: normalizedY)
+    }
+
+    func isPointInTrafficLightArea(_ pointInWindow: NSPoint, window: NSWindow) -> Bool {
+        guard hideTitleBarSetting else { return false }
+        let buttonTypes: [NSWindow.ButtonType] = [.closeButton, .miniaturizeButton, .zoomButton, .fullScreenButton]
+        for type in buttonTypes {
+            if let button = window.standardWindowButton(type) {
+                let localPoint = button.convert(pointInWindow, from: nil)
+                if button.bounds.contains(localPoint) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    func installOptionScrollZoomLifecycleObservers() {
+        let center = NotificationCenter.default
+        for name in [NSWindow.didResignKeyNotification, NSWindow.willCloseNotification] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] notif in
+                guard let self else { return }
+                if let win = notif.object as? NSWindow, win !== self.primaryWindow {
+                    return
+                }
+                self.endOptionScrollZoomIfActive()
+            }
+        }
+        for name in [NSApplication.didResignActiveNotification, NSApplication.didHideNotification] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.endOptionScrollZoomIfActive()
+            }
+        }
+    }
+
+    func endOptionScrollZoomIfActive() {
+        guard optionScrollZoomActive else { return }
+        optionScrollZoomActive = false
+        optionScrollZoomEndHandler?()
+    }
 }
