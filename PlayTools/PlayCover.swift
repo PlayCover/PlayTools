@@ -18,6 +18,7 @@ public class PlayCover: NSObject {
         PlayScreen.shared.initialize()
         PlayInput.shared.initialize()
         DiscordIPC.shared.initialize()
+        PlayInfo.installPowerStateHooksIfNeeded()
 
         if PlaySettings.shared.rootWorkDir {
             // Change the working directory to / just like iOS
