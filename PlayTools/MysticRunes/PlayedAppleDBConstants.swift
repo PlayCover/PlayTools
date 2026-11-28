@@ -107,6 +107,15 @@ struct PlayedAppleDBConstants {
             kSecAttrPublicKeyHash
         ]
     ]
+    static let keyNumericAttributes: Set<String> = [
+        kSecAttrKeySizeInBits as String,
+        kSecAttrEffectiveKeySize as String
+    ]
+    static let keyBooleanAttributes = Set([
+        kSecAttrIsPermanent, kSecAttrCanEncrypt, kSecAttrCanDecrypt, kSecAttrCanDerive,
+        kSecAttrCanSign, kSecAttrCanVerify, kSecAttrCanWrap, kSecAttrCanUnwrap
+    ].map { $0 as String })
+
     static let values = [
         kSecValueData,
         kSecValueRef,
