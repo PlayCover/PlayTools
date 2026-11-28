@@ -15,6 +15,9 @@
 #import <AVFoundation/AVFoundation.h>
 #import <CoreMotion/CoreMotion.h>
 #import <GameController/GameController.h>
+#import <objc/message.h>
+#import <os/lock.h>
+#import <stdatomic.h>
 
 __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
@@ -253,6 +256,68 @@ bool menuWasCreated = false;
  of code and complexity. I'm not sure this trade-off is "worth it", at least at the time of writing.
  */
 
+
+#if TARGET_OS_MACCATALYST
+static void (*sOrigCMDealloc)(__unsafe_unretained id, SEL) = NULL;
+static atomic_bool sCMVirtualAlmondCalibrationDone = ATOMIC_VAR_INIT(false);
+static atomic_bool sCMVirtualAlmondExtraRetainEnabled = ATOMIC_VAR_INIT(true);
+static os_unfair_lock sCMVirtualAlmondCalibLock = OS_UNFAIR_LOCK_INIT;
+static __thread BOOL sInCMVirtualAlmondCalib = NO;
+
+static void pt_CMMotionManager_dealloc(__unsafe_unretained id self, SEL _cmd) {
+    // On macOS 27.2.1 Catalyst, -[CMMotionManager deallocPrivate] releases
+    // +[CMMotionManager virtualAlmondDevice] without having retained it in init
+    // and then sends messages to the stale global pointer, causing UAF SIGSEGV.
+    if (!atomic_load_explicit(&sCMVirtualAlmondCalibrationDone, memory_order_acquire) && !sInCMVirtualAlmondCalib) {
+        os_unfair_lock_lock(&sCMVirtualAlmondCalibLock);
+        if (!atomic_load_explicit(&sCMVirtualAlmondCalibrationDone, memory_order_relaxed) && !sInCMVirtualAlmondCalib) {
+            sInCMVirtualAlmondCalib = YES;
+            CFTypeRef retainedDev = NULL;
+            CFIndex beforeCount = 0;
+            Class cmCls = objc_getClass("CMMotionManager");
+            SEL devSel = sel_registerName("virtualAlmondDevice");
+            if (cmCls && [cmCls respondsToSelector:devSel]) {
+                CFTypeRef dev = ((CFTypeRef (*)(Class, SEL))objc_msgSend)(cmCls, devSel);
+                if (dev) {
+                    retainedDev = dev;
+                    beforeCount = CFGetRetainCount(retainedDev);
+                    CFRetain(retainedDev);
+                }
+            }
+            if (sOrigCMDealloc) {
+                sOrigCMDealloc(self, _cmd);
+            }
+            if (retainedDev) {
+                CFIndex afterCount = CFGetRetainCount(retainedDev);
+                if (afterCount == beforeCount + 1) {
+                    atomic_store_explicit(&sCMVirtualAlmondExtraRetainEnabled, false, memory_order_release);
+                    CFRelease(retainedDev);
+                }
+                atomic_store_explicit(&sCMVirtualAlmondCalibrationDone, true, memory_order_release);
+            }
+            sInCMVirtualAlmondCalib = NO;
+            os_unfair_lock_unlock(&sCMVirtualAlmondCalibLock);
+            return;
+        }
+        os_unfair_lock_unlock(&sCMVirtualAlmondCalibLock);
+    }
+
+    if (atomic_load_explicit(&sCMVirtualAlmondExtraRetainEnabled, memory_order_acquire)) {
+        Class cmCls = objc_getClass("CMMotionManager");
+        SEL devSel = sel_registerName("virtualAlmondDevice");
+        if (cmCls && [cmCls respondsToSelector:devSel]) {
+            CFTypeRef dev = ((CFTypeRef (*)(Class, SEL))objc_msgSend)(cmCls, devSel);
+            if (dev) {
+                CFRetain(dev);
+            }
+        }
+    }
+    if (sOrigCMDealloc) {
+        sOrigCMDealloc(self, _cmd);
+    }
+}
+#endif
+
 @implementation PTSwizzleLoader
 + (void)load {
     // This might need refactor soon
@@ -357,6 +422,23 @@ bool menuWasCreated = false;
     if ([[PlaySettings shared] limitMotionUpdateFrequency]) {
         [objc_getClass("CMMotionManager") swizzleInstanceMethod:@selector(init) withMethod:@selector(hook_CMMotionManager_init)];
     }
+#if TARGET_OS_MACCATALYST
+    {
+        Class cmCls = objc_getClass("CMMotionManager");
+        SEL deallocSel = sel_registerName("dealloc");
+        Method deallocMethod = cmCls ? class_getInstanceMethod(cmCls, deallocSel) : NULL;
+        if (deallocMethod) {
+            IMP origDealloc = method_getImplementation(deallocMethod);
+            if (origDealloc != (IMP)pt_CMMotionManager_dealloc) {
+                sOrigCMDealloc = (void (*)(__unsafe_unretained id, SEL))origDealloc;
+                class_replaceMethod(cmCls,
+                                    deallocSel,
+                                    (IMP)pt_CMMotionManager_dealloc,
+                                    method_getTypeEncoding(deallocMethod));
+            }
+        }
+    }
+#endif
 
     if (([[PlaySettings shared] disableBuiltinMouse])) {
         [objc_getClass("GCMouse") swizzleClassMethod:@selector(current) withMethod:@selector(hook_GCMouse_current)];
