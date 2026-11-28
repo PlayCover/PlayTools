@@ -608,6 +608,7 @@
 				AA7196D4287A447700623C15 /* Sources */,
 				AA7196D5287A447700623C15 /* Frameworks */,
 				AA7196D6287A447700623C15 /* Resources */,
+				8A1953BAC02C5125B712D623 /* Build WirelessInsights compatibility */,
 				6ED6ACAB28AAB30F0040D234 /* SwiftLint */,
 				6E84A14728D0F94E00BF7495 /* Embed Frameworks */,
 			);
@@ -684,6 +685,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		8A1953BAC02C5125B712D623 /* Build WirelessInsights compatibility */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Compatibility/WirelessInsights.swift",
+				"$(SRCROOT)/Compatibility/WirelessInsights-Info.plist",
+			);
+			name = "Build WirelessInsights compatibility";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/WirelessInsightsCompatibility/WirelessInsights.framework/Versions/A/WirelessInsights",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/WirelessInsightsCompatibility/WirelessInsights.framework/Versions/A/Resources/Info.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "set -euo pipefail\nif [[ \"${EFFECTIVE_PLATFORM_NAME:-}\" != -maccatalyst ]]; then exit 0; fi\nframework=\"${SCRIPT_OUTPUT_FILE_0%/Versions/A/WirelessInsights}\"\nmkdir -p \"$(dirname \"$SCRIPT_OUTPUT_FILE_1\")\"\ncp \"$SCRIPT_INPUT_FILE_1\" \"$SCRIPT_OUTPUT_FILE_1\"\nln -sfn A \"$framework/Versions/Current\"\nln -sfn Versions/Current/WirelessInsights \"$framework/WirelessInsights\"\nln -sfn Versions/Current/Resources \"$framework/Resources\"\nxcrun --sdk macosx swiftc -O -target arm64-apple-ios18.0-macabi -module-name WirelessInsights -enable-library-evolution -emit-library \"$SCRIPT_INPUT_FILE_0\" -o \"$SCRIPT_OUTPUT_FILE_0\" -Xlinker -install_name -Xlinker @rpath/WirelessInsights.framework/Versions/A/WirelessInsights\n/usr/bin/codesign --force --sign - \"$framework\"\n";
+		};
 		6ED6ACAB28AAB30F0040D234 /* SwiftLint */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
