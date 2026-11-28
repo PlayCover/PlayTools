@@ -12,6 +12,9 @@
 #import <sys/utsname.h>
 #import "NSObject+Swizzle.h"
 #import <dlfcn.h>
+#import <objc/runtime.h>
+#import <sys/stat.h>
+#import <unistd.h>
 
 @import MachO;
 
@@ -327,9 +330,155 @@ DYLD_INTERPOSE(pt_rename, rename)
 DYLD_INTERPOSE(pt_unlink, unlink)
 DYLD_INTERPOSE(pt_usleep, usleep)
 
+static NSURL *(*pt_origContainerURLForGroupIdentifier)(id, SEL, NSString *) = NULL;
+static BOOL pt_appGroupHookInstalled = NO;
+
+static BOOL pt_ensureWritableGroupDirectory(NSFileManager *manager, NSURL *url) {
+    if (![url isKindOfClass:[NSURL class]] || !url.isFileURL || url.path.length == 0) {
+        return NO;
+    }
+
+    NSString *path = url.path;
+    BOOL isDirectory = NO;
+    if (![manager fileExistsAtPath:path isDirectory:&isDirectory]) {
+        [manager createDirectoryAtURL:url withIntermediateDirectories:YES attributes:nil error:nil];
+        [manager fileExistsAtPath:path isDirectory:&isDirectory];
+    }
+    return isDirectory && access(path.fileSystemRepresentation, W_OK | X_OK) == 0;
+}
+
+static BOOL pt_isValidGroupIdentifier(NSString *groupIdentifier) {
+    return [groupIdentifier isKindOfClass:[NSString class]] &&
+           groupIdentifier.length > 0 &&
+           ![groupIdentifier containsString:@"/"] &&
+           ![groupIdentifier containsString:@".."] &&
+           ![groupIdentifier isEqualToString:@"."] &&
+           [groupIdentifier rangeOfCharacterFromSet:NSCharacterSet.controlCharacterSet].location == NSNotFound;
+}
+
+static NSURL * _Nullable pt_spaceFreeGroupRootURL(NSFileManager *manager) {
+    NSURL *libraryURL = [manager URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask].firstObject;
+    if (![libraryURL isKindOfClass:[NSURL class]] || !libraryURL.isFileURL || libraryURL.path.length == 0) {
+        return nil;
+    }
+    return [libraryURL URLByAppendingPathComponent:@"PlayCoverGroupContainers" isDirectory:YES];
+}
+
+static void pt_migrateLegacyGroupDirectoryIfUninitialized(NSFileManager *manager, NSURL *legacyURL, NSURL *targetURL) {
+    if (!legacyURL || !targetURL) {
+        return;
+    }
+    struct stat targetStat;
+    if (lstat(targetURL.path.fileSystemRepresentation, &targetStat) == 0 || errno != ENOENT) {
+        return;
+    }
+
+    BOOL legacyIsDir = NO;
+    if (![manager fileExistsAtPath:legacyURL.path isDirectory:&legacyIsDir] || !legacyIsDir) {
+        return;
+    }
+
+    NSURL *parentURL = [targetURL URLByDeletingLastPathComponent];
+    if (!pt_ensureWritableGroupDirectory(manager, parentURL)) {
+        return;
+    }
+
+    if (![manager moveItemAtURL:legacyURL toURL:targetURL error:nil]) {
+        [manager copyItemAtURL:legacyURL toURL:targetURL error:nil];
+    }
+}
+
+static NSURL * _Nullable pt_spaceFreeAliasForWritableGroupURL(NSFileManager *manager,
+                                                               NSURL *origURL,
+                                                               NSString *groupIdentifier) {
+    NSURL *rootURL = pt_spaceFreeGroupRootURL(manager);
+    NSURL *aliasURL = [rootURL URLByAppendingPathComponent:groupIdentifier isDirectory:YES];
+    if (!aliasURL || [aliasURL.path containsString:@" "] || !pt_ensureWritableGroupDirectory(manager, rootURL)) {
+        return nil;
+    }
+
+    NSString *aliasPath = aliasURL.path;
+    NSString *destPath = origURL.path;
+    struct stat st;
+    if (lstat(aliasPath.fileSystemRepresentation, &st) == 0) {
+        if (S_ISLNK(st.st_mode)) {
+            NSString *existingDest = [manager destinationOfSymbolicLinkAtPath:aliasPath error:nil];
+            if (![existingDest isEqualToString:destPath]) {
+                [manager removeItemAtPath:aliasPath error:nil];
+                [manager createSymbolicLinkAtPath:aliasPath withDestinationPath:destPath error:nil];
+            }
+        } else if (!S_ISDIR(st.st_mode)) {
+            return nil;
+        }
+    } else if (errno == ENOENT) {
+        [manager createSymbolicLinkAtPath:aliasPath withDestinationPath:destPath error:nil];
+    } else {
+        return nil;
+    }
+
+    return access(aliasPath.fileSystemRepresentation, W_OK | X_OK) == 0 ? aliasURL : nil;
+}
+
+static NSURL *pt_containerURLForGroupIdentifier(NSFileManager *self, SEL _cmd, NSString *groupIdentifier) {
+    NSURL *origURL = pt_origContainerURLForGroupIdentifier ? pt_origContainerURLForGroupIdentifier(self, _cmd, groupIdentifier) : nil;
+    if (!pt_isValidGroupIdentifier(groupIdentifier)) {
+        return nil;
+    }
+
+    // Real iOS App Group containers (/private/var/mobile/Containers/Shared/AppGroup/<UUID>)
+    // never contain spaces, so iOS apps frequently strip "file://" from url.absoluteString.
+    // Provide a space-free Library/PlayCoverGroupContainers/<group> path to avoid "%20" SQLite failures.
+    if (pt_ensureWritableGroupDirectory(self, origURL)) {
+        if (![origURL.path containsString:@" "]) {
+            return origURL;
+        }
+        NSURL *aliasURL = pt_spaceFreeAliasForWritableGroupURL(self, origURL, groupIdentifier);
+        return aliasURL ?: origURL;
+    }
+
+    NSURL *fallbackRoot = pt_spaceFreeGroupRootURL(self);
+    NSURL *fallbackURL = [fallbackRoot URLByAppendingPathComponent:groupIdentifier isDirectory:YES];
+    if (fallbackURL && ![fallbackURL.path containsString:@" "]) {
+        NSURL *appSupport = [self URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
+        NSURL *legacyURL = [[appSupport URLByAppendingPathComponent:@"PlayCoverGroupContainers" isDirectory:YES]
+            URLByAppendingPathComponent:groupIdentifier isDirectory:YES];
+        pt_migrateLegacyGroupDirectoryIfUninitialized(self, legacyURL, fallbackURL);
+        if (pt_ensureWritableGroupDirectory(self, fallbackURL)) {
+            return fallbackURL;
+        }
+    }
+
+    NSURL *appSupport = [self URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
+    NSURL *legacyURL = [[appSupport URLByAppendingPathComponent:@"PlayCoverGroupContainers" isDirectory:YES]
+        URLByAppendingPathComponent:groupIdentifier isDirectory:YES];
+    return pt_ensureWritableGroupDirectory(self, legacyURL) ? legacyURL : nil;
+}
+
+static void pt_installAppGroupContainerGuard(void) {
+    if (pt_appGroupHookInstalled) {
+        return;
+    }
+    Class fmClass = objc_getClass("NSFileManager");
+    if (!fmClass) {
+        return;
+    }
+    SEL sel = @selector(containerURLForSecurityApplicationGroupIdentifier:);
+    Method m = class_getInstanceMethod(fmClass, sel);
+    if (!m) {
+        return;
+    }
+    IMP origImp = method_getImplementation(m);
+    if (origImp != (IMP)pt_containerURLForGroupIdentifier) {
+        pt_origContainerURLForGroupIdentifier = (NSURL *(*)(id, SEL, NSString *))origImp;
+        class_replaceMethod(fmClass, sel, (IMP)pt_containerURLForGroupIdentifier, method_getTypeEncoding(m));
+    }
+    pt_appGroupHookInstalled = YES;
+}
+
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
+    pt_installAppGroupContainerGuard();
     [PlayCover launch];
     
     if (ue_status == 0) {
