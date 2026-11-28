@@ -14,6 +14,7 @@ public class PlayCover: NSObject {
     @objc static public func launch() {
         quitWhenClose()
         AKInterface.initialize()
+        initializeGlobalBackIntegration()
         UserPluginLoader.initialize()
         PlayScreen.shared.initialize()
         PlayInput.shared.initialize()
@@ -105,5 +106,88 @@ public class PlayCover: NSObject {
     static func delay(_ delay: Double, closure: @escaping () -> Void) {
         let when = DispatchTime.now() + delay
         DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
+    }
+
+    static func activeUIWindow() -> UIWindow? {
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            if let keyWindow = windowScene.windows.first(where: { $0.isKeyWindow && !$0.isHidden }) {
+                return keyWindow
+            }
+            if let visibleWindow = windowScene.windows.first(where: { !$0.isHidden && $0.alpha > 0.01 }) {
+                return visibleWindow
+            }
+        }
+        return nil
+    }
+
+    private static var globalBackRefreshPending = false
+    private static var globalBackRefreshTrailingRequested = false
+    private static var lastGlobalBackRefreshUptime: TimeInterval = 0
+    private static let globalBackRefreshMinInterval: TimeInterval = 0.08
+
+    static func scheduleCoalescedGlobalBackRefresh() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async {
+                scheduleCoalescedGlobalBackRefresh()
+            }
+            return
+        }
+        if globalBackRefreshPending {
+            globalBackRefreshTrailingRequested = true
+            return
+        }
+        let now = ProcessInfo.processInfo.systemUptime
+        let elapsed = now - lastGlobalBackRefreshUptime
+        let delay = (elapsed >= 0 && elapsed < globalBackRefreshMinInterval)
+            ? (globalBackRefreshMinInterval - elapsed)
+            : 0.0
+        globalBackRefreshPending = true
+        let fire: () -> Void = {
+            globalBackRefreshPending = false
+            let hadTrailing = globalBackRefreshTrailingRequested
+            globalBackRefreshTrailingRequested = false
+            lastGlobalBackRefreshUptime = ProcessInfo.processInfo.systemUptime
+            AKInterface.shared?.refreshGlobalBackUI?()
+            if hadTrailing {
+                scheduleCoalescedGlobalBackRefresh()
+            }
+        }
+        if delay > 0.001 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: fire)
+        } else {
+            DispatchQueue.main.async(execute: fire)
+        }
+    }
+
+    static func initializeGlobalBackIntegration() {
+        PTDuoSetGlobalBackRefreshHandler {
+            PlayCover.scheduleCoalescedGlobalBackRefresh()
+        }
+        AKInterface.shared?.setupGlobalBackIntegration?(
+            queryState: { includeTopClose in
+                let win = PlayCover.activeUIWindow()
+                var hasSidebarBack: ObjCBool = false
+                let hasBack = PTDuoQueryGlobalBackStateForWindow(win, includeTopClose, &hasSidebarBack)
+                let isTextInput = PTDuoWindowHasActiveTextInput(win)
+                var bitmask = 0
+                if hasBack { bitmask |= 1 }
+                if hasSidebarBack.boolValue { bitmask |= 2 }
+                if isTextInput { bitmask |= 4 }
+                return bitmask
+            },
+            performBack: { includeTopClose in
+                let win = PlayCover.activeUIWindow()
+                return PTDuoPerformGlobalBackActionForWindow(win, includeTopClose)
+            }
+        )
+        AKInterface.shared?.setupGlobalHomeIntegration?(
+            queryHome: {
+                PTDuoQueryGlobalHomeStateForWindow(PlayCover.activeUIWindow())
+            },
+            performHome: {
+                PTDuoPerformGlobalHomeActionForWindow(PlayCover.activeUIWindow())
+            }
+        )
     }
 }
