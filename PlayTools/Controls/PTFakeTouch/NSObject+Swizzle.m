@@ -164,16 +164,24 @@ __attribute__((visibility("hidden")))
     }
 }
 
+static __thread NSInteger pt_insideAllowedWindowSetFrameDepth = 0;
+
 - (void) hook_uiwindow_setFrame:(CGRect)frame {
     if ([self isKindOfClass:[UIWindow class]]
         && [PlayScreen interceptWindowSetFrame:(UIWindow *)self frame:frame]) {
         return;
     }
-    [self hook_uiwindow_setFrame:frame];
+    pt_insideAllowedWindowSetFrameDepth++;
+    @try {
+        [self hook_uiwindow_setFrame:frame];
+    } @finally {
+        pt_insideAllowedWindowSetFrameDepth--;
+    }
 }
 
 - (void) hook_uiwindow_setBounds:(CGRect)bounds {
-    if ([self isKindOfClass:[UIWindow class]]
+    if (pt_insideAllowedWindowSetFrameDepth == 0
+        && [self isKindOfClass:[UIWindow class]]
         && [PlayScreen interceptWindowSetBounds:(UIWindow *)self bounds:bounds]) {
         return;
     }

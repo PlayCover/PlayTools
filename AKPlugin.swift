@@ -93,8 +93,11 @@ private struct AKAppLayoutInfo {
 }
 
 class AKPlugin: NSObject, Plugin {
+    private static let savedFrameDefaultsKey = "PlayCover.SavedWindowFrame.v1"
+
     private let layoutInfo = AKAppLayoutInfo()
     private let configuredWindows = NSHashTable<NSWindow>.weakObjects()
+    private var isRestoringSavedFrame = false
 
     required override init() {
         super.init()
@@ -125,6 +128,7 @@ class AKPlugin: NSObject, Plugin {
                 self?.configureWindowIfNeeded(win)
             }
         }
+        installWindowFrameObservers(on: center)
     }
 
     var screenCount: Int {
@@ -482,6 +486,10 @@ private extension AKPlugin {
     }
 
     func applyInitialSizing(_ win: NSWindow) {
+        if restoreSavedWindowFrameIfAvailable(win) {
+            return
+        }
+
         let target = win.screen ?? NSScreen.main ?? NSScreen.screens.first
         let visible = target?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
 
@@ -592,5 +600,134 @@ private extension AKPlugin {
         let originX = max(visible.minX, min(frame.origin.x, visible.maxX - frame.width))
         let originY = max(visible.minY, min(frame.origin.y, visible.maxY - frame.height))
         win.setFrameOrigin(NSPoint(x: originX, y: originY))
+    }
+
+    func installWindowFrameObservers(on center: NotificationCenter) {
+        for name in [
+            NSWindow.didEndLiveResizeNotification,
+            NSWindow.didMoveNotification,
+            NSWindow.willCloseNotification
+        ] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] notif in
+                guard let win = notif.object as? NSWindow else { return }
+                self?.saveWindowFrameIfAppropriate(win)
+            }
+        }
+
+        center.addObserver(forName: NSWindow.didResizeNotification, object: nil, queue: .main) { [weak self] notif in
+            guard let win = notif.object as? NSWindow, !win.inLiveResize else { return }
+            self?.saveWindowFrameIfAppropriate(win)
+        }
+
+        center.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            for win in self.configuredWindows.allObjects {
+                self.saveWindowFrameIfAppropriate(win)
+            }
+        }
+    }
+
+    func restoreSavedWindowFrameIfAvailable(_ win: NSWindow) -> Bool {
+        guard resolutionSetting == 7 || resolutionSetting == 6,
+              let saved = loadSavedWindowFrame(),
+              saved.resolution == resolutionSetting else {
+            return false
+        }
+        let target = screenForSavedFrame(saved.frame)
+            ?? win.screen ?? NSScreen.main ?? NSScreen.screens.first
+        let visible = target?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
+        let titleOverhead = estimatedTitleOverhead(win)
+        let maxW = max(240, floor(visible.width - 24))
+        let maxH = max(240, floor(visible.height - titleOverhead - 20))
+
+        isRestoringSavedFrame = true
+        defer { isRestoringSavedFrame = false }
+
+        if resolutionSetting == 7 && (layoutInfo.isAdaptive || sdkShiftSetting) {
+            win.resizeIncrements = NSSize(width: 1, height: 1)
+            let minW: CGFloat = 360
+            let minH: CGFloat = 540
+            win.contentMinSize = NSSize(width: minW, height: minH)
+            let targetW = min(max(saved.frame.width, minW), visible.width)
+            let targetH = min(max(saved.frame.height, minH + titleOverhead), visible.height)
+            var clamped = NSRect(origin: saved.frame.origin, size: NSSize(width: targetW, height: targetH))
+            clamped.origin.x = max(visible.minX, min(clamped.origin.x, visible.maxX - clamped.width))
+            clamped.origin.y = max(visible.minY, min(clamped.origin.y, visible.maxY - clamped.height))
+            win.setFrame(clamped, display: true)
+            return true
+        }
+
+        let aspect: AKAspectSpec
+        if resolutionSetting == 7 {
+            aspect = resolvedNonAdaptiveAspect()
+        } else if let ratio = aspectRatioSetting, ratio.width > 0, ratio.height > 0 {
+            aspect = AKAspectSpec(width: ratio.width, height: ratio.height, minW: 240, minH: 240)
+        } else {
+            aspect = layoutInfo.recommendedAspect
+        }
+        win.contentMinSize = NSSize(width: aspect.minW, height: aspect.minH)
+        win.contentAspectRatio = NSSize(width: aspect.width, height: aspect.height)
+        let savedContentH = max(aspect.minH, saved.frame.height - titleOverhead)
+        var targetH = min(savedContentH, maxH)
+        var targetW = round(targetH * (aspect.width / aspect.height))
+        if targetW > maxW {
+            targetW = maxW
+            targetH = round(targetW * (aspect.height / aspect.width))
+        }
+        win.setContentSize(NSSize(width: max(aspect.minW, targetW), height: max(aspect.minH, targetH)))
+        let updated = win.frame
+        let originX = max(visible.minX, min(saved.frame.origin.x, visible.maxX - updated.width))
+        let originY = max(visible.minY, min(saved.frame.origin.y, visible.maxY - updated.height))
+        win.setFrameOrigin(NSPoint(x: originX, y: originY))
+        return true
+    }
+
+    func saveWindowFrameIfAppropriate(_ win: NSWindow) {
+        guard !isRestoringSavedFrame,
+              configuredWindows.contains(win),
+              isMainAppWindow(win),
+              win.isVisible,
+              !win.styleMask.contains(.fullScreen) else {
+            return
+        }
+        let frame = win.frame
+        guard frame.width >= 200, frame.height >= 200 else { return }
+        let payload: [String: Any] = [
+            "x": Double(frame.origin.x),
+            "y": Double(frame.origin.y),
+            "width": Double(frame.size.width),
+            "height": Double(frame.size.height),
+            "resolution": resolutionSetting
+        ]
+        UserDefaults.standard.set(payload, forKey: Self.savedFrameDefaultsKey)
+    }
+
+    func loadSavedWindowFrame() -> (frame: NSRect, resolution: Int)? {
+        guard let dict = UserDefaults.standard.dictionary(forKey: Self.savedFrameDefaultsKey),
+              let originX = (dict["x"] as? NSNumber)?.doubleValue,
+              let originY = (dict["y"] as? NSNumber)?.doubleValue,
+              let width = (dict["width"] as? NSNumber)?.doubleValue,
+              let height = (dict["height"] as? NSNumber)?.doubleValue,
+              let res = (dict["resolution"] as? NSNumber)?.intValue,
+              width >= 200, height >= 200 else {
+            return nil
+        }
+        return (NSRect(x: originX, y: originY, width: width, height: height), res)
+    }
+
+    func screenForSavedFrame(_ frame: NSRect) -> NSScreen? {
+        let center = NSPoint(x: frame.midX, y: frame.midY)
+        if let containing = NSScreen.screens.first(where: { $0.frame.contains(center) }) {
+            return containing
+        }
+        return NSScreen.screens.max { lhs, rhs in
+            let lhsRect = lhs.frame.intersection(frame)
+            let rhsRect = rhs.frame.intersection(frame)
+            return (lhsRect.width * lhsRect.height) < (rhsRect.width * rhsRect.height)
+        }
     }
 }

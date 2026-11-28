@@ -4,6 +4,7 @@
 //  PlayTools
 //
 import Foundation
+import QuartzCore
 import UIKit
 
 let screen = PlayScreen.shared
@@ -14,7 +15,6 @@ let mainScreenWidth = !isInvertFixEnabled
 let mainScreenHeight = !isInvertFixEnabled
     ? PlaySettings.shared.windowSizeHeight
     : PlaySettings.shared.windowSizeWidth
-let customScaler = PlaySettings.shared.customScaler
 
 extension CGSize {
     func aspectRatio() -> CGFloat {
@@ -161,10 +161,29 @@ public class PlayScreen: NSObject {
     private var savedRootAutoresizingMask: UIView.AutoresizingMask?
     private var scaledViews = NSHashTable<UIView>.weakObjects()
     private var scaledWindows = NSHashTable<UIWindow>.weakObjects()
+    private var isHostLiveResizing = false
+    private var isApplyingCoalescedResize = false
+    private var liveResizePacingInterval: CFTimeInterval = 0
+    private var liveResizeLastAppliedTime: CFTimeInterval = 0
+    private var liveResizeCommitStartTime: CFTimeInterval = 0
+    private var liveResizeAwaitingCommit = false
+    private var pendingCoalescedFrame: CGRect?
+    private var pendingCoalescedBounds: CGRect?
+    private weak var pendingCoalescedWindow: UIWindow?
+    private var coalescedResizeWorkItem: DispatchWorkItem?
+    private var liveResizeCommitObserver: CFRunLoopObserver?
+
+    private var isForcedPhoneAdaptive: Bool {
+        displayMode == .adaptive
+            && PlaySettings.shared.smartAdaptive
+            && !appCapabilities.supportsIPad
+            && appCapabilities.supportsDuoAdaptive
+    }
 
     private var shouldAllowRuntimeFallback: Bool {
         PlaySettings.shared.smartAdaptive
             && displayMode == .adaptive
+            && !appCapabilities.supportsIPad
             && !PlaySettings.shared.sdkShift
     }
 
@@ -188,24 +207,33 @@ public class PlayScreen: NSObject {
             center.addObserver(forName: name, object: nil, queue: .main, using: handleAppearance)
         }
         center.addObserver(
+            forName: NSNotification.Name("NSWindowWillStartLiveResizeNotification"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notif in
+            self?.handleHostWindowLiveResizeStart(notif.object)
+        }
+        center.addObserver(
             forName: NSNotification.Name("NSWindowDidResizeNotification"),
             object: nil,
             queue: .main
-        ) { [weak self] _ in
-            self?.handleHostWindowResize()
+        ) { [weak self] notif in
+            self?.handleHostWindowResize(notif.object, isEndOfLiveResize: false)
         }
         center.addObserver(
             forName: NSNotification.Name("NSWindowDidEndLiveResizeNotification"),
             object: nil,
             queue: .main
-        ) { [weak self] _ in
-            self?.handleHostWindowResize()
+        ) { [weak self] notif in
+            self?.handleHostWindowResize(notif.object, isEndOfLiveResize: true)
         }
     }
 
     @objc public static func frame(_ rect: CGRect) -> CGRect { rect.toAspectRatioReversed() }
     @objc public static func bounds(_ rect: CGRect) -> CGRect { rect.toAspectRatio() }
-    @objc public static func nativeBounds(_ rect: CGRect) -> CGRect { rect.toAspectRatio(CGFloat(customScaler)) }
+    @objc public static func nativeBounds(_ rect: CGRect) -> CGRect {
+        portraitBounds(rect.toAspectRatio(), scale: reportedNativeScale)
+    }
     @objc public static func width(_ size: Int) -> Int { size }
     @objc public static func height(_ size: Int) -> Int { Int(size / Int(UIScreen.aspectRatio)) }
     @objc public static func sizeAspectRatio(_ size: CGSize) -> CGSize { size.toAspectRatio() }
@@ -213,16 +241,24 @@ public class PlayScreen: NSObject {
     @objc public static func frameDefault(_ rect: CGRect) -> CGRect { rect.toAspectRatioDefault() }
     @objc public static func boundsDefault(_ rect: CGRect) -> CGRect { rect.toAspectRatioDefault() }
     @objc public static func nativeBoundsDefault(_ rect: CGRect) -> CGRect {
-        rect.toAspectRatioDefault(CGFloat(customScaler))
+        portraitBounds(rect.toAspectRatioDefault(), scale: reportedNativeScale)
     }
     @objc public static func sizeAspectRatioDefault(_ size: CGSize) -> CGSize { size.toAspectRatioDefault() }
     @objc public static func frameInternalDefault(_ rect: CGRect) -> CGRect { rect.toAspectRatioDefault() }
     @objc public static func boundsResizable(_ rect: CGRect) -> CGRect { shared.resolveBoundsResizable(rect) }
 
+    @objc public static let reportedNativeScale: CGFloat = {
+        let raw = PlaySettings.shared.customScaler
+        return raw.isFinite && raw > 0 ? CGFloat(raw) : 2
+    }()
+
     @objc public static func nativeBoundsResizable(_ rect: CGRect) -> CGRect {
-        let logical = boundsResizable(rect)
-        let scale = shared.effectiveScale
-        return CGRect(origin: .zero, size: CGSize(width: logical.width * scale, height: logical.height * scale))
+        portraitBounds(boundsResizable(rect), scale: reportedNativeScale)
+    }
+
+    private static func portraitBounds(_ rect: CGRect, scale: CGFloat = 1) -> CGRect {
+        CGRect(x: 0, y: 0, width: Swift.min(rect.width, rect.height) * scale,
+               height: Swift.max(rect.width, rect.height) * scale)
     }
 
     @objc public static func onWindowLayoutSubviews(_ window: UIWindow) {
@@ -320,20 +356,13 @@ public class PlayScreen: NSObject {
         guard let win = activePrimaryWindow else {
             return CGPoint(x: normX * screenRect.width, y: normY * screenRect.height)
         }
-        if case .scaled = displayMode,
-           let sceneBounds = win.windowScene?.coordinateSpace.bounds,
-           sceneBounds.width > 1, sceneBounds.height > 1,
-           win.frame.width > 1, win.frame.height > 1 {
-            let sceneX = normX * sceneBounds.width
-            let sceneY = normY * sceneBounds.height
-            let winFrame = win.frame
-            let point = CGPoint(
-                x: (sceneX - winFrame.minX) * (win.bounds.width / winFrame.width),
-                y: (sceneY - winFrame.minY) * (win.bounds.height / winFrame.height)
-            )
-            let inside = point.x >= 0 && point.x <= win.bounds.width
-                && point.y >= 0 && point.y <= win.bounds.height
-            return inside ? point : nil
+        if case .scaled = displayMode, let space = win.windowScene?.coordinateSpace {
+            let sceneBounds = space.bounds
+            guard sceneBounds.width > 1, sceneBounds.height > 1 else { return nil }
+            let scenePoint = CGPoint(x: sceneBounds.minX + normX * sceneBounds.width,
+                                     y: sceneBounds.minY + normY * sceneBounds.height)
+            let windowPoint = win.convert(scenePoint, from: space)
+            return win.bounds.contains(windowPoint) ? windowPoint : nil
         }
         return CGPoint(x: normX * win.bounds.width, y: normY * win.bounds.height)
     }
@@ -349,11 +378,6 @@ public class PlayScreen: NSObject {
 }
 
 private extension PlayScreen {
-    var effectiveScale: CGFloat {
-        let raw = PlaySettings.shared.customScaler
-        return CGFloat(round(raw > 0 ? raw : 2.0))
-    }
-
     static func initialDisplayMode(capabilities: ScreenAppCapabilities) -> PlayDisplayMode {
         guard PlaySettings.shared.smartAdaptive else {
             return .adaptive
@@ -501,55 +525,281 @@ private extension PlayScreen {
         }
     }
 
-    func handleHostWindowResize() {
+    static func nextAdaptiveResizePacingInterval(
+        currentInterval: CFTimeInterval,
+        frameCommitDuration: CFTimeInterval
+    ) -> CFTimeInterval {
+        guard frameCommitDuration.isFinite, frameCommitDuration >= 0 else {
+            return currentInterval
+        }
+        if frameCommitDuration < 0.014 {
+            if currentInterval <= 0 {
+                return 0
+            }
+            let decayed = currentInterval * 0.5
+            return decayed < 0.016 ? 0 : decayed
+        }
+        let target = Swift.min(0.095, Swift.max(0.032, frameCommitDuration * 1.25))
+        if currentInterval <= 0 {
+            return target
+        }
+        let blended = currentInterval * 0.5 + target * 0.5
+        return Swift.min(0.095, Swift.max(0.032, blended))
+    }
+
+    func isMainAppNSWindow(_ object: Any?) -> Bool {
+        guard let obj = object as? NSObject else { return true }
+        let clsName = NSStringFromClass(type(of: obj))
+        return !(clsName.contains("Menu")
+            || clsName.contains("StatusBar")
+            || clsName.contains("Tooltip")
+            || clsName.contains("Popover")
+            || clsName.contains("Sheet"))
+    }
+
+    func startLiveResizeCommitObserverIfNeeded() {
+        guard liveResizeCommitObserver == nil else { return }
+        let observer = CFRunLoopObserverCreateWithHandler(
+            kCFAllocatorDefault,
+            CFRunLoopActivity.beforeWaiting.rawValue,
+            true,
+            CFIndex.max
+        ) { [weak self] _, _ in
+            self?.handleLiveResizeRunLoopCommit()
+        }
+        if let observer {
+            CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
+            liveResizeCommitObserver = observer
+        }
+    }
+
+    func stopLiveResizePacing() {
+        coalescedResizeWorkItem?.cancel()
+        coalescedResizeWorkItem = nil
+        if let observer = liveResizeCommitObserver {
+            CFRunLoopRemoveObserver(CFRunLoopGetMain(), observer, .commonModes)
+            CFRunLoopObserverInvalidate(observer)
+            liveResizeCommitObserver = nil
+        }
+        liveResizeAwaitingCommit = false
+        liveResizePacingInterval = 0
+        liveResizeLastAppliedTime = 0
+    }
+
+    func handleLiveResizeRunLoopCommit() {
+        guard isHostLiveResizing, liveResizeAwaitingCommit else { return }
+        liveResizeAwaitingCommit = false
+        let duration = CACurrentMediaTime() - liveResizeCommitStartTime
+        liveResizePacingInterval = Self.nextAdaptiveResizePacingInterval(
+            currentInterval: liveResizePacingInterval,
+            frameCommitDuration: duration
+        )
+    }
+
+    func scheduleCoalescedLiveResizeFlush(now: CFTimeInterval) {
+        guard coalescedResizeWorkItem == nil else { return }
+        let elapsed = now - liveResizeLastAppliedTime
+        let wait = Swift.max(0.008, liveResizePacingInterval - elapsed)
+        let item = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            self.coalescedResizeWorkItem = nil
+            guard self.isHostLiveResizing else { return }
+            self.flushPendingCoalescedLiveResize(finalSettle: false)
+        }
+        coalescedResizeWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + wait, execute: item)
+    }
+
+    func flushPendingCoalescedLiveResize(finalSettle: Bool) {
+        let targetFrame = pendingCoalescedFrame
+        let targetBounds = pendingCoalescedBounds
+        let targetWin = pendingCoalescedWindow ?? activePrimaryWindow
+        pendingCoalescedFrame = nil
+        pendingCoalescedBounds = nil
+        pendingCoalescedWindow = nil
+        guard let win = targetWin, let appliedFrame = targetFrame ?? targetBounds.map({
+            CGRect(origin: .zero, size: $0.size)
+        }) else {
+            return
+        }
+        let now = CACurrentMediaTime()
+        liveResizeLastAppliedTime = now
+        liveResizeCommitStartTime = now
+        liveResizeAwaitingCommit = !finalSettle
+        isApplyingCoalescedResize = true
+        win.frame = appliedFrame
+        isApplyingCoalescedResize = false
+        win.setNeedsLayout()
+    }
+
+    func handleHostWindowLiveResizeStart(_ object: Any? = nil) {
+        guard isMainAppNSWindow(object) else { return }
+        isHostLiveResizing = true
+        liveResizePacingInterval = 0
+        liveResizeLastAppliedTime = 0
+        liveResizeAwaitingCommit = false
+        pendingCoalescedFrame = nil
+        pendingCoalescedBounds = nil
+        pendingCoalescedWindow = nil
+        relayoutWorkItem?.cancel()
+        relayoutWorkItem = nil
+        fallbackWorkItem?.cancel()
+        fallbackWorkItem = nil
+        if displayMode == .adaptive {
+            startLiveResizeCommitObserverIfNeeded()
+        }
+    }
+
+    func settleAdaptiveLiveResizeEnd(for win: UIWindow) {
+        if let sceneBounds = win.windowScene?.coordinateSpace.bounds,
+           sceneBounds.width > 1, sceneBounds.height > 1 {
+            let sizeDiffers = abs(win.frame.width - sceneBounds.width) > 0.5
+                || abs(win.frame.height - sceneBounds.height) > 0.5
+                || abs(win.bounds.width - sceneBounds.width) > 0.5
+                || abs(win.bounds.height - sceneBounds.height) > 0.5
+            if sizeDiffers {
+                pendingCoalescedFrame = nil
+                pendingCoalescedBounds = nil
+                pendingCoalescedWindow = nil
+                isApplyingCoalescedResize = true
+                win.frame = sceneBounds
+                isApplyingCoalescedResize = false
+            } else if pendingCoalescedFrame != nil || pendingCoalescedBounds != nil {
+                flushPendingCoalescedLiveResize(finalSettle: true)
+            }
+        } else if pendingCoalescedFrame != nil || pendingCoalescedBounds != nil {
+            flushPendingCoalescedLiveResize(finalSettle: true)
+        }
+        lastAdaptiveBounds = CGRect(origin: .zero, size: win.bounds.size)
+        scheduleFinalAdaptiveLayoutIfNeeded(for: win, delay: 0.0)
+    }
+
+    func handleAdaptiveHostWindowResize(for win: UIWindow, isEndOfLiveResize: Bool) {
+        if isEndOfLiveResize {
+            settleAdaptiveLiveResizeEnd(for: win)
+            return
+        }
+        if isHostLiveResizing {
+            relayoutWorkItem?.cancel()
+            relayoutWorkItem = nil
+            return
+        }
+        lastAdaptiveBounds = CGRect(origin: .zero, size: win.bounds.size)
+        scheduleFinalAdaptiveLayoutIfNeeded(for: win, delay: 0.08)
+    }
+
+    func handleHostWindowResize(_ object: Any? = nil, isEndOfLiveResize: Bool) {
+        if isEndOfLiveResize {
+            guard isMainAppNSWindow(object) else { return }
+            isHostLiveResizing = false
+            stopLiveResizePacing()
+        } else if !isMainAppNSWindow(object) {
+            return
+        }
         guard let win = activePrimaryWindow else { return }
         switch displayMode {
         case .adaptive:
-            lastAdaptiveBounds = CGRect(origin: .zero, size: win.bounds.size)
-            scheduleAdaptiveRelayout(for: win)
-            if PlaySettings.shared.smartAdaptive && !didTriggerRuntimeFallback {
-                scheduleRuntimeFallbackCheck(delay: 0.8)
-            }
+            handleAdaptiveHostWindowResize(for: win, isEndOfLiveResize: isEndOfLiveResize)
         case .scaled(let logicalSize, _, _):
-            applyScaledCanvas(to: win, logicalSize: logicalSize)
-            DispatchQueue.main.async { [weak self, weak win] in
-                guard let self = self, let win = win,
-                      case .scaled(let currentLogical, _, _) = self.displayMode else { return }
-                self.applyScaledCanvas(to: win, logicalSize: currentLogical)
+            if isHostLiveResizing && !isEndOfLiveResize {
+                applyScaledWindowGeometryToScene(containing: win, logicalSize: logicalSize)
+                return
+            }
+            applyScaledCanvasToScene(containing: win, logicalSize: logicalSize)
+            if !isEndOfLiveResize {
+                DispatchQueue.main.async { [weak self, weak win] in
+                    guard let self = self, let win = win,
+                          !self.isHostLiveResizing,
+                          case .scaled(let currentLogical, _, _) = self.displayMode else { return }
+                    self.applyScaledCanvasToScene(containing: win, logicalSize: currentLogical)
+                }
             }
         }
+    }
+
+    func shouldCoalesceAdaptiveResize(
+        for window: UIWindow,
+        currentSize: CGSize,
+        targetSize: CGSize,
+        pendingFrame: CGRect?,
+        pendingBounds: CGRect?
+    ) -> Bool {
+        guard isHostLiveResizing, window === activePrimaryWindow else {
+            return false
+        }
+        let now = CACurrentMediaTime()
+        let sizeDiffers = abs(currentSize.width - targetSize.width) > 0.5
+            || abs(currentSize.height - targetSize.height) > 0.5
+        if sizeDiffers && (liveResizeAwaitingCommit
+            || (liveResizePacingInterval > 0 && (now - liveResizeLastAppliedTime) < liveResizePacingInterval)) {
+            pendingCoalescedWindow = window
+            pendingCoalescedFrame = pendingFrame
+            pendingCoalescedBounds = pendingBounds
+            scheduleCoalescedLiveResizeFlush(now: now)
+            return true
+        }
+        pendingCoalescedFrame = nil
+        pendingCoalescedBounds = nil
+        coalescedResizeWorkItem?.cancel()
+        coalescedResizeWorkItem = nil
+        liveResizeLastAppliedTime = now
+        liveResizeCommitStartTime = now
+        liveResizeAwaitingCommit = true
+        return false
     }
 
     func handleWindowSetFrame(_ window: UIWindow, frame: CGRect) -> Bool {
         guard PlaySettings.shared.dynamicWindowMode,
               !isApplyingScaledLayout,
-              case .scaled(let logicalSize, _, _) = displayMode,
+              !isApplyingCoalescedResize,
               isAppWindow(window) else {
             return false
         }
-        let container = resolveContainerBounds(for: window, candidate: frame, logicalSize: logicalSize)
-        applyScaledWindowGeometry(to: window, logicalSize: logicalSize, containerBounds: container)
-        return true
+        switch displayMode {
+        case .scaled(let logicalSize, _, _):
+            let container = resolveContainerBounds(for: window, candidate: frame, logicalSize: logicalSize)
+            applyScaledWindowGeometry(to: window, logicalSize: logicalSize, containerBounds: container)
+            return true
+        case .adaptive:
+            return shouldCoalesceAdaptiveResize(
+                for: window,
+                currentSize: window.frame.size,
+                targetSize: frame.size,
+                pendingFrame: frame,
+                pendingBounds: nil
+            )
+        }
     }
 
     func handleWindowSetBounds(_ window: UIWindow, bounds: CGRect) -> Bool {
         guard PlaySettings.shared.dynamicWindowMode,
               !isApplyingScaledLayout,
-              case .scaled(let logicalSize, _, _) = displayMode,
+              !isApplyingCoalescedResize,
               isAppWindow(window) else {
             return false
         }
-        let container: CGRect
-        if let sceneBounds = window.windowScene?.coordinateSpace.bounds,
-           sceneBounds.width > 1, sceneBounds.height > 1 {
-            container = sceneBounds
-        } else if bounds.width > 1, bounds.height > 1 {
-            container = CGRect(origin: .zero, size: bounds.size)
-        } else {
-            container = CGRect(origin: .zero, size: logicalSize)
+        switch displayMode {
+        case .scaled(let logicalSize, _, _):
+            let container: CGRect
+            if let sceneBounds = window.windowScene?.coordinateSpace.bounds,
+               sceneBounds.width > 1, sceneBounds.height > 1 {
+                container = sceneBounds
+            } else if bounds.width > 1, bounds.height > 1 {
+                container = CGRect(origin: .zero, size: bounds.size)
+            } else {
+                container = CGRect(origin: .zero, size: logicalSize)
+            }
+            applyScaledWindowGeometry(to: window, logicalSize: logicalSize, containerBounds: container)
+            return true
+        case .adaptive:
+            return shouldCoalesceAdaptiveResize(
+                for: window,
+                currentSize: window.bounds.size,
+                targetSize: bounds.size,
+                pendingFrame: nil,
+                pendingBounds: bounds
+            )
         }
-        applyScaledWindowGeometry(to: window, logicalSize: logicalSize, containerBounds: container)
-        return true
     }
 
     func ensureWindowScaledBeforeRootVC(_ window: UIWindow) {
@@ -581,22 +831,31 @@ private extension PlayScreen {
 
     func handleWindowLayoutSubviews(_ window: UIWindow) {
         guard PlaySettings.shared.dynamicWindowMode, isEligiblePrimaryWindow(window) else { return }
-        applySceneSizeRestrictions(for: window.windowScene)
-        ensureInitialPlacementAndFallback()
+        if !isHostLiveResizing {
+            applySceneSizeRestrictions(for: window.windowScene)
+            ensureInitialPlacementAndFallback()
+        }
 
         switch displayMode {
         case .scaled(let logicalSize, _, _):
-            applyScaledCanvas(to: window, logicalSize: logicalSize)
+            if isHostLiveResizing {
+                let sceneBounds = window.windowScene?.coordinateSpace.bounds ?? window.bounds
+                let container = (sceneBounds.width > 1 && sceneBounds.height > 1)
+                    ? sceneBounds
+                    : CGRect(origin: .zero, size: logicalSize)
+                applyScaledWindowGeometry(to: window, logicalSize: logicalSize, containerBounds: container)
+            } else {
+                applyScaledCanvas(to: window, logicalSize: logicalSize)
+            }
         case .adaptive:
+            resetScaledTransformsIfNeeded(in: window)
             if window === activePrimaryWindow {
-                resetScaledTransformsIfNeeded(in: window)
                 if abs(window.bounds.width - lastAdaptiveLayoutSize.width) > 0.5
                     || abs(window.bounds.height - lastAdaptiveLayoutSize.height) > 0.5 {
                     lastAdaptiveLayoutSize = window.bounds.size
-                    lastAdaptiveBounds = CGRect(origin: .zero, size: window.bounds.size)
-                    scheduleAdaptiveRelayout(for: window)
-                    if PlaySettings.shared.smartAdaptive && !didTriggerRuntimeFallback {
-                        scheduleRuntimeFallbackCheck(delay: 0.8)
+                    if !isHostLiveResizing {
+                        lastAdaptiveBounds = CGRect(origin: .zero, size: window.bounds.size)
+                        scheduleFinalAdaptiveLayoutIfNeeded(for: window, delay: 0.08)
                     }
                 }
             }
@@ -701,7 +960,16 @@ private extension PlayScreen {
             || cls == "UITransitionView"
             || (rootView?.isDescendant(of: subview) ?? false)
         let sceneBounds = window.windowScene?.coordinateSpace.bounds ?? .zero
-        guard isRootHost || subviewNeedsClamping(subview, in: window, sceneBounds: sceneBounds) else { return }
+        guard isRootHost || subviewNeedsClamping(subview, in: window, sceneBounds: sceneBounds) else {
+            if subview.frame.height >= 0,
+               abs(subview.frame.origin.x) <= 1,
+               subview.frame.width > window.bounds.width + 1 {
+                var clamped = subview.frame
+                clamped.size.width = window.bounds.width
+                subview.frame = clamped
+            }
+            return
+        }
 
         normalizeSubviewLayout(subview, in: window)
         if isRootHost, let rootView = rootView, rootView.superview === subview {
@@ -715,11 +983,9 @@ private extension PlayScreen {
         let matchesScene = sceneBounds.width > 1 && sceneBounds.height > 1
             && abs(subview.frame.width - sceneBounds.width) <= 6
             && abs(subview.frame.height - sceneBounds.height) <= 6
-        let exceedsWindow = subview.frame.width > window.bounds.width + 1
-            || subview.frame.height > window.bounds.height + 1
-            || subview.frame.maxX > window.bounds.width + 1
-            || subview.frame.maxY > window.bounds.height + 1
-        return matchesScene || exceedsWindow
+        let exceedsFullCanvas = subview.frame.width > window.bounds.width + 1
+            && subview.frame.height > window.bounds.height + 1
+        return matchesScene || exceedsFullCanvas
     }
 
     func normalizeSubviewLayout(_ subview: UIView, in window: UIWindow) {
@@ -813,16 +1079,17 @@ private extension PlayScreen {
         )
         let targetCenter = CGPoint(x: containerBounds.midX, y: containerBounds.midY)
 
-        let curScale = hypot(window.transform.a, window.transform.b)
+        let targetTransform = CGAffineTransform(scaleX: scale, y: scale)
         let needsBounds = abs(window.bounds.width - targetBounds.width) > 0.25
             || abs(window.bounds.height - targetBounds.height) > 0.25
             || abs(window.bounds.origin.x) > 0.25
             || abs(window.bounds.origin.y) > 0.25
         let needsCenter = abs(window.center.x - targetCenter.x) > 0.25
             || abs(window.center.y - targetCenter.y) > 0.25
-        let needsScale = abs(curScale - scale) > 0.001
-            || abs(window.transform.b) > 0.001
-            || abs(window.transform.c) > 0.001
+        let currentTransform = window.transform
+        let needsScale = abs(currentTransform.a - scale) > 0.001 || abs(currentTransform.d - scale) > 0.001
+            || abs(currentTransform.b) > 0.001 || abs(currentTransform.c) > 0.001
+            || abs(currentTransform.tx) > 0.001 || abs(currentTransform.ty) > 0.001
 
         guard needsBounds || needsCenter || needsScale else { return }
 
@@ -830,12 +1097,29 @@ private extension PlayScreen {
         isApplyingScaledLayout = true
         defer { isApplyingScaledLayout = false }
 
-        if needsBounds && window.transform != .identity {
-            window.transform = .identity
-        }
         if needsBounds { window.bounds = targetBounds }
         if needsCenter { window.center = targetCenter }
-        if needsScale { window.transform = CGAffineTransform(scaleX: scale, y: scale) }
+        if needsScale { window.transform = targetTransform }
+    }
+
+    func applyScaledWindowGeometryToScene(containing window: UIWindow, logicalSize: CGSize) {
+        let sceneWindows = window.windowScene?.windows ?? []
+        let sceneBounds = window.windowScene?.coordinateSpace.bounds ?? window.bounds
+        let container = (sceneBounds.width > 1 && sceneBounds.height > 1)
+            ? sceneBounds
+            : CGRect(origin: .zero, size: logicalSize)
+        for appWindow in sceneWindows where appWindow !== window && isEligiblePrimaryWindow(appWindow) {
+            applyScaledWindowGeometry(to: appWindow, logicalSize: logicalSize, containerBounds: container)
+        }
+        applyScaledWindowGeometry(to: window, logicalSize: logicalSize, containerBounds: container)
+    }
+
+    func applyScaledCanvasToScene(containing window: UIWindow, logicalSize: CGSize) {
+        let sceneWindows = window.windowScene?.windows ?? []
+        for appWindow in sceneWindows where appWindow !== window && isEligiblePrimaryWindow(appWindow) {
+            applyScaledCanvas(to: appWindow, logicalSize: logicalSize)
+        }
+        applyScaledCanvas(to: window, logicalSize: logicalSize)
     }
 
     func applyScaledCanvas(to window: UIWindow, logicalSize: CGSize) {
@@ -860,6 +1144,35 @@ private extension PlayScreen {
                 recursivelyRelayout(subview)
             }
             scheduleAdaptiveRelayout(for: window)
+        }
+    }
+
+    func scheduleFinalAdaptiveLayoutIfNeeded(for window: UIWindow, delay: TimeInterval) {
+        relayoutWorkItem?.cancel()
+        let item = DispatchWorkItem { [weak self, weak window] in
+            guard let self = self,
+                  let win = window,
+                  self.displayMode == .adaptive,
+                  !self.isHostLiveResizing else { return }
+            self.lastRelayoutTime = CFAbsoluteTimeGetCurrent()
+            if self.lastAdaptiveLayoutSize != win.bounds.size {
+                self.lastAdaptiveLayoutSize = win.bounds.size
+                self.lastAdaptiveBounds = CGRect(origin: .zero, size: win.bounds.size)
+            }
+            win.setNeedsLayout()
+            win.layoutIfNeeded()
+            if !self.isForcedPhoneAdaptive {
+                for subview in win.subviews {
+                    if Toast.hintView.contains(subview) || subview is CircleMenu { continue }
+                    self.recursivelyRelayout(subview)
+                }
+            }
+        }
+        relayoutWorkItem = item
+        if delay <= 0 {
+            DispatchQueue.main.async(execute: item)
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: item)
         }
     }
 
@@ -922,7 +1235,7 @@ private extension PlayScreen {
               !didTriggerRuntimeFallback,
               let win = activePrimaryWindow,
               let rootView = win.rootViewController?.view,
-              win.bounds.width >= 100 else { return }
+              win.bounds.width >= 500 else { return }
 
         let overflowFound = hasNonScrollableWidthOverflow(in: rootView, window: win, threshold: 24)
         guard overflowFound else { return }
@@ -942,7 +1255,7 @@ private extension PlayScreen {
             minWidth: minSize.width,
             minHeight: minSize.height
         )
-        applyScaledCanvas(to: win, logicalSize: logical)
+        applyScaledCanvasToScene(containing: win, logicalSize: logical)
     }
 
     func hasNonScrollableWidthOverflow(in view: UIView, window: UIWindow, threshold: CGFloat) -> Bool {
