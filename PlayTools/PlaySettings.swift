@@ -84,6 +84,8 @@ let settings = PlaySettings.shared
 
     @objc lazy var enableScrollWheel = settingsData.enableScrollWheel
 
+    @objc lazy var optionScrollZoom = settingsData.optionScrollZoom ?? true
+
     @objc lazy var hideTitleBar = settingsData.hideTitleBar
 
     @objc lazy var floatingWindow = settingsData.floatingWindow
@@ -124,6 +126,7 @@ struct AppSettingsData: Codable {
     var rootWorkDir = true
     var noKMOnInput = false
     var enableScrollWheel = true
+    var optionScrollZoom: Bool?
     var hideTitleBar = false
     var floatingWindow = false
     var checkMicPermissionSync = false

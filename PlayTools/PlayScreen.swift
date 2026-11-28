@@ -159,6 +159,43 @@ public class PlayScreen: NSObject {
             .first { $0.isKeyWindow }
     }
 
+    struct PlayTouchTarget {
+        let window: UIWindow
+        let point: CGPoint
+        let hitView: UIView
+    }
+
+    func resolveTouchTarget(
+        forNormalizedContentX normalizedX: CGFloat,
+        y normalizedY: CGFloat
+    ) -> PlayTouchTarget? {
+        guard let primary = keyWindow,
+              primary.bounds.width >= 1,
+              primary.bounds.height >= 1 else {
+            return nil
+        }
+        let primaryPoint: CGPoint
+        if let space = primary.windowScene?.coordinateSpace,
+           space.bounds.width > 1,
+           space.bounds.height > 1 {
+            let scenePoint = CGPoint(
+                x: space.bounds.minX + normalizedX * space.bounds.width,
+                y: space.bounds.minY + normalizedY * space.bounds.height
+            )
+            let converted = primary.convert(scenePoint, from: space)
+            guard primary.bounds.contains(converted) else { return nil }
+            primaryPoint = converted
+        } else {
+            primaryPoint = CGPoint(
+                x: normalizedX * primary.bounds.width,
+                y: normalizedY * primary.bounds.height
+            )
+        }
+        let fallback = primary.hitTest(primaryPoint, with: nil)
+            ?? primary.rootViewController?.view ?? primary
+        return PlayTouchTarget(window: primary, point: primaryPoint, hitView: fallback)
+    }
+
     var windowScene: UIWindowScene? {
         window?.windowScene
     }

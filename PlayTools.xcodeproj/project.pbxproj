@@ -53,6 +53,7 @@
 		AA719759287A480D00623C15 /* PlayAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719723287A480C00623C15 /* PlayAction.swift */; };
 		AA71975A287A480D00623C15 /* Toucher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719724287A480C00623C15 /* Toucher.swift */; };
 		AA719789287A480D00623C15 /* PlayInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719755287A480C00623C15 /* PlayInput.swift */; };
+		A9C4E1012F0B8A100051A201 /* OptionScrollZoomController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C4E1022F0B8A100051A201 /* OptionScrollZoomController.swift */; };
 		AA71978A287A480D00623C15 /* ControlMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719756287A480C00623C15 /* ControlMode.swift */; };
 		AA71978B287A480D00623C15 /* MenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719757287A480C00623C15 /* MenuController.swift */; };
 		AA7197A1287A481500623C15 /* CircleMenuLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71978D287A481500623C15 /* CircleMenuLoader.swift */; };
@@ -154,6 +155,7 @@
 		AA719723287A480C00623C15 /* PlayAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayAction.swift; sourceTree = "<group>"; };
 		AA719724287A480C00623C15 /* Toucher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toucher.swift; sourceTree = "<group>"; };
 		AA719755287A480C00623C15 /* PlayInput.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayInput.swift; sourceTree = "<group>"; };
+		A9C4E1022F0B8A100051A201 /* OptionScrollZoomController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionScrollZoomController.swift; sourceTree = "<group>"; };
 		AA719756287A480C00623C15 /* ControlMode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControlMode.swift; sourceTree = "<group>"; };
 		AA719757287A480C00623C15 /* MenuController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuController.swift; sourceTree = "<group>"; };
 		AA71978D287A481500623C15 /* CircleMenuLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleMenuLoader.swift; sourceTree = "<group>"; };
@@ -464,6 +466,7 @@
 				9562D1702AB51B41002C329D /* Frontend */,
 				AA719757287A480C00623C15 /* MenuController.swift */,
 				AA719755287A480C00623C15 /* PlayInput.swift */,
+				A9C4E1022F0B8A100051A201 /* OptionScrollZoomController.swift */,
 				9562D16E2AB50D34002C329D /* ActionDispatcher.swift */,
 			);
 			path = Controls;
@@ -757,6 +760,7 @@
 				9562D1752AB52479002C329D /* EditorMouseEventAdapter.swift in Sources */,
 				AA7197AA287A481500623C15 /* Toast.swift in Sources */,
 				AA719789287A480D00623C15 /* PlayInput.swift in Sources */,
+				A9C4E1012F0B8A100051A201 /* OptionScrollZoomController.swift in Sources */,
 				AA71970B287A44D200623C15 /* PlayLoader.m in Sources */,
 				9555ED332C058E36006E469C /* DebugController.swift in Sources */,
 				9562D1512AB484C7002C329D /* EventAdapters.swift in Sources */,
