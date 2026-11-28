@@ -8,8 +8,32 @@
 //  which Square, Inc. licenses this file to you.
 
 #import "UITouch-KIFAdditions.h"
+#import <TargetConditionals.h>
 #import <objc/runtime.h>
 #import "PTFakeMetaTouch.h"
+
+// Never rely on ProcessInfo.isiOSAppOnMac / isMacCatalystApp here: PlayTools spoofs both
+// to NO under iPhone / iPhone Duo mode, which would otherwise invoke the nonexistent
+// _setIsTapToClick: selector on Mac Catalyst UITouch and crash fake touches.
+static inline void pt_configureFakeTouchFlags(UITouch *touch) {
+#if TARGET_OS_MACCATALYST
+    if ([touch respondsToSelector:@selector(_setIsFirstTouchForView:)]) {
+        [touch _setIsFirstTouchForView:YES];
+    }
+    if ([touch respondsToSelector:@selector(setIsTap:)]) {
+        [touch setIsTap:NO];
+    }
+#else
+    if ([touch respondsToSelector:@selector(_setIsFirstTouchForView:)]) {
+        [touch _setIsFirstTouchForView:YES];
+        if ([touch respondsToSelector:@selector(setIsTap:)]) {
+            [touch setIsTap:NO];
+        }
+    } else if ([touch respondsToSelector:@selector(_setIsTapToClick:)]) {
+        [touch _setIsTapToClick:NO];
+    }
+#endif
+}
 
 @implementation UITouch (KIFAdditions)
 
@@ -29,12 +53,7 @@
     
     [self setView:hitTestView];
     [self setPhase:UITouchPhaseBegan];
-    if (![[NSProcessInfo processInfo] isiOSAppOnMac] && ![[NSProcessInfo processInfo] isMacCatalystApp]) {
-        [self _setIsTapToClick:NO];
-    } else {
-        [self _setIsFirstTouchForView:YES];
-        [self setIsTap:NO];
-    }
+    pt_configureFakeTouchFlags(self);
     [self setTimestamp: [[NSProcessInfo processInfo] systemUptime]];
     if ([self respondsToSelector:@selector(setGestureView:)]) {
         [self setGestureView:hitTestView];
@@ -64,12 +83,7 @@
     [self setView:hitTestView];
     [self setPhase:UITouchPhaseEnded];
     //DLog(@"init...touch...setPhase 3");
-    if (![[NSProcessInfo processInfo] isiOSAppOnMac] && ![[NSProcessInfo processInfo] isMacCatalystApp]) {
-        [self _setIsTapToClick:NO];
-    } else {
-        [self _setIsFirstTouchForView:YES];
-        [self setIsTap:NO];
-    }
+    pt_configureFakeTouchFlags(self);
     [self setTimestamp: [[NSProcessInfo processInfo] systemUptime]];
     if ([self respondsToSelector:@selector(setGestureView:)]) {
         [self setGestureView:hitTestView];
