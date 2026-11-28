@@ -127,6 +127,7 @@ static _Atomic uint64_t pt_metalDrawableFrameCount = 0;
 static _Atomic uint64_t pt_lastMotionBucket = 0;
 static _Atomic double pt_lastSampleBufferEnqueueTime = 0.0;
 static _Atomic BOOL pt_pendingMotionReevalScheduled = false;
+static _Atomic BOOL pt_hostWindowLiveResizing = false;
 static BOOL pt_lastKnownWindowVisible = YES;
 static CFTimeInterval pt_lastAdaptiveScheduleTime = 0.0;
 static CFTimeInterval pt_lastMotionActiveTime = 0.0;
@@ -487,6 +488,7 @@ typedef NS_ENUM(NSInteger, PTDisplayLinkRateMode) {
 static void pt_reapplyActiveFPSCeilingToAllTracked(void);
 static void pt_notifyOverlayCeilingDidChange(NSInteger ceiling);
 static void pt_scheduleAdaptiveMotionReevalIfNeeded(void);
+static BOOL pt_isMainAppNSWindow(id win);
 
 static NSUInteger pt_countRecentRingEvents(const CFTimeInterval *ring, NSUInteger capacity, CFTimeInterval cutoff) {
     NSUInteger count = 0;
@@ -1183,7 +1185,9 @@ static void pt_scheduleAdaptiveMotionReevalIfNeeded(void) {
 }
 
 static inline BOOL pt_shouldRecordLayerMotion(CALayer *layer) {
-    if (pt_tlsSuppressMotionRecording || !pt_lastKnownWindowVisible) {
+    if (pt_tlsSuppressMotionRecording ||
+        !pt_lastKnownWindowVisible ||
+        atomic_load_explicit(&pt_hostWindowLiveResizing, memory_order_relaxed)) {
         return NO;
     }
     if (pt_configuredFrameRateCap != -1 || ![NSThread isMainThread]) {
@@ -1357,7 +1361,9 @@ static BOOL pt_isSpatialCAAnimationOnLayer(CALayer *layer, CAAnimation *anim) {
 
 - (void)pt_eff_layerAddAnimation:(CAAnimation *)anim forKey:(nullable NSString *)key {
     [self pt_eff_layerAddAnimation:anim forKey:key];
-    if (pt_shouldRecordLayerMotion(self) && pt_isSpatialCAAnimationOnLayer(self, anim)) {
+    if (!atomic_load_explicit(&pt_hostWindowLiveResizing, memory_order_relaxed) &&
+        pt_shouldRecordLayerMotion(self) &&
+        pt_isSpatialCAAnimationOnLayer(self, anim)) {
         CFTimeInterval repeat = (anim.repeatCount > 0.0f && isfinite(anim.repeatCount)) ? (CFTimeInterval)anim.repeatCount : 1.0;
         CFTimeInterval span = MIN(MAX(anim.duration * repeat, 0.25), 15.0);
         CFTimeInterval newExpiry = CACurrentMediaTime() + span;
@@ -1662,6 +1668,40 @@ static void pt_installAdaptiveFPSHooks(void) {
                                                        queue:[NSOperationQueue mainQueue]
                                                   usingBlock:^(NSNotification * _Nonnull note) {
         (void)note;
+        pt_noteAdaptiveUserInput();
+    }];
+
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+    [nc addObserverForName:@"NSWindowWillStartLiveResizeNotification"
+                    object:nil
+                     queue:[NSOperationQueue mainQueue]
+                usingBlock:^(NSNotification * _Nonnull note) {
+        if (note.object && !pt_isMainAppNSWindow(note.object)) {
+            return;
+        }
+        atomic_store_explicit(&pt_hostWindowLiveResizing, true, memory_order_release);
+        pt_noteAdaptiveUserInput();
+    }];
+    [nc addObserverForName:@"NSWindowDidResizeNotification"
+                    object:nil
+                     queue:[NSOperationQueue mainQueue]
+                usingBlock:^(NSNotification * _Nonnull note) {
+        if (!atomic_load_explicit(&pt_hostWindowLiveResizing, memory_order_acquire)) {
+            return;
+        }
+        if (note.object && !pt_isMainAppNSWindow(note.object)) {
+            return;
+        }
+        pt_noteAdaptiveUserInput();
+    }];
+    [nc addObserverForName:@"NSWindowDidEndLiveResizeNotification"
+                    object:nil
+                     queue:[NSOperationQueue mainQueue]
+                usingBlock:^(NSNotification * _Nonnull note) {
+        if (note.object && !pt_isMainAppNSWindow(note.object)) {
+            return;
+        }
+        atomic_store_explicit(&pt_hostWindowLiveResizing, false, memory_order_release);
         pt_noteAdaptiveUserInput();
     }];
 
